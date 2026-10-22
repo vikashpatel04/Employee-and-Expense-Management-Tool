@@ -1,0 +1,19 @@
+{
+  "name": "@fincrew/db",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p .",
+    "gen:types": "supabase gen types typescript --linked > src/database.types.ts"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.118.0"
+  },
+  "devDependencies": {
+    "typescript": "~5.9.3"
+  }
+}

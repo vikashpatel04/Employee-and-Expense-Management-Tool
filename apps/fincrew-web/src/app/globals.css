@@ -1,0 +1,34 @@
+@import 'tailwindcss';
+
+/* Temporary neutral theme. Real tokens come from packages/ui after the design phase. */
+:root {
+  --bg: #f7f7f5;
+  --surface: #ffffff;
+  --text: #17181a;
+  --muted: #6b6f76;
+  --border: #e4e4e0;
+  --accent: #1f5f4a;
+  --danger: #b42318;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f1012;
+    --surface: #17181b;
+    --text: #ececea;
+    --muted: #9a9ea6;
+    --border: #2a2c30;
+    --accent: #5cc4a0;
+    --danger: #f97066;
+  }
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    sans-serif;
+}

@@ -1,0 +1,28 @@
+{
+  "appName": "FinCrew",
+  "auth": {
+    "signInTitle": "Sign in to FinCrew",
+    "signInSubtitle": "Owner and team access",
+    "email": "Email",
+    "password": "Password",
+    "signIn": "Sign in",
+    "signingIn": "Signing in…",
+    "signOut": "Sign out",
+    "invalidCredentials": "Email or password is incorrect.",
+    "noAccess": "This account isn't linked to a shop yet. Ask the owner for access."
+  },
+  "setup": {
+    "title": "Set up your shop",
+    "subtitle": "You'll be the owner. This can only be done once.",
+    "shopName": "Shop name",
+    "yourName": "Your name",
+    "create": "Create shop",
+    "creating": "Creating…",
+    "failed": "Couldn't set up the shop: {{reason}}"
+  },
+  "home": {
+    "welcome": "Welcome, {{name}}",
+    "owner": "Owner",
+    "comingSoon": "Staff, attendance and salary screens arrive in the next phases."
+  }
+}

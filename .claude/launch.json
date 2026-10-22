@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "fincrew-web",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@fincrew/web", "dev"],
+      "port": 3000
+    }
+  ]
+}

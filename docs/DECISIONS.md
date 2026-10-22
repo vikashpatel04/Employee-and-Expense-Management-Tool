@@ -1,0 +1,31 @@
+# Decisions
+
+Choices made during the build that PLAN.md doesn't spell out. Newest first.
+
+## 2026-10-22 — Phase 1
+
+- **Owner bootstrap via `setup_shop()`.** The first signed-in user creates the shop and becomes
+  owner; it refuses once any shop exists. Public sign-ups are off, so only logins you create in
+  Supabase can reach it. Owner rows can only be inserted while `setup_shop` sets the
+  `fincrew.bootstrap` flag.
+- **Owner protection lives in a trigger**, not just policies: the owner can't be deleted or demoted,
+  nobody can be promoted, people can't move shops.
+- **`shop_id` duplicated on `role_permissions` and `person_roles`** so policies stay simple
+  (`shop_id = current_shop_id()`); a trigger checks it matches the role/person.
+- **RLS helpers are `SECURITY DEFINER` with `search_path = ''`**, so policies call them without
+  recursive RLS and without search-path hijacking.
+- **Audit log** is written by a `SECURITY DEFINER` trigger; users have no insert/update/delete
+  grant, and a trigger rejects UPDATE/DELETE even for the database owner (append-only).
+- **Permission keys** are dotted strings (`staff.pay.edit`) in a `permissions` table, mirrored in
+  `packages/core/src/permissions.ts`; a test fails if they drift.
+- **DB tests run on PGlite** with a small stub of Supabase's `auth` schema and API roles, because
+  Docker isn't available on the dev machine. Tests switch to the `authenticated` role with a JWT
+  subject, as PostgREST does.
+- **Tables arrive with the phase that uses them**, not all at once, so each lands with its RLS tests.
+- **TypeScript 5.9**, not 7: Next.js and Expo tooling still expect the JS compiler API.
+- **Workspace packages ship TS source** (no build step); Next transpiles them via
+  `transpilePackages`, Expo/Metro will too.
+- **Next.js 16 `proxy.ts`** (formerly middleware) refreshes the Supabase session and redirects
+  signed-out users. Server code uses `auth.getClaims()` (verifies the JWT), never `getSession()`.
+- **Keep-awake** calls a harmless `ping()` RPC every 3 days from GitHub Actions.
+- **Placeholder look**: a neutral theme with CSS variables until the design phase (Phase 3).
