@@ -41,7 +41,8 @@
     "shopCount_other": "{{count}} shops",
     "switchShop": "Switch shop. Current shop: {{name}}",
     "attendance": "Attendance",
-    "salary": "Salary"
+    "salary": "Salary",
+    "advances": "Advances"
   },
   "staff": {
     "title": "Staff",
@@ -345,6 +346,53 @@
     "errors": {
       "noPermission": "You can see salary but not run or pay it.",
       "failed": "Couldn't finish: {{reason}}"
+    }
+  },
+  "advances": {
+    "title": "Advances",
+    "subtitle": "{{shop}} · advances still to recover",
+    "total": "Still to recover",
+    "columns": {
+      "name": "Staff",
+      "outstanding": "To recover",
+      "cut": "Monthly cut",
+      "limit": "Limit"
+    },
+    "empty": "No advances to recover.",
+    "give": "Give advance",
+    "repaid": "Record repaid",
+    "kind": {
+      "label": "What happened",
+      "given": "Advance given",
+      "repaid": "Repaid in cash"
+    },
+    "fields": {
+      "amount": "Amount (₹)",
+      "date": "Date",
+      "mode": "Paid by",
+      "note": "Note (optional)",
+      "confirm": "Give it anyway, above the limit"
+    },
+    "save": "Save",
+    "saving": "Saving…",
+    "settings": {
+      "title": "Advance rules for this person",
+      "limit": "Limit (₹, blank = no limit)",
+      "cut": "Cut from each salary (₹, blank = decide at each run)",
+      "save": "Save rules"
+    },
+    "undo": "Undo",
+    "undone": "Undone",
+    "done": {
+      "given": "Advance given.",
+      "repaid": "Repayment recorded.",
+      "settings": "Advance rules saved.",
+      "undone": "Line undone."
+    },
+    "errors": {
+      "noPermission": "You don't have permission for this.",
+      "overLimit": "This advance crosses the person's limit. Tick “Give it anyway” to confirm.",
+      "failed": "Couldn't save: {{reason}}"
     }
   }
 }

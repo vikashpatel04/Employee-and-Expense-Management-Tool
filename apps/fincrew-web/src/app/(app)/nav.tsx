@@ -2,13 +2,21 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { CalendarDays, House, IndianRupee, Users, type LucideIcon } from 'lucide-react';
+import {
+  ArrowUpRight,
+  CalendarDays,
+  House,
+  IndianRupee,
+  Users,
+  type LucideIcon,
+} from 'lucide-react';
 
 const ICONS: Record<string, LucideIcon> = {
   home: House,
   calendar: CalendarDays,
   users: Users,
   rupee: IndianRupee,
+  advance: ArrowUpRight,
 };
 
 export type NavItem = { href: string; label: string; icon: keyof typeof ICONS };

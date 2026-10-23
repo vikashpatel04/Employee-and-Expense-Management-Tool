@@ -5,15 +5,13 @@ _Last updated: 2026-10-23_
 ## Start here (handover for a new session)
 
 **Where we are:** Phases 1–3 done; Phase 4 (FinCrew website) in progress — data layer live,
-screens slices 1–4 done and checked in the browser: app shell + shop switcher, staff list/add,
-staff detail (overview, ledger, pay), attendance grid, salary run. Local `main` may be ahead of
+screens slices 1–5 done and checked in the browser: app shell + shop switcher, staff list/add,
+staff detail (overview, ledger, pay), attendance grid, salary run, advances + undo. Local `main` may be ahead of
 GitHub: run `git status -sb`; the owner pushes (never push unless asked).
 
 **Next work, in order** (owner said "continue"; pick the top unfinished one):
 
-1. **Advances on the web**: give / record repaid (table `advances`, limit confirmation via
-   `over_limit_confirmed`), staff advance limit + monthly cut (`staff.advance_limit_paise`,
-   `advance_cut_paise`), undo payment (reversal line, `salary.undo_payment`).
+1. ~~Advances on the web~~ — done (slice 5).
 2. **Settings screens** (owner rule: every rule is an admin setting): holidays; leave templates
    (versions: weekly offs, paid leaves, carry-over, sandwich, accrual — `validateTemplateVersion`);
    assign template to staff; shop rules (`shops.settings` → `resolveShopRules`/`validateShopRules`,
@@ -157,6 +155,10 @@ Tables still to add (with the phase that uses them, each with RLS tests): `staff
 `attendance_scans`, `invites`, `pin_credentials`, `push_tokens` (Phase 7).
 
 ## Session log
+
+- **2026-10-23** — **Slice 5: advances** (give/repaid with limit confirmation, advance rules, undo
+  in ledger, Advances page). Test Staff now has limit ₹5,000 and cut ₹1,000 (still deletable: no
+  ledger lines). Next: settings screens (holidays, leave templates + assignment, shop rules, roles).
 
 - **2026-10-23** — **Slice 4: salary run** (work out, review with lines/days/warnings, finalize,
   pay). Checked with Test Staff as a draft (₹355). Not finalized on the live shop: ledger lines

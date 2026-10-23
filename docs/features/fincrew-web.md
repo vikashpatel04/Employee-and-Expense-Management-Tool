@@ -75,8 +75,22 @@ Checked in the browser on 2026-10-23 with Test Staff, **drafts only**: 0.5 days 
 31 × 0.5), unmarked-days warning, Run again → "0 new, 1 updated". Finalize and Pay were not run on
 the live shop: ledger lines are permanent, so a finalized Test Staff could never be deleted.
 
+## Advances — staff detail + `(app)/advances`
+
+- Staff detail **Overview** (`advances.give`): **Give advance / Record repaid** (amount, date
+  DD/MM/YYYY, mode, note) → `advances` row; the database posts the ledger line. Past the person's
+  limit the database refuses (hint `over_limit`) and the form shows "Give it anyway" to confirm.
+  **Advance rules** (`staff.edit`): limit and default monthly cut (blank = none / decide at run).
+- **Undo** (`salary.undo_payment`) on salary payments and advances in the Ledger tab: exact
+  reversal, once; reversed lines show "Undone".
+- **/advances** (`salary.view` or `advances.give`): people with an advance to recover, monthly
+  cut, limit, total. Actions: `staff/[id]/advance-actions.ts`.
+
+Checked in the browser on 2026-10-23: both pages render; advance rules saved for Test Staff
+(limit ₹5,000, cut ₹1,000). No advance was given on the live shop (permanent ledger line).
+
 ## Not built yet
 
 Staff detail: attendance calendar, edit details/leaving date, allowances and deductions editing,
-leave template assignment, advance limit/cut, Staffora invite; advances (give/repay), holidays and leave-template screens, CSV export, payslip PDF/print,
+leave template assignment, advance limit/cut, Staffora invite; holidays and leave-template screens, CSV export, payslip PDF/print,
 requests, settings screens for every rule in `docs/features/core-rules.md`.

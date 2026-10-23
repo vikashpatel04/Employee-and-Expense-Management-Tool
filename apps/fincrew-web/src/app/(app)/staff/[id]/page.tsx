@@ -13,6 +13,7 @@ import { t } from '@/lib/i18n';
 import { requireMe } from '@/lib/session';
 import { createClient } from '@/lib/supabase/server';
 import { Avatar, quietButtonClass } from '../../../components';
+import { AdvanceForm, AdvanceSettingsForm, UndoButton } from './advance-forms';
 import { PayForm } from './pay-form';
 
 type Tab = 'overview' | 'ledger' | 'pay';
@@ -106,9 +107,11 @@ export default async function StaffDetailPage({
           canMoney={canLedger}
           advanceLimit={s.advance_limit_paise}
           advanceCut={s.advance_cut_paise}
+          canGive={can('advances.give')}
+          canEditStaff={can('staff.edit')}
         />
       )}
-      {tab === 'ledger' && <Ledger staffId={id} />}
+      {tab === 'ledger' && <Ledger staffId={id} canUndo={can('salary.undo_payment')} />}
       {tab === 'pay' && (
         <Pay
           staffId={id}
@@ -128,6 +131,8 @@ async function Overview(props: {
   canMoney: boolean;
   advanceLimit: number | null;
   advanceCut: number | null;
+  canGive: boolean;
+  canEditStaff: boolean;
 }) {
   const supabase = await createClient();
   const [{ data: bal }, { data: adv }] = props.canMoney
@@ -209,15 +214,60 @@ async function Overview(props: {
           </a>
         </section>
       )}
+      {props.canGive && (
+        <section className={card}>
+          <h2 className="text-title-md mb-3">{t('advances.give')}</h2>
+          <AdvanceForm
+            staffId={props.staffId}
+            today={todayIST()}
+            labels={{
+              kind: {
+                label: t('advances.kind.label'),
+                given: t('advances.kind.given'),
+                repaid: t('advances.kind.repaid'),
+              },
+              amount: t('advances.fields.amount'),
+              date: t('advances.fields.date'),
+              mode: t('advances.fields.mode'),
+              modes: t('salary.modes', { returnObjects: true }) as unknown as Record<
+                string,
+                string
+              >,
+              note: t('advances.fields.note'),
+              confirm: t('advances.fields.confirm'),
+              save: t('advances.save'),
+              saving: t('advances.saving'),
+            }}
+          />
+        </section>
+      )}
+      {props.canEditStaff && (
+        <section className={card}>
+          <h2 className="text-title-md mb-3">{t('advances.settings.title')}</h2>
+          <AdvanceSettingsForm
+            staffId={props.staffId}
+            limit={props.advanceLimit == null ? null : Number(props.advanceLimit)}
+            cut={props.advanceCut == null ? null : Number(props.advanceCut)}
+            labels={{
+              limit: t('advances.settings.limit'),
+              cut: t('advances.settings.cut'),
+              save: t('advances.settings.save'),
+              saving: t('advances.saving'),
+            }}
+          />
+        </section>
+      )}
     </div>
   );
 }
 
-async function Ledger({ staffId }: { staffId: string }) {
+async function Ledger({ staffId, canUndo }: { staffId: string; canUndo: boolean }) {
   const supabase = await createClient();
   const { data } = await supabase
     .from('ledger_entries')
-    .select('id, date, type, amount_paise, name, note, payment_mode, adjusts, created_at')
+    .select(
+      'id, date, type, amount_paise, name, note, payment_mode, adjusts, reverses_id, created_at',
+    )
     .eq('staff_id', staffId)
     .order('date')
     .order('created_at');
@@ -236,6 +286,7 @@ async function Ledger({ staffId }: { staffId: string }) {
   if (lines.length === 0)
     return <p className="text-body-lg text-[var(--ink-muted)]">{t('staffDetail.ledger.empty')}</p>;
 
+  const reversed = new Set((data ?? []).map((l) => l.reverses_id).filter(Boolean));
   const withBalance = runningBalances(lines).reverse();
   const byMonth = new Map<string, typeof withBalance>();
   for (const l of withBalance) {
@@ -283,6 +334,16 @@ async function Ledger({ staffId }: { staffId: string }) {
                   <span className="text-caption text-[var(--ink-muted)]">
                     {t('staffDetail.ledger.runningBalance', { amount: formatINR(l.balance) })}
                   </span>
+                  {reversed.has(l.id) ? (
+                    <span className="text-caption text-[var(--ink-muted)]">
+                      {t('advances.undone')}
+                    </span>
+                  ) : (
+                    canUndo &&
+                    (l.type === 'salary_payment' || l.type === 'advance') && (
+                      <UndoButton staffId={staffId} lineId={l.id} label={t('advances.undo')} />
+                    )
+                  )}
                 </span>
               </li>
             ))}
