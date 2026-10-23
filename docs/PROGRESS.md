@@ -7,7 +7,7 @@ _Last updated: 2026-10-23_
 | #   | Phase                        | Status                                                                                           |
 | --- | ---------------------------- | ------------------------------------------------------------------------------------------------ |
 | 1   | Foundation                   | **Done** (2026-10-23)                                                                            |
-| 2   | Core logic (`packages/core`) | **Next** (money + date helpers already in)                                                       |
+| 2   | Core logic (`packages/core`) | **Done** (2026-10-23): 154 tests, rules in `docs/features/core-rules.md`                         |
 | 3   | Design                       | **Design system v1 done** in Claude Design (`docs/DESIGN.md`); key screens + `packages/ui` to do |
 | 4   | FinCrew web core             | Not started                                                                                      |
 | 5   | FinCrew Android              | Not started                                                                                      |
@@ -76,7 +76,13 @@ lives in the git-ignored root `.env` for `pnpm db:types`.
 
 ## Next up
 
-**Phase 2** (below). Phase 1 is done.
+**Owner:** confirm the 13 rule interpretations in `docs/DECISIONS.md` (2026-10-23, Phase 2).
+
+**Phase 3 (Design) remainder:** key screens as Design artifacts on the design system, then
+`packages/ui` generated from its `tokens.json` (`docs/DESIGN.md`). **Phase 4 (FinCrew web core)**
+can start in parallel on the data side: tables for staff, pay settings, leave templates,
+holidays, attendance, advances, ledger, salary runs, payslips, each with RLS tests, using
+`packages/core` for every calculation.
 
 Open items (low priority, fold into the next migration that touches these tables):
 
@@ -88,14 +94,17 @@ Open items (low priority, fold into the next migration that touches these tables
   `supabase/setup-cli@v1` run on deprecated Node 20; bump when newer majors are available.
 - Leaked-password protection in Supabase Auth: owner's call (may need a paid plan).
 
-Phase 2 — `packages/core`, tests first from PLAN §4: leave templates + carry-over, sandwich rule,
-attendance → payable days, salary (monthly / daily / hourly, mid-month pay changes), late policy,
-ledger balance. No UI.
-
 Remaining tables from PLAN §5 (staff, pay_settings, attendance, ledger_entries, …) are added with
 the phase that first uses them (mostly Phase 4), each with RLS tests.
 
 ## Session log
+
+- **2026-10-23** — **Phase 2 done.** `packages/core`: exact fractions (`rational`), dates,
+  effective-dated versions, leave templates + carry-over, attendance → payable days + sandwich
+  rule, late policy, salary (monthly/daily/hourly, mid-month changes, overtime, allowances,
+  leave payout, deductions, advance cut), ledger (reversals, re-run adjustments, advances),
+  expenses, attendance-code rules. 154 core tests, written test-first. 13 interpretations
+  recorded in DECISIONS for the owner.
 
 - **2026-10-23** — Design system v1 created in Claude Design by a separate session
   ("FinCrew Design System", https://claude.ai/artifact/8jzomFcfJazHfn6yiUFQQP); recorded in

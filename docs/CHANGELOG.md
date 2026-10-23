@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Added — 2026-10-23 (Phase 2: Core logic)
+
+- `packages/core` rules for PLAN §4: `rational`, `dated`, `leave`, `attendance`, `late`,
+  `salary`, `ledger`, `expenses`, `attendance-code`; extended `dates`. 154 tests.
+- `docs/features/core-rules.md`.
+
 ### Deployed — 2026-10-23
 
 - FinCrew web live at https://fincrew-web.vercel.app. Phase 1 (Foundation) complete.

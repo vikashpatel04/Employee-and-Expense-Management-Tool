@@ -2,6 +2,31 @@
 
 Choices made during the build that PLAN.md doesn't spell out. Newest first.
 
+## 2026-10-23 — Phase 2 rule interpretations (owner to confirm)
+
+Where PLAN §4 was silent or ambiguous, `packages/core` does this. Each is one test away from
+changing; details and examples in `docs/features/core-rules.md`.
+
+1. **Rounding:** exact fractions inside a calculation; each payslip line rounded to the rupee once.
+2. **Holiday on a weekly off** counts as the holiday (its paid flag wins).
+3. **Working a paid weekly off/holiday** = the off day's pay + an extra day (2 days' pay) when the
+   extra-working-day setting is on; working an unpaid one = 1 day.
+4. **Unmarked working days** are unpaid and make the salary run warn.
+5. **Sandwich rule** triggers only on `absent` (not unpaid leave or half day) on the nearest
+   working day each side; looks across month edges; an unmarked side doesn't trigger it.
+6. **Leave year:** `resetMonth` is the last month of the leave year; lapse/payout happens at its end.
+7. **Leave earned** is the full monthly allotment even in a partial first or last month.
+8. **Late half-day conversions don't use up a free late day.** Early leaving shares the same count
+   and threshold. The month uses the staff late-policy override in effect at month end.
+9. **Allowances and fixed deductions** are paid for the share of employed days they cover;
+   prorated ones by payable days within that, capped at the full share.
+10. **Leave payout and late charges for hourly staff** use hourly rate × shift length as the day rate.
+11. **Advance cut is a payslip line, not a ledger line.** The advance is on the ledger when given;
+    the smaller payment recovers it. Posting a cut line as well would count it twice.
+12. **Wrong-code lockout** runs 10 minutes from the 5th wrong code in 10 minutes; attempts while
+    locked don't count as wrong.
+13. **Payslip lines carry kinds and names, not text**, so the apps translate them (i18n rule).
+
 ## 2026-10-23 — Design lives in Claude Design
 
 - **All UI design is kept in Claude Design**, as one Design System artifact (tokens, brand book,

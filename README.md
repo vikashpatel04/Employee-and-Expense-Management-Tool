@@ -8,7 +8,7 @@ tiers. Successor to StaffBook.
 
 ## Status
 
-Phase 1 (foundation) done; Phase 2 (core logic) next. See [docs/PROGRESS.md](docs/PROGRESS.md).
+Phases 1 (foundation) and 2 (core logic) done; design system in Claude Design; Phase 3/4 next. See [docs/PROGRESS.md](docs/PROGRESS.md).
 Website: https://fincrew-web.vercel.app
 
 ## Docs
