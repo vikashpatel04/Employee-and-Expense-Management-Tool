@@ -22,6 +22,7 @@ describe('exposed (public schema) functions', () => {
     );
     expect(r.rows.map((x) => x.name)).toEqual([
       'create_shop',
+      'finalize_payslip',
       'my_permissions',
       'ping',
       'shop_exists',

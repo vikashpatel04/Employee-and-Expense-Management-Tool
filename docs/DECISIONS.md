@@ -2,6 +2,28 @@
 
 Choices made during the build that PLAN.md doesn't spell out. Newest first.
 
+## 2026-10-23 — Phase 4.2 money data
+
+- **The app calculates, the database posts.** Payslips are computed by `packages/core` and saved
+  as drafts; `finalize_payslip` posts ledger lines _from the saved payslip_, so the ledger always
+  matches what the payslip says. Nobody can write `salary_earned`/`deduction`/`late_deduction`
+  lines directly.
+- **Re-runs are revisions.** A new payslip for the same run and person becomes the next revision
+  (only after the previous one is final; one draft at a time). Finalizing posts the differences
+  as `adjustment` lines with `adjusts` = the corrected type, dated the day of the re-run.
+- **Advances live in their own table** (given / repaid) and each row posts its ledger line by
+  trigger. Cash repaid is a positive `advance` line. Outstanding = given − repaid − cuts on the
+  latest final payslip revisions.
+- **The advance limit is enforced by the database**: over the limit is refused unless the row says
+  `over_limit_confirmed` (the app's confirmation step).
+- **Monthly advance cut is a staff setting** (`staff.advance_cut_paise`, null = decide at each run),
+  in keeping with "no hard-coded rules".
+- **Payments are capped** at the payslip's net pay (net of reversals); undo needs
+  `salary.undo_payment` and works for any line (exact opposite, once).
+- **Sign rules per ledger type** are database checks (e.g. payments negative, earned positive).
+- Advisor fixes folded in: `people_read` uses `(select auth.uid())`; composite FKs from 4.1 got
+  covering indexes.
+
 ## 2026-10-23 — Phase 4.1 data model
 
 - **Composite foreign keys for shop safety:** child rows reference `(shop_id, staff_id)`,

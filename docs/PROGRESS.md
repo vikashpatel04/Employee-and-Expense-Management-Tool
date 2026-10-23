@@ -9,7 +9,7 @@ _Last updated: 2026-10-23_
 | 1   | Foundation                   | **Done** (2026-10-23)                                                                            |
 | 2   | Core logic (`packages/core`) | **Done** (2026-10-23): 201 tests, every rule a setting; `docs/features/core-rules.md`            |
 | 3   | Design                       | **Design system v1 done** in Claude Design (`docs/DESIGN.md`); key screens + `packages/ui` to do |
-| 4   | FinCrew web core             | **In progress**: 4.1 data layer done (not live yet); 4.2 money tables next                       |
+| 4   | FinCrew web core             | **In progress**: 4.1 data live; 4.2 money data done (not live yet); 4.3 screens next             |
 | 5   | FinCrew Android              | Not started                                                                                      |
 | 6   | Expenses                     | Not started                                                                                      |
 | 7   | Staffora                     | Not started                                                                                      |
@@ -65,8 +65,9 @@ setup against the live project, and sign-in on the Vercel deployment (2026-10-23
 | ------------------------------------- | ------------------------------ | ------------------------------- |
 | `20261022000001_foundation.sql`       | 2026-10-23                     | CI migrate job, run 39898016456 |
 | `20261023000001_harden_functions.sql` | 2026-10-23                     | CI migrate job, run 39901338816 |
-| `20261023000002_multi_shop.sql`       | pending — applies on next push | CI migrate job                  |
-| `20261023000003_staff_attendance.sql` | pending — applies on next push | CI migrate job                  |
+| `20261023000002_multi_shop.sql`       | 2026-10-23                     | CI migrate job, run 39950298454 |
+| `20261023000003_staff_attendance.sql` | 2026-10-23                     | CI migrate job, run 39950298454 |
+| `20261023000004_money.sql`            | pending — applies on next push | CI migrate job                  |
 
 Migrations are applied by the CI **migrate** job on every push to `main`, so **everything in
 `supabase/migrations/` on `main` counts as applied** and must never change (CI enforces this).
@@ -78,14 +79,12 @@ lives in the git-ignored root `.env` for `pnpm db:types`.
 
 ## Next up
 
-**Phase 4 plan:** 4.1 data layer (staff, pay, leave, holidays, attendance) ✅ → 4.2 money
-(advances, ledger append-only, salary runs + payslips, leave balances, using core) → 4.3 web
+**Phase 4 plan:** 4.1 data layer (staff, pay, leave, holidays, attendance) ✅ live → 4.2 money
+(advances, ledger append-only, salary runs + payslips, leave balances) ✅ not live → 4.3 web
 screens on the design system (needs `packages/ui` from Phase 3) → settings screen for every rule.
 
-**Multi-shop (2026-10-23, not yet live):** push to apply `20261023000002_multi_shop.sql`, then
-`pnpm db:types` and check the website: shop switcher on home, "Add a shop" for owners. During
-the minute between Vercel deploying and CI migrating, the home page may error; reload after CI
-is green.
+**Multi-shop:** live (2026-10-23). Backend verified on the live DB; the switcher UI shows once
+you belong to 2+ shops.
 
 **Owner:** review the defaults in the settings reference (`docs/features/core-rules.md`); every
 rule is changeable, so this only decides what a new shop starts with. Phase 4 needs a settings
@@ -99,18 +98,22 @@ holidays, attendance, advances, ledger, salary runs, payslips, each with RLS tes
 
 Open items (low priority, fold into the next migration that touches these tables):
 
-- Advisor performance notes: `multiple_permissive_policies` on `roles`, `role_permissions`,
-  `person_roles` (the `*_write` "for all" policy overlaps `*_read` on SELECT; split it into
-  insert/update/delete); `unindexed_foreign_keys` on `audit_log.actor_id`,
-  `person_roles.role_id/shop_id`, `role_permissions.permission_key/shop_id`.
 - GitHub Actions warn that `actions/checkout@v4`, `setup-node@v4`, `pnpm/action-setup@v4`,
   `supabase/setup-cli@v1` run on deprecated Node 20; bump when newer majors are available.
 - Leaked-password protection in Supabase Auth: owner's call (may need a paid plan).
 
-Remaining tables from PLAN §5 (staff, pay_settings, attendance, ledger_entries, …) are added with
-the phase that first uses them (mostly Phase 4), each with RLS tests.
+Tables still to add (with the phase that uses them, each with RLS tests): `staff_documents`
+(storage), `requests` (leave/advance requests), expense tables (Phase 6), `attendance_codes`,
+`attendance_scans`, `invites`, `pin_credentials`, `push_tokens` (Phase 7).
 
 ## Session log
+
+- **2026-10-23** — Pushed: multi-shop + Phase 4.1 live (CI run 39950298454); live DB checked (4
+  migrations, 16 tables all RLS, owner data intact), advisors rerun, DB types regenerated.
+  **Phase 4.2** migration `20261023000004_money.sql`: advances, ledger_entries (append-only),
+  salary_runs, payslips (revisions), leave_balances, ledger/advance balance views,
+  finalize_payslip; advisor fixes folded in. 24 money tests (87 DB tests).
+  `supabase/vitest.config.ts` raises hook timeout (each file boots its own PGlite).
 
 - **2026-10-23** — **Phase 4.1** migration `20261023000003_staff_attendance.sql`: staff, pay
   settings, allowances, fixed deductions, leave templates + versions + assignments, holidays,

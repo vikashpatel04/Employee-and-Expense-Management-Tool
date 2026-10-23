@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Added — 2026-10-23 (Phase 4.2: money data)
+
+- Tables: advances, ledger_entries, salary_runs, payslips, leave_balances; views
+  ledger_balances, advance_balances; `finalize_payslip`; `staff.advance_cut_paise`.
+- Performance: `people_read` evaluates `auth.uid()` once; covering indexes for 4.1 foreign keys.
+
 ### Added — 2026-10-23 (Phase 4.1: data layer)
 
 - Tables: staff, pay_settings, allowances, fixed_deductions, leave_templates,
