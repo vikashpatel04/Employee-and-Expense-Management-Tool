@@ -32,6 +32,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
     items.push({ href: '/attendance', label: t('nav.attendance'), icon: 'calendar' });
   }
   if (can('staff.view')) items.push({ href: '/staff', label: t('nav.staff'), icon: 'users' });
+  if (can('salary.view')) items.push({ href: '/salary', label: t('nav.salary'), icon: 'rupee' });
 
   return (
     <div className="flex min-h-dvh flex-wrap items-stretch">

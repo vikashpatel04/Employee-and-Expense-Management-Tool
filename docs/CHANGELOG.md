@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added — 2026-10-23 (Phase 4.3 slice 4)
+
+- Salary run: work out, run again, review per person, finalize, pay.
+
 ### Added — 2026-10-23 (Phase 4.3 slice 3)
 
 - Attendance grid: month view, bulk Set to, Mark today present, paid-leave balance check.

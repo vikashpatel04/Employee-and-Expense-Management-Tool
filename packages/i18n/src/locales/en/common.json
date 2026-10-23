@@ -40,7 +40,8 @@
     "shopCount_one": "{{count}} shop",
     "shopCount_other": "{{count}} shops",
     "switchShop": "Switch shop. Current shop: {{name}}",
-    "attendance": "Attendance"
+    "attendance": "Attendance",
+    "salary": "Salary"
   },
   "staff": {
     "title": "Staff",
@@ -242,6 +243,108 @@
       "future": "Days after today can't be marked yet.",
       "leave": "{{name}} has {{left}} paid leave left this month.",
       "failed": "Couldn't save: {{reason}}"
+    }
+  },
+  "salary": {
+    "title": "Salary",
+    "status": {
+      "none": "Not worked out",
+      "draft": "Draft",
+      "finalized": "Finalized",
+      "paid": "Paid"
+    },
+    "subtitle_one": "{{month}} · {{count}} person",
+    "subtitle_other": "{{month}} · {{count}} people",
+    "workedOut": "worked out {{when}}",
+    "prevMonth": "Previous month",
+    "nextMonth": "Next month",
+    "empty": {
+      "title": "Salary for {{month}} isn't worked out yet",
+      "body": "Work it out from attendance, pay settings and leave rules. You can check every payslip before finalizing.",
+      "noPermission": "Nobody has worked out salary for this month yet."
+    },
+    "run": "Work out salary",
+    "runAgain": "Run again",
+    "finalize": "Finalize salary",
+    "finalizeOne": "Finalize",
+    "pay": "Pay",
+    "payAll": "Pay everyone",
+    "payMode": "Paid by",
+    "modes": {
+      "cash": "Cash",
+      "upi": "UPI",
+      "bank": "Bank",
+      "card": "Card"
+    },
+    "working": "Working…",
+    "totals": {
+      "net": "Net pay",
+      "gross": "Gross",
+      "deductions": "Deductions",
+      "advance": "Advance cuts"
+    },
+    "columns": {
+      "staff": "Staff",
+      "days": "Days",
+      "earned": "Earned",
+      "overtime": "Overtime",
+      "allowances": "Allowances",
+      "gross": "Gross",
+      "deductions": "Deductions",
+      "advance": "Advance cut",
+      "net": "Net pay",
+      "status": "Payslip",
+      "details": "Details"
+    },
+    "total_one": "Total · {{count}} person",
+    "total_other": "Total · {{count}} people",
+    "rowStatus": {
+      "draft": "Draft",
+      "finalized": "To pay",
+      "paid": "Paid",
+      "partly": "{{paid}} paid"
+    },
+    "revision": "Run {{n}}",
+    "showDetails": "Show payslip for {{name}}",
+    "hideDetails": "Hide payslip for {{name}}",
+    "lines": {
+      "earned": "Salary for {{days}} days",
+      "overtime": "Overtime",
+      "allowance": "{{name}}",
+      "leave_payout": "Unused leave paid out",
+      "deduction": "{{name}}",
+      "late_deduction": "Late deduction",
+      "advance_cut": "Advance cut",
+      "net": "Net pay"
+    },
+    "days": {
+      "title": "Days in {{month}}",
+      "payable": "{{payable}} payable days of {{employed}}.",
+      "leaveLeft": "Paid leave left after {{month}}: {{left}}."
+    },
+    "warnings": {
+      "title": "Check before finalizing",
+      "unmarked_days_one": "{{name}}: {{count}} working day not marked (not paid).",
+      "unmarked_days_other": "{{name}}: {{count}} working days not marked (not paid).",
+      "no_pay_settings_one": "{{name}}: no pay set for {{count}} day.",
+      "no_pay_settings_other": "{{name}}: no pay set for {{count}} days.",
+      "missing_check_out_one": "{{name}}: {{count}} day without check-out (not paid).",
+      "missing_check_out_other": "{{name}}: {{count}} days without check-out (not paid).",
+      "negative_net_pay": "{{name}}: deductions are more than earnings.",
+      "paid_leave_over_balance": "{{name}}: more paid leave marked than the balance allows.",
+      "openAttendance": "Open attendance"
+    },
+    "done": {
+      "run": "Worked out: {{created}} new, {{updated}} updated.",
+      "finalized_one": "Finalized {{count}} payslip.",
+      "finalized_other": "Finalized {{count}} payslips.",
+      "paid_one": "Paid {{count}} person.",
+      "paid_other": "Paid {{count}} people."
+    },
+    "footnote": "Finalizing posts each payslip to the staff ledger. Running again after finalizing creates a new run for anyone whose pay changed; finalizing it posts only the difference.",
+    "errors": {
+      "noPermission": "You can see salary but not run or pay it.",
+      "failed": "Couldn't finish: {{reason}}"
     }
   }
 }

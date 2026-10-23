@@ -54,8 +54,29 @@ Checked in the browser on 2026-10-23 against the live project: shell, staff list
 Checked in the browser on 2026-10-23 with Test Staff: Mark today present, paid leave refused
 ("0 paid leave left"), half day → Days 0.5; empty previous month.
 
+## Salary run — `(app)/salary`
+
+- `salary.view` sees it; `salary.run` works out, finalizes and pays. Month switcher (no future
+  months); status chip Not worked out / Draft / Finalized / Paid; totals (net, gross, deductions,
+  advance cuts); "Check before finalizing" lists payslip warnings (unmarked days, no pay set,
+  missing check-out, negative net, paid leave over balance) with a link to attendance.
+- Table per person (design: "Web · salary run review"): days, earned, overtime, allowances
+  (incl. leave payout), gross, deductions, advance cut, net, payslip status. A row expands to the
+  payslip lines, the month's days and Finalize / Pay for that person.
+- **Work out / Run again** (`runSalary`): `src/lib/salary-month.ts` `computeMonth` runs
+  `calculateSalary` and the leave roll (opening = last month's carried; payout days fed back in)
+  for everyone employed that month. A draft is updated in place; after finalizing, a new revision
+  is created only if lines or the advance cut changed (key-order-safe compare, jsonb reorders).
+- **Finalize** (`finalizeSalary`, all drafts or one): `finalize_payslip` posts the ledger lines
+  and the leave month. **Pay** (`paySalary`, one or everyone, with mode): a `salary_payment` for
+  what's left of net pay (payments minus their reversals; `paidByPayslip`).
+
+Checked in the browser on 2026-10-23 with Test Staff, **drafts only**: 0.5 days → ₹355 (22,000 ÷
+31 × 0.5), unmarked-days warning, Run again → "0 new, 1 updated". Finalize and Pay were not run on
+the live shop: ledger lines are permanent, so a finalized Test Staff could never be deleted.
+
 ## Not built yet
 
 Staff detail: attendance calendar, edit details/leaving date, allowances and deductions editing,
-leave template assignment, advance limit/cut, Staffora invite; salary run, advances, holidays and leave-template screens, CSV export,
+leave template assignment, advance limit/cut, Staffora invite; advances (give/repay), holidays and leave-template screens, CSV export, payslip PDF/print,
 requests, settings screens for every rule in `docs/features/core-rules.md`.

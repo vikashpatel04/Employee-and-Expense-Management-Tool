@@ -2,6 +2,18 @@
 
 Choices made during the build that PLAN.md doesn't spell out. Newest first.
 
+## 2026-10-23 — Salary run screen
+
+- The website works out payslips with `packages/core` on the server (`computeMonth`) and stores
+  them as drafts; the database's `finalize_payslip` posts the ledger. Same inputs as the
+  attendance grid, so the grid's Days and the payslip agree.
+- Running again: drafts are updated in place; finalized payslips get a new revision only when
+  their lines or advance cut changed. Staff who no longer qualify keep any old draft (rare; delete
+  by hand for now).
+- Paying is per finalized payslip for whatever is left of net pay; "Pay everyone" uses one mode.
+  Partial payments and undo-payment screens come later (the database already supports both).
+- "Print payslips" from the design isn't built yet (PDF later).
+
 ## 2026-10-23 — Attendance grid
 
 - The grid computes everything with `packages/core` on the server (same inputs the salary run

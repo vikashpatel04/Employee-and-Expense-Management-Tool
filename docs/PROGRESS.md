@@ -4,16 +4,16 @@ _Last updated: 2026-10-23_
 
 ## Phase status (docs/PLAN.md §8)
 
-| #   | Phase                        | Status                                                                                                                         |
-| --- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| 1   | Foundation                   | **Done** (2026-10-23)                                                                                                          |
-| 2   | Core logic (`packages/core`) | **Done** (2026-10-23): 201 tests, every rule a setting; `docs/features/core-rules.md`                                          |
-| 3   | Design                       | **Design system v1 done** in Claude Design (`docs/DESIGN.md`); key screens + `packages/ui` to do                               |
-| 4   | FinCrew web core             | **In progress**: data layer live; 4.3 screens: slices 1–3 (shell, staff, staff detail + pay, attendance grid) done and checked |
-| 5   | FinCrew Android              | Not started                                                                                                                    |
-| 6   | Expenses                     | Not started                                                                                                                    |
-| 7   | Staffora                     | Not started                                                                                                                    |
-| 8   | Polish                       | Not started                                                                                                                    |
+| #   | Phase                        | Status                                                                                                                                     |
+| --- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1   | Foundation                   | **Done** (2026-10-23)                                                                                                                      |
+| 2   | Core logic (`packages/core`) | **Done** (2026-10-23): 201 tests, every rule a setting; `docs/features/core-rules.md`                                                      |
+| 3   | Design                       | **Design system v1 done** in Claude Design (`docs/DESIGN.md`); key screens + `packages/ui` to do                                           |
+| 4   | FinCrew web core             | **In progress**: data layer live; 4.3 screens: slices 1–4 (shell, staff, staff detail + pay, attendance grid, salary run) done and checked |
+| 5   | FinCrew Android              | Not started                                                                                                                                |
+| 6   | Expenses                     | Not started                                                                                                                                |
+| 7   | Staffora                     | Not started                                                                                                                                |
+| 8   | Polish                       | Not started                                                                                                                                |
 
 ## Phase 1 — Foundation
 
@@ -108,6 +108,11 @@ Tables still to add (with the phase that uses them, each with RLS tests): `staff
 `attendance_scans`, `invites`, `pin_credentials`, `push_tokens` (Phase 7).
 
 ## Session log
+
+- **2026-10-23** — **Slice 4: salary run** (work out, review with lines/days/warnings, finalize,
+  pay). Checked with Test Staff as a draft (₹355). Not finalized on the live shop: ledger lines
+  are permanent and would make Test Staff undeletable — owner to decide. Next: advances and
+  undo payment, holidays + leave templates + rule settings screens, staff extras, payslip PDF.
 
 - **2026-10-23** — **Slice 3: attendance grid** (month view, select days + Set to, Mark today
   present, paid-leave balance check, past-day permission). Checked with Test Staff (today is now
