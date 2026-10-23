@@ -20,6 +20,9 @@ Staff, salary and expense management for one shop. Read these before doing anyth
   the live database (CI `migrate` job), so **never edit, rename or delete a migration that is on
   `main`**; CI blocks it. New files need a later timestamp than the newest one.
 - Every table: `shop_id`, RLS on, and tests in `supabase/tests/` as owner / custom role / staff.
+- SQL helpers and trigger functions go in the `private` schema (not exposed by the API); only
+  functions the apps call go in `public`. New functions have no anon/PUBLIC execute by default:
+  grant explicitly in the migration. Check with `supabase db advisors` after deploying.
 - All UI strings go through `packages/i18n`.
 
 ## Commands

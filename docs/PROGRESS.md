@@ -27,6 +27,10 @@ Done:
       `current_shop_id()`, `is_owner()`, `has_permission(key)`, `my_permissions()`; RLS on all
       tables; owner protection; append-only audit log; `setup_shop()`, `shop_exists()`, `ping()`
 - [x] RLS test harness on PGlite + 21 tests (owner / Supervisor role / staff / stranger / anon)
+- [x] Migration `20261023000001_harden_functions.sql` (after the Supabase security advisor):
+      helpers + trigger functions moved to a non-exposed `private` schema; anon can call only
+      `ping()`; future functions not executable by anon/PUBLIC by default; `ping()` search_path
+      fixed. 7 more tests (28 DB tests total)
 - [x] FinCrew web (Next.js 16): email+password sign-in, first-run "Set up your shop", home page,
       sign-out, session refresh in `src/proxy.ts`
 - [x] Supabase `config.toml` with public sign-ups disabled
@@ -40,18 +44,24 @@ Done:
         (CI run 39898016456, 2026-10-23)
   - [x] Verify live DB: 7 tables + 8 functions present (from generated types); anonymous API
         calls refused on every table, insert, `setup_shop`, `shop_exists`; `ping()` answers
-  - [ ] Create your owner login in Supabase Auth; sign in locally; run shop setup
+  - [x] Owner login created; signed in locally; shop set up ("Dhanalakshmi Textiles", owner
+        Dinesh Patel). Verified in DB: 1 shop, 1 owner linked to the login, 22 permissions,
+        2 audit rows, second `setup_shop` refused
+  - [ ] Push `main` so CI applies `20261023000001_harden_functions.sql`, then rerun
+        `supabase db advisors` (expected left: intended authenticated-callable functions,
+        Supabase's own `rls_auto_enable`, leaked-password protection)
   - [ ] Import the repo in Vercel (root `apps/fincrew-web`), set env vars
   - [x] `pnpm db:types` (real types committed), cast removed from `session.ts`
 
-Verified locally: `pnpm typecheck`, `pnpm test` (42 tests), `pnpm build`; sign-in page renders and
-`/` redirects to `/login` when signed out. **Not yet verified against a real Supabase project.**
+Verified: `pnpm typecheck`, `pnpm test` (49 tests), `pnpm build`; end-to-end sign-in and shop
+setup against the live project (2026-10-23).
 
 ## Migrations applied to the live project
 
-| Migration                       | Applied    | How                             |
-| ------------------------------- | ---------- | ------------------------------- |
-| `20261022000001_foundation.sql` | 2026-10-23 | CI migrate job, run 39898016456 |
+| Migration                             | Applied                        | How                             |
+| ------------------------------------- | ------------------------------ | ------------------------------- |
+| `20261022000001_foundation.sql`       | 2026-10-23                     | CI migrate job, run 39898016456 |
+| `20261023000001_harden_functions.sql` | pending — applies on next push | CI migrate job                  |
 
 Migrations are applied by the CI **migrate** job on every push to `main`, so **everything in
 `supabase/migrations/` on `main` counts as applied** and must never change (CI enforces this).
@@ -70,6 +80,10 @@ Remaining tables from PLAN §5 (staff, pay_settings, attendance, ledger_entries,
 the phase that first uses them (mostly Phase 4), each with RLS tests.
 
 ## Session log
+
+- **2026-10-23** — Owner login + shop setup done against the live project and verified in the DB
+  (`supabase db query --linked --project-ref …`). Security advisor run → hardening migration
+  `20261023000001_harden_functions.sql` (not yet pushed). Live checks use the CLI login only.
 
 - **2026-10-23** — Live DB verified from outside (schema via generated types, anonymous access
   refused via REST). Real DB types generated; `db-types.mjs` validates the ref.

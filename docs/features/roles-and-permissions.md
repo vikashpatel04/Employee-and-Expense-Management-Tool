@@ -12,13 +12,14 @@ PLAN §3. Status: **database done** (Phase 1); management screens come in Phase 
 
 ## Database
 
-| Piece                 | Where                                                                             |
-| --------------------- | --------------------------------------------------------------------------------- |
-| Permission keys       | `permissions` table + `packages/core/src/permissions.ts` (kept in sync by a test) |
-| `has_permission(key)` | used in every RLS policy                                                          |
-| `my_permissions()`    | apps call it to show/hide UI                                                      |
-| Policies              | `supabase/migrations/20261022000001_foundation.sql`                               |
-| Tests                 | `supabase/tests/foundation.test.ts`                                               |
+| Piece                         | Where                                                                                         |
+| ----------------------------- | --------------------------------------------------------------------------------------------- |
+| Permission keys               | `permissions` table + `packages/core/src/permissions.ts` (kept in sync by a test)             |
+| `private.has_permission(key)` | used in every RLS policy                                                                      |
+| `my_permissions()`            | apps call it to show/hide UI                                                                  |
+| Policies                      | `supabase/migrations/20261022000001_foundation.sql` (+ `20261023000001_harden_functions.sql`) |
+| Tests                         | `supabase/tests/foundation.test.ts`                                                           |
+| Function exposure             | helpers in `private` (not on the API); `supabase/tests/functions.test.ts`                     |
 
 ## What each person can see (today)
 

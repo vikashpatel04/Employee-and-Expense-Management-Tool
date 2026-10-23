@@ -2,12 +2,27 @@
 
 Choices made during the build that PLAN.md doesn't spell out. Newest first.
 
+## 2026-10-23 — Function exposure (security advisor)
+
+- **Internal functions live in a `private` schema** that PostgREST doesn't expose:
+  `current_person_id`, `current_shop_id`, `is_owner`, `has_permission` and the trigger functions.
+  Only functions the apps call live in `public` (`my_permissions`, `setup_shop`, `shop_exists`,
+  `ping`); a test pins that list.
+- **New functions get no execute grant for anon/PUBLIC by default** (default privileges changed).
+  Each migration grants what it needs explicitly. Policy helpers must be granted to
+  `authenticated`, because RLS runs as the signed-in user.
+- **Remaining advisor warnings are accepted:** `authenticated` can call `my_permissions`,
+  `setup_shop`, `shop_exists` (intended; they guard themselves) and the private helpers (needed
+  by RLS, not reachable over the API). `rls_auto_enable` is Supabase's own event-trigger function
+  for auto-enabling RLS; left alone. Leaked-password protection is an Auth dashboard setting
+  (may need a paid plan); owner chooses.
+- **The shop's audit row has no actor**: `setup_shop` inserts the shop before the owner's person
+  row exists. The owner row right after it carries the actor.
+
 ## 2026-10-23 — Live project checks
 
-- **Helper functions stay callable by anonymous users** (`has_permission`, `is_owner`,
-  `my_permissions`, `current_*`), via Supabase's default grant. Checked live: they return
-  `false` / `[]` / `null` and reveal no data. Optional hardening: revoke from `anon` in a later
-  migration.
+- ~~Helper functions stay callable by anonymous users~~ — superseded the same day by the
+  `private` schema move above.
 - **Generated `packages/db/src/database.types.ts` is committed and excluded from Prettier**, so
   regenerating only shows real schema changes in diffs.
 

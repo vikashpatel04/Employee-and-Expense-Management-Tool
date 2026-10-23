@@ -9,6 +9,13 @@
 - `scripts/check-migrations.sh`: CI fails on edits to applied migrations or out-of-order new ones.
 - Root scripts `pnpm db:login`, `pnpm db:types`; root `.env.example` for the project ref.
 
+### Security — 2026-10-23
+
+- Migration `20261023000001_harden_functions.sql`: helper and trigger functions moved to a
+  non-exposed `private` schema; anonymous users can only call `ping()`; new functions are no
+  longer executable by anon/PUBLIC by default; `ping()` search_path fixed. Tests in
+  `supabase/tests/functions.test.ts`.
+
 ### Changed — 2026-10-23
 
 - `packages/db` now has real types generated from the live project; removed the temporary cast in
