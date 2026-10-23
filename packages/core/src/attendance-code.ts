@@ -13,6 +13,12 @@ export interface CodeSettings {
   /** After any accepted check, ignore further ones for this long (double taps). */
   cooldownMinutes: number;
   checkOutRequired: boolean;
+  /** Wrong codes that trigger a wait… */
+  maxWrongCodes: number;
+  /** …when they happen within this many minutes… */
+  wrongCodeWindowMinutes: number;
+  /** …and how long the wait is, from the last of them. */
+  lockoutMinutes: number;
 }
 
 export const DEFAULT_CODE_SETTINGS: CodeSettings = {
@@ -20,11 +26,10 @@ export const DEFAULT_CODE_SETTINGS: CodeSettings = {
   minGapMinutes: 30,
   cooldownMinutes: 2,
   checkOutRequired: true,
+  maxWrongCodes: 5,
+  wrongCodeWindowMinutes: 10,
+  lockoutMinutes: 10,
 };
-
-export const MAX_WRONG_CODES = 5;
-export const WRONG_CODE_WINDOW_MINUTES = 10;
-export const LOCKOUT_MINUTES = 10;
 
 const MIN = 60_000;
 const DAY = 1440 * MIN;
@@ -46,16 +51,17 @@ export type CheckResult =
   | { ok: false; reason: 'locked' | 'cooldown' | 'too_soon'; retryAt: number }
   | { ok: false; reason: 'wrong_code' | 'already_checked_out' };
 
-/** When the wrong-code lockout ends (0 if not locked): 5 wrong codes within 10 minutes. */
-function lockedUntil(attempts: readonly CheckAttempt[]): number {
+/** When the wrong-code lockout ends (0 if not locked). */
+function lockedUntil(attempts: readonly CheckAttempt[], settings: CodeSettings): number {
+  const { maxWrongCodes, wrongCodeWindowMinutes, lockoutMinutes } = settings;
   const wrong = attempts
     .filter((a) => a.result === 'wrong_code')
     .map((a) => a.at)
     .sort((a, b) => a - b);
   let until = 0;
-  for (let i = MAX_WRONG_CODES - 1; i < wrong.length; i++) {
-    if (wrong[i]! - wrong[i - MAX_WRONG_CODES + 1]! <= WRONG_CODE_WINDOW_MINUTES * MIN) {
-      until = Math.max(until, wrong[i]! + LOCKOUT_MINUTES * MIN);
+  for (let i = maxWrongCodes - 1; i < wrong.length; i++) {
+    if (wrong[i]! - wrong[i - maxWrongCodes + 1]! <= wrongCodeWindowMinutes * MIN) {
+      until = Math.max(until, wrong[i]! + lockoutMinutes * MIN);
     }
   }
   return until;
@@ -74,7 +80,7 @@ export function evaluateCheck(input: {
 }): CheckResult {
   const { now, settings, today } = input;
 
-  const until = lockedUntil(input.attempts);
+  const until = lockedUntil(input.attempts, settings);
   if (now < until) return { ok: false, reason: 'locked', retryAt: until };
 
   if (!input.codeMatches) return { ok: false, reason: 'wrong_code' };

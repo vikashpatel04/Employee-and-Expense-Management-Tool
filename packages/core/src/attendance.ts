@@ -5,6 +5,7 @@
  */
 import { addDays, compareDates, eachDay, weekday as weekdayOf, type BusinessDate } from './dates';
 import type { LeaveTemplateVersion } from './leave';
+import { DEFAULT_PAY_RULES, type PayRules } from './settings';
 
 export const ATTENDANCE_STATUSES = [
   'present',
@@ -39,15 +40,21 @@ export interface ScheduledDay {
   paid: boolean;
 }
 
-/** What the calendar says about a day before anyone marks attendance. A holiday wins over a weekly off. */
+/**
+ * What the calendar says about a day before anyone marks attendance. With no template there are
+ * no weekly offs. When a holiday falls on a weekly off, `holidayOnWeeklyOff` decides.
+ */
 export function scheduledDay(
   date: BusinessDate,
   template: LeaveTemplateVersion | undefined,
   holidays: ReadonlyMap<BusinessDate, Holiday>,
+  holidayOnWeeklyOff: PayRules['holidayOnWeeklyOff'] = DEFAULT_PAY_RULES.holidayOnWeeklyOff,
 ): ScheduledDay {
   const holiday = holidays.get(date);
-  if (holiday) return { date, kind: 'holiday', paid: holiday.paid };
   const off = template?.weeklyOffs.find((o) => o.weekday === weekdayOf(date));
+  if (holiday && !(off && holidayOnWeeklyOff === 'weekly_off')) {
+    return { date, kind: 'holiday', paid: holiday.paid };
+  }
   if (off) return { date, kind: 'weekly_off', paid: off.paid };
   return { date, kind: 'working', paid: false };
 }
@@ -62,9 +69,9 @@ export interface DayResult {
   source: 'record' | 'auto' | 'none';
   /** Pay for the day itself, in half-day units (0–2). */
   baseUnits: number;
-  /** Half-day units worked on a weekly off or holiday, paid as an extra working day. */
+  /** Half-day units worked on a weekly off or holiday, paid on top (see `PayRules.offDayWork`). */
   extraUnits: number;
-  /** A paid weekly off made unpaid by the sandwich rule. */
+  /** A paid off day made unpaid by the sandwich rule. */
   sandwiched: boolean;
   record?: AttendanceRecord;
 }
@@ -74,6 +81,9 @@ const WORK_UNITS: Partial<Record<AttendanceStatus, number>> = {
   half_day: 1,
   paid_leave: 2,
 };
+
+/** Marks that can replace an off day when `markOnOffDay` is `apply`. */
+const OFF_DAY_OVERRIDES: readonly AttendanceStatus[] = ['absent', 'unpaid_leave', 'paid_leave'];
 
 export interface EvaluateDaysInput {
   /** The range to evaluate, usually a calendar month. */
@@ -86,29 +96,35 @@ export interface EvaluateDaysInput {
   holidays: readonly Holiday[];
   /** Records for the range, plus neighbouring days for the sandwich rule at month edges. */
   records: readonly AttendanceRecord[];
-  /** Shop setting: pay presence on an off day as an extra working day (default on). */
-  extraWorkingDayPay: boolean;
+  /** The shop's pay rules (with any staff override applied). */
+  rules: PayRules;
 }
 
 /** How far the sandwich rule looks for the nearest working day on each side. */
 const SANDWICH_SEARCH_DAYS = 31;
 
 export function evaluateDays(input: EvaluateDaysInput): DayResult[] {
+  const { rules } = input;
   const holidays = new Map(input.holidays.map((h) => [h.date, h]));
   const records = new Map(input.records.map((r) => [r.date, r]));
   const employed = (date: BusinessDate) =>
     compareDates(date, input.joiningDate) >= 0 &&
     (!input.leavingDate || compareDates(date, input.leavingDate) <= 0);
-  const schedule = (date: BusinessDate) => scheduledDay(date, input.templateOn(date), holidays);
+  const schedule = (date: BusinessDate) =>
+    scheduledDay(date, input.templateOn(date), holidays, rules.holidayOnWeeklyOff);
 
-  /** Nearest working day in `step` direction is marked absent (false if unknown or not employed). */
-  const neighbourAbsent = (date: BusinessDate, step: 1 | -1): boolean => {
+  /** The nearest working day in `step` direction has one of the trigger statuses. */
+  const neighbourAway = (
+    date: BusinessDate,
+    step: 1 | -1,
+    triggers: readonly string[],
+  ): boolean => {
     let d = date;
     for (let i = 0; i < SANDWICH_SEARCH_DAYS; i++) {
       d = addDays(d, step);
       if (!employed(d)) return false;
       if (schedule(d).kind !== 'working') continue;
-      return records.get(d)?.status === 'absent';
+      return triggers.includes(records.get(d)?.status ?? 'unmarked');
     }
     return false;
   };
@@ -123,7 +139,10 @@ export function evaluateDays(input: EvaluateDaysInput): DayResult[] {
     }
 
     if (scheduled.kind === 'working') {
-      if (!record) return { ...base, status: 'unmarked', source: 'none', baseUnits: 0 };
+      if (!record) {
+        const units = rules.unmarkedDay === 'paid' ? 2 : 0;
+        return { ...base, status: 'unmarked', source: 'none', baseUnits: units };
+      }
       return {
         ...base,
         status: record.status,
@@ -142,22 +161,40 @@ export function evaluateDays(input: EvaluateDaysInput): DayResult[] {
           : 0
       : 0;
     if (worked > 0) {
+      const extra =
+        rules.offDayWork === 'extra'
+          ? worked
+          : rules.offDayWork === 'replace'
+            ? Math.max(0, worked - offUnits)
+            : 0;
       return {
         ...base,
         status: record!.status,
         source: 'record',
         baseUnits: offUnits,
-        extraUnits: input.extraWorkingDayPay ? worked : 0,
+        extraUnits: extra,
+      };
+    }
+
+    // Absent / leave marked on an off day replaces it when the shop says so.
+    if (record && rules.markOnOffDay === 'apply' && OFF_DAY_OVERRIDES.includes(record.status)) {
+      return {
+        ...base,
+        status: record.status,
+        source: 'record',
+        baseUnits: WORK_UNITS[record.status] ?? 0,
       };
     }
 
     const status: AttendanceStatus = scheduled.kind === 'holiday' ? 'holiday' : 'weekly_off';
+    const sandwich = input.templateOn(date)?.sandwich;
     const sandwiched =
-      scheduled.kind === 'weekly_off' &&
       scheduled.paid &&
-      input.templateOn(date)?.sandwichRule === true &&
-      neighbourAbsent(date, -1) &&
-      neighbourAbsent(date, 1);
+      sandwich?.enabled === true &&
+      sandwich.appliesTo.includes(scheduled.kind) &&
+      (sandwich.sides === 'both'
+        ? neighbourAway(date, -1, sandwich.triggers) && neighbourAway(date, 1, sandwich.triggers)
+        : neighbourAway(date, -1, sandwich.triggers) || neighbourAway(date, 1, sandwich.triggers));
 
     return {
       ...base,
@@ -214,6 +251,16 @@ export function summarizeDays(days: readonly DayResult[]): DaySummary {
     s.extraWorkingDays += d.extraUnits / 2;
     if (d.sandwiched) s.sandwiched++;
 
+    if (
+      d.scheduled.kind !== 'working' &&
+      OFF_DAY_OVERRIDES.includes(d.status as AttendanceStatus)
+    ) {
+      // An absence or leave that replaced an off day (markOnOffDay: apply).
+      if (d.status === 'absent') s.absent++;
+      else if (d.status === 'paid_leave') s.paidLeave++;
+      else s.unpaidLeave++;
+      continue;
+    }
     if (d.scheduled.kind !== 'working') {
       const paid = d.scheduled.paid && !d.sandwiched;
       if (d.scheduled.kind === 'weekly_off') paid ? s.paidWeeklyOff++ : s.unpaidWeeklyOff++;
@@ -247,7 +294,7 @@ export function summarizeDays(days: readonly DayResult[]): DaySummary {
   return s;
 }
 
-/** Paid leave days used (on working days), for the leave balance. */
+/** Paid leave days used, for the leave balance. */
 export function paidLeaveUsed(days: readonly DayResult[]): number {
-  return days.filter((d) => d.scheduled.kind === 'working' && d.status === 'paid_leave').length;
+  return days.filter((d) => d.status === 'paid_leave').length;
 }

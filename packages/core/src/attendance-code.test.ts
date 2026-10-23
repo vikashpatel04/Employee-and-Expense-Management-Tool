@@ -126,3 +126,24 @@ describe('isMissingCheckOut', () => {
     ).toBe(false);
   });
 });
+
+describe('lockout settings', () => {
+  it('uses the shop’s wrong-code count, window and wait', () => {
+    const settings = {
+      ...DEFAULT_CODE_SETTINGS,
+      maxWrongCodes: 3,
+      wrongCodeWindowMinutes: 5,
+      lockoutMinutes: 15,
+    };
+    const attempts: CheckAttempt[] = [4, 2, 1].map((m) => ({
+      at: t0 - m * MIN,
+      result: 'wrong_code',
+    }));
+    expect(check({ attempts, settings })).toEqual({
+      ok: false,
+      reason: 'locked',
+      retryAt: t0 + 14 * MIN,
+    });
+    expect(check({ attempts })).toEqual({ ok: true, kind: 'in' }); // defaults: 5 needed
+  });
+});

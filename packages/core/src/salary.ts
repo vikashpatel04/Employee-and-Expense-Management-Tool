@@ -1,8 +1,11 @@
 /**
  * Salary for one staff member and one month (docs/PLAN.md §4.6).
  *
- *   day_rate           = monthly_salary / D   (D = actual days in the month)
- *   earned             = day_rate × payable_days   (daily: wage × payable days; hourly: hours × rate)
+ *   day_rate           = monthly_salary / B   (B = actual days in the month, or a fixed number:
+ *                                             PayRules.dayRateBasis)
+ *   earned             = monthly − unpaid days × day_rate + extra days × day_rate
+ *                        (= day_rate × payable_days when B is the month's days;
+ *                         daily: wage × payable days; hourly: hours × rate)
  *   gross              = earned + overtime + allowances + leave payout
  *   net_before_advance = gross − (fixed deductions + late deductions)
  *   advance_cut        = scheduled cut, capped at what's outstanding and at net_before_advance
@@ -10,6 +13,7 @@
  *
  * Every payslip line is computed exactly (fractions) and rounded to the rupee ONCE.
  * Lines carry kinds and names, never display text: the apps translate them.
+ * Every rule choice comes from `rules` (shop) and the staff member's pay-settings overrides.
  */
 import {
   evaluateDays,
@@ -24,7 +28,7 @@ import { effectiveOn, type Dated } from './dated';
 import {
   applyLatePolicy,
   dayLateness,
-  lateDeduction,
+  lateDayCharge,
   resolveLatePolicy,
   shiftMinutes,
   type LateOutcome,
@@ -34,6 +38,7 @@ import {
 import type { LeaveTemplateVersion } from './leave';
 import type { Paise } from './money';
 import { rat, ratAdd, ratCompare, ratMul, ratToRupeePaise, ZERO, type Rat } from './rational';
+import { withOverride, type PayRules } from './settings';
 
 export type PayType = 'monthly' | 'daily' | 'hourly';
 
@@ -45,7 +50,12 @@ export interface PaySettings extends Dated {
   /** Per hour. */
   overtimeRate?: Paise;
   shift?: Shift;
+  /** Hourly staff: hours that make a day, for leave payout. Defaults to the shift length. */
+  hoursPerDay?: number;
+  /** This person's exceptions to the shop's late policy. */
   latePolicyOverride?: Partial<LatePolicy>;
+  /** This person's exceptions to the shop's pay rules. */
+  payRulesOverride?: Partial<PayRules>;
 }
 
 export interface Allowance {
@@ -77,7 +87,8 @@ export interface SalaryInput {
   records: readonly AttendanceRecord[];
   allowances: readonly Allowance[];
   deductions: readonly FixedDeduction[];
-  shop: { latePolicy: LatePolicy; extraWorkingDayPay: boolean };
+  /** The shop's rules; the staff member's overrides are applied on top. */
+  rules: { pay: PayRules; late: LatePolicy };
   /** Unused paid leave paid out this month (from the leave balance roll). */
   leavePayoutDays?: number;
   advance?: { scheduledCut: Paise; outstanding: Paise };
@@ -123,14 +134,22 @@ export interface SalaryResult {
 
 const WORKED_UNITS: Partial<Record<string, number>> = { present: 2, half_day: 1 };
 
-function dayRate(s: PaySettings, daysInThisMonth: number): Rat {
+/** One day's pay for late charges and leave payout. `basisDays` divides a monthly salary. */
+function dayRate(s: PaySettings, basisDays: number): Rat {
   switch (s.payType) {
     case 'monthly':
-      return rat(s.monthlySalary ?? 0, daysInThisMonth);
+      return rat(s.monthlySalary ?? 0, basisDays);
     case 'daily':
       return rat(s.dailyWage ?? 0);
-    case 'hourly':
-      return s.shift ? rat((s.hourlyRate ?? 0) * shiftMinutes(s.shift), 60) : ZERO;
+    case 'hourly': {
+      const minutes =
+        s.hoursPerDay !== undefined
+          ? Math.round(s.hoursPerDay * 60)
+          : s.shift
+            ? shiftMinutes(s.shift)
+            : 0;
+      return rat((s.hourlyRate ?? 0) * minutes, 60);
+    }
   }
 }
 
@@ -143,6 +162,14 @@ export function calculateSalary(input: SalaryInput): SalaryResult {
   const from = monthStart(input.year, input.month);
   const to = monthEnd(input.year, input.month);
 
+  const settingsOn = (date: BusinessDate) => effectiveOn(input.paySettings, date);
+  // The month uses the overrides in effect on its last day of employment (or its last day).
+  const closingDate =
+    input.leavingDate && compareDates(input.leavingDate, to) < 0 ? input.leavingDate : to;
+  const closingSettings = settingsOn(closingDate);
+  const payRules = withOverride(input.rules.pay, closingSettings?.payRulesOverride);
+  const basis = payRules.dayRateBasis.mode === 'fixed_days' ? payRules.dayRateBasis.days : D;
+
   const days = evaluateDays({
     from,
     to,
@@ -151,15 +178,12 @@ export function calculateSalary(input: SalaryInput): SalaryResult {
     templateOn: input.templateOn,
     holidays: input.holidays,
     records: input.records,
-    extraWorkingDayPay: input.shop.extraWorkingDayPay,
+    rules: payRules,
   });
   const employed = days.filter((d) => d.status !== 'not_employed');
-  const settingsOn = (date: BusinessDate) => effectiveOn(input.paySettings, date);
-  const lastEmployed = employed.at(-1);
-  const closingSettings = lastEmployed ? settingsOn(lastEmployed.date) : undefined;
 
   // ---- Late policy: measure, then decide free / charged / half day for the month.
-  const policy = resolveLatePolicy(input.shop.latePolicy, closingSettings?.latePolicyOverride);
+  const policy = resolveLatePolicy(input.rules.late, closingSettings?.latePolicyOverride);
   const measured = employed.flatMap((day) => {
     const s = settingsOn(day.date);
     const rec = day.record;
@@ -202,8 +226,14 @@ export function calculateSalary(input: SalaryInput): SalaryResult {
             rat((s.hourlyRate ?? 0) * Math.max(0, rec.checkOut - rec.checkIn), 60),
           );
       }
+    } else if (s.payType === 'monthly') {
+      // The day's share of the month, adjusted by what the day is worth at the day rate:
+      // a fully paid day (2 units) adds exactly 1/D of the salary whatever the basis.
+      const monthly = s.monthlySalary ?? 0;
+      const units = day.baseUnits + day.extraUnits;
+      earned = ratAdd(earned, ratAdd(rat(monthly, D), rat(monthly * (units - 2), 2 * basis)));
     } else {
-      earned = ratAdd(earned, ratMul(dayRate(s, D), rat(day.baseUnits + day.extraUnits, 2)));
+      earned = ratAdd(earned, ratMul(dayRate(s, basis), rat(day.baseUnits + day.extraUnits, 2)));
     }
     if (rec?.overtimeMinutes) {
       overtime = ratAdd(overtime, rat((s.overtimeRate ?? 0) * rec.overtimeMinutes, 60));
@@ -212,7 +242,7 @@ export function calculateSalary(input: SalaryInput): SalaryResult {
     if (l?.outcome === 'charged' && s.shift) {
       lateCharge = ratAdd(
         lateCharge,
-        lateDeduction(l.chargedMinutes, dayRate(s, D), shiftMinutes(s.shift)),
+        lateDayCharge(l, policy, dayRate(s, basis), shiftMinutes(s.shift)),
       );
     }
   }
@@ -232,6 +262,7 @@ export function calculateSalary(input: SalaryInput): SalaryResult {
     if (amount !== 0) lines.push(name === undefined ? { kind, amount } : { kind, name, amount });
   };
 
+  if (ratCompare(earned, ZERO) < 0) earned = ZERO; // a fixed basis can't take pay below zero
   push('earned', earned);
   push('overtime', overtime);
   if (eligible > 0) {
@@ -247,7 +278,7 @@ export function calculateSalary(input: SalaryInput): SalaryResult {
     }
   }
   if (input.leavePayoutDays && closingSettings) {
-    push('leave_payout', ratMul(dayRate(closingSettings, D), rat(input.leavePayoutDays)));
+    push('leave_payout', ratMul(dayRate(closingSettings, basis), rat(input.leavePayoutDays)));
   }
   if (eligible > 0) {
     for (const x of input.deductions) {

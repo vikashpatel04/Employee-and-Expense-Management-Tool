@@ -7,7 +7,7 @@ _Last updated: 2026-10-23_
 | #   | Phase                        | Status                                                                                           |
 | --- | ---------------------------- | ------------------------------------------------------------------------------------------------ |
 | 1   | Foundation                   | **Done** (2026-10-23)                                                                            |
-| 2   | Core logic (`packages/core`) | **Done** (2026-10-23): 154 tests, rules in `docs/features/core-rules.md`                         |
+| 2   | Core logic (`packages/core`) | **Done** (2026-10-23): 201 tests, every rule a setting; `docs/features/core-rules.md`            |
 | 3   | Design                       | **Design system v1 done** in Claude Design (`docs/DESIGN.md`); key screens + `packages/ui` to do |
 | 4   | FinCrew web core             | Not started                                                                                      |
 | 5   | FinCrew Android              | Not started                                                                                      |
@@ -76,7 +76,9 @@ lives in the git-ignored root `.env` for `pnpm db:types`.
 
 ## Next up
 
-**Owner:** confirm the 13 rule interpretations in `docs/DECISIONS.md` (2026-10-23, Phase 2).
+**Owner:** review the defaults in the settings reference (`docs/features/core-rules.md`); every
+rule is changeable, so this only decides what a new shop starts with. Phase 4 needs a settings
+screen for them.
 
 **Phase 3 (Design) remainder:** key screens as Design artifacts on the design system, then
 `packages/ui` generated from its `tokens.json` (`docs/DESIGN.md`). **Phase 4 (FinCrew web core)**
@@ -98,6 +100,13 @@ Remaining tables from PLAN §5 (staff, pay_settings, attendance, ledger_entries,
 the phase that first uses them (mostly Phase 4), each with RLS tests.
 
 ## Session log
+
+- **2026-10-23** — Owner asked for no hard-coded rules and support for staff with no leave. Added
+  `settings.ts` (shop rules, defaults, per-staff overrides, validation); every Phase 2
+  interpretation is now a setting (day-rate basis, off-day work, unmarked days, holiday vs
+  weekly off, marks on off days, sandwich triggers/sides/applies-to, leave accrual, late count
+  start, half-day threshold on/off, free-day use, fixed per-day late charge, lockout values,
+  hourly hours per day). No-template staff supported. 201 core tests.
 
 - **2026-10-23** — **Phase 2 done.** `packages/core`: exact fractions (`rational`), dates,
   effective-dated versions, leave templates + carry-over, attendance → payable days + sandwich

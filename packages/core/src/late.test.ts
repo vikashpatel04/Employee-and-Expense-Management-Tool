@@ -3,6 +3,7 @@ import {
   applyLatePolicy,
   DEFAULT_LATE_POLICY,
   dayLateness,
+  lateDayCharge,
   lateDeduction,
   resolveLatePolicy,
   type LatePolicy,
@@ -121,5 +122,45 @@ describe('resolveLatePolicy', () => {
   it('a staff override replaces only the fields it sets', () => {
     expect(resolveLatePolicy(deduct, { freeLateDays: 5 })).toEqual({ ...deduct, freeLateDays: 5 });
     expect(resolveLatePolicy(deduct, undefined)).toEqual(deduct);
+  });
+});
+
+describe('late policy options', () => {
+  it('lateCountsFrom grace_end: minutes after grace only', () => {
+    expect(
+      dayLateness({ checkIn: shift.start + 25 }, shift, { ...deduct, lateCountsFrom: 'grace_end' }),
+    ).toEqual({
+      lateMinutes: 15,
+      earlyMinutes: 0,
+    });
+  });
+
+  it('half-day threshold off: very late days are charged, never halved', () => {
+    const out = applyLatePolicy(lateDays([200]), {
+      ...deduct,
+      freeLateDays: 0,
+      halfDayThresholdMinutes: null,
+    });
+    expect(out[0]).toMatchObject({ outcome: 'charged', chargedMinutes: 200 });
+  });
+
+  it('halfDayUsesFreeDay: a halved day uses up a free late day', () => {
+    const out = applyLatePolicy(lateDays([121, 15, 15, 15]), {
+      ...deduct,
+      halfDayUsesFreeDay: true,
+    });
+    expect(out.map((o) => o.outcome)).toEqual(['half_day', 'free', 'free', 'charged']);
+  });
+
+  it('per_late_day charge: a fixed amount per charged day, whatever the minutes', () => {
+    const policy: LatePolicy = { ...deduct, charge: { mode: 'per_late_day', amount: 5_000 } };
+    const [o] = applyLatePolicy(lateDays([45]), { ...policy, freeLateDays: 0 });
+    expect(ratToRupeePaise(lateDayCharge(o!, policy, rat(100_000), 660))).toBe(5_000);
+  });
+
+  it('per_minute charge (default) uses the day rate', () => {
+    const [o] = applyLatePolicy(lateDays([66]), { ...deduct, freeLateDays: 0 });
+    // 66 min × ₹1,000 / 660 = ₹100
+    expect(ratToRupeePaise(lateDayCharge(o!, deduct, rat(100_000), 660))).toBe(10_000);
   });
 });

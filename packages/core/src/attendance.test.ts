@@ -8,7 +8,8 @@ import {
   type Holiday,
 } from './attendance';
 import { monthEnd, monthStart } from './dates';
-import type { LeaveTemplateVersion } from './leave';
+import { DEFAULT_SANDWICH_RULE, type LeaveTemplateVersion } from './leave';
+import { DEFAULT_PAY_RULES, type PayRules } from './settings';
 
 // October 2026: 31 days, the 1st is a Thursday. Sundays: 4, 11, 18, 25.
 const OCT = { from: monthStart(2026, 10), to: monthEnd(2026, 10) };
@@ -18,7 +19,8 @@ const sundayPaid: LeaveTemplateVersion = {
   weeklyOffs: [{ weekday: 0, paid: true }],
   paidLeavesPerMonth: 2,
   carryOver: { mode: 'lapse' },
-  sandwichRule: false,
+  sandwich: DEFAULT_SANDWICH_RULE,
+  accrual: { mode: 'full' },
 };
 
 /** Everyone present on every working day of October, except the dates given. */
@@ -40,7 +42,7 @@ function run(opts: {
   template?: LeaveTemplateVersion;
   joiningDate?: string;
   leavingDate?: string;
-  extraWorkingDayPay?: boolean;
+  rules?: Partial<PayRules>;
   from?: string;
   to?: string;
 }) {
@@ -53,7 +55,7 @@ function run(opts: {
     templateOn: () => template,
     holidays: opts.holidays ?? [],
     records: opts.records ?? [],
-    extraWorkingDayPay: opts.extraWorkingDayPay ?? true,
+    rules: { ...DEFAULT_PAY_RULES, ...opts.rules },
   });
 }
 
@@ -195,7 +197,7 @@ describe('extra working days (present on a weekly off or holiday)', () => {
   it('adds nothing extra when the setting is off', () => {
     const days = run({
       records: presentAllMonth({ '2026-10-04': 'present' }),
-      extraWorkingDayPay: false,
+      rules: { offDayWork: 'none' },
     });
     expect(summarizeDays(days)).toMatchObject({ extraWorkingDays: 0, payableDays: 31 });
   });
@@ -235,7 +237,7 @@ describe('joining and leaving mid-month', () => {
 });
 
 describe('sandwich rule', () => {
-  const sandwich = { ...sundayPaid, sandwichRule: true };
+  const sandwich = { ...sundayPaid, sandwich: { ...DEFAULT_SANDWICH_RULE, enabled: true } };
 
   it('is off by default', () => {
     const s = summarizeDays(
@@ -320,5 +322,158 @@ describe('sandwich rule', () => {
       '2026-10-04': 'present',
     });
     expect(summarizeDays(run({ template: sandwich, records })).sandwiched).toBe(0);
+  });
+});
+
+describe('staff with no leave template', () => {
+  it('has no weekly offs: every day is a working day to mark', () => {
+    const days = evaluateDays({
+      from: OCT.from,
+      to: OCT.to,
+      joiningDate: '2025-01-01',
+      templateOn: () => undefined,
+      holidays: [],
+      records: [],
+      rules: DEFAULT_PAY_RULES,
+    });
+    expect(summarizeDays(days)).toMatchObject({ unmarked: 31, paidWeeklyOff: 0, payableDays: 0 });
+  });
+
+  it('is paid for every day marked present, Sundays included', () => {
+    const records = Array.from({ length: 31 }, (_, i) => ({
+      date: `2026-10-${String(i + 1).padStart(2, '0')}`,
+      status: 'present' as const,
+    }));
+    const days = evaluateDays({
+      from: OCT.from,
+      to: OCT.to,
+      joiningDate: '2025-01-01',
+      templateOn: () => undefined,
+      holidays: [],
+      records,
+      rules: DEFAULT_PAY_RULES,
+    });
+    expect(summarizeDays(days)).toMatchObject({
+      present: 31,
+      extraWorkingDays: 0,
+      payableDays: 31,
+    });
+  });
+});
+
+describe('setting: offDayWork', () => {
+  it('replace: a worked paid Sunday is paid once', () => {
+    const days = run({
+      records: presentAllMonth({ '2026-10-04': 'present' }),
+      rules: { offDayWork: 'replace' },
+    });
+    expect(summarizeDays(days)).toMatchObject({ extraWorkingDays: 0, payableDays: 31 });
+  });
+
+  it('replace: a worked unpaid Sunday becomes paid', () => {
+    const days = run({
+      records: presentAllMonth({ '2026-10-04': 'present' }),
+      template: { ...sundayPaid, weeklyOffs: [{ weekday: 0, paid: false }] },
+      rules: { offDayWork: 'replace' },
+    });
+    expect(summarizeDays(days)).toMatchObject({ extraWorkingDays: 1, payableDays: 28 });
+  });
+
+  it('none: working an unpaid Sunday pays nothing', () => {
+    const days = run({
+      records: presentAllMonth({ '2026-10-04': 'present' }),
+      template: { ...sundayPaid, weeklyOffs: [{ weekday: 0, paid: false }] },
+      rules: { offDayWork: 'none' },
+    });
+    expect(summarizeDays(days).payableDays).toBe(27);
+  });
+});
+
+describe('setting: unmarkedDay', () => {
+  it('paid: unmarked working days are paid but still counted (and warned about)', () => {
+    const s = summarizeDays(run({ records: [], rules: { unmarkedDay: 'paid' } }));
+    expect(s).toMatchObject({ unmarked: 27, payableDays: 31 });
+  });
+});
+
+describe('setting: holidayOnWeeklyOff', () => {
+  const holidays = [{ date: '2026-10-04', paid: false }];
+
+  it('holiday (default): an unpaid holiday on a paid Sunday is unpaid', () => {
+    const s = summarizeDays(run({ records: presentAllMonth(), holidays }));
+    expect(s).toMatchObject({ unpaidHoliday: 1, paidWeeklyOff: 3, payableDays: 30 });
+  });
+
+  it('weekly_off: the Sunday stays a paid weekly off', () => {
+    const s = summarizeDays(
+      run({ records: presentAllMonth(), holidays, rules: { holidayOnWeeklyOff: 'weekly_off' } }),
+    );
+    expect(s).toMatchObject({ unpaidHoliday: 0, paidWeeklyOff: 4, payableDays: 31 });
+  });
+});
+
+describe('setting: markOnOffDay', () => {
+  it('apply: absent on a paid Sunday makes it unpaid and counts as absent', () => {
+    const days = run({
+      records: presentAllMonth({ '2026-10-04': 'absent' }),
+      rules: { markOnOffDay: 'apply' },
+    });
+    expect(days.find((d) => d.date === '2026-10-04')).toMatchObject({
+      status: 'absent',
+      baseUnits: 0,
+    });
+    expect(summarizeDays(days)).toMatchObject({ absent: 1, paidWeeklyOff: 3, payableDays: 30 });
+  });
+
+  it('apply: paid leave on an off day is paid and uses balance', () => {
+    const template = { ...sundayPaid, weeklyOffs: [{ weekday: 0, paid: false }] };
+    const days = run({
+      records: presentAllMonth({ '2026-10-04': 'paid_leave' }),
+      template,
+      rules: { markOnOffDay: 'apply' },
+    });
+    expect(paidLeaveUsed(days)).toBe(1);
+    expect(summarizeDays(days)).toMatchObject({ paidLeave: 1, payableDays: 28 });
+  });
+});
+
+describe('sandwich rule options', () => {
+  const on = (over: Partial<LeaveTemplateVersion['sandwich']>) => ({
+    ...sundayPaid,
+    sandwich: { ...DEFAULT_SANDWICH_RULE, enabled: true, ...over },
+  });
+
+  it('triggers can include unpaid leave', () => {
+    const records = presentAllMonth({ '2026-10-03': 'unpaid_leave', '2026-10-05': 'absent' });
+    const s = summarizeDays(
+      run({ template: on({ triggers: ['absent', 'unpaid_leave'] }), records }),
+    );
+    expect(s.sandwiched).toBe(1);
+  });
+
+  it('triggers can include unmarked days', () => {
+    const records = presentAllMonth({ '2026-10-03': 'absent' }).filter(
+      (r) => r.date !== '2026-10-05',
+    );
+    const s = summarizeDays(run({ template: on({ triggers: ['absent', 'unmarked'] }), records }));
+    expect(s.sandwiched).toBe(1);
+  });
+
+  it('sides: either side is enough', () => {
+    const records = presentAllMonth({ '2026-10-03': 'absent' });
+    const s = summarizeDays(run({ template: on({ sides: 'either' }), records }));
+    expect(s.sandwiched).toBe(1);
+  });
+
+  it('can apply to paid holidays', () => {
+    const records = presentAllMonth({ '2026-10-01': 'absent', '2026-10-03': 'absent' }).filter(
+      (r) => r.date !== '2026-10-02',
+    );
+    const holidays = [{ date: '2026-10-02', paid: true }];
+    expect(summarizeDays(run({ template: on({}), records, holidays })).sandwiched).toBe(0);
+    const s = summarizeDays(
+      run({ template: on({ appliesTo: ['weekly_off', 'holiday'] }), records, holidays }),
+    );
+    expect(s).toMatchObject({ sandwiched: 1, paidHoliday: 0, unpaidHoliday: 1 });
   });
 });

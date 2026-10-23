@@ -1,120 +1,155 @@
 # Core rules (`packages/core`)
 
 PLAN §4 as code. Pure TypeScript (no Supabase/React), so the website, both apps, edge functions
-and the database tests all use the same rules. 154 tests; each module has a `*.test.ts` beside it.
+and the database tests all use the same rules. 201 tests; each module has a `*.test.ts` beside it.
 
-Status: **done** (Phase 2, 2026-10-23). Interpretations the plan didn't spell out are marked
-**(interp.)** and listed together in `docs/DECISIONS.md` for the owner to confirm.
+Status: **done** (Phase 2, 2026-10-23). **No business rule is hard-coded:** every choice is a
+setting the owner (admin) can change, shop-wide or per staff member. The defaults below are what
+the shop gets until someone changes them.
+
+## Settings reference
+
+Stored per shop in `shops.settings` (read with `resolveShopRules`, checked with
+`validateShopRules`). A staff member's pay settings can override any `pay` or `late` field for
+that person (`payRulesOverride`, `latePolicyOverride`). Leave settings live on each **leave
+template version**, so different staff can have different leave rules.
+
+### Pay rules (`settings.ts`, `PayRules`)
+
+| Setting              | Options                           | Default         | What it does                                                                                                                                                |
+| -------------------- | --------------------------------- | --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `dayRateBasis`       | `calendar_days` · `fixed_days: N` | `calendar_days` | Monthly salary ÷ days in this month, or ÷ a fixed N (e.g. 30, 26). A fully paid month always pays exactly the salary; each unpaid day costs salary ÷ basis. |
+| `offDayWork`         | `extra` · `replace` · `none`      | `extra`         | Working a weekly off/holiday: off-day pay + an extra day; paid once as a working day; or only the off day's own pay.                                        |
+| `unmarkedDay`        | `unpaid` · `paid`                 | `unpaid`        | A working day nobody marked. The salary run warns either way.                                                                                               |
+| `holidayOnWeeklyOff` | `holiday` · `weekly_off`          | `holiday`       | Which paid flag decides a holiday that falls on a weekly off.                                                                                               |
+| `markOnOffDay`       | `ignore` · `apply`                | `ignore`        | Absent/leave marked on an off day: the off day stands, or the mark replaces it (paid leave then uses balance).                                              |
+
+### Late policy (`late.ts`, `LatePolicy`)
+
+| Setting                   | Options                                                     | Default                                                |
+| ------------------------- | ----------------------------------------------------------- | ------------------------------------------------------ |
+| `mode`                    | `notice_only` · `deduct`                                    | `notice_only`                                          |
+| `freeLateDays`            | 0 or more                                                   | 3                                                      |
+| `halfDayThresholdMinutes` | minutes, or `null` (never)                                  | 120 (more than this → half day)                        |
+| `halfDayUsesFreeDay`      | yes / no                                                    | no                                                     |
+| `earlyLeaving`            | yes / no                                                    | no (when on: same count, threshold and charge as late) |
+| `lateCountsFrom`          | `shift_start` · `grace_end`                                 | `shift_start`                                          |
+| `charge`                  | `per_minute` (day rate ÷ shift minutes) · `per_late_day: ₹` | `per_minute`                                           |
+
+Per staff member (pay settings): shift start/end, grace minutes (default 10), and any of the above.
+
+### Leave template version (`leave.ts`)
+
+| Setting              | Options                                                                                       | Default for a new template |
+| -------------------- | --------------------------------------------------------------------------------------------- | -------------------------- |
+| `weeklyOffs`         | any weekdays, each paid/unpaid; empty = none                                                  | —                          |
+| `paidLeavesPerMonth` | 0 or more (0 = no paid leave)                                                                 | —                          |
+| `carryOver`          | `lapse` · `carry` (optional cap) · `carry_within_year` (reset month) · `payout` (reset month) | `lapse`                    |
+| `accrual`            | `full` · `prorated` (rounding `down`/`nearest`/`up`)                                          | `full`                     |
+| `sandwich.enabled`   | yes / no                                                                                      | no                         |
+| `sandwich.triggers`  | any of `absent`, `unpaid_leave`, `half_day`, `unmarked`                                       | `absent`                   |
+| `sandwich.appliesTo` | `weekly_off`, `holiday`                                                                       | `weekly_off`               |
+| `sandwich.sides`     | `both` · `either`                                                                             | `both`                     |
+
+`resetMonth` is the **last** month of the leave year (3 = year ends with March).
+
+**Staff with no leave:** don't assign a template (no weekly offs, no paid leave, any bank
+lapses, paid leave can't be marked), or assign one with `paidLeavesPerMonth: 0` and/or no
+weekly offs.
+
+### Attendance code (`attendance-code.ts`, `CodeSettings`)
+
+| Setting                                                       | Default                                       |
+| ------------------------------------------------------------- | --------------------------------------------- |
+| `rotation`                                                    | daily at 00:00 IST (`atMinutes`), or `manual` |
+| `minGapMinutes` (check-in → check-out)                        | 30                                            |
+| `cooldownMinutes` (after any accepted check)                  | 2                                             |
+| `checkOutRequired`                                            | yes                                           |
+| `maxWrongCodes` / `wrongCodeWindowMinutes` / `lockoutMinutes` | 5 / 10 / 10                                   |
+
+### Other
+
+| Setting                                                                 | Where               | Default                                        |
+| ----------------------------------------------------------------------- | ------------------- | ---------------------------------------------- |
+| `smallExpenseLimit`                                                     | shop                | none (amounts below it default to Not tracked) |
+| Advance limit                                                           | per staff member    | none                                           |
+| Pay type, salary/wage/rate, overtime rate, `hoursPerDay` (hourly)       | pay settings, dated | —                                              |
+| Allowances / fixed deductions: amount, fixed or prorated, from/to dates | per staff member    | —                                              |
+| Holidays: date, paid or not                                             | shop                | —                                              |
+
+### Fixed by design (not settings)
+
+- Money is integer paise; each payslip line is rounded to the rupee, half-up, once (PLAN §4.1).
+- Business dates are Asia/Kolkata; IST has no daylight saving.
+- Ledger lines are never edited or deleted (PLAN §4.7). The advance cut is a payslip line, not a
+  ledger line, because the advance is already on the ledger (see Ledger below).
+- The advance cut never takes net pay below zero (PLAN §4.6).
 
 ## Modules
 
-| Module               | PLAN       | What it does                                                                              |
-| -------------------- | ---------- | ----------------------------------------------------------------------------------------- |
-| `money.ts`           | §4.1       | Paise type, `formatINR` (₹1,25,000.00), `roundToRupee` (half-up)                          |
-| `rational.ts`        | §4.1       | Exact fractions on BigInt; `ratToRupeePaise` is the ONE rounding per payslip line         |
-| `dates.ts`           | §4.1       | IST business dates `YYYY-MM-DD`, month ranges, weekday, `minutesOfDayIST`                 |
-| `dated.ts`           | §4.2, §4.6 | `effectiveOn` / `segments`: which dated version applied on a day                          |
-| `leave.ts`           | §4.2       | Template versions, assignments, monthly leave roll with carry-over modes                  |
-| `attendance.ts`      | §4.3, §4.2 | Calendar (weekly offs, holidays), statuses → payable half-day units, sandwich rule        |
-| `late.ts`            | §4.4       | Lateness per day, free late days, half-day threshold, early leaving, per-minute charge    |
-| `salary.ts`          | §4.6       | `calculateSalary`: payslip lines, totals, warnings                                        |
-| `ledger.ts`          | §4.7       | Balance, running balance, reversals, payslip → ledger lines, re-run adjustments, advances |
-| `expenses.ts`        | §4.8       | Paid by / charged to, staff ledger effects, shop totals                                   |
-| `attendance-code.ts` | §4.5       | Scanned code parsing, check-in/out decision, lockout, cooldown, next code change          |
-| `permissions.ts`     | §3         | Permission keys (mirrored in the DB, checked by a test)                                   |
+| Module               | PLAN       | What it does                                                                        |
+| -------------------- | ---------- | ----------------------------------------------------------------------------------- |
+| `settings.ts`        | all        | Shop rule set, defaults, overrides, validation                                      |
+| `money.ts`           | §4.1       | Paise type, `formatINR` (₹1,25,000.00), `roundToRupee` (half-up)                    |
+| `rational.ts`        | §4.1       | Exact fractions on BigInt; `ratToRupeePaise` is the one rounding per line           |
+| `dates.ts`           | §4.1       | IST business dates `YYYY-MM-DD`, month ranges, weekday, `minutesOfDayIST`           |
+| `dated.ts`           | §4.2, §4.6 | `effectiveOn` / `segments`: which dated version applied on a day                    |
+| `leave.ts`           | §4.2       | Template versions, assignments, accrual, monthly roll with carry-over               |
+| `attendance.ts`      | §4.3, §4.2 | Calendar, statuses → payable half-day units, sandwich rule                          |
+| `late.ts`            | §4.4       | Lateness per day, free days, half-day threshold, charges                            |
+| `salary.ts`          | §4.6       | `calculateSalary`: payslip lines, totals, warnings                                  |
+| `ledger.ts`          | §4.7       | Balance, running balance, reversals, payslip → ledger, re-run adjustments, advances |
+| `expenses.ts`        | §4.8       | Paid by / charged to, staff ledger effects, shop totals                             |
+| `attendance-code.ts` | §4.5       | Scanned code, check-in/out decision, lockout, cooldown, rotation                    |
+| `permissions.ts`     | §3         | Permission keys (mirrored in the DB, checked by a test)                             |
 
-## Money and rounding
+## How the calculations work
 
-- Amounts are integer paise. Inside a calculation, values are exact fractions; each payslip line
-  is rounded to the rupee, half-up, exactly once. Totals add the rounded lines.
-- Example: ₹30,000 a month, pay rises to ₹36,000 on the 16th of a 31-day month:
-  30,000 × 15/31 + 36,000 × 16/31 = ₹33,096.77 → **₹33,097** (one rounding, not two).
-
-## Leave (§4.2)
-
-- Template version: weekly offs (weekday + paid/unpaid), paid leaves per month, carry-over,
-  sandwich rule. Staff → template by dated assignment; template → version by date.
-- Monthly roll: `available = opening + earned`; `used` can't exceed it.
-  - `lapse`: unused disappears. `carry` (optional cap): banked up to the cap.
-  - `carry_within_year` / `payout`: `resetMonth` is the **last month of the leave year**; at its
-    end the bank lapses / is paid out (payout goes on that month's payslip at its day rate). **(interp.)**
-- Earned is the full monthly allotment in any month the person is employed, even a partial
-  first month. **(interp.)**
-- The carry-over decision uses the version in effect on the month's last employed day. **(interp.)**
-
-## Attendance → payable days (§4.3, §4.6)
+### Attendance → payable days
 
 Pay is counted in half-day units: present 2, half day 1, paid leave 2, absent / unpaid leave 0.
+Weekly offs and holidays fill in automatically (paid 2, unpaid 0). Only days from joining to
+leaving count. The sandwich rule looks for the nearest working day on each side, past other off
+days, across month edges, stopping at the employment edge.
 
-- Weekly offs and holidays fill in automatically: paid → 2 units, unpaid → 0.
-  A shop holiday on a weekly off counts as the holiday. **(interp.)**
-- Working on a weekly off or holiday: the off day keeps its own pay **and**, with the "extra
-  working day" setting on (default), the work is paid as an extra day (present 2 / half 1).
-  So a paid Sunday worked = 2 days' pay; an unpaid one = 1. **(interp.)**
-- Other marks on an off day (absent, leave) are treated as the off day itself. **(interp.)**
-- A working day with no mark is **unmarked**: not paid, and the salary run warns. **(interp.)**
-- Only days from joining to leaving count.
-- **Sandwich rule** (off by default): a paid weekly off becomes unpaid when the nearest working
-  day before AND after are both marked **absent**. It looks past other offs and holidays, across
-  month edges, and stops at the employment edge. Unpaid leave, half days and unmarked days don't
-  trigger it; nor does an off day the person worked. **(interp.: only `absent` counts)**
-
-## Lateness (§4.4)
-
-- Late minutes count from shift start once past grace (11 min late with 10 min grace = 11).
-- `notice_only` (default): shown, never charged.
-- `deduct`: first N late days free (default 3), later ones charged
-  `minutes × day_rate ÷ shift_minutes`; more than the threshold (default 120 min) late turns the
-  day into a half day instead. A half-day conversion doesn't use up a free day. **(interp.)**
-- Early leaving (off by default) adds to the same day's minutes, count and threshold.
-- Only `present` days with a check-in are measured; hourly staff and staff without a shift are
-  never late. The month uses the staff override in effect on its last employed day. **(interp.)**
-
-## Salary (§4.6)
+### Salary
 
 `calculateSalary(input)` returns payslip `lines` (`earned`, `overtime`, `allowance`,
-`leave_payout`, `deduction`, `late_deduction`, `advance_cut`; kinds + names, no display text),
+`leave_payout`, `deduction`, `late_deduction`, `advance_cut`; kinds and names, no display text),
 totals (`gross`, `deductions`, `netBeforeAdvance`, `advanceCut`, `netPay`), the day breakdown,
 late outcomes and warnings (`unmarked_days`, `no_pay_settings`, `missing_check_out`,
 `negative_net_pay`).
 
-- Each day uses the pay settings in effect that day, so mid-month changes split naturally.
-- Monthly: `monthly ÷ D × payable days`. Daily: `wage × payable days`. Hourly: `rate × hours
-between check-in and check-out` (missing check-out → warning, not paid).
-- Overtime: `minutes × overtime rate ÷ 60` from each day's record.
-- Allowances / fixed deductions **(interp.)**: share of the employed days they cover.
-  Fixed: `amount × covered ÷ employed`. Prorated: `amount × payable days within its cover ÷
-employed`, never more than the fixed share. A full-month, fully-attended person gets the full
-  amount; so does a mid-month joiner who attended every day.
-- Leave payout: days × day rate from the settings on the last employed day (hourly: rate × shift
-  length). **(interp.)**
-- Advance cut: `min(scheduled cut, outstanding, net before advance)`, never below zero.
+- Each day uses the pay settings in effect that day, so a mid-month change splits the month.
+  ₹30,000 rising to ₹36,000 on the 16th of a 31-day month: 30,000 × 15/31 + 36,000 × 16/31 =
+  ₹33,096.77 → **₹33,097** (one rounding).
+- Monthly: each day adds salary ÷ D, plus (day's units ÷ 2 − 1) × salary ÷ basis. With the
+  calendar basis that is simply salary × payable days ÷ D.
+- Daily: wage × payable days. Hourly: rate × hours between check-in and check-out (missing
+  check-out → warning, not paid).
+- Overtime: minutes × overtime rate ÷ 60.
+- Allowances / fixed deductions: the share of employed days they cover. Fixed:
+  `amount × covered ÷ employed`. Prorated: by payable days within that, never more than the
+  fixed share.
+- Leave payout: days × day rate (hourly: rate × `hoursPerDay`, or the shift length).
+- The month uses the staff overrides in effect on its last day of employment.
 
-## Ledger (§4.7)
+### Ledger
 
-- Positive = the shop owes the staff member. Balance = sum of lines, never stored.
-- Lines are never edited: `reversalOf` undoes one (once; a reversal can't be reversed).
-  Re-running a finalized month writes `adjustment` lines for the differences only.
-- A finalized payslip posts `salary_earned` (+gross), each `deduction` and `late_deduction`
-  (negative). The **advance cut is not a ledger line**: the advance was posted as a negative line
-  when given, and paying a smaller salary recovers it. Advance −10,000; salary +30,000; paid
-  26,000 (4,000 cut) → balance −6,000, exactly the uncut advance. **(interp.: plan listed
-  `advance_cut` as a ledger type; it stays in the enum but money-wise lives on the payslip)**
-- Advances: outstanding = given − cut − repaid; crossing the per-person limit returns
-  `crossesLimit` for the app to confirm.
+Positive = the shop owes the staff member. Balance = sum of lines, never stored. `reversalOf`
+undoes a line once; re-running a finalized month writes `adjustment` lines for the differences.
+A finalized payslip posts `salary_earned` (+gross), each `deduction` and `late_deduction`
+(negative). Advance −10,000; salary +30,000; paid 26,000 (4,000 cut) → balance −6,000, exactly
+the uncut advance. Advances: outstanding = given − cut − repaid; crossing the person's limit
+returns `crossesLimit` for the app to confirm.
 
-## Expenses (§4.8)
+### Expenses
 
-- Charged to staff → `staff_charge` (negative) on their ledger. Paid by staff + reimburse →
-  `reimbursement` (positive) on the payer's ledger. Both can apply.
-- Below the small-expense limit, "charged to" defaults to Not tracked.
-- Shop totals count only shop-charged expenses; not-tracked and staff-charged are reported apart.
+Charged to staff → `staff_charge` (negative) on their ledger. Paid by staff + reimburse →
+`reimbursement` (positive) on the payer's ledger. Shop totals count only shop-charged expenses.
 
-## Attendance code (§4.5)
+### Attendance code
 
-- Scanner accepts any QR whose content is exactly 6 digits.
-- Order of checks: lockout (5 wrong codes within 10 min → 10 min wait from the 5th) → wrong code →
-  cooldown after an accepted check (2 min) → check-in, or check-out after the minimum gap
-  (30 min) → refuse after check-out. Attempts during lockout don't count as wrong. **(interp.)**
-- Daily rotation at a chosen IST time (default midnight), or manual only.
-- Not here (server side, Phase 7): code hashing and storage, device binding.
+Order of checks: lockout → wrong code → cooldown → check-in, or check-out after the minimum gap
+→ refuse after check-out. Attempts while locked don't count as wrong. Hashing, storage and device
+binding are server side (Phase 7).

@@ -2,30 +2,30 @@
 
 Choices made during the build that PLAN.md doesn't spell out. Newest first.
 
-## 2026-10-23 — Phase 2 rule interpretations (owner to confirm)
+## 2026-10-23 — No hard-coded rules: everything is a setting
 
-Where PLAN §4 was silent or ambiguous, `packages/core` does this. Each is one test away from
-changing; details and examples in `docs/features/core-rules.md`.
+Owner's instruction: every value is customisable by the admin, and staff may have no leave.
 
-1. **Rounding:** exact fractions inside a calculation; each payslip line rounded to the rupee once.
-2. **Holiday on a weekly off** counts as the holiday (its paid flag wins).
-3. **Working a paid weekly off/holiday** = the off day's pay + an extra day (2 days' pay) when the
-   extra-working-day setting is on; working an unpaid one = 1 day.
-4. **Unmarked working days** are unpaid and make the salary run warn.
-5. **Sandwich rule** triggers only on `absent` (not unpaid leave or half day) on the nearest
-   working day each side; looks across month edges; an unmarked side doesn't trigger it.
-6. **Leave year:** `resetMonth` is the last month of the leave year; lapse/payout happens at its end.
-7. **Leave earned** is the full monthly allotment even in a partial first or last month.
-8. **Late half-day conversions don't use up a free late day.** Early leaving shares the same count
-   and threshold. The month uses the staff late-policy override in effect at month end.
-9. **Allowances and fixed deductions** are paid for the share of employed days they cover;
-   prorated ones by payable days within that, capped at the full share.
-10. **Leave payout and late charges for hourly staff** use hourly rate × shift length as the day rate.
-11. **Advance cut is a payslip line, not a ledger line.** The advance is on the ledger when given;
-    the smaller payment recovers it. Posting a cut line as well would count it twice.
-12. **Wrong-code lockout** runs 10 minutes from the 5th wrong code in 10 minutes; attempts while
-    locked don't count as wrong.
-13. **Payslip lines carry kinds and names, not text**, so the apps translate them (i18n rule).
+- **Every business rule is a setting** with a default (`packages/core/src/settings.ts`,
+  `LatePolicy`, leave template versions, `CodeSettings`). The full list with options and
+  defaults is the settings reference in `docs/features/core-rules.md`. The engine never decides a
+  rule on its own; adding a rule means adding a setting.
+- **Three levels:** shop-wide (`shops.settings` → `resolveShopRules`), per leave template version
+  (leave, weekly offs, sandwich, accrual), and per staff member (pay settings may override any pay
+  rule or late-policy field for that person).
+- **Staff with no leave** are supported two ways: no template (no weekly offs, no paid leave, bank
+  lapses, paid leave can't be marked) or a template with 0 paid leaves and/or no weekly offs.
+- **Defaults** keep the earlier Phase 2 interpretations, now changeable: holiday wins over a weekly
+  off; working an off day pays the off day plus an extra day; unmarked days unpaid (with a
+  warning); sandwich only on `absent`, both sides, weekly offs only; full leave accrual;
+  half-day conversion doesn't use a free late day; late minutes counted from shift start, charged
+  per minute; day rate = salary ÷ days in the month; lockout 5 wrong codes / 10 min / 10 min wait.
+- **Fixed by design, not settings:** integer paise and one rounding per payslip line (PLAN §4.1);
+  IST dates; append-only ledger; advance cut never makes net pay negative; the advance cut is a
+  payslip line, not a ledger line (the advance is already on the ledger when given; a cut line
+  would count it twice); payslip lines carry kinds and names, not text (i18n).
+- `resetMonth` is the LAST month of the leave year; lapse or payout happens at its end.
+- A month uses the staff overrides in effect on its last day of employment.
 
 ## 2026-10-23 — Design lives in Claude Design
 

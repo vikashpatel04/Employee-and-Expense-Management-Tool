@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import type { AttendanceRecord } from './attendance';
 import { DEFAULT_LATE_POLICY } from './late';
-import type { LeaveTemplateVersion } from './leave';
+import { DEFAULT_SANDWICH_RULE, type LeaveTemplateVersion } from './leave';
+import { DEFAULT_PAY_RULES } from './settings';
 import { calculateSalary, type PaySettings, type SalaryInput } from './salary';
 
 // October 2026: 31 days, Sundays 4, 11, 18, 25.
@@ -13,7 +14,8 @@ const sundayPaid: LeaveTemplateVersion = {
   weeklyOffs: [{ weekday: 0, paid: true }],
   paidLeavesPerMonth: 2,
   carryOver: { mode: 'lapse' },
-  sandwichRule: false,
+  sandwich: DEFAULT_SANDWICH_RULE,
+  accrual: { mode: 'full' },
 };
 
 const shift = { start: 9 * 60 + 30, end: 20 * 60 + 30, graceMinutes: 10 }; // 660 min
@@ -53,7 +55,7 @@ function input(over: Partial<SalaryInput> = {}): SalaryInput {
     records: workingDays(),
     allowances: [],
     deductions: [],
-    shop: { latePolicy: DEFAULT_LATE_POLICY, extraWorkingDayPay: true },
+    rules: { pay: DEFAULT_PAY_RULES, late: DEFAULT_LATE_POLICY },
     ...over,
   };
 }
@@ -258,7 +260,7 @@ describe('late policy in salary', () => {
   it('deduct: late days after the free ones are charged per minute', () => {
     const r = calculateSalary(
       input({
-        shop: { latePolicy: deduct, extraWorkingDayPay: true },
+        rules: { pay: DEFAULT_PAY_RULES, late: deduct },
         records: workingDays(late15([1, 2, 3, 5, 6])),
       }),
     );
@@ -270,7 +272,7 @@ describe('late policy in salary', () => {
   it('far too late turns the day into a half day', () => {
     const r = calculateSalary(
       input({
-        shop: { latePolicy: deduct, extraWorkingDayPay: true },
+        rules: { pay: DEFAULT_PAY_RULES, late: deduct },
         records: workingDays({ 5: { checkIn: shift.start + 130 } }),
       }),
     );
@@ -299,7 +301,7 @@ describe('late policy in salary', () => {
         paySettings: [
           { effectiveFrom: '2025-01-01', payType: 'monthly', monthlySalary: 3_000_000 },
         ],
-        shop: { latePolicy: deduct, extraWorkingDayPay: true },
+        rules: { pay: DEFAULT_PAY_RULES, late: deduct },
         records: workingDays(late15([1, 2, 3, 5, 6])),
       }),
     );
@@ -376,5 +378,118 @@ describe('totals and lines', () => {
   it('someone who left before the month gets an empty payslip', () => {
     const r = calculateSalary(input({ leavingDate: '2026-09-30' }));
     expect(r).toMatchObject({ gross: 0, netPay: 0, lines: [] });
+  });
+});
+
+describe('setting: dayRateBasis fixed days', () => {
+  const fixed30 = {
+    pay: { ...DEFAULT_PAY_RULES, dayRateBasis: { mode: 'fixed_days' as const, days: 30 } },
+    late: DEFAULT_LATE_POLICY,
+  };
+
+  it('a full month still pays exactly the salary (31-day month)', () => {
+    expect(calculateSalary(input({ rules: fixed30 })).earned).toBe(3_000_000);
+  });
+
+  it('each unpaid day costs salary ÷ 30, in any month', () => {
+    const r = calculateSalary(
+      input({ rules: fixed30, records: workingDays({ 5: { status: 'absent' } }) }),
+    );
+    expect(r.earned).toBe(2_900_000);
+  });
+
+  it('February: full month = full salary, one absence = −1/30', () => {
+    const feb = (absentDay?: number): AttendanceRecord[] => {
+      const out: AttendanceRecord[] = [];
+      for (let day = 1; day <= 28; day++) {
+        if ([1, 8, 15, 22].includes(day)) continue;
+        out.push({
+          date: `2026-02-${String(day).padStart(2, '0')}`,
+          status: day === absentDay ? 'absent' : 'present',
+        });
+      }
+      return out;
+    };
+    expect(calculateSalary(input({ rules: fixed30, month: 2, records: feb() })).earned).toBe(
+      3_000_000,
+    );
+    expect(calculateSalary(input({ rules: fixed30, month: 2, records: feb(2) })).earned).toBe(
+      2_900_000,
+    );
+  });
+
+  it('never goes below zero', () => {
+    const r = calculateSalary(
+      input({
+        rules: {
+          ...fixed30,
+          pay: { ...fixed30.pay, dayRateBasis: { mode: 'fixed_days', days: 26 } },
+        },
+        paySettings: [monthly(2_600_000)],
+        records: [],
+      }),
+    );
+    expect(r.earned).toBe(0);
+  });
+});
+
+describe('per-staff overrides', () => {
+  it('payRulesOverride changes the rules for that person only', () => {
+    const r = calculateSalary(
+      input({
+        paySettings: [{ ...monthly(3_000_000), payRulesOverride: { offDayWork: 'none' } }],
+        records: workingDays({ 4: { status: 'present' } }),
+      }),
+    );
+    expect(r.summary.extraWorkingDays).toBe(0);
+    expect(r.earned).toBe(3_000_000);
+  });
+
+  it('a late-policy override can switch the charge to a fixed amount per late day', () => {
+    const r = calculateSalary(
+      input({
+        paySettings: [
+          {
+            ...monthly(3_000_000),
+            latePolicyOverride: {
+              mode: 'deduct',
+              freeLateDays: 1,
+              charge: { mode: 'per_late_day', amount: 5_000 },
+            },
+          },
+        ],
+        records: workingDays({
+          1: { checkIn: shift.start + 15 },
+          2: { checkIn: shift.start + 15 },
+          3: { checkIn: shift.start + 40 },
+        }),
+      }),
+    );
+    expect(line(r, 'late_deduction')).toBe(10_000);
+  });
+});
+
+describe('hourly staff day length', () => {
+  it('hoursPerDay sets the day for leave payout', () => {
+    const hourly: PaySettings = {
+      effectiveFrom: '2025-01-01',
+      payType: 'hourly',
+      hourlyRate: 10_000,
+      hoursPerDay: 8,
+    };
+    const r = calculateSalary(input({ paySettings: [hourly], records: [], leavePayoutDays: 2 }));
+    expect(line(r, 'leave_payout')).toBe(160_000);
+  });
+});
+
+describe('staff with no leave template', () => {
+  it('works every day including Sundays and is paid for each day marked', () => {
+    const all: AttendanceRecord[] = Array.from({ length: 31 }, (_, i) => ({
+      date: d(i + 1),
+      status: 'present',
+    }));
+    const r = calculateSalary(input({ templateOn: () => undefined, records: all }));
+    expect(r.summary).toMatchObject({ present: 31, paidWeeklyOff: 0, extraWorkingDays: 0 });
+    expect(r.earned).toBe(3_000_000);
   });
 });

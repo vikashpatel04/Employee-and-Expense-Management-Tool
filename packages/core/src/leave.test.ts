@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import {
   canUsePaidLeave,
+  earnedLeave,
   rollLeaveMonth,
   rollLeaveMonths,
   templateVersionOn,
   validateTemplateVersion,
   type LeaveTemplateVersion,
+  DEFAULT_SANDWICH_RULE,
 } from './leave';
 
 const base: LeaveTemplateVersion = {
@@ -13,7 +15,8 @@ const base: LeaveTemplateVersion = {
   weeklyOffs: [{ weekday: 0, paid: true }],
   paidLeavesPerMonth: 2,
   carryOver: { mode: 'lapse' },
-  sandwichRule: false,
+  sandwich: DEFAULT_SANDWICH_RULE,
+  accrual: { mode: 'full' },
 };
 const v = (carryOver: LeaveTemplateVersion['carryOver']): LeaveTemplateVersion => ({
   ...base,
@@ -193,6 +196,77 @@ describe('validateTemplateVersion', () => {
       'weeklyOffs: weekday must be 0 (Sunday) to 6 (Saturday), got 7',
       'paidLeavesPerMonth must be a whole number of days, 0 or more',
       'carryOver.resetMonth must be 1–12',
+    ]);
+  });
+});
+
+describe('staff with no leave', () => {
+  it('no template: nothing earned, any bank lapses', () => {
+    const m = rollLeaveMonth({ year: 2026, month: 1, opening: 3, used: 0, version: undefined });
+    expect(m).toMatchObject({ earned: 0, available: 3, carried: 0, lapsed: 3 });
+  });
+
+  it('no template: paid leave cannot be used', () => {
+    expect(() =>
+      rollLeaveMonth({ year: 2026, month: 1, opening: 0, used: 1, version: undefined }),
+    ).toThrow(/more paid leave/);
+    expect(canUsePaidLeave({ available: 0, usedSoFar: 0 })).toBe(false);
+  });
+
+  it('a template with weekly offs but 0 paid leaves is valid', () => {
+    expect(validateTemplateVersion({ ...base, paidLeavesPerMonth: 0 })).toEqual([]);
+  });
+});
+
+describe('accrual in a partial month', () => {
+  const prorated = (rounding: 'down' | 'nearest' | 'up') => ({
+    ...base,
+    accrual: { mode: 'prorated' as const, rounding },
+  });
+
+  it('full (default): the whole allotment even for a partial month', () => {
+    expect(earnedLeave(base, 10, 31)).toBe(2);
+  });
+
+  it.each([
+    // 2 leaves × 10/31 = 0.65; × 20/31 = 1.29
+    ['down', 10, 0],
+    ['nearest', 10, 1],
+    ['up', 10, 1],
+    ['down', 20, 1],
+    ['nearest', 20, 1],
+    ['up', 20, 2],
+  ] as const)('prorated, rounding %s, %i employed days → %i', (rounding, days, expected) => {
+    expect(earnedLeave(prorated(rounding), days, 31)).toBe(expected);
+  });
+
+  it('a full month earns the full allotment either way', () => {
+    expect(earnedLeave(prorated('down'), 31, 31)).toBe(2);
+  });
+
+  it('rollLeaveMonth uses employed days', () => {
+    const m = rollLeaveMonth({
+      year: 2026,
+      month: 1,
+      opening: 0,
+      used: 0,
+      employedDays: 10,
+      version: prorated('down'),
+    });
+    expect(m.earned).toBe(0);
+  });
+});
+
+describe('sandwich rule validation', () => {
+  it('needs triggers and off days when on', () => {
+    expect(
+      validateTemplateVersion({
+        ...base,
+        sandwich: { enabled: true, triggers: [], appliesTo: [], sides: 'both' },
+      }),
+    ).toEqual([
+      'sandwich.triggers needs at least one status when the rule is on',
+      'sandwich.appliesTo needs weekly offs, holidays or both when the rule is on',
     ]);
   });
 });

@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+### Changed — 2026-10-23 (rules are settings)
+
+- `packages/core/src/settings.ts`: shop rule set with defaults, per-staff overrides, validation.
+- New settings: day-rate basis, off-day work, unmarked days, holiday vs weekly off, marks on off
+  days, sandwich triggers/sides/applies-to, leave accrual (full/prorated), late count start,
+  half-day threshold off, half day uses free day, per-day late charge, lockout values, hourly
+  hours per day.
+- Leave template versions: `sandwichRule: boolean` → `sandwich` object; new `accrual`.
+- Staff with no leave template supported (no offs, no paid leave).
+
 ### Added — 2026-10-23 (Phase 2: Core logic)
 
 - `packages/core` rules for PLAN §4: `rational`, `dated`, `leave`, `attendance`, `late`,
