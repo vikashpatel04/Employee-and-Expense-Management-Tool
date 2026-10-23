@@ -99,3 +99,38 @@ export function monthOf(date: BusinessDate): { year: number; month: number } {
   const [y, m] = date.split('-').map(Number) as [number, number];
   return { year: y, month: m };
 }
+
+/** "09:30" (an HTML time input) → minutes after midnight; null if not a valid HH:MM. */
+export function parseTimeOfDay(value: string): number | null {
+  const m = /^(\d{2}):(\d{2})$/.exec(value.trim());
+  if (!m) return null;
+  const h = Number(m[1]);
+  const min = Number(m[2]);
+  return h < 24 && min < 60 ? h * 60 + min : null;
+}
+
+/** Minutes after midnight → "09:30" for a time input. */
+export function minutesToInput(minutes: number): string {
+  return `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`;
+}
+
+/** Minutes after midnight → "9:30 AM" (design voice: "9:42 AM"). */
+export function formatTimeOfDay(minutes: number): string {
+  const h24 = Math.floor(minutes / 60) % 24;
+  const h12 = h24 % 12 === 0 ? 12 : h24 % 12;
+  return `${h12}:${String(minutes % 60).padStart(2, '0')} ${h24 < 12 ? 'AM' : 'PM'}`;
+}
+
+/** "2026-10-23" → "23/10/2026". The only date format shown to people (owner's rule). */
+export function formatDisplayDate(date: BusinessDate): string {
+  const { year, month } = monthOf(date);
+  return `${date.slice(8, 10)}/${String(month).padStart(2, '0')}/${year}`;
+}
+
+/** "23/10/2026" (also 5/1/2026, 05-01-2026, 05.01.2026) → "2026-10-23"; null if not a real date. */
+export function parseDisplayDate(text: string): BusinessDate | null {
+  const m = /^(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})$/.exec(text.trim());
+  if (!m) return null;
+  const iso = `${m[3]}-${m[2]!.padStart(2, '0')}-${m[1]!.padStart(2, '0')}`;
+  return isBusinessDate(iso) ? iso : null;
+}

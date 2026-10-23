@@ -2,6 +2,18 @@
 
 Choices made during the build that PLAN.md doesn't spell out. Newest first.
 
+## 2026-10-23 — Dates are DD/MM/YYYY everywhere (owner's rule)
+
+- Every date shown or typed in FinCrew and Staffora is **DD/MM/YYYY** (23/10/2026). It overrides
+  the design system's voice rule ("Fri, 23 Oct"). Stored dates stay ISO `YYYY-MM-DD`.
+- `packages/core`: `formatDisplayDate`, `parseDisplayDate` (also accepts 5/1/2026, 05-01-2026,
+  05.01.2026; rejects impossible dates). Apps never format dates with Intl/locale functions.
+- Date fields are DD/MM/YYYY **text fields**, not browser date pickers, because pickers follow
+  the browser's language (US browsers would show MM/DD/YYYY). A calendar picker that keeps
+  DD/MM/YYYY can come later.
+- Month headings ("October 2026") are months, not dates, and keep the month name.
+- Amounts typed by people go through `parseRupees` (exact, no floats).
+
 ## 2026-10-23 — Attendance code shows a QR (owner review)
 
 - **FinCrew shows the code as a QR itself** ("Show QR" on the Attendance code screen, a

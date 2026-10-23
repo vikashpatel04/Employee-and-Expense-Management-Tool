@@ -42,3 +42,24 @@ export function formatINR(
   const body = decimals ? `${grouped}.${fraction}` : grouped;
   return `${negative ? '-' : ''}${symbol ? '₹' : ''}${body}`;
 }
+
+/**
+ * Parse an amount someone typed ("22,000", "₹1,25,000.50", "1250.5") into paise, exactly:
+ * digits are read as text, never through a float. Null for anything that isn't a plain
+ * non-negative amount with at most 2 decimals.
+ */
+export function parseRupees(text: string): Paise | null {
+  const s = text.trim().replace(/^₹\s*/, '').replace(/,/g, '');
+  const m = /^(\d*)(?:\.(\d{0,2}))?$/.exec(s);
+  if (!m || (m[1] === '' && (m[2] ?? '') === '')) return null;
+  const paise = Number(m[1] || '0') * 100 + Number((m[2] ?? '').padEnd(2, '0'));
+  return Number.isSafeInteger(paise) ? paise : null;
+}
+
+/** Paise as plain text for an input field ("125000.50"; whole rupees without decimals). */
+export function paiseToInput(paise: Paise): string {
+  assertPaise(paise);
+  const rupees = Math.trunc(paise / 100);
+  const rest = Math.abs(paise % 100);
+  return rest === 0 ? String(rupees) : `${rupees}.${String(rest).padStart(2, '0')}`;
+}

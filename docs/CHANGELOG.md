@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+### Added — 2026-10-23 (Phase 4.3 slice 2)
+
+- Staff detail: overview, ledger, pay, change pay from a date.
+- Core: `parseRupees`, `paiseToInput`, time-of-day helpers, `formatDisplayDate`, `parseDisplayDate`.
+
+### Changed — 2026-10-23
+
+- Every date is shown and typed as DD/MM/YYYY.
+
 ### Added — 2026-10-23 (Phase 4.3 slice 1)
 
 - Website app shell with shop switcher; Staff list and Add staff; `add_staff` RPC.

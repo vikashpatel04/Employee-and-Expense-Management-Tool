@@ -65,6 +65,19 @@ export const inputClass =
 export const buttonClass =
   'text-label w-full min-h-[var(--tap-primary)] rounded-[var(--radius-md)] bg-[var(--accent)] px-4 text-[var(--on-accent)] active:bg-[var(--accent-strong)] disabled:opacity-[var(--opacity-disabled)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus)]';
 
+/**
+ * Props for a date field. Dates are typed as DD/MM/YYYY everywhere (a browser date picker would
+ * follow the browser's language), and server actions read them with `parseDisplayDate`.
+ */
+export const dateFieldProps = {
+  inputMode: 'numeric',
+  placeholder: 'DD/MM/YYYY',
+  // Raw string keeps the backslashes; no character class, because browsers compile `pattern`
+  // with the `v` flag, where "/" inside [...] must be escaped.
+  pattern: String.raw`\d{1,2}(\/|\.|-)\d{1,2}(\/|\.|-)\d{4}`,
+  autoComplete: 'off',
+} as const;
+
 /** Secondary, outlined button (sign out, switch shop). */
 export const quietButtonClass =
   'text-label-sm min-h-[var(--tap-min)] rounded-[var(--radius-md)] border border-[var(--line-strong)] px-4 active:bg-[var(--surface-pressed)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus)]';

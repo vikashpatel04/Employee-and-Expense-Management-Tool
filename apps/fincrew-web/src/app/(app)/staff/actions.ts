@@ -1,6 +1,7 @@
 'use server';
 
 import { redirect } from 'next/navigation';
+import { parseDisplayDate } from '@fincrew/core';
 import { t } from '@/lib/i18n';
 import { requireMe } from '@/lib/session';
 import { createClient } from '@/lib/supabase/server';
@@ -12,7 +13,8 @@ export async function addStaff(_prev: AddStaffState, form: FormData): Promise<Ad
   if (!me) redirect('/');
   const name = String(form.get('name') ?? '').trim();
   const phone = String(form.get('phone') ?? '').trim();
-  const joiningDate = String(form.get('joiningDate') ?? '');
+  const joiningDate = parseDisplayDate(String(form.get('joiningDate') ?? ''));
+  if (!joiningDate) return { error: t('common.invalidDate') };
 
   const supabase = await createClient();
   const { error } = await supabase.rpc('add_staff', {

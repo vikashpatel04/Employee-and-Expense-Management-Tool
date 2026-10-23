@@ -27,6 +27,8 @@ Staff, salary and expense management for one shop. Read these before doing anyth
   functions the apps call go in `public`. New functions have no anon/PUBLIC execute by default:
   grant explicitly in the migration. Check with `supabase db advisors` after deploying.
 - All UI strings go through `packages/i18n`.
+- Dates shown or typed are always **DD/MM/YYYY** (`formatDisplayDate` / `parseDisplayDate` from
+  core); typed money goes through `parseRupees`. Never Intl/locale date formatting in apps.
 
 ## Commands
 

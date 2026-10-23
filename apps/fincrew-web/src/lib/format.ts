@@ -1,16 +1,7 @@
-import { businessDateOf } from '@fincrew/core';
+import { businessDateOf, formatDisplayDate } from '@fincrew/core';
 
-const DATE = new Intl.DateTimeFormat('en-IN', {
-  day: 'numeric',
-  month: 'short',
-  year: 'numeric',
-  timeZone: 'UTC',
-});
-
-/** "2026-10-23" → "23 Oct 2026". Business dates carry no time zone, so format them as UTC. */
-export function formatDate(date: string): string {
-  return DATE.format(new Date(`${date}T00:00:00Z`));
-}
+/** Every date shown in the app: DD/MM/YYYY (owner's rule; docs/DECISIONS.md). */
+export const formatDate = formatDisplayDate;
 
 /** Today's business date in IST, "YYYY-MM-DD". */
 export const todayIST = () => businessDateOf(new Date());

@@ -81,5 +81,109 @@
     "saving": "Adding…",
     "cancel": "Cancel",
     "failed": "Couldn't add this person: {{reason}}"
+  },
+  "staffDetail": {
+    "back": "Staff",
+    "joined": "Joined {{date}}",
+    "left": "Left {{date}}",
+    "tabs": {
+      "label": "Sections",
+      "overview": "Overview",
+      "ledger": "Ledger",
+      "pay": "Pay"
+    },
+    "balance": {
+      "due": "Due to {{name}}",
+      "owes": "{{name}} owes the shop",
+      "settled": "Settled",
+      "noLines": "No money recorded yet."
+    },
+    "advance": {
+      "title": "Advance to recover",
+      "none": "No advance outstanding",
+      "cut": "Cut {{amount}} each month",
+      "noCut": "Cut decided at each salary run",
+      "limit": "Limit {{amount}}",
+      "noLimit": "No limit"
+    },
+    "actions": {
+      "call": "Call",
+      "whatsapp": "WhatsApp"
+    },
+    "ledger": {
+      "balance": "Balance",
+      "empty": "No ledger lines yet. Salary, payments and advances will show here.",
+      "runningBalance": "Balance {{amount}}"
+    },
+    "pay": {
+      "noAccess": "You can't see pay for this person.",
+      "none": "No pay set yet. Set it from the joining date so salary can be worked out.",
+      "current": "Current pay",
+      "since": "Since {{date}}",
+      "type": "Pay type",
+      "types": {
+        "monthly": "Monthly",
+        "daily": "Daily wage",
+        "hourly": "Hourly"
+      },
+      "amount": {
+        "monthly": "Monthly salary",
+        "daily": "Daily wage",
+        "hourly": "Hourly rate"
+      },
+      "overtime": "Overtime, per hour",
+      "shift": "Shift",
+      "noShift": "No shift set (never late)",
+      "grace": "{{minutes}} min grace",
+      "dayMinutes": "Hours in a day",
+      "template": "Leave template",
+      "noTemplate": "None: no weekly offs, no paid leave",
+      "templateSince": "From {{date}}",
+      "allowances": "Allowances",
+      "deductions": "Fixed deductions",
+      "fixed": "Fixed",
+      "prorated": "By days worked",
+      "history": "Pay history",
+      "change": "Change pay from a date",
+      "form": {
+        "title": "Change pay from a date",
+        "hint": "The new pay applies from this date. Earlier months keep the pay that applied then.",
+        "effectiveFrom": "From",
+        "payType": "Pay type",
+        "amount": "Amount (₹)",
+        "overtime": "Overtime per hour (₹, optional)",
+        "shiftStart": "Shift starts (optional)",
+        "shiftEnd": "Shift ends",
+        "grace": "Grace minutes",
+        "hoursPerDay": "Hours in a day (hourly pay, optional)",
+        "save": "Save pay",
+        "saving": "Saving…",
+        "saved": "Pay saved from {{date}}.",
+        "errors": {
+          "amount": "Enter the amount in rupees, like 22000 or 22,000.50.",
+          "overtime": "Enter overtime in rupees, or leave it empty.",
+          "shift": "Enter both shift times, with the end after the start, or leave both empty.",
+          "grace": "Grace must be a whole number of minutes.",
+          "hours": "Hours in a day must be more than 0.",
+          "failed": "Couldn't save: {{reason}}"
+        }
+      }
+    }
+  },
+  "ledgerTypes": {
+    "opening_balance": "Opening balance",
+    "salary_earned": "Salary",
+    "salary_payment": "Salary paid",
+    "advance": "Advance",
+    "advance_cut": "Advance cut",
+    "late_deduction": "Late deduction",
+    "deduction": "Deduction",
+    "reimbursement": "Reimbursement",
+    "staff_charge": "Charged to staff",
+    "adjustment": "Correction",
+    "reversal": "Undone"
+  },
+  "common": {
+    "invalidDate": "Enter the date as DD/MM/YYYY, for example 23/10/2026."
   }
 }

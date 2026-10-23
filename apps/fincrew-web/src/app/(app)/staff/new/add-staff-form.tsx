@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { useActionState } from 'react';
-import { buttonClass, inputClass, quietButtonClass } from '../../../components';
+import { formatDisplayDate } from '@fincrew/core';
+import { buttonClass, dateFieldProps, inputClass, quietButtonClass } from '../../../components';
 import { addStaff, type AddStaffState } from '../actions';
 
 type Labels = {
@@ -46,9 +47,9 @@ export function AddStaffForm({ labels, today }: { labels: Labels; today: string 
         <input
           id="joiningDate"
           name="joiningDate"
-          type="date"
+          {...dateFieldProps}
           required
-          defaultValue={today}
+          defaultValue={formatDisplayDate(today)}
           className={inputClass}
         />
       </label>

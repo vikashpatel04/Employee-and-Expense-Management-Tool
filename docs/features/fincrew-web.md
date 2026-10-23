@@ -21,7 +21,22 @@ the design's text styles and Lucide icons (24px, 2px stroke, the design system's
   person and the staff row in one transaction under the caller's own access rules. Pay settings,
   leave template and the Staffora invite come with the staff detail screen.
 
+## Staff detail — `(app)/staff/[id]`
+
+- Tabs by permission: **Overview** (balance: due / owes / settled; advance to recover with monthly
+  cut and limit; Call and WhatsApp), **Ledger** (`salary.view` or self: lines by month, newest
+  first, with running balance from core `runningBalances`), **Pay** (`staff.pay.view` or self:
+  current pay, overtime, shift and grace, leave template, allowances, deductions, history).
+- **Change pay from a date** (`staff.pay.edit`): prefilled with current pay; amount parsed with
+  `parseRupees`, times with `parseTimeOfDay`, date with `parseDisplayDate`; saves a dated
+  `pay_settings` row (same date replaces it).
+- Dates everywhere are DD/MM/YYYY (`formatDate` = core `formatDisplayDate`; `dateFieldProps`).
+
+Checked in the browser on 2026-10-23 against the live project: shell, staff list, Add staff
+("Test Staff"), staff detail tabs, saving pay (₹22,000 monthly, 9:30 AM – 8:30 PM).
+
 ## Not built yet
 
-Staff detail (overview, attendance calendar, ledger, pay), attendance grid, salary run, advances,
+Staff detail: attendance calendar, edit details/leaving date, allowances and deductions editing,
+leave template assignment, advance limit/cut, Staffora invite; attendance grid, salary run, advances,
 requests, settings screens for every rule in `docs/features/core-rules.md`.

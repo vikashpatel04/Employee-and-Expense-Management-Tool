@@ -130,7 +130,12 @@ export default async function StaffPage({
                   <td className="px-4 py-3">
                     <span className="flex items-center gap-3">
                       <Avatar name={r.name} size={32} />
-                      <span className="text-label-sm">{r.name}</span>
+                      <Link
+                        href={`/staff/${r.id}`}
+                        className="text-label-sm text-[var(--accent-ink)] underline-offset-2 hover:underline"
+                      >
+                        {r.name}
+                      </Link>
                     </span>
                   </td>
                   <td className="text-body px-4 py-3 text-[var(--ink-muted)] tabular-nums">
