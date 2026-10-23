@@ -16,6 +16,7 @@ Website: https://fincrew-web.vercel.app
 - [Plan](docs/PLAN.md) — the full brief
 - [Progress](docs/PROGRESS.md) — what's done and what's next
 - [Setup](docs/SETUP.md) — Supabase, GitHub, Vercel
+- [Design](docs/DESIGN.md) — design system in Claude Design
 - [Decisions](docs/DECISIONS.md) · [Changelog](docs/CHANGELOG.md) · [Features](docs/features/)
 
 ## Stack

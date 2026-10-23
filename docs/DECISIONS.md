@@ -2,6 +2,18 @@
 
 Choices made during the build that PLAN.md doesn't spell out. Newest first.
 
+## 2026-10-23 — Design lives in Claude Design
+
+- **All UI design is kept in Claude Design**, as one Design System artifact (tokens, brand book,
+  components, icons), with key screens to follow as Design artifacts built on it. Link and how
+  to read it: `docs/DESIGN.md`.
+- **`tokens.json` in that artifact is the source of truth for tokens**; `packages/ui` is
+  generated from it in Phase 3, never hand-edited to diverge.
+- **Money logic stays in `packages/core`**: the design system's `formatPaise` is a preview
+  helper; app code formats money with `packages/core`.
+- Accents: FinCrew "Peacock" (cool petrol), Staffora "Marigold" (warm yellow). Fonts: Anek
+  Latin / Tamil / Devanagari, one design across the three scripts.
+
 ## 2026-10-23 — Function exposure (security advisor)
 
 - **Internal functions live in a `private` schema** that PostgREST doesn't expose:

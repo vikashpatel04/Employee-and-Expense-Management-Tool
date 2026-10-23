@@ -4,16 +4,16 @@ _Last updated: 2026-10-23_
 
 ## Phase status (docs/PLAN.md §8)
 
-| #   | Phase                        | Status                                     |
-| --- | ---------------------------- | ------------------------------------------ |
-| 1   | Foundation                   | **Done** (2026-10-23)                      |
-| 2   | Core logic (`packages/core`) | **Next** (money + date helpers already in) |
-| 3   | Design                       | Not started                                |
-| 4   | FinCrew web core             | Not started                                |
-| 5   | FinCrew Android              | Not started                                |
-| 6   | Expenses                     | Not started                                |
-| 7   | Staffora                     | Not started                                |
-| 8   | Polish                       | Not started                                |
+| #   | Phase                        | Status                                                                                           |
+| --- | ---------------------------- | ------------------------------------------------------------------------------------------------ |
+| 1   | Foundation                   | **Done** (2026-10-23)                                                                            |
+| 2   | Core logic (`packages/core`) | **Next** (money + date helpers already in)                                                       |
+| 3   | Design                       | **Design system v1 done** in Claude Design (`docs/DESIGN.md`); key screens + `packages/ui` to do |
+| 4   | FinCrew web core             | Not started                                                                                      |
+| 5   | FinCrew Android              | Not started                                                                                      |
+| 6   | Expenses                     | Not started                                                                                      |
+| 7   | Staffora                     | Not started                                                                                      |
+| 8   | Polish                       | Not started                                                                                      |
 
 ## Phase 1 — Foundation
 
@@ -96,6 +96,10 @@ Remaining tables from PLAN §5 (staff, pay_settings, attendance, ledger_entries,
 the phase that first uses them (mostly Phase 4), each with RLS tests.
 
 ## Session log
+
+- **2026-10-23** — Design system v1 created in Claude Design by a separate session
+  ("FinCrew Design System", https://claude.ai/artifact/8jzomFcfJazHfn6yiUFQQP); recorded in
+  `docs/DESIGN.md`. Verified the artifact reads (README, index, 75 files).
 
 - **2026-10-23** — FinCrew web deployed to Vercel and verified; owner signed in on the live site.
   **Phase 1 done.**

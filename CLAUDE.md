@@ -6,6 +6,7 @@ Staff, salary and expense management for one shop. Read these before doing anyth
 2. `docs/PLAN.md` — the full brief (rules in §4, data model §5, build order §8, working rules §9).
 3. `docs/DECISIONS.md` — choices made during the build that the plan doesn't spell out.
 4. `docs/features/` — one file per shipped feature: what it does and where the code lives.
+5. `docs/DESIGN.md` — the design system in Claude Design (link, how to read it). All UI follows it.
 
 ## House rules
 
