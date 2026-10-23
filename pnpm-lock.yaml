@@ -11,6 +11,9 @@ importers:
       prettier:
         specifier: ^3.9.10
         version: 3.9.10
+      supabase:
+        specifier: ^2.121.0
+        version: 2.121.0
       turbo:
         specifier: ^2.11.10
         version: 2.11.10
@@ -113,9 +116,6 @@ importers:
       '@types/node':
         specifier: ^24.19.2
         version: 24.19.2
-      supabase:
-        specifier: ^2.121.0
-        version: 2.121.0
       typescript:
         specifier: ~5.9.3
         version: 5.9.3

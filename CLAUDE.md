@@ -16,8 +16,9 @@ Staff, salary and expense management for one shop. Read these before doing anyth
   in the same commit. A new session must be able to continue from the docs alone.
 - Money is integer paise everywhere. Business dates are Asia/Kolkata `YYYY-MM-DD`.
 - `packages/core` is pure TypeScript (no Supabase/React). Tests first.
-- Schema changes only via new files in `supabase/migrations/`. Never edit a migration that has
-  been applied to the live project (see PROGRESS.md for which ones are applied).
+- Schema changes only via new files in `supabase/migrations/`. Pushing to `main` applies them to
+  the live database (CI `migrate` job), so **never edit, rename or delete a migration that is on
+  `main`**; CI blocks it. New files need a later timestamp than the newest one.
 - Every table: `shop_id`, RLS on, and tests in `supabase/tests/` as owner / custom role / staff.
 - All UI strings go through `packages/i18n`.
 
@@ -29,4 +30,5 @@ pnpm test        # core logic + RLS tests (PGlite, no Docker)
 pnpm typecheck
 pnpm build
 pnpm --filter @fincrew/web dev
+pnpm db:types    # regenerate packages/db types from the live project
 ```

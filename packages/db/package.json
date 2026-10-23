@@ -7,8 +7,7 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "typecheck": "tsc -p .",
-    "gen:types": "supabase gen types typescript --linked > src/database.types.ts"
+    "typecheck": "tsc -p ."
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.118.0"

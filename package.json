@@ -12,11 +12,14 @@
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "db:login": "supabase login",
+    "db:types": "node scripts/db-types.mjs"
   },
   "devDependencies": {
     "prettier": "^3.9.10",
     "turbo": "^2.11.10",
-    "typescript": "~5.9.3"
+    "typescript": "~5.9.3",
+    "supabase": "^2.121.0"
   }
 }

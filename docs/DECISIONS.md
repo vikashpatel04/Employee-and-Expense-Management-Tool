@@ -2,6 +2,19 @@
 
 Choices made during the build that PLAN.md doesn't spell out. Newest first.
 
+## 2026-10-23 — Migrations deploy from GitHub
+
+- **Migrations apply automatically** from the `migrate` job in `.github/workflows/ci.yml` on
+  push to `main`, only after the migration check, typecheck, tests and build pass. Chosen over
+  Supabase's own GitHub integration so the RLS tests gate every deploy.
+- **Everything on `main` in `supabase/migrations/` is treated as applied and immutable.**
+  `scripts/check-migrations.sh` fails CI if one is modified, deleted or renamed, or if a new
+  file's timestamp sorts before the newest existing one. Fix mistakes with a new migration.
+- CI runs on `main` are never cancelled mid-way (a migration may be running); branch runs are.
+- Shows a `--dry-run` of pending migrations before applying, so the Actions log records what ran.
+- **No local link / DB password needed.** `pnpm db:types` uses the project ref and the CLI login.
+  The DB password lives only in GitHub secrets (and your password manager).
+
 ## 2026-10-22 — Phase 1
 
 - **Owner bootstrap via `setup_shop()`.** The first signed-in user creates the shop and becomes

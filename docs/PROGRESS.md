@@ -1,6 +1,6 @@
 # Progress
 
-_Last updated: 2026-10-22_
+_Last updated: 2026-10-23_
 
 ## Phase status (docs/PLAN.md §8)
 
@@ -30,22 +30,26 @@ Done:
 - [x] FinCrew web (Next.js 16): email+password sign-in, first-run "Set up your shop", home page,
       sign-out, session refresh in `src/proxy.ts`
 - [x] Supabase `config.toml` with public sign-ups disabled
-- [x] GitHub Actions: `ci.yml` (typecheck, test, build) and `keep-awake.yml` (pings every 3 days)
+- [x] GitHub Actions: `ci.yml` (migration immutability check, typecheck, test, build, then
+      **migrate** job applying migrations to the live project on push to `main`) and
+      `keep-awake.yml` (pings every 3 days)
+- [x] Root scripts: `pnpm db:login`, `pnpm db:types` (no local link or DB password needed)
 - [ ] **Waiting on owner** — accounts only you can create (steps in `docs/SETUP.md`):
-  - [ ] Create the Supabase project, link it, push migrations
-  - [ ] Create your owner login in Supabase Auth
-  - [ ] Create the GitHub repo, add `SUPABASE_URL` + `SUPABASE_PUBLISHABLE_KEY` secrets
+  - [ ] Create the Supabase project (sign-ups off), access token
+  - [ ] Create the GitHub repo, add the 5 secrets, push `main` → migrate job applies foundation
+  - [ ] Verify live DB (tables, RLS, permissions, anon blocked)
+  - [ ] Create your owner login in Supabase Auth; sign in locally; run shop setup
   - [ ] Import the repo in Vercel (root `apps/fincrew-web`), set env vars
-  - [ ] Generate real DB types: `pnpm --filter @fincrew/db gen:types`, then remove the cast in
-        `apps/fincrew-web/src/lib/session.ts`
+  - [ ] `pnpm db:types`, then remove the cast in `apps/fincrew-web/src/lib/session.ts`
 
 Verified locally: `pnpm typecheck`, `pnpm test` (42 tests), `pnpm build`; sign-in page renders and
 `/` redirects to `/login` when signed out. **Not yet verified against a real Supabase project.**
 
 ## Migrations applied to the live project
 
-None yet. Until the first `supabase db push`, `20261022000001_foundation.sql` may still be edited;
-after that, changes go in new migration files only.
+None yet. Migrations are applied by the CI **migrate** job on every push to `main`, so
+**everything in `supabase/migrations/` on `main` counts as applied** and must never change
+(CI enforces this). `20261022000001_foundation.sql` becomes applied with the first push.
 
 ## Next up
 
@@ -58,5 +62,8 @@ the phase that first uses them (mostly Phase 4), each with RLS tests.
 
 ## Session log
 
+- **2026-10-23** — Migrations auto-apply from GitHub Actions after CI passes; CI blocks edits to
+  applied migrations; Supabase CLI moved to repo root (`db:login`, `db:types`); SETUP rewritten
+  for the GitHub-first order.
 - **2026-10-22** — Phase 1 scaffold: monorepo, foundation migration + RLS tests, web sign-in and
   shop setup, CI and keep-awake, docs.
