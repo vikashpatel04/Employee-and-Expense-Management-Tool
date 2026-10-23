@@ -16,6 +16,9 @@ Choices made during the build that PLAN.md doesn't spell out. Newest first.
 - **Migrations apply automatically** from the `migrate` job in `.github/workflows/ci.yml` on
   push to `main`, only after the migration check, typecheck, tests and build pass. Chosen over
   Supabase's own GitHub integration so the RLS tests gate every deploy.
+  _Revisited 2026-10-23, kept:_ the integration deploys on push regardless of CI, so it only keeps
+  that gate if every change goes through a PR with branch protection. The owner pushes straight
+  to `main`, so the Actions job stays. Switch only together with a PR workflow; never run both.
 - **Everything on `main` in `supabase/migrations/` is treated as applied and immutable.**
   `scripts/check-migrations.sh` fails CI if one is modified, deleted or renamed, or if a new
   file's timestamp sorts before the newest existing one. Fix mistakes with a new migration.
