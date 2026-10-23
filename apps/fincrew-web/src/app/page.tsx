@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { t } from '@/lib/i18n';
 import { requireMe } from '@/lib/session';
-import { AuthCard, buttonClass } from './components';
+import { AuthCard, buttonClass, inputClass, quietButtonClass } from './components';
 import { signOut } from './login/actions';
 import { switchShop } from './shops/actions';
 
@@ -11,7 +11,7 @@ export default async function HomePage() {
   if (!me) {
     return (
       <AuthCard title={t('appName')}>
-        <p className="text-sm text-[var(--muted)]">{t('auth.noAccess')}</p>
+        <p className="text-body text-[var(--ink-muted)]">{t('auth.noAccess')}</p>
         <form action={signOut} className="mt-6">
           <button className={buttonClass}>{t('auth.signOut')}</button>
         </form>
@@ -25,33 +25,26 @@ export default async function HomePage() {
     <main className="mx-auto max-w-3xl px-4 py-10">
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-sm text-[var(--muted)]">{me.shopName}</p>
-          <h1 className="text-2xl font-semibold">{t('home.welcome', { name: me.name })}</h1>
+          <p className="text-body text-[var(--ink-muted)]">{me.shopName}</p>
+          <h1 className="text-title-xl">{t('home.welcome', { name: me.name })}</h1>
           {me.isOwner && (
-            <span className="mt-2 inline-block rounded-full bg-[var(--accent)]/15 px-2.5 py-0.5 text-xs font-medium text-[var(--accent)]">
+            <span className="text-caption mt-2 inline-block rounded-[var(--radius-pill)] bg-[var(--accent-soft)] px-3 py-1 text-[var(--accent-ink)]">
               {t('home.owner')}
             </span>
           )}
         </div>
         <form action={signOut}>
-          <button className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm">
-            {t('auth.signOut')}
-          </button>
+          <button className={quietButtonClass}>{t('auth.signOut')}</button>
         </form>
       </header>
 
       {(me.memberships.length > 1 || ownsAShop) && (
-        <section className="mt-8 flex flex-wrap items-end gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
+        <section className="mt-8 flex flex-wrap items-end gap-3 rounded-[var(--radius-lg)] bg-[var(--surface)] p-4 shadow-[var(--elevation-1)]">
           {me.memberships.length > 1 && (
             <form action={switchShop} className="flex flex-wrap items-end gap-2">
-              <label className="text-sm">
+              <label className="text-label-sm">
                 {t('shops.switchLabel')}
-                <select
-                  id="shopId"
-                  name="shopId"
-                  defaultValue={me.shopId}
-                  className="mt-1 block rounded-lg border border-[var(--border)] bg-transparent px-3 py-2"
-                >
+                <select id="shopId" name="shopId" defaultValue={me.shopId} className={inputClass}>
                   {me.memberships.map((m) => (
                     <option key={m.shopId} value={m.shopId}>
                       {m.shopName}
@@ -59,15 +52,13 @@ export default async function HomePage() {
                   ))}
                 </select>
               </label>
-              <button className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm">
-                {t('shops.switch')}
-              </button>
+              <button className={quietButtonClass}>{t('shops.switch')}</button>
             </form>
           )}
           {ownsAShop && (
             <Link
               href="/shops/new"
-              className="ml-auto rounded-lg border border-[var(--border)] px-3 py-2 text-sm"
+              className={`${quietButtonClass} ml-auto inline-flex items-center`}
             >
               {t('shops.add')}
             </Link>
@@ -75,7 +66,7 @@ export default async function HomePage() {
         </section>
       )}
 
-      <p className="mt-10 text-[var(--muted)]">{t('home.comingSoon')}</p>
+      <p className="text-body-lg mt-10 text-[var(--ink-muted)]">{t('home.comingSoon')}</p>
     </main>
   );
 }

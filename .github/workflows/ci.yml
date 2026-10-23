@@ -28,6 +28,8 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # packages/ui generated files must match the design-system snapshot
+      - run: pnpm ui:tokens --check
       - run: pnpm typecheck
       # packages/core rules + database RLS tests (PGlite, no Docker needed)
       - run: pnpm test

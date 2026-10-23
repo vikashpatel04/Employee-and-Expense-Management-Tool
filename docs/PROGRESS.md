@@ -108,6 +108,11 @@ Tables still to add (with the phase that uses them, each with RLS tests): `staff
 
 ## Session log
 
+- **2026-10-23** — Key screens published in Claude Design (FinCrew, Staffora; see DESIGN.md).
+  `packages/ui` generated from design tokens (`pnpm ui:tokens`, CI check, 6 tests); website now
+  uses tokens.css + Anek Latin. Not yet visually checked in the browser; owner hasn't reviewed
+  the screen designs. Next: review screens, then Phase 4.3 screens (Today, staff, salary run).
+
 - **2026-10-23** — Money migration live (CI run 39953812217): 21 tables, all RLS; advisors show only
   the accepted warnings (FK/initplan notes fixed); DB types regenerated.
 

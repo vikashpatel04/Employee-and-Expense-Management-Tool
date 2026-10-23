@@ -41,6 +41,31 @@ Use the Artifact tool, not a web fetch:
 - **Assets:** app icon concepts (FinCrew "Ledger F" lead, "Rupee ring"; Staffora "Checked-in"
   lead, "Staff badge"), nine status icon SVGs.
 
+## Key screens (Design artifacts, 2026-10-23)
+
+- **FinCrew key screens:** https://claude.ai/artifact/WydRUvQzCNMAoXcNVh7pWC (Android light + dark:
+  Today, status sheet, shop switcher, Attendance code, Staff detail tabs, Salary run draft/final,
+  Add expense; web: attendance grid, salary review table)
+- **Staffora key screens:** https://claude.ai/artifact/9YMxty5q9jFvuut8ay8dTe (Home before/after
+  check-in, Scan QR, Enter code incl. wrong code, Checked in, Money ledger/payslips; light + dark)
+- Not yet reviewed by the owner in the browser.
+
+**Design-system gaps found while designing** (to add to the system): tokens.css not served (now
+generated in `packages/ui`); dark-mode switching (now `[data-theme]` + media query in tokens.css);
+no type classes (now `.text-*` in tokens.css); no warning/settings icons or expense-category
+icons/colours; missing components (banner, shop switcher, neutral tag, date/month switcher,
+key-value row, stat tile, text input/select/checkbox/time field, selectable card, web sidebar/
+table/grid cell/bulk toolbar, camera viewfinder, sheet header/footer); limits (Button as link,
+LedgerLine kinds, tappable MonthCalendar days, display-only SummaryChip, CodePad states).
+
+## packages/ui
+
+`packages/ui/design/tokens.json` is a snapshot of the system's `project/tokens.json`. To refresh:
+Artifact `read` the design system with `path: "project/tokens.json"`, copy it over the snapshot,
+run `pnpm ui:tokens`. That generates `src/tokens.generated.ts` (resolved `themes` per app and
+theme, sizes, text styles) and `src/tokens.css` (variables, dark mode, `.app-staffora`, `.text-*`).
+CI fails if the generated files are stale.
+
 ## Still to design (Phase 3)
 
 Key screens as **Design** artifacts built on this system (PLAN §7): Today, Attendance code,

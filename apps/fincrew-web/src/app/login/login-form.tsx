@@ -11,11 +11,11 @@ export function LoginForm({ labels }: { labels: Labels }) {
 
   return (
     <form action={action} className="space-y-4">
-      <label className="block text-sm">
+      <label className="text-label-sm block">
         {labels.email}
         <input name="email" type="email" autoComplete="email" required className={inputClass} />
       </label>
-      <label className="block text-sm">
+      <label className="text-label-sm block">
         {labels.password}
         <input
           name="password"
@@ -26,7 +26,7 @@ export function LoginForm({ labels }: { labels: Labels }) {
         />
       </label>
       {state.error && (
-        <p role="alert" className="text-sm text-[var(--danger)]">
+        <p role="alert" className="text-body text-[var(--danger)]">
           {state.error}
         </p>
       )}

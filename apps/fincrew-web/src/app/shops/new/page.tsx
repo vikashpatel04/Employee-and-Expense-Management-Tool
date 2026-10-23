@@ -22,7 +22,10 @@ export default async function NewShopPage() {
           creating: t('setup.creating'),
         }}
       />
-      <Link href="/" className="mt-4 block text-center text-sm text-[var(--muted)] underline">
+      <Link
+        href="/"
+        className="text-body mt-4 block text-center text-[var(--accent-ink)] underline"
+      >
         {t('shops.cancel')}
       </Link>
     </AuthCard>

@@ -1,34 +1,19 @@
 @import 'tailwindcss';
 
-/* Temporary neutral theme. Real tokens come from packages/ui after the design phase. */
-:root {
-  --bg: #f7f7f5;
-  --surface: #ffffff;
-  --text: #17181a;
-  --muted: #6b6f76;
-  --border: #e4e4e0;
-  --accent: #1f5f4a;
-  --danger: #b42318;
-}
+/*
+ * Design tokens (colours light/dark, spacing, radius, sizes, text styles) come from
+ * @fincrew/ui/tokens.css, imported in layout.tsx. Only app-level wiring lives here.
+ */
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0f1012;
-    --surface: #17181b;
-    --text: #ececea;
-    --muted: #9a9ea6;
-    --border: #2a2c30;
-    --accent: #5cc4a0;
-    --danger: #f97066;
-  }
+/* next/font self-hosts Anek Latin; put it first in the design system's stacks. */
+:root {
+  --font-sans:
+    var(--font-anek-latin), 'Noto Sans Tamil', 'Noto Sans Devanagari', system-ui, sans-serif;
+  --font-num: var(--font-anek-latin), system-ui, sans-serif;
 }
 
 body {
-  background: var(--bg);
-  color: var(--text);
-  font-family:
-    system-ui,
-    -apple-system,
-    'Segoe UI',
-    sans-serif;
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: var(--font-sans);
 }

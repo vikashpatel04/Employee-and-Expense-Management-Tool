@@ -1,6 +1,9 @@
 import type { ReactNode } from 'react';
 
-/** Centered card used by the sign-in and setup screens until the design system exists. */
+/**
+ * Centered card used by the sign-in and setup screens. Colours, type and sizes come from the
+ * FinCrew Design System tokens (`@fincrew/ui/tokens.css`, docs/DESIGN.md).
+ */
 export function AuthCard({
   title,
   subtitle,
@@ -12,9 +15,9 @@ export function AuthCard({
 }) {
   return (
     <main className="flex min-h-dvh items-center justify-center px-4">
-      <div className="w-full max-w-sm rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-sm">
-        <h1 className="text-xl font-semibold">{title}</h1>
-        {subtitle && <p className="mt-1 text-sm text-[var(--muted)]">{subtitle}</p>}
+      <div className="w-full max-w-sm rounded-[var(--radius-lg)] bg-[var(--surface)] p-6 shadow-[var(--elevation-1)]">
+        <h1 className="text-title-lg">{title}</h1>
+        {subtitle && <p className="text-body mt-1 text-[var(--ink-muted)]">{subtitle}</p>}
         <div className="mt-6">{children}</div>
       </div>
     </main>
@@ -22,7 +25,11 @@ export function AuthCard({
 }
 
 export const inputClass =
-  'mt-1 block w-full rounded-lg border border-[var(--border)] bg-transparent px-3 py-2.5 outline-none focus:border-[var(--accent)]';
+  'text-body-lg mt-1 block w-full min-h-[var(--tap-min)] rounded-[var(--radius-sm)] border border-[var(--line-strong)] bg-[var(--surface)] px-3 outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus)]';
 
 export const buttonClass =
-  'w-full rounded-lg bg-[var(--accent)] px-4 py-2.5 font-medium text-white disabled:opacity-60 dark:text-black';
+  'text-label w-full min-h-[var(--tap-primary)] rounded-[var(--radius-md)] bg-[var(--accent)] px-4 text-[var(--on-accent)] active:bg-[var(--accent-strong)] disabled:opacity-[var(--opacity-disabled)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus)]';
+
+/** Secondary, outlined button (sign out, switch shop). */
+export const quietButtonClass =
+  'text-label-sm min-h-[var(--tap-min)] rounded-[var(--radius-md)] border border-[var(--line-strong)] px-4 active:bg-[var(--surface-pressed)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus)]';

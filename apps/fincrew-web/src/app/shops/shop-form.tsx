@@ -11,11 +11,11 @@ export function ShopForm({ labels, ownerName }: { labels: Labels; ownerName?: st
 
   return (
     <form action={action} className="space-y-4">
-      <label className="block text-sm">
+      <label className="text-label-sm block">
         {labels.shopName}
         <input name="shopName" required maxLength={120} className={inputClass} />
       </label>
-      <label className="block text-sm">
+      <label className="text-label-sm block">
         {labels.yourName}
         <input
           name="ownerName"
@@ -27,7 +27,7 @@ export function ShopForm({ labels, ownerName }: { labels: Labels; ownerName?: st
         />
       </label>
       {state.error && (
-        <p role="alert" className="text-sm text-[var(--danger)]">
+        <p role="alert" className="text-body text-[var(--danger)]">
           {state.error}
         </p>
       )}

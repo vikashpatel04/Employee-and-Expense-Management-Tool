@@ -100,10 +100,17 @@ importers:
         version: 5.9.3
 
   packages/ui:
+    dependencies:
+      '@fincrew/core':
+        specifier: workspace:*
+        version: link:../core
     devDependencies:
       typescript:
         specifier: ~5.9.3
         version: 5.9.3
+      vitest:
+        specifier: ^5.0.5
+        version: 5.0.5(@types/node@24.19.2)(vite@8.3.5(@types/node@24.19.2)(jiti@2.7.0))
 
   supabase:
     devDependencies:

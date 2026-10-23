@@ -1,0 +1,293 @@
+/* FinCrew Design System v1: generated from packages/ui/design/tokens.json by scripts/ui-tokens.mjs. Do not edit. */
+
+/* Light values; aliases (accent, money-*, danger) point at other variables, so they follow the theme. */
+:root {
+  --canvas: #f1f3f0;
+  --surface: #ffffff;
+  --surface-muted: #e7eae5;
+  --surface-pressed: #dde1db;
+  --line: #dde1db;
+  --line-strong: #838b85;
+  --ink: #11171a;
+  --ink-muted: #525b62;
+  --ink-subtle: #656e75;
+  --scrim: rgba(8, 12, 14, 0.48);
+  --fincrew: #0b5d6b;
+  --fincrew-strong: #08494f;
+  --fincrew-soft: #d9edef;
+  --on-fincrew: #ffffff;
+  --staffora: #f2a30f;
+  --staffora-strong: #d98c00;
+  --staffora-ink: #7a4800;
+  --staffora-soft: #fdefd0;
+  --on-staffora: #271900;
+  --accent: var(--fincrew);
+  --accent-strong: var(--fincrew-strong);
+  --accent-soft: var(--fincrew-soft);
+  --accent-ink: var(--fincrew);
+  --on-accent: var(--on-fincrew);
+  --focus: #1a5fd6;
+  --status-present: #13753a;
+  --status-present-soft: #dcf1e2;
+  --status-half-day: #566a0b;
+  --status-half-day-soft: #ecf1d0;
+  --status-absent: #bb2727;
+  --status-absent-soft: #fbe3e1;
+  --status-paid-leave: #1d53bd;
+  --status-paid-leave-soft: #e1e9fb;
+  --status-unpaid-leave: #6640b5;
+  --status-unpaid-leave-soft: #ece5fa;
+  --status-weekly-off: #535d67;
+  --status-weekly-off-soft: #e7eaed;
+  --status-holiday: #9e2270;
+  --status-holiday-soft: #f8e0ee;
+  --status-late: #a14b06;
+  --status-late-soft: #fcead1;
+  --status-unmarked: #656e75;
+  --money-owed: var(--status-late);
+  --money-paid: var(--status-present);
+  --money-advance: var(--status-paid-leave);
+  --money-deduction: var(--ink-muted);
+  --danger: var(--status-absent);
+  --on-danger: #ffffff;
+  --elevation-1: 0 1px 2px rgba(17, 23, 26, 0.06), 0 0 0 1px rgba(17, 23, 26, 0.05);
+  --elevation-2: 0 6px 20px rgba(17, 23, 26, 0.08), 0 1px 3px rgba(17, 23, 26, 0.06);
+  --elevation-3: 0 -10px 40px rgba(17, 23, 26, 0.16);
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --radius-pill: 999px;
+  --tap-min: 48px;
+  --tap-primary: 56px;
+  --row-min: 72px;
+  --keypad-key: 64px;
+  --tab-bar: 64px;
+  --avatar: 44px;
+  --icon: 24px;
+  --icon-sm: 16px;
+  --content-max: 480px;
+  --opacity-disabled: 0.45;
+  --font-sans: "Anek Latin", "Anek Tamil", "Anek Devanagari", "Noto Sans Tamil", "Noto Sans Devanagari", system-ui, sans-serif;
+  --font-num: "Anek Latin", "Anek Tamil", "Anek Devanagari", "Noto Sans Tamil", "Noto Sans Devanagari", system-ui, sans-serif;
+  --font-ta: "Anek Tamil", "Anek Latin", "Anek Tamil", "Anek Devanagari", "Noto Sans Tamil", "Noto Sans Devanagari", system-ui, sans-serif;
+  --font-hi: "Anek Devanagari", "Anek Latin", "Anek Tamil", "Anek Devanagari", "Noto Sans Tamil", "Noto Sans Devanagari", system-ui, sans-serif;
+  color-scheme: light;
+}
+
+/* Dark: the system setting, unless the user picked light; or an explicit dark choice. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --canvas: #0c1013;
+    --surface: #151a1e;
+    --surface-muted: #20272c;
+    --surface-pressed: #2a3238;
+    --line: #283037;
+    --line-strong: #68737c;
+    --ink: #edf0f1;
+    --ink-muted: #a5afb6;
+    --ink-subtle: #8c969e;
+    --scrim: rgba(0, 0, 0, 0.6);
+    --fincrew: #5cc6d2;
+    --fincrew-strong: #86d7e0;
+    --fincrew-soft: #11343a;
+    --on-fincrew: #04232a;
+    --staffora: #ffba3d;
+    --staffora-strong: #ffcb6b;
+    --staffora-ink: #ffc65a;
+    --staffora-soft: #392908;
+    --on-staffora: #271900;
+    --focus: #8fb8ff;
+    --status-present: #66d48e;
+    --status-present-soft: #12301f;
+    --status-half-day: #c4d96c;
+    --status-half-day-soft: #262e0f;
+    --status-absent: #ff9188;
+    --status-absent-soft: #3c1716;
+    --status-paid-leave: #93b5ff;
+    --status-paid-leave-soft: #152649;
+    --status-unpaid-leave: #c0a6ff;
+    --status-unpaid-leave-soft: #291d47;
+    --status-weekly-off: #aab4be;
+    --status-weekly-off-soft: #232a31;
+    --status-holiday: #f595d0;
+    --status-holiday-soft: #3b1530;
+    --status-late: #ffb468;
+    --status-late-soft: #392509;
+    --status-unmarked: #8c969e;
+    --on-danger: #2a0b0a;
+    --elevation-1: 0 0 0 1px rgba(255, 255, 255, 0.06);
+    --elevation-2: 0 6px 20px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.07);
+    --elevation-3: 0 -10px 40px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.08);
+    color-scheme: dark;
+  }
+}
+:root[data-theme='dark'] {
+  --canvas: #0c1013;
+  --surface: #151a1e;
+  --surface-muted: #20272c;
+  --surface-pressed: #2a3238;
+  --line: #283037;
+  --line-strong: #68737c;
+  --ink: #edf0f1;
+  --ink-muted: #a5afb6;
+  --ink-subtle: #8c969e;
+  --scrim: rgba(0, 0, 0, 0.6);
+  --fincrew: #5cc6d2;
+  --fincrew-strong: #86d7e0;
+  --fincrew-soft: #11343a;
+  --on-fincrew: #04232a;
+  --staffora: #ffba3d;
+  --staffora-strong: #ffcb6b;
+  --staffora-ink: #ffc65a;
+  --staffora-soft: #392908;
+  --on-staffora: #271900;
+  --focus: #8fb8ff;
+  --status-present: #66d48e;
+  --status-present-soft: #12301f;
+  --status-half-day: #c4d96c;
+  --status-half-day-soft: #262e0f;
+  --status-absent: #ff9188;
+  --status-absent-soft: #3c1716;
+  --status-paid-leave: #93b5ff;
+  --status-paid-leave-soft: #152649;
+  --status-unpaid-leave: #c0a6ff;
+  --status-unpaid-leave-soft: #291d47;
+  --status-weekly-off: #aab4be;
+  --status-weekly-off-soft: #232a31;
+  --status-holiday: #f595d0;
+  --status-holiday-soft: #3b1530;
+  --status-late: #ffb468;
+  --status-late-soft: #392509;
+  --status-unmarked: #8c969e;
+  --on-danger: #2a0b0a;
+  --elevation-1: 0 0 0 1px rgba(255, 255, 255, 0.06);
+  --elevation-2: 0 6px 20px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.07);
+  --elevation-3: 0 -10px 40px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  color-scheme: dark;
+}
+
+/* Staffora screens: wrap in class="app-staffora" to switch the accent to Marigold. */
+.app-staffora {
+  --accent: var(--staffora);
+  --accent-strong: var(--staffora-strong);
+  --accent-soft: var(--staffora-soft);
+  --accent-ink: var(--staffora-ink);
+  --on-accent: var(--on-staffora);
+}
+
+/* Text styles */
+.text-money-hero {
+  font-family: var(--font-num);
+  font-size: 48px;
+  line-height: 52px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+
+.text-money-lg {
+  font-family: var(--font-num);
+  font-size: 32px;
+  line-height: 38px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.text-money-md {
+  font-family: var(--font-num);
+  font-size: 20px;
+  line-height: 26px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.text-money-sm {
+  font-family: var(--font-num);
+  font-size: 15px;
+  line-height: 20px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.text-code-digits {
+  font-family: var(--font-num);
+  font-size: 44px;
+  line-height: 48px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.text-title-xl {
+  font-family: var(--font-sans);
+  font-size: 28px;
+  line-height: 34px;
+  font-weight: 600;
+}
+
+.text-title-lg {
+  font-family: var(--font-sans);
+  font-size: 22px;
+  line-height: 28px;
+  font-weight: 600;
+}
+
+.text-title-md {
+  font-family: var(--font-sans);
+  font-size: 18px;
+  line-height: 24px;
+  font-weight: 600;
+}
+
+.text-body-lg {
+  font-family: var(--font-sans);
+  font-size: 17px;
+  line-height: 26px;
+  font-weight: 400;
+}
+
+.text-body {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 22px;
+  font-weight: 400;
+}
+
+.text-label {
+  font-family: var(--font-sans);
+  font-size: 17px;
+  line-height: 22px;
+  font-weight: 600;
+}
+
+.text-label-sm {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 20px;
+  font-weight: 600;
+}
+
+.text-caption {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 500;
+}
+
+.text-micro {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+}

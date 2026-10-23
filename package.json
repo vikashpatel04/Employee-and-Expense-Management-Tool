@@ -14,7 +14,8 @@
     "test": "turbo run test",
     "format": "prettier --write .",
     "db:login": "supabase login",
-    "db:types": "node scripts/db-types.mjs"
+    "db:types": "node scripts/db-types.mjs",
+    "ui:tokens": "node scripts/ui-tokens.mjs"
   },
   "devDependencies": {
     "prettier": "^3.9.10",

@@ -3,3 +3,6 @@ pnpm-lock.yaml
 node_modules
 docs/PLAN.md
 packages/db/src/database.types.ts
+packages/ui/src/tokens.generated.ts
+packages/ui/src/tokens.css
+packages/ui/design/tokens.json
