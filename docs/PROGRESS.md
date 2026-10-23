@@ -2,13 +2,77 @@
 
 _Last updated: 2026-10-23_
 
+## Start here (handover for a new session)
+
+**Where we are:** Phases 1–3 done; Phase 4 (FinCrew website) in progress — data layer live,
+screens slices 1–4 done and checked in the browser: app shell + shop switcher, staff list/add,
+staff detail (overview, ledger, pay), attendance grid, salary run. Local `main` may be ahead of
+GitHub: run `git status -sb`; the owner pushes (never push unless asked).
+
+**Next work, in order** (owner said "continue"; pick the top unfinished one):
+
+1. **Advances on the web**: give / record repaid (table `advances`, limit confirmation via
+   `over_limit_confirmed`), staff advance limit + monthly cut (`staff.advance_limit_paise`,
+   `advance_cut_paise`), undo payment (reversal line, `salary.undo_payment`).
+2. **Settings screens** (owner rule: every rule is an admin setting): holidays; leave templates
+   (versions: weekly offs, paid leaves, carry-over, sandwich, accrual — `validateTemplateVersion`);
+   assign template to staff; shop rules (`shops.settings` → `resolveShopRules`/`validateShopRules`,
+   reference in `docs/features/core-rules.md`); roles & permissions.
+3. **Staff detail extras**: edit name/phone, leaving date/status, allowances & deductions,
+   advance limit/cut, opening balance.
+4. Payslip print/PDF, attendance CSV, clear a mark; then Phase 5 (Android), 6 (expenses), 7 (Staffora).
+
+**Waiting on the owner:**
+
+- Whether to **finalize/pay Test Staff's October draft** on the live shop to test end to end.
+  Ledger lines are permanent, so Test Staff (person `55e7a159-1a4b-4615-a1a3-bdbbcdc6b304`)
+  could never be deleted afterwards. Until then it's deletable (people delete cascades; drafts
+  have no ledger lines).
+- Review rule defaults (`docs/features/core-rules.md`), leaked-password protection (Supabase Auth).
+
+**Owner rules (also in CLAUDE.md and memory):** no co-author on commits; owner pushes; docs in
+every commit; every rule is a setting (no hard-coding); dates DD/MM/YYYY everywhere; all strings
+via i18n; design follows the Claude Design system (`docs/DESIGN.md`).
+
+**How to check work:**
+
+- Tests/types/build: `pnpm test` (core 225, ui 6, db 90 — PGlite, no Docker), `pnpm typecheck`,
+  `pnpm build`, `pnpm ui:tokens --check`, `bash scripts/check-migrations.sh origin/main HEAD`.
+- Live DB (CLI is logged in): `pnpm exec supabase db query --linked --project-ref
+ufmlqvvfznemghmnvynz "<sql>"`; advisors: `pnpm exec supabase db advisors --linked --project-ref
+ufmlqvvfznemghmnvynz --type all`. To test as the owner inside SQL: `begin; select
+set_config('request.jwt.claim.sub', (select auth_user_id::text from public.people where is_owner
+limit 1), true); set local role authenticated; … rollback;`
+- Browser: `.claude/launch.json` → preview "fincrew-web" on :3000 (or a dev server the owner
+  started). Signed-in pages need the **owner to sign in** in the pane (never type their password).
+- After a pushed migration: watch CI (`gh run list`), then `pnpm db:types` and commit types.
+
+**Gotchas seen this session:**
+
+- Windows dev server sometimes keeps a **stale server bundle** after edits (client updates, SSR
+  doesn't → hydration mismatch). Fix: stop the preview, `rm -rf apps/fincrew-web/.next`, start.
+  Stale `.next/types` after moving routes breaks `tsc`: delete `.next`.
+- HTML `pattern` is compiled with the **`v` flag**: no unescaped `/` in `[...]`; write patterns
+  with `String.raw` (see `dateFieldProps` in `apps/fincrew-web/src/app/components.tsx`).
+- Postgres **jsonb reorders keys**: compare stored JSON with `sameJson` (`src/lib/salary-month.ts`).
+- Anything exported from a `'use server'` file is a callable endpoint: keep helpers in `src/lib`.
+- Composite FKs mean cross-shop rows fail with `foreign key`; unique `(staff_id, effective_from)`
+  on dated tables.
+- New public SQL functions must be added to `supabase/tests/functions.test.ts`'s pinned list.
+- Design canvases: read with the Artifact tool; read `project/canvas.json` + files before editing;
+  a newer version may exist (re-read before publishing).
+
+**Key links:** FinCrew screens https://claude.ai/artifact/WydRUvQzCNMAoXcNVh7pWC · Staffora screens
+https://claude.ai/artifact/9YMxty5q9jFvuut8ay8dTe · Design system
+https://claude.ai/artifact/8jzomFcfJazHfn6yiUFQQP · Website https://fincrew-web.vercel.app
+
 ## Phase status (docs/PLAN.md §8)
 
 | #   | Phase                        | Status                                                                                                                                     |
 | --- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
 | 1   | Foundation                   | **Done** (2026-10-23)                                                                                                                      |
-| 2   | Core logic (`packages/core`) | **Done** (2026-10-23): 201 tests, every rule a setting; `docs/features/core-rules.md`                                                      |
-| 3   | Design                       | **Design system v1 done** in Claude Design (`docs/DESIGN.md`); key screens + `packages/ui` to do                                           |
+| 2   | Core logic (`packages/core`) | **Done**: 225 tests, every rule a setting; `docs/features/core-rules.md`                                                                   |
+| 3   | Design                       | **Done** (2026-10-23): design system, key screens (owner reviewed), `packages/ui` tokens                                                   |
 | 4   | FinCrew web core             | **In progress**: data layer live; 4.3 screens: slices 1–4 (shell, staff, staff detail + pay, attendance grid, salary run) done and checked |
 | 5   | FinCrew Android              | Not started                                                                                                                                |
 | 6   | Expenses                     | Not started                                                                                                                                |
@@ -80,22 +144,7 @@ lives in the git-ignored root `.env` for `pnpm db:types`.
 
 ## Next up
 
-**Phase 4 plan:** 4.1 data layer (staff, pay, leave, holidays, attendance) ✅ live → 4.2 money
-(advances, ledger append-only, salary runs + payslips, leave balances) ✅ live → 4.3 web
-screens on the design system (needs `packages/ui` from Phase 3) → settings screen for every rule.
-
-**Multi-shop:** live (2026-10-23). Backend verified on the live DB; the switcher UI shows once
-you belong to 2+ shops.
-
-**Owner:** review the defaults in the settings reference (`docs/features/core-rules.md`); every
-rule is changeable, so this only decides what a new shop starts with. Phase 4 needs a settings
-screen for them.
-
-**Phase 3 (Design) remainder:** key screens as Design artifacts on the design system, then
-`packages/ui` generated from its `tokens.json` (`docs/DESIGN.md`). **Phase 4 (FinCrew web core)**
-can start in parallel on the data side: tables for staff, pay settings, leave templates,
-holidays, attendance, advances, ledger, salary runs, payslips, each with RLS tests, using
-`packages/core` for every calculation.
+See **Start here** at the top for the ordered list.
 
 Open items (low priority, fold into the next migration that touches these tables):
 

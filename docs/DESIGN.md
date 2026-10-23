@@ -69,12 +69,20 @@ run `pnpm ui:tokens`. That generates `src/tokens.generated.ts` (resolved `themes
 theme, sizes, text styles) and `src/tokens.css` (variables, dark mode, `.app-staffora`, `.text-*`).
 CI fails if the generated files are stale.
 
-## Still to design (Phase 3)
+## Still to design
 
-Key screens as **Design** artifacts built on this system (PLAN §7): Today, Attendance code,
-Staff detail, Salary run, Add expense, Staffora Home, Scan and Enter code. Then generate
-`packages/ui` from `tokens.json` (TypeScript theme for web and React Native; `AppScope` becomes
-a theme provider).
+Phase 3 is done (system, key screens, `packages/ui`). Later screens are designed in the same
+canvases when needed: settings screens (leave templates, holidays, rules, roles), advances,
+expenses, Staffora requests. Fill the design-system gaps listed above as screens need them.
+
+## How the website uses it
+
+- `apps/fincrew-web` imports `@fincrew/ui/tokens.css` (colours light/dark, sizes, `.text-*`
+  styles) and loads Anek Latin with `next/font`. Components use token variables only
+  (`bg-[var(--surface)]`, `text-[var(--ink-muted)]`, …). Icons: Lucide (24px, 2px stroke).
+- Web screens follow the canvases' "Web ·" artboards; Android screens will follow the phone
+  artboards (Phase 5) using `themes` from `@fincrew/ui`.
+- Owner rule overrides the design voice: **dates are DD/MM/YYYY** everywhere.
 
 ## Notes for code
 
