@@ -9,7 +9,7 @@ _Last updated: 2026-10-23_
 | 1   | Foundation                   | **Done** (2026-10-23)                                                                            |
 | 2   | Core logic (`packages/core`) | **Done** (2026-10-23): 201 tests, every rule a setting; `docs/features/core-rules.md`            |
 | 3   | Design                       | **Design system v1 done** in Claude Design (`docs/DESIGN.md`); key screens + `packages/ui` to do |
-| 4   | FinCrew web core             | **In progress**: 4.1 data live; 4.2 money data done (not live yet); 4.3 screens next             |
+| 4   | FinCrew web core             | **In progress**: 4.1 data live; 4.2 money data live; 4.3 screens next                            |
 | 5   | FinCrew Android              | Not started                                                                                      |
 | 6   | Expenses                     | Not started                                                                                      |
 | 7   | Staffora                     | Not started                                                                                      |
@@ -61,13 +61,13 @@ setup against the live project, and sign-in on the Vercel deployment (2026-10-23
 
 ## Migrations applied to the live project
 
-| Migration                             | Applied                        | How                             |
-| ------------------------------------- | ------------------------------ | ------------------------------- |
-| `20261022000001_foundation.sql`       | 2026-10-23                     | CI migrate job, run 39898016456 |
-| `20261023000001_harden_functions.sql` | 2026-10-23                     | CI migrate job, run 39901338816 |
-| `20261023000002_multi_shop.sql`       | 2026-10-23                     | CI migrate job, run 39950298454 |
-| `20261023000003_staff_attendance.sql` | 2026-10-23                     | CI migrate job, run 39950298454 |
-| `20261023000004_money.sql`            | pending — applies on next push | CI migrate job                  |
+| Migration                             | Applied    | How                             |
+| ------------------------------------- | ---------- | ------------------------------- |
+| `20261022000001_foundation.sql`       | 2026-10-23 | CI migrate job, run 39898016456 |
+| `20261023000001_harden_functions.sql` | 2026-10-23 | CI migrate job, run 39901338816 |
+| `20261023000002_multi_shop.sql`       | 2026-10-23 | CI migrate job, run 39950298454 |
+| `20261023000003_staff_attendance.sql` | 2026-10-23 | CI migrate job, run 39950298454 |
+| `20261023000004_money.sql`            | 2026-10-23 | CI migrate job, run 39953812217 |
 
 Migrations are applied by the CI **migrate** job on every push to `main`, so **everything in
 `supabase/migrations/` on `main` counts as applied** and must never change (CI enforces this).
@@ -80,7 +80,7 @@ lives in the git-ignored root `.env` for `pnpm db:types`.
 ## Next up
 
 **Phase 4 plan:** 4.1 data layer (staff, pay, leave, holidays, attendance) ✅ live → 4.2 money
-(advances, ledger append-only, salary runs + payslips, leave balances) ✅ not live → 4.3 web
+(advances, ledger append-only, salary runs + payslips, leave balances) ✅ live → 4.3 web
 screens on the design system (needs `packages/ui` from Phase 3) → settings screen for every rule.
 
 **Multi-shop:** live (2026-10-23). Backend verified on the live DB; the switcher UI shows once
@@ -107,6 +107,9 @@ Tables still to add (with the phase that uses them, each with RLS tests): `staff
 `attendance_scans`, `invites`, `pin_credentials`, `push_tokens` (Phase 7).
 
 ## Session log
+
+- **2026-10-23** — Money migration live (CI run 39953812217): 21 tables, all RLS; advisors show only
+  the accepted warnings (FK/initplan notes fixed); DB types regenerated.
 
 - **2026-10-23** — Pushed: multi-shop + Phase 4.1 live (CI run 39950298454); live DB checked (4
   migrations, 16 tables all RLS, owner data intact), advisors rerun, DB types regenerated.

@@ -14,6 +14,77 @@ export type Database = {
   }
   public: {
     Tables: {
+      advances: {
+        Row: {
+          amount_paise: number
+          created_at: string
+          created_by: string | null
+          date: string
+          id: string
+          kind: string
+          note: string | null
+          over_limit_confirmed: boolean
+          payment_mode: string | null
+          shop_id: string
+          staff_id: string
+        }
+        Insert: {
+          amount_paise: number
+          created_at?: string
+          created_by?: string | null
+          date: string
+          id?: string
+          kind?: string
+          note?: string | null
+          over_limit_confirmed?: boolean
+          payment_mode?: string | null
+          shop_id: string
+          staff_id: string
+        }
+        Update: {
+          amount_paise?: number
+          created_at?: string
+          created_by?: string | null
+          date?: string
+          id?: string
+          kind?: string
+          note?: string | null
+          over_limit_confirmed?: boolean
+          payment_mode?: string | null
+          shop_id?: string
+          staff_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "advances_shop_id_created_by_fkey"
+            columns: ["shop_id", "created_by"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["shop_id", "id"]
+          },
+          {
+            foreignKeyName: "advances_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "advances_shop_id_staff_id_fkey"
+            columns: ["shop_id", "staff_id"]
+            isOneToOne: false
+            referencedRelation: "advance_balances"
+            referencedColumns: ["shop_id", "staff_id"]
+          },
+          {
+            foreignKeyName: "advances_shop_id_staff_id_fkey"
+            columns: ["shop_id", "staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["shop_id", "person_id"]
+          },
+        ]
+      }
       allowances: {
         Row: {
           amount_paise: number
@@ -55,6 +126,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "shops"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "allowances_shop_id_staff_id_fkey"
+            columns: ["shop_id", "staff_id"]
+            isOneToOne: false
+            referencedRelation: "advance_balances"
+            referencedColumns: ["shop_id", "staff_id"]
           },
           {
             foreignKeyName: "allowances_shop_id_staff_id_fkey"
@@ -122,6 +200,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "people"
             referencedColumns: ["shop_id", "id"]
+          },
+          {
+            foreignKeyName: "attendance_shop_id_staff_id_fkey"
+            columns: ["shop_id", "staff_id"]
+            isOneToOne: false
+            referencedRelation: "advance_balances"
+            referencedColumns: ["shop_id", "staff_id"]
           },
           {
             foreignKeyName: "attendance_shop_id_staff_id_fkey"
@@ -226,6 +311,13 @@ export type Database = {
             foreignKeyName: "fixed_deductions_shop_id_staff_id_fkey"
             columns: ["shop_id", "staff_id"]
             isOneToOne: false
+            referencedRelation: "advance_balances"
+            referencedColumns: ["shop_id", "staff_id"]
+          },
+          {
+            foreignKeyName: "fixed_deductions_shop_id_staff_id_fkey"
+            columns: ["shop_id", "staff_id"]
+            isOneToOne: false
             referencedRelation: "staff"
             referencedColumns: ["shop_id", "person_id"]
           },
@@ -263,6 +355,70 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "shops"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      leave_balances: {
+        Row: {
+          carried: number
+          earned: number
+          lapsed: number
+          month: number
+          opening: number
+          paid_out: number
+          shop_id: string
+          staff_id: string
+          updated_at: string
+          used: number
+          year: number
+        }
+        Insert: {
+          carried?: number
+          earned?: number
+          lapsed?: number
+          month: number
+          opening?: number
+          paid_out?: number
+          shop_id: string
+          staff_id: string
+          updated_at?: string
+          used?: number
+          year: number
+        }
+        Update: {
+          carried?: number
+          earned?: number
+          lapsed?: number
+          month?: number
+          opening?: number
+          paid_out?: number
+          shop_id?: string
+          staff_id?: string
+          updated_at?: string
+          used?: number
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leave_balances_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leave_balances_shop_id_staff_id_fkey"
+            columns: ["shop_id", "staff_id"]
+            isOneToOne: false
+            referencedRelation: "advance_balances"
+            referencedColumns: ["shop_id", "staff_id"]
+          },
+          {
+            foreignKeyName: "leave_balances_shop_id_staff_id_fkey"
+            columns: ["shop_id", "staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["shop_id", "person_id"]
           },
         ]
       }
@@ -352,6 +508,96 @@ export type Database = {
           },
         ]
       }
+      ledger_entries: {
+        Row: {
+          adjusts: string | null
+          amount_paise: number
+          created_at: string
+          created_by: string | null
+          date: string
+          id: string
+          name: string | null
+          note: string | null
+          payment_mode: string | null
+          ref_id: string | null
+          ref_table: string | null
+          reverses_id: string | null
+          shop_id: string
+          staff_id: string
+          type: string
+        }
+        Insert: {
+          adjusts?: string | null
+          amount_paise: number
+          created_at?: string
+          created_by?: string | null
+          date: string
+          id?: string
+          name?: string | null
+          note?: string | null
+          payment_mode?: string | null
+          ref_id?: string | null
+          ref_table?: string | null
+          reverses_id?: string | null
+          shop_id: string
+          staff_id: string
+          type: string
+        }
+        Update: {
+          adjusts?: string | null
+          amount_paise?: number
+          created_at?: string
+          created_by?: string | null
+          date?: string
+          id?: string
+          name?: string | null
+          note?: string | null
+          payment_mode?: string | null
+          ref_id?: string | null
+          ref_table?: string | null
+          reverses_id?: string | null
+          shop_id?: string
+          staff_id?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ledger_entries_reverses_id_fkey"
+            columns: ["reverses_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ledger_entries_shop_id_created_by_fkey"
+            columns: ["shop_id", "created_by"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["shop_id", "id"]
+          },
+          {
+            foreignKeyName: "ledger_entries_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ledger_entries_shop_id_staff_id_fkey"
+            columns: ["shop_id", "staff_id"]
+            isOneToOne: false
+            referencedRelation: "advance_balances"
+            referencedColumns: ["shop_id", "staff_id"]
+          },
+          {
+            foreignKeyName: "ledger_entries_shop_id_staff_id_fkey"
+            columns: ["shop_id", "staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["shop_id", "person_id"]
+          },
+        ]
+      }
       pay_settings: {
         Row: {
           created_at: string
@@ -417,6 +663,115 @@ export type Database = {
           },
           {
             foreignKeyName: "pay_settings_shop_id_staff_id_fkey"
+            columns: ["shop_id", "staff_id"]
+            isOneToOne: false
+            referencedRelation: "advance_balances"
+            referencedColumns: ["shop_id", "staff_id"]
+          },
+          {
+            foreignKeyName: "pay_settings_shop_id_staff_id_fkey"
+            columns: ["shop_id", "staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["shop_id", "person_id"]
+          },
+        ]
+      }
+      payslips: {
+        Row: {
+          advance_cut_paise: number
+          created_at: string
+          deductions_paise: number
+          finalized_at: string | null
+          finalized_by: string | null
+          gross_paise: number
+          id: string
+          leave: Json | null
+          lines: Json
+          net_before_advance_paise: number
+          net_pay_paise: number
+          pdf_path: string | null
+          revision: number
+          run_id: string
+          shop_id: string
+          staff_id: string
+          status: string
+          summary: Json
+          warnings: Json
+        }
+        Insert: {
+          advance_cut_paise?: number
+          created_at?: string
+          deductions_paise?: number
+          finalized_at?: string | null
+          finalized_by?: string | null
+          gross_paise?: number
+          id?: string
+          leave?: Json | null
+          lines?: Json
+          net_before_advance_paise?: number
+          net_pay_paise?: number
+          pdf_path?: string | null
+          revision?: number
+          run_id: string
+          shop_id: string
+          staff_id: string
+          status?: string
+          summary?: Json
+          warnings?: Json
+        }
+        Update: {
+          advance_cut_paise?: number
+          created_at?: string
+          deductions_paise?: number
+          finalized_at?: string | null
+          finalized_by?: string | null
+          gross_paise?: number
+          id?: string
+          leave?: Json | null
+          lines?: Json
+          net_before_advance_paise?: number
+          net_pay_paise?: number
+          pdf_path?: string | null
+          revision?: number
+          run_id?: string
+          shop_id?: string
+          staff_id?: string
+          status?: string
+          summary?: Json
+          warnings?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payslips_shop_id_finalized_by_fkey"
+            columns: ["shop_id", "finalized_by"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["shop_id", "id"]
+          },
+          {
+            foreignKeyName: "payslips_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payslips_shop_id_run_id_fkey"
+            columns: ["shop_id", "run_id"]
+            isOneToOne: false
+            referencedRelation: "salary_runs"
+            referencedColumns: ["shop_id", "id"]
+          },
+          {
+            foreignKeyName: "payslips_shop_id_staff_id_fkey"
+            columns: ["shop_id", "staff_id"]
+            isOneToOne: false
+            referencedRelation: "advance_balances"
+            referencedColumns: ["shop_id", "staff_id"]
+          },
+          {
+            foreignKeyName: "payslips_shop_id_staff_id_fkey"
             columns: ["shop_id", "staff_id"]
             isOneToOne: false
             referencedRelation: "staff"
@@ -592,6 +947,48 @@ export type Database = {
           },
         ]
       }
+      salary_runs: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          month: number
+          shop_id: string
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          month: number
+          shop_id: string
+          year: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          month?: number
+          shop_id?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "salary_runs_shop_id_created_by_fkey"
+            columns: ["shop_id", "created_by"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["shop_id", "id"]
+          },
+          {
+            foreignKeyName: "salary_runs_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shops: {
         Row: {
           created_at: string
@@ -615,6 +1012,7 @@ export type Database = {
       }
       staff: {
         Row: {
+          advance_cut_paise: number | null
           advance_limit_paise: number | null
           created_at: string
           device_id: string | null
@@ -626,6 +1024,7 @@ export type Database = {
           status: string
         }
         Insert: {
+          advance_cut_paise?: number | null
           advance_limit_paise?: number | null
           created_at?: string
           device_id?: string | null
@@ -637,6 +1036,7 @@ export type Database = {
           status?: string
         }
         Update: {
+          advance_cut_paise?: number | null
           advance_limit_paise?: number | null
           created_at?: string
           device_id?: string | null
@@ -701,6 +1101,13 @@ export type Database = {
             foreignKeyName: "staff_leave_templates_shop_id_staff_id_fkey"
             columns: ["shop_id", "staff_id"]
             isOneToOne: false
+            referencedRelation: "advance_balances"
+            referencedColumns: ["shop_id", "staff_id"]
+          },
+          {
+            foreignKeyName: "staff_leave_templates_shop_id_staff_id_fkey"
+            columns: ["shop_id", "staff_id"]
+            isOneToOne: false
             referencedRelation: "staff"
             referencedColumns: ["shop_id", "person_id"]
           },
@@ -715,13 +1122,82 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      advance_balances: {
+        Row: {
+          advance_cut_paise: number | null
+          advance_limit_paise: number | null
+          outstanding_paise: number | null
+          shop_id: string | null
+          staff_id: string | null
+        }
+        Insert: {
+          advance_cut_paise?: number | null
+          advance_limit_paise?: number | null
+          outstanding_paise?: never
+          shop_id?: string | null
+          staff_id?: string | null
+        }
+        Update: {
+          advance_cut_paise?: number | null
+          advance_limit_paise?: number | null
+          outstanding_paise?: never
+          shop_id?: string | null
+          staff_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_shop_id_person_id_fkey"
+            columns: ["shop_id", "staff_id"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["shop_id", "id"]
+          },
+        ]
+      }
+      ledger_balances: {
+        Row: {
+          balance_paise: number | null
+          shop_id: string | null
+          staff_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ledger_entries_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ledger_entries_shop_id_staff_id_fkey"
+            columns: ["shop_id", "staff_id"]
+            isOneToOne: false
+            referencedRelation: "advance_balances"
+            referencedColumns: ["shop_id", "staff_id"]
+          },
+          {
+            foreignKeyName: "ledger_entries_shop_id_staff_id_fkey"
+            columns: ["shop_id", "staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["shop_id", "person_id"]
+          },
+        ]
+      }
     }
     Functions: {
       create_shop: {
         Args: { owner_name: string; shop_name: string }
         Returns: string
       }
+      finalize_payslip: { Args: { p_payslip: string }; Returns: undefined }
       my_permissions: { Args: { p_shop: string }; Returns: string[] }
       ping: { Args: never; Returns: string }
       shop_exists: { Args: never; Returns: boolean }
