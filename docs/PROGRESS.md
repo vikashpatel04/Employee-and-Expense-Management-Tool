@@ -9,7 +9,7 @@ _Last updated: 2026-10-23_
 | 1   | Foundation                   | **Done** (2026-10-23)                                                                            |
 | 2   | Core logic (`packages/core`) | **Done** (2026-10-23): 201 tests, every rule a setting; `docs/features/core-rules.md`            |
 | 3   | Design                       | **Design system v1 done** in Claude Design (`docs/DESIGN.md`); key screens + `packages/ui` to do |
-| 4   | FinCrew web core             | Not started                                                                                      |
+| 4   | FinCrew web core             | **In progress**: 4.1 data layer done (not live yet); 4.2 money tables next                       |
 | 5   | FinCrew Android              | Not started                                                                                      |
 | 6   | Expenses                     | Not started                                                                                      |
 | 7   | Staffora                     | Not started                                                                                      |
@@ -66,6 +66,7 @@ setup against the live project, and sign-in on the Vercel deployment (2026-10-23
 | `20261022000001_foundation.sql`       | 2026-10-23                     | CI migrate job, run 39898016456 |
 | `20261023000001_harden_functions.sql` | 2026-10-23                     | CI migrate job, run 39901338816 |
 | `20261023000002_multi_shop.sql`       | pending — applies on next push | CI migrate job                  |
+| `20261023000003_staff_attendance.sql` | pending — applies on next push | CI migrate job                  |
 
 Migrations are applied by the CI **migrate** job on every push to `main`, so **everything in
 `supabase/migrations/` on `main` counts as applied** and must never change (CI enforces this).
@@ -76,6 +77,10 @@ Supabase project: `employee-expense-management`, ref `ufmlqvvfznemghmnvynz` (Mum
 lives in the git-ignored root `.env` for `pnpm db:types`.
 
 ## Next up
+
+**Phase 4 plan:** 4.1 data layer (staff, pay, leave, holidays, attendance) ✅ → 4.2 money
+(advances, ledger append-only, salary runs + payslips, leave balances, using core) → 4.3 web
+screens on the design system (needs `packages/ui` from Phase 3) → settings screen for every rule.
 
 **Multi-shop (2026-10-23, not yet live):** push to apply `20261023000002_multi_shop.sql`, then
 `pnpm db:types` and check the website: shop switcher on home, "Add a shop" for owners. During
@@ -106,6 +111,11 @@ Remaining tables from PLAN §5 (staff, pay_settings, attendance, ledger_entries,
 the phase that first uses them (mostly Phase 4), each with RLS tests.
 
 ## Session log
+
+- **2026-10-23** — **Phase 4.1** migration `20261023000003_staff_attendance.sql`: staff, pay
+  settings, allowances, fixed deductions, leave templates + versions + assignments, holidays,
+  attendance; composite FKs for shop safety; RLS per PLAN §3 incl. past-day edits; audit on all.
+  21 new DB tests (63 total). Feature doc `docs/features/staff-attendance-data.md`.
 
 - **2026-10-23** — **Multi-shop.** Migration `20261023000002_multi_shop.sql`: one `people` row per
   (shop, login), shop-scoped RLS helpers, `create_shop` (first run, or owners adding shops),

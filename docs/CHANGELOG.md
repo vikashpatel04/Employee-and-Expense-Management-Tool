@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Added — 2026-10-23 (Phase 4.1: data layer)
+
+- Tables: staff, pay_settings, allowances, fixed_deductions, leave_templates,
+  leave_template_versions, staff_leave_templates, holidays, attendance, with RLS, audit and
+  composite shop-safe foreign keys.
+
 ### Added — 2026-10-23 (multi-shop)
 
 - A login can belong to several shops; permissions, settings, roles and data are per shop.
