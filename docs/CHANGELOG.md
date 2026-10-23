@@ -11,7 +11,7 @@
 
 ### Security — 2026-10-23
 
-- Migration `20261023000001_harden_functions.sql`: helper and trigger functions moved to a
+- Migration `20261023000001_harden_functions.sql` (applied 2026-10-23): helper and trigger functions moved to a
   non-exposed `private` schema; anonymous users can only call `ping()`; new functions are no
   longer executable by anon/PUBLIC by default; `ping()` search_path fixed. Tests in
   `supabase/tests/functions.test.ts`.

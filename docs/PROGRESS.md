@@ -47,9 +47,9 @@ Done:
   - [x] Owner login created; signed in locally; shop set up ("Dhanalakshmi Textiles", owner
         Dinesh Patel). Verified in DB: 1 shop, 1 owner linked to the login, 22 permissions,
         2 audit rows, second `setup_shop` refused
-  - [ ] Push `main` so CI applies `20261023000001_harden_functions.sql`, then rerun
-        `supabase db advisors` (expected left: intended authenticated-callable functions,
-        Supabase's own `rls_auto_enable`, leaked-password protection)
+  - [x] Hardening migration applied (CI run 39901338816); advisor rerun: only the accepted
+        warnings remain (see DECISIONS 2026-10-23); helpers now 404 on the API; owner still
+        has 22 permissions
   - [ ] Import the repo in Vercel (root `apps/fincrew-web`), set env vars
   - [x] `pnpm db:types` (real types committed), cast removed from `session.ts`
 
@@ -58,10 +58,10 @@ setup against the live project (2026-10-23).
 
 ## Migrations applied to the live project
 
-| Migration                             | Applied                        | How                             |
-| ------------------------------------- | ------------------------------ | ------------------------------- |
-| `20261022000001_foundation.sql`       | 2026-10-23                     | CI migrate job, run 39898016456 |
-| `20261023000001_harden_functions.sql` | pending — applies on next push | CI migrate job                  |
+| Migration                             | Applied    | How                             |
+| ------------------------------------- | ---------- | ------------------------------- |
+| `20261022000001_foundation.sql`       | 2026-10-23 | CI migrate job, run 39898016456 |
+| `20261023000001_harden_functions.sql` | 2026-10-23 | CI migrate job, run 39901338816 |
 
 Migrations are applied by the CI **migrate** job on every push to `main`, so **everything in
 `supabase/migrations/` on `main` counts as applied** and must never change (CI enforces this).
@@ -72,6 +72,20 @@ lives in the git-ignored root `.env` for `pnpm db:types`.
 
 ## Next up
 
+1. **Vercel** (owner, ~5 min): import repo, root `apps/fincrew-web`, two env vars, then set the
+   Site URL in Supabase Auth. Closes Phase 1.
+2. **Phase 2** (below).
+
+Open items (low priority, fold into the next migration that touches these tables):
+
+- Advisor performance notes: `multiple_permissive_policies` on `roles`, `role_permissions`,
+  `person_roles` (the `*_write` "for all" policy overlaps `*_read` on SELECT; split it into
+  insert/update/delete); `unindexed_foreign_keys` on `audit_log.actor_id`,
+  `person_roles.role_id/shop_id`, `role_permissions.permission_key/shop_id`.
+- GitHub Actions warn that `actions/checkout@v4`, `setup-node@v4`, `pnpm/action-setup@v4`,
+  `supabase/setup-cli@v1` run on deprecated Node 20; bump when newer majors are available.
+- Leaked-password protection in Supabase Auth: owner's call (may need a paid plan).
+
 Phase 2 — `packages/core`, tests first from PLAN §4: leave templates + carry-over, sandwich rule,
 attendance → payable days, salary (monthly / daily / hourly, mid-month pay changes), late policy,
 ledger balance. No UI.
@@ -80,6 +94,9 @@ Remaining tables from PLAN §5 (staff, pay_settings, attendance, ledger_entries,
 the phase that first uses them (mostly Phase 4), each with RLS tests.
 
 ## Session log
+
+- **2026-10-23** — Hardening migration live; advisor rechecked; DB types regenerated (helpers no
+  longer in `public`). Open items listed under "Next up".
 
 - **2026-10-23** — Owner login + shop setup done against the live project and verified in the DB
   (`supabase db query --linked --project-ref …`). Security advisor run → hardening migration

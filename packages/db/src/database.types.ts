@@ -259,10 +259,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      current_person_id: { Args: never; Returns: string }
-      current_shop_id: { Args: never; Returns: string }
-      has_permission: { Args: { permission_key: string }; Returns: boolean }
-      is_owner: { Args: never; Returns: boolean }
       my_permissions: { Args: never; Returns: string[] }
       ping: { Args: never; Returns: string }
       setup_shop: {
