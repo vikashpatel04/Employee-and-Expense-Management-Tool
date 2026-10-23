@@ -1,0 +1,54 @@
+import type { ReactNode } from 'react';
+import { LogOut } from 'lucide-react';
+import { t } from '@/lib/i18n';
+import { requireMe } from '@/lib/session';
+import { AuthCard, buttonClass } from '../components';
+import { signOut } from '../login/actions';
+import { NavLinks, type NavItem } from './nav';
+import { ShopSwitcher } from './shop-switcher';
+
+/**
+ * Signed-in shell (design: "Web · attendance grid"): sidebar with the shop switcher and the
+ * sections this person may open, main area beside it; the sidebar stacks above on a phone.
+ * Sections appear here as they are built.
+ */
+export default async function AppLayout({ children }: { children: ReactNode }) {
+  const me = await requireMe();
+
+  if (!me) {
+    return (
+      <AuthCard title={t('appName')}>
+        <p className="text-body text-[var(--ink-muted)]">{t('auth.noAccess')}</p>
+        <form action={signOut} className="mt-6">
+          <button className={buttonClass}>{t('auth.signOut')}</button>
+        </form>
+      </AuthCard>
+    );
+  }
+
+  const can = (key: string) => me.permissions.includes(key);
+  const items: NavItem[] = [{ href: '/', label: t('nav.dashboard'), icon: 'home' }];
+  if (can('staff.view')) items.push({ href: '/staff', label: t('nav.staff'), icon: 'users' });
+
+  return (
+    <div className="flex min-h-dvh flex-wrap items-stretch">
+      <nav
+        aria-label={t('nav.main')}
+        className="flex flex-[1_1_208px] flex-col gap-1 bg-[var(--surface)] px-3 py-5 shadow-[inset_-1px_0_0_var(--line)]"
+      >
+        <span className="text-title-md px-3 pb-3 text-[var(--accent-ink)]">{t('appName')}</span>
+        <ShopSwitcher me={me} />
+        <NavLinks items={items} label={t('nav.main')} />
+        <form action={signOut} className="mt-auto pt-4">
+          <button className="text-label-sm flex min-h-11 w-full items-center gap-3 rounded-[var(--radius-md)] px-3 text-[var(--ink-muted)] hover:bg-[var(--surface-muted)]">
+            <LogOut size={20} aria-hidden="true" />
+            {t('auth.signOut')}
+          </button>
+        </form>
+      </nav>
+      <main className="flex min-w-0 flex-[999_1_560px] flex-col gap-5 px-4 py-6 sm:px-8">
+        {children}
+      </main>
+    </div>
+  );
+}

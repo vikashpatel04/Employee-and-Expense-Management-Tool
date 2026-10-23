@@ -305,3 +305,32 @@ describe('attendance', () => {
     await rejects(q(null, 'select 1 from staff'), /permission denied/);
   });
 });
+
+describe('add_staff', () => {
+  const add = (user: string, shop: string, name: string) =>
+    q<{ id: string }>(user, `select public.add_staff($1, $2, '98765 43210', '2026-10-01') as id`, [
+      shop,
+      name,
+    ]);
+
+  it('creates the person and the staff row together', async () => {
+    const [row] = await add(asha, shop1, '  Selvi Murugan ');
+    const rows = await q<{ name: string; phone: string; joining: string }>(
+      asha,
+      `select p.name, p.phone, to_char(s.joining_date, 'YYYY-MM-DD') as joining
+       from staff s join people p on p.id = s.person_id where s.person_id = $1`,
+      [row!.id],
+    );
+    expect(rows).toEqual([{ name: 'Selvi Murugan', phone: '98765 43210', joining: '2026-10-01' }]);
+  });
+
+  it('needs staff.edit in that shop, and leaves nothing behind when refused', async () => {
+    await rejects(add(ravi, shop1, 'Ghost'), /row-level security/);
+    await rejects(add(asha, shop1, '   '), /check constraint/);
+    expect(await q(asha, `select 1 from people where name in ('Ghost', '')`)).toHaveLength(0);
+  });
+
+  it("can't add staff to a shop you don't manage", async () => {
+    await rejects(add(kiran, shop1, 'Intruder'), /row-level security/);
+  });
+});

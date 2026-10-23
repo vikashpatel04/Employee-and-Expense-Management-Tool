@@ -1,4 +1,39 @@
 import type { ReactNode } from 'react';
+import { initials } from '@/lib/format';
+
+/** Neutral initials avatar (design system: avatars stay neutral, colour is for meaning). */
+export function Avatar({ name, size = 36 }: { name: string; size?: number }) {
+  return (
+    <span
+      aria-hidden="true"
+      style={{ width: size, height: size, fontSize: Math.round(size * 0.38) }}
+      className="inline-grid shrink-0 place-items-center rounded-full bg-[var(--surface-pressed)] font-semibold text-[var(--ink-muted)]"
+    >
+      {initials(name)}
+    </span>
+  );
+}
+
+/** Screen title, subtitle and actions (design: web screens' header row). */
+export function PageHeader({
+  title,
+  subtitle,
+  actions,
+}: {
+  title: string;
+  subtitle?: string;
+  actions?: ReactNode;
+}) {
+  return (
+    <div className="flex flex-wrap items-end justify-between gap-4">
+      <div className="flex flex-col gap-0.5">
+        <h1 className="text-title-xl">{title}</h1>
+        {subtitle && <p className="text-body text-[var(--ink-muted)]">{subtitle}</p>}
+      </div>
+      {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
+    </div>
+  );
+}
 
 /**
  * Centered card used by the sign-in and setup screens. Colours, type and sizes come from the

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added — 2026-10-23 (Phase 4.3 slice 1)
+
+- Website app shell with shop switcher; Staff list and Add staff; `add_staff` RPC.
+
 ### Added — 2026-10-23 (Phase 4.2: money data)
 
 - Tables: advances, ledger_entries, salary_runs, payslips, leave_balances; views

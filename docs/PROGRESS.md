@@ -9,7 +9,7 @@ _Last updated: 2026-10-23_
 | 1   | Foundation                   | **Done** (2026-10-23)                                                                            |
 | 2   | Core logic (`packages/core`) | **Done** (2026-10-23): 201 tests, every rule a setting; `docs/features/core-rules.md`            |
 | 3   | Design                       | **Design system v1 done** in Claude Design (`docs/DESIGN.md`); key screens + `packages/ui` to do |
-| 4   | FinCrew web core             | **In progress**: 4.1 data live; 4.2 money data live; 4.3 screens next                            |
+| 4   | FinCrew web core             | **In progress**: data layer live; 4.3 screens: slice 1 (shell + staff) built                     |
 | 5   | FinCrew Android              | Not started                                                                                      |
 | 6   | Expenses                     | Not started                                                                                      |
 | 7   | Staffora                     | Not started                                                                                      |
@@ -61,13 +61,14 @@ setup against the live project, and sign-in on the Vercel deployment (2026-10-23
 
 ## Migrations applied to the live project
 
-| Migration                             | Applied    | How                             |
-| ------------------------------------- | ---------- | ------------------------------- |
-| `20261022000001_foundation.sql`       | 2026-10-23 | CI migrate job, run 39898016456 |
-| `20261023000001_harden_functions.sql` | 2026-10-23 | CI migrate job, run 39901338816 |
-| `20261023000002_multi_shop.sql`       | 2026-10-23 | CI migrate job, run 39950298454 |
-| `20261023000003_staff_attendance.sql` | 2026-10-23 | CI migrate job, run 39950298454 |
-| `20261023000004_money.sql`            | 2026-10-23 | CI migrate job, run 39953812217 |
+| Migration                             | Applied                        | How                             |
+| ------------------------------------- | ------------------------------ | ------------------------------- |
+| `20261022000001_foundation.sql`       | 2026-10-23                     | CI migrate job, run 39898016456 |
+| `20261023000001_harden_functions.sql` | 2026-10-23                     | CI migrate job, run 39901338816 |
+| `20261023000002_multi_shop.sql`       | 2026-10-23                     | CI migrate job, run 39950298454 |
+| `20261023000003_staff_attendance.sql` | 2026-10-23                     | CI migrate job, run 39950298454 |
+| `20261023000004_money.sql`            | 2026-10-23                     | CI migrate job, run 39953812217 |
+| `20261023000005_add_staff.sql`        | pending — applies on next push | CI migrate job                  |
 
 Migrations are applied by the CI **migrate** job on every push to `main`, so **everything in
 `supabase/migrations/` on `main` counts as applied** and must never change (CI enforces this).
@@ -107,6 +108,11 @@ Tables still to add (with the phase that uses them, each with RLS tests): `staff
 `attendance_scans`, `invites`, `pin_credentials`, `push_tokens` (Phase 7).
 
 ## Session log
+
+- **2026-10-23** — **Phase 4.3 slice 1**: web app shell (sidebar, shop switcher, permission-aware
+  sections), staff list and Add staff (`add_staff` RPC, migration 5). Built and typechecked;
+  needs push + owner sign-in to check in the browser. Next slices: staff detail, attendance grid,
+  salary run, settings. See `docs/features/fincrew-web.md`.
 
 - **2026-10-23** — Owner reviewed the key screens; their comment (Show QR instead of Copy code on
   Attendance code) applied to the FinCrew canvas and recorded in DECISIONS. Website restyle

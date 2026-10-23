@@ -21,6 +21,7 @@ describe('exposed (public schema) functions', () => {
        where n.nspname = 'public' order by 1`,
     );
     expect(r.rows.map((x) => x.name)).toEqual([
+      'add_staff',
       'create_shop',
       'finalize_payslip',
       'my_permissions',

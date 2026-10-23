@@ -23,7 +23,7 @@
   "home": {
     "welcome": "Welcome, {{name}}",
     "owner": "Owner",
-    "comingSoon": "Staff, attendance and salary screens arrive in the next phases."
+    "comingSoon": "Attendance, salary and expenses screens arrive next. Start by adding your staff."
   },
   "shops": {
     "switchLabel": "Shop",
@@ -32,5 +32,54 @@
     "newTitle": "Add a shop",
     "newSubtitle": "You'll be its owner. Staff, settings and leave rules are separate for each shop.",
     "cancel": "Cancel"
+  },
+  "nav": {
+    "main": "Main",
+    "dashboard": "Dashboard",
+    "staff": "Staff",
+    "shopCount_one": "{{count}} shop",
+    "shopCount_other": "{{count}} shops",
+    "switchShop": "Switch shop. Current shop: {{name}}"
+  },
+  "staff": {
+    "title": "Staff",
+    "subtitle_one": "{{shop}} · {{count}} person",
+    "subtitle_other": "{{shop}} · {{count}} people",
+    "add": "Add staff",
+    "search": "Search by name or phone",
+    "searchButton": "Search",
+    "filter": {
+      "label": "Show",
+      "active": "Active",
+      "left": "Left",
+      "all": "All"
+    },
+    "columns": {
+      "name": "Name",
+      "phone": "Phone",
+      "joined": "Joined",
+      "status": "Status"
+    },
+    "status": {
+      "active": "Active",
+      "left": "Left"
+    },
+    "empty": {
+      "title": "No staff yet",
+      "body": "Add the people who work in this shop. You can set their pay and leave rules next."
+    },
+    "noMatch": "Nobody matches “{{q}}”.",
+    "added": "{{name}} was added.",
+    "newTitle": "Add staff",
+    "newSubtitle": "Name and joining date are enough to start. Pay, leave rules and the Staffora invite come next.",
+    "fields": {
+      "name": "Full name",
+      "phone": "Phone (optional)",
+      "joiningDate": "Joining date"
+    },
+    "save": "Add staff",
+    "saving": "Adding…",
+    "cancel": "Cancel",
+    "failed": "Couldn't add this person: {{reason}}"
   }
 }

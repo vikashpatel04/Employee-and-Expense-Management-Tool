@@ -1193,6 +1193,15 @@ export type Database = {
       }
     }
     Functions: {
+      add_staff: {
+        Args: {
+          p_joining_date: string
+          p_name: string
+          p_phone: string
+          p_shop: string
+        }
+        Returns: string
+      }
       create_shop: {
         Args: { owner_name: string; shop_name: string }
         Returns: string
