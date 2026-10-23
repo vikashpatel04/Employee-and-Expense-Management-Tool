@@ -4,16 +4,16 @@ _Last updated: 2026-10-23_
 
 ## Phase status (docs/PLAN.md §8)
 
-| #   | Phase                        | Status                                                       |
-| --- | ---------------------------- | ------------------------------------------------------------ |
-| 1   | Foundation                   | **Code done — needs your accounts** (see "Waiting on owner") |
-| 2   | Core logic (`packages/core`) | Not started (money + date helpers already in)                |
-| 3   | Design                       | Not started                                                  |
-| 4   | FinCrew web core             | Not started                                                  |
-| 5   | FinCrew Android              | Not started                                                  |
-| 6   | Expenses                     | Not started                                                  |
-| 7   | Staffora                     | Not started                                                  |
-| 8   | Polish                       | Not started                                                  |
+| #   | Phase                        | Status                                                   |
+| --- | ---------------------------- | -------------------------------------------------------- |
+| 1   | Foundation                   | **Live DB migrated — finishing owner setup** (see below) |
+| 2   | Core logic (`packages/core`) | Not started (money + date helpers already in)            |
+| 3   | Design                       | Not started                                              |
+| 4   | FinCrew web core             | Not started                                              |
+| 5   | FinCrew Android              | Not started                                              |
+| 6   | Expenses                     | Not started                                              |
+| 7   | Staffora                     | Not started                                              |
+| 8   | Polish                       | Not started                                              |
 
 ## Phase 1 — Foundation
 
@@ -35,8 +35,9 @@ Done:
       `keep-awake.yml` (pings every 3 days)
 - [x] Root scripts: `pnpm db:login`, `pnpm db:types` (no local link or DB password needed)
 - [ ] **Waiting on owner** — accounts only you can create (steps in `docs/SETUP.md`):
-  - [ ] Create the Supabase project (sign-ups off), access token
-  - [ ] Create the GitHub repo, add the 5 secrets, push `main` → migrate job applies foundation
+  - [x] Create the Supabase project (sign-ups off), access token
+  - [x] Create the GitHub repo, add the 5 secrets, push `main` → migrate job applied foundation
+        (CI run 39898016456, 2026-10-23)
   - [ ] Verify live DB (tables, RLS, permissions, anon blocked)
   - [ ] Create your owner login in Supabase Auth; sign in locally; run shop setup
   - [ ] Import the repo in Vercel (root `apps/fincrew-web`), set env vars
@@ -47,9 +48,14 @@ Verified locally: `pnpm typecheck`, `pnpm test` (42 tests), `pnpm build`; sign-i
 
 ## Migrations applied to the live project
 
-None yet. Migrations are applied by the CI **migrate** job on every push to `main`, so
-**everything in `supabase/migrations/` on `main` counts as applied** and must never change
-(CI enforces this). `20261022000001_foundation.sql` becomes applied with the first push.
+| Migration                       | Applied    | How                             |
+| ------------------------------- | ---------- | ------------------------------- |
+| `20261022000001_foundation.sql` | 2026-10-23 | CI migrate job, run 39898016456 |
+
+Migrations are applied by the CI **migrate** job on every push to `main`, so **everything in
+`supabase/migrations/` on `main` counts as applied** and must never change (CI enforces this).
+
+GitHub repo: https://github.com/vikashpatel04/Employee-and-Expense-Management-Tool
 
 ## Next up
 
@@ -62,6 +68,9 @@ the phase that first uses them (mostly Phase 4), each with RLS tests.
 
 ## Session log
 
+- **2026-10-23** — Repo on GitHub; secrets set; first CI migrate run applied the foundation
+  migration to the live project. (First run before secrets existed stopped safely at "Check
+  secrets".)
 - **2026-10-23** — Migrations auto-apply from GitHub Actions after CI passes; CI blocks edits to
   applied migrations; Supabase CLI moved to repo root (`db:login`, `db:types`); SETUP rewritten
   for the GitHub-first order.
