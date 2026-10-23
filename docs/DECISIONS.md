@@ -2,6 +2,15 @@
 
 Choices made during the build that PLAN.md doesn't spell out. Newest first.
 
+## 2026-10-23 — Attendance grid
+
+- The grid computes everything with `packages/core` on the server (same inputs the salary run
+  will use, via `src/lib/mappers.ts`), so a cell, the Days total and the payslip can't disagree.
+- Days/Late/Absent count **up to today** in the current month (future paid offs aren't counted).
+- Paid-leave balance for the check: opening = the previous month's `leave_balances.carried`
+  (written when that month's salary is finalized; 0 before any finalized month) + this month's
+  `earnedLeave`. Clearing a mark (back to unmarked) isn't offered yet; set another status.
+
 ## 2026-10-23 — Dates are DD/MM/YYYY everywhere (owner's rule)
 
 - Every date shown or typed in FinCrew and Staffora is **DD/MM/YYYY** (23/10/2026). It overrides

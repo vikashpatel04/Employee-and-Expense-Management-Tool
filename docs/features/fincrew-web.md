@@ -35,8 +35,27 @@ the design's text styles and Lucide icons (24px, 2px stroke, the design system's
 Checked in the browser on 2026-10-23 against the live project: shell, staff list, Add staff
 ("Test Staff"), staff detail tabs, saving pay (₹22,000 monthly, 9:30 AM – 8:30 PM).
 
+## Attendance grid — `(app)/attendance`
+
+- Staff × days for one month (`?month=YYYY-MM`, no future months), per the design. Every cell's
+  status comes from `packages/core` `evaluateDays` with the shop's rules and each person's
+  template, holidays and records (weekly offs and holidays fill in; sandwich rule; extra working
+  days); late dot from `dayLateness` with that day's shift. Days / Late / Absent count up to today
+  (`summarizeDays`), the same numbers the salary run uses.
+- Seen with `staff.view` or `attendance.mark`. With `attendance.mark`: click days to select,
+  **Set to** one status (present, half day, absent, paid leave, unpaid leave); **Mark today
+  present** fills today's unmarked working days. Earlier days need `attendance.edit_past`;
+  future days and days outside employment can't be selected.
+- **Paid leave is refused beyond the month's balance** (PLAN §4.3): opening = last finalized
+  month's carried balance, plus `earnedLeave` from the template; no template = no paid leave.
+- Data loading: `src/lib/attendance-month.ts`; DB → core conversions: `src/lib/mappers.ts`
+  (shared with the salary run). Save: `attendance/actions.ts` (`setAttendance`, upsert per day).
+
+Checked in the browser on 2026-10-23 with Test Staff: Mark today present, paid leave refused
+("0 paid leave left"), half day → Days 0.5; empty previous month.
+
 ## Not built yet
 
 Staff detail: attendance calendar, edit details/leaving date, allowances and deductions editing,
-leave template assignment, advance limit/cut, Staffora invite; attendance grid, salary run, advances,
+leave template assignment, advance limit/cut, Staffora invite; salary run, advances, holidays and leave-template screens, CSV export,
 requests, settings screens for every rule in `docs/features/core-rules.md`.

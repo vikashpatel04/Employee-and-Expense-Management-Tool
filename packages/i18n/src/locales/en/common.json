@@ -39,7 +39,8 @@
     "staff": "Staff",
     "shopCount_one": "{{count}} shop",
     "shopCount_other": "{{count}} shops",
-    "switchShop": "Switch shop. Current shop: {{name}}"
+    "switchShop": "Switch shop. Current shop: {{name}}",
+    "attendance": "Attendance"
   },
   "staff": {
     "title": "Staff",
@@ -185,5 +186,62 @@
   },
   "common": {
     "invalidDate": "Enter the date as DD/MM/YYYY, for example 23/10/2026."
+  },
+  "weekdays": {
+    "short": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+    "tiny": ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"]
+  },
+  "status": {
+    "present": "Present",
+    "half_day": "Half day",
+    "absent": "Absent",
+    "paid_leave": "Paid leave",
+    "unpaid_leave": "Unpaid leave",
+    "weekly_off": "Weekly off",
+    "holiday": "Holiday",
+    "late": "Late",
+    "unmarked": "Not marked",
+    "future": "Not yet",
+    "not_employed": "Not employed"
+  },
+  "attendance": {
+    "title": "Attendance",
+    "subtitle_one": "{{shop}} · {{count}} person · today is {{today}}",
+    "subtitle_other": "{{shop}} · {{count}} people · today is {{today}}",
+    "prevMonth": "Previous month",
+    "nextMonth": "Next month",
+    "legend": "What the cells mean",
+    "lateDot": "Late (dot)",
+    "grid": "Attendance for {{month}}",
+    "columns": {
+      "staff": "Staff",
+      "days": "Days",
+      "late": "Late",
+      "absent": "Absent"
+    },
+    "offs": "{{days}} off",
+    "noOffs": "No weekly off",
+    "noTemplate": "No leave template",
+    "cell": "{{name}}, {{date}}, {{status}}",
+    "cellLate": "{{name}}, {{date}}, {{status}}, late",
+    "selected_one": "{{count}} day selected",
+    "selected_other": "{{count}} days selected",
+    "setTo": "Set to",
+    "clear": "Clear selection",
+    "hint": "Click days to select them, then set one status for all of them at once.",
+    "readOnly": "You can see attendance but not change it.",
+    "markToday": "Mark today present",
+    "markTodayNone": "Everyone is marked today.",
+    "saving": "Saving…",
+    "saved_one": "Saved {{count}} day.",
+    "saved_other": "Saved {{count}} days.",
+    "footnote": "Days = payable days so far (present, paid leave, paid weekly off and holiday; half days count 0.5). Changing a day in a finalized month means running salary again.",
+    "empty": "Nobody worked here in {{month}}.",
+    "errors": {
+      "past": "Only today can be changed. Earlier days need the “Edit past days” permission.",
+      "future": "Days after today can't be marked yet.",
+      "leave": "{{name}} has {{left}} paid leave left this month.",
+      "failed": "Couldn't save: {{reason}}"
+    }
   }
 }

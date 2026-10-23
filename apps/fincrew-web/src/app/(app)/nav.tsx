@@ -2,9 +2,9 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { House, Users, type LucideIcon } from 'lucide-react';
+import { CalendarDays, House, Users, type LucideIcon } from 'lucide-react';
 
-const ICONS: Record<string, LucideIcon> = { home: House, users: Users };
+const ICONS: Record<string, LucideIcon> = { home: House, calendar: CalendarDays, users: Users };
 
 export type NavItem = { href: string; label: string; icon: keyof typeof ICONS };
 

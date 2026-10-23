@@ -28,6 +28,9 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
 
   const can = (key: string) => me.permissions.includes(key);
   const items: NavItem[] = [{ href: '/', label: t('nav.dashboard'), icon: 'home' }];
+  if (can('staff.view') || can('attendance.mark')) {
+    items.push({ href: '/attendance', label: t('nav.attendance'), icon: 'calendar' });
+  }
   if (can('staff.view')) items.push({ href: '/staff', label: t('nav.staff'), icon: 'users' });
 
   return (

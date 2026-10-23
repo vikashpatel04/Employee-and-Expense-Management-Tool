@@ -10,3 +10,4 @@ export * from './salary';
 export * from './ledger';
 export * from './expenses';
 export * from './attendance-code';
+export * from './settings';
