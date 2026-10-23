@@ -2,6 +2,14 @@
 
 Choices made during the build that PLAN.md doesn't spell out. Newest first.
 
+## 2026-10-23 — Attendance code shows a QR (owner review)
+
+- **FinCrew shows the code as a QR itself** ("Show QR" on the Attendance code screen, a
+  full-screen QR view for the counter that keeps the screen on), replacing PLAN §4.5's "the
+  system only gives a code; I make my own QR". Asked for in the owner's comment on the key
+  screens. The QR's content is still the plain 6-digit code, so `parseScannedCode` and any
+  other QR generator keep working. "Copy code" is gone from that screen.
+
 ## 2026-10-23 — Phase 4.2 money data
 
 - **The app calculates, the database posts.** Payslips are computed by `packages/core` and saved

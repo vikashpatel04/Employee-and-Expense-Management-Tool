@@ -108,6 +108,10 @@ Tables still to add (with the phase that uses them, each with RLS tests): `staff
 
 ## Session log
 
+- **2026-10-23** — Owner reviewed the key screens; their comment (Show QR instead of Copy code on
+  Attendance code) applied to the FinCrew canvas and recorded in DECISIONS. Website restyle
+  checked in the browser, light and dark: Anek loaded, token colours, 56px primary buttons.
+
 - **2026-10-23** — Key screens published in Claude Design (FinCrew, Staffora; see DESIGN.md).
   `packages/ui` generated from design tokens (`pnpm ui:tokens`, CI check, 6 tests); website now
   uses tokens.css + Anek Latin. Not yet visually checked in the browser; owner hasn't reviewed

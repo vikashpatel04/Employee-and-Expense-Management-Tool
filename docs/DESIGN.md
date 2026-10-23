@@ -48,14 +48,17 @@ Use the Artifact tool, not a web fetch:
   Add expense; web: attendance grid, salary review table)
 - **Staffora key screens:** https://claude.ai/artifact/9YMxty5q9jFvuut8ay8dTe (Home before/after
   check-in, Scan QR, Enter code incl. wrong code, Checked in, Money ledger/payslips; light + dark)
-- Not yet reviewed by the owner in the browser.
+- Reviewed by the owner (2026-10-23). Change made from their comment: Attendance code now has
+  **Show QR** instead of Copy code, plus a new artboard "Attendance code · QR" (full-screen QR
+  view).
 
 **Design-system gaps found while designing** (to add to the system): tokens.css not served (now
 generated in `packages/ui`); dark-mode switching (now `[data-theme]` + media query in tokens.css);
 no type classes (now `.text-*` in tokens.css); no warning/settings icons or expense-category
 icons/colours; missing components (banner, shop switcher, neutral tag, date/month switcher,
 key-value row, stat tile, text input/select/checkbox/time field, selectable card, web sidebar/
-table/grid cell/bulk toolbar, camera viewfinder, sheet header/footer); limits (Button as link,
+table/grid cell/bulk toolbar, camera viewfinder, sheet header/footer); limits (CodeDisplay's copy button can't be swapped for Show QR, so that screen lays out the
+code card itself; Button as link,
 LedgerLine kinds, tappable MonthCalendar days, display-only SummaryChip, CodePad states).
 
 ## packages/ui
