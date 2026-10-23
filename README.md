@@ -8,7 +8,8 @@ tiers. Successor to StaffBook.
 
 ## Status
 
-Phase 1 (foundation) of 8. See [docs/PROGRESS.md](docs/PROGRESS.md).
+Phase 1 (foundation) done; Phase 2 (core logic) next. See [docs/PROGRESS.md](docs/PROGRESS.md).
+Website: https://fincrew-web.vercel.app
 
 ## Docs
 

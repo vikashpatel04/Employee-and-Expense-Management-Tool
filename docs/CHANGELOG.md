@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Deployed — 2026-10-23
+
+- FinCrew web live at https://fincrew-web.vercel.app. Phase 1 (Foundation) complete.
+
 ### Added — 2026-10-23
 
 - CI `migrate` job: applies `supabase/migrations/` to the live project on push to `main` after

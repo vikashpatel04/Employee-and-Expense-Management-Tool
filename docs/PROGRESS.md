@@ -4,16 +4,16 @@ _Last updated: 2026-10-23_
 
 ## Phase status (docs/PLAN.md §8)
 
-| #   | Phase                        | Status                                                   |
-| --- | ---------------------------- | -------------------------------------------------------- |
-| 1   | Foundation                   | **Live DB migrated — finishing owner setup** (see below) |
-| 2   | Core logic (`packages/core`) | Not started (money + date helpers already in)            |
-| 3   | Design                       | Not started                                              |
-| 4   | FinCrew web core             | Not started                                              |
-| 5   | FinCrew Android              | Not started                                              |
-| 6   | Expenses                     | Not started                                              |
-| 7   | Staffora                     | Not started                                              |
-| 8   | Polish                       | Not started                                              |
+| #   | Phase                        | Status                                     |
+| --- | ---------------------------- | ------------------------------------------ |
+| 1   | Foundation                   | **Done** (2026-10-23)                      |
+| 2   | Core logic (`packages/core`) | **Next** (money + date helpers already in) |
+| 3   | Design                       | Not started                                |
+| 4   | FinCrew web core             | Not started                                |
+| 5   | FinCrew Android              | Not started                                |
+| 6   | Expenses                     | Not started                                |
+| 7   | Staffora                     | Not started                                |
+| 8   | Polish                       | Not started                                |
 
 ## Phase 1 — Foundation
 
@@ -38,7 +38,7 @@ Done:
       **migrate** job applying migrations to the live project on push to `main`) and
       `keep-awake.yml` (pings every 3 days)
 - [x] Root scripts: `pnpm db:login`, `pnpm db:types` (no local link or DB password needed)
-- [ ] **Waiting on owner** — accounts only you can create (steps in `docs/SETUP.md`):
+- [x] Owner accounts and live setup (steps in `docs/SETUP.md`):
   - [x] Create the Supabase project (sign-ups off), access token
   - [x] Create the GitHub repo, add the 5 secrets, push `main` → migrate job applied foundation
         (CI run 39898016456, 2026-10-23)
@@ -50,11 +50,14 @@ Done:
   - [x] Hardening migration applied (CI run 39901338816); advisor rerun: only the accepted
         warnings remain (see DECISIONS 2026-10-23); helpers now 404 on the API; owner still
         has 22 permissions
-  - [ ] Import the repo in Vercel (root `apps/fincrew-web`), set env vars
+  - [x] Vercel: https://fincrew-web.vercel.app (root `apps/fincrew-web`, 2 env vars, Supabase
+        integration deliberately not added). Checked: signed-out `/` and `/setup` → 307 to
+        `/login`; no secrets in any client JS chunk (Supabase is only called server-side); owner
+        signed in on the live site and sees the home page; Site URL set in Supabase Auth
   - [x] `pnpm db:types` (real types committed), cast removed from `session.ts`
 
 Verified: `pnpm typecheck`, `pnpm test` (49 tests), `pnpm build`; end-to-end sign-in and shop
-setup against the live project (2026-10-23).
+setup against the live project, and sign-in on the Vercel deployment (2026-10-23).
 
 ## Migrations applied to the live project
 
@@ -67,14 +70,13 @@ Migrations are applied by the CI **migrate** job on every push to `main`, so **e
 `supabase/migrations/` on `main` counts as applied** and must never change (CI enforces this).
 
 GitHub repo: https://github.com/vikashpatel04/Employee-and-Expense-Management-Tool
+Website: https://fincrew-web.vercel.app (Vercel, auto-deploys on push to `main`)
 Supabase project: `employee-expense-management`, ref `ufmlqvvfznemghmnvynz` (Mumbai). The ref
 lives in the git-ignored root `.env` for `pnpm db:types`.
 
 ## Next up
 
-1. **Vercel** (owner, ~5 min): import repo, root `apps/fincrew-web`, two env vars, then set the
-   Site URL in Supabase Auth. Closes Phase 1.
-2. **Phase 2** (below).
+**Phase 2** (below). Phase 1 is done.
 
 Open items (low priority, fold into the next migration that touches these tables):
 
@@ -94,6 +96,9 @@ Remaining tables from PLAN §5 (staff, pay_settings, attendance, ledger_entries,
 the phase that first uses them (mostly Phase 4), each with RLS tests.
 
 ## Session log
+
+- **2026-10-23** — FinCrew web deployed to Vercel and verified; owner signed in on the live site.
+  **Phase 1 done.**
 
 - **2026-10-23** — Hardening migration live; advisor rechecked; DB types regenerated (helpers no
   longer in `public`). Open items listed under "Next up".
