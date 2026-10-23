@@ -14,6 +14,124 @@ export type Database = {
   }
   public: {
     Tables: {
+      allowances: {
+        Row: {
+          amount_paise: number
+          created_at: string
+          effective_from: string
+          effective_to: string | null
+          id: string
+          name: string
+          prorated: boolean
+          shop_id: string
+          staff_id: string
+        }
+        Insert: {
+          amount_paise: number
+          created_at?: string
+          effective_from: string
+          effective_to?: string | null
+          id?: string
+          name: string
+          prorated?: boolean
+          shop_id: string
+          staff_id: string
+        }
+        Update: {
+          amount_paise?: number
+          created_at?: string
+          effective_from?: string
+          effective_to?: string | null
+          id?: string
+          name?: string
+          prorated?: boolean
+          shop_id?: string
+          staff_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "allowances_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "allowances_shop_id_staff_id_fkey"
+            columns: ["shop_id", "staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["shop_id", "person_id"]
+          },
+        ]
+      }
+      attendance: {
+        Row: {
+          check_in: string | null
+          check_out: string | null
+          date: string
+          id: string
+          marked_by: string | null
+          note: string | null
+          overtime_minutes: number
+          shop_id: string
+          source: string
+          staff_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          check_in?: string | null
+          check_out?: string | null
+          date: string
+          id?: string
+          marked_by?: string | null
+          note?: string | null
+          overtime_minutes?: number
+          shop_id: string
+          source?: string
+          staff_id: string
+          status: string
+          updated_at?: string
+        }
+        Update: {
+          check_in?: string | null
+          check_out?: string | null
+          date?: string
+          id?: string
+          marked_by?: string | null
+          note?: string | null
+          overtime_minutes?: number
+          shop_id?: string
+          source?: string
+          staff_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_shop_id_marked_by_fkey"
+            columns: ["shop_id", "marked_by"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["shop_id", "id"]
+          },
+          {
+            foreignKeyName: "attendance_shop_id_staff_id_fkey"
+            columns: ["shop_id", "staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["shop_id", "person_id"]
+          },
+        ]
+      }
       audit_log: {
         Row: {
           action: string
@@ -62,6 +180,247 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "shops"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      fixed_deductions: {
+        Row: {
+          amount_paise: number
+          created_at: string
+          effective_from: string
+          effective_to: string | null
+          id: string
+          name: string
+          shop_id: string
+          staff_id: string
+        }
+        Insert: {
+          amount_paise: number
+          created_at?: string
+          effective_from: string
+          effective_to?: string | null
+          id?: string
+          name: string
+          shop_id: string
+          staff_id: string
+        }
+        Update: {
+          amount_paise?: number
+          created_at?: string
+          effective_from?: string
+          effective_to?: string | null
+          id?: string
+          name?: string
+          shop_id?: string
+          staff_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fixed_deductions_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fixed_deductions_shop_id_staff_id_fkey"
+            columns: ["shop_id", "staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["shop_id", "person_id"]
+          },
+        ]
+      }
+      holidays: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          name: string
+          paid: boolean
+          shop_id: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          id?: string
+          name: string
+          paid?: boolean
+          shop_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          name?: string
+          paid?: boolean
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "holidays_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leave_template_versions: {
+        Row: {
+          accrual: Json
+          carry_over: Json
+          created_at: string
+          effective_from: string
+          id: string
+          paid_leaves_per_month: number
+          sandwich: Json
+          shop_id: string
+          template_id: string
+          weekly_offs: Json
+        }
+        Insert: {
+          accrual?: Json
+          carry_over?: Json
+          created_at?: string
+          effective_from: string
+          id?: string
+          paid_leaves_per_month?: number
+          sandwich?: Json
+          shop_id: string
+          template_id: string
+          weekly_offs?: Json
+        }
+        Update: {
+          accrual?: Json
+          carry_over?: Json
+          created_at?: string
+          effective_from?: string
+          id?: string
+          paid_leaves_per_month?: number
+          sandwich?: Json
+          shop_id?: string
+          template_id?: string
+          weekly_offs?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leave_template_versions_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leave_template_versions_shop_id_template_id_fkey"
+            columns: ["shop_id", "template_id"]
+            isOneToOne: false
+            referencedRelation: "leave_templates"
+            referencedColumns: ["shop_id", "id"]
+          },
+        ]
+      }
+      leave_templates: {
+        Row: {
+          archived: boolean
+          created_at: string
+          id: string
+          name: string
+          shop_id: string
+        }
+        Insert: {
+          archived?: boolean
+          created_at?: string
+          id?: string
+          name: string
+          shop_id: string
+        }
+        Update: {
+          archived?: boolean
+          created_at?: string
+          id?: string
+          name?: string
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leave_templates_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pay_settings: {
+        Row: {
+          created_at: string
+          daily_wage_paise: number | null
+          day_minutes: number | null
+          effective_from: string
+          grace_minutes: number
+          hourly_rate_paise: number | null
+          id: string
+          late_policy_override: Json
+          monthly_salary_paise: number | null
+          overtime_rate_paise: number | null
+          pay_rules_override: Json
+          pay_type: string
+          shift_end: number | null
+          shift_start: number | null
+          shop_id: string
+          staff_id: string
+        }
+        Insert: {
+          created_at?: string
+          daily_wage_paise?: number | null
+          day_minutes?: number | null
+          effective_from: string
+          grace_minutes?: number
+          hourly_rate_paise?: number | null
+          id?: string
+          late_policy_override?: Json
+          monthly_salary_paise?: number | null
+          overtime_rate_paise?: number | null
+          pay_rules_override?: Json
+          pay_type: string
+          shift_end?: number | null
+          shift_start?: number | null
+          shop_id: string
+          staff_id: string
+        }
+        Update: {
+          created_at?: string
+          daily_wage_paise?: number | null
+          day_minutes?: number | null
+          effective_from?: string
+          grace_minutes?: number
+          hourly_rate_paise?: number | null
+          id?: string
+          late_policy_override?: Json
+          monthly_salary_paise?: number | null
+          overtime_rate_paise?: number | null
+          pay_rules_override?: Json
+          pay_type?: string
+          shift_end?: number | null
+          shift_start?: number | null
+          shop_id?: string
+          staff_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pay_settings_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pay_settings_shop_id_staff_id_fkey"
+            columns: ["shop_id", "staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["shop_id", "person_id"]
           },
         ]
       }
@@ -253,6 +612,106 @@ export type Database = {
           settings?: Json
         }
         Relationships: []
+      }
+      staff: {
+        Row: {
+          advance_limit_paise: number | null
+          created_at: string
+          device_id: string | null
+          joining_date: string
+          leaving_date: string | null
+          person_id: string
+          self_attendance: boolean
+          shop_id: string
+          status: string
+        }
+        Insert: {
+          advance_limit_paise?: number | null
+          created_at?: string
+          device_id?: string | null
+          joining_date: string
+          leaving_date?: string | null
+          person_id: string
+          self_attendance?: boolean
+          shop_id: string
+          status?: string
+        }
+        Update: {
+          advance_limit_paise?: number | null
+          created_at?: string
+          device_id?: string | null
+          joining_date?: string
+          leaving_date?: string | null
+          person_id?: string
+          self_attendance?: boolean
+          shop_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_shop_id_person_id_fkey"
+            columns: ["shop_id", "person_id"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["shop_id", "id"]
+          },
+        ]
+      }
+      staff_leave_templates: {
+        Row: {
+          created_at: string
+          effective_from: string
+          id: string
+          shop_id: string
+          staff_id: string
+          template_id: string
+        }
+        Insert: {
+          created_at?: string
+          effective_from: string
+          id?: string
+          shop_id: string
+          staff_id: string
+          template_id: string
+        }
+        Update: {
+          created_at?: string
+          effective_from?: string
+          id?: string
+          shop_id?: string
+          staff_id?: string
+          template_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_leave_templates_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_leave_templates_shop_id_staff_id_fkey"
+            columns: ["shop_id", "staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["shop_id", "person_id"]
+          },
+          {
+            foreignKeyName: "staff_leave_templates_shop_id_template_id_fkey"
+            columns: ["shop_id", "template_id"]
+            isOneToOne: false
+            referencedRelation: "leave_templates"
+            referencedColumns: ["shop_id", "id"]
+          },
+        ]
       }
     }
     Views: {
