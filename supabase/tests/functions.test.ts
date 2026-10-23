@@ -8,7 +8,7 @@ let owner: string;
 beforeAll(async () => {
   db = await freshDb();
   owner = await createAuthUser(db, 'owner@shop.test');
-  await as(db, owner, (tx) => tx.query(`select public.setup_shop('Test Shop', 'Asha')`));
+  await as(db, owner, (tx) => tx.query(`select public.create_shop('Test Shop', 'Asha')`));
 });
 
 const call = (userId: string | null, sql: string) => as(db, userId, (tx) => tx.query(sql));
@@ -21,22 +21,30 @@ describe('exposed (public schema) functions', () => {
        where n.nspname = 'public' order by 1`,
     );
     expect(r.rows.map((x) => x.name)).toEqual([
+      'create_shop',
       'my_permissions',
       'ping',
-      'setup_shop',
       'shop_exists',
     ]);
   });
 
   it('anon can call ping and nothing else', async () => {
     await call(null, 'select public.ping()');
-    for (const fn of ['my_permissions()', 'shop_exists()', `setup_shop('a', 'b')`]) {
+    for (const fn of [
+      `my_permissions('00000000-0000-0000-0000-000000000000')`,
+      'shop_exists()',
+      `create_shop('a', 'b')`,
+    ]) {
       await rejects(call(null, `select public.${fn}`), /permission denied/);
     }
   });
 
   it('signed-in users can call my_permissions and shop_exists', async () => {
-    const perms = await call(owner, 'select * from public.my_permissions()');
+    const shop = await call(owner, 'select id from public.shops');
+    const id = (shop.rows[0] as { id: string }).id;
+    const perms = await as(db, owner, (tx) =>
+      tx.query('select * from public.my_permissions($1)', [id]),
+    );
     expect(perms.rows).toHaveLength(22);
     await call(owner, 'select public.shop_exists()');
   });
@@ -44,7 +52,11 @@ describe('exposed (public schema) functions', () => {
 
 describe('private helpers', () => {
   it('are not executable by anon', async () => {
-    for (const fn of ['has_permission($$staff.view$$)', 'is_owner()', 'current_person_id()']) {
+    for (const fn of [
+      `has_permission(gen_random_uuid(), 'staff.view')`,
+      'is_owner(gen_random_uuid())',
+      'person_id(gen_random_uuid())',
+    ]) {
       await rejects(call(null, `select private.${fn}`), /permission denied/);
     }
   });

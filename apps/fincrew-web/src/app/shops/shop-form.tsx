@@ -2,12 +2,12 @@
 
 import { useActionState } from 'react';
 import { buttonClass, inputClass } from '../components';
-import { setupShop, type SetupState } from './actions';
+import { createShop, type CreateShopState } from './actions';
 
 type Labels = { shopName: string; yourName: string; create: string; creating: string };
 
-export function SetupForm({ labels }: { labels: Labels }) {
-  const [state, action, pending] = useActionState<SetupState, FormData>(setupShop, {});
+export function ShopForm({ labels, ownerName }: { labels: Labels; ownerName?: string }) {
+  const [state, action, pending] = useActionState<CreateShopState, FormData>(createShop, {});
 
   return (
     <form action={action} className="space-y-4">
@@ -22,6 +22,7 @@ export function SetupForm({ labels }: { labels: Labels }) {
           required
           maxLength={120}
           autoComplete="name"
+          defaultValue={ownerName}
           className={inputClass}
         />
       </label>

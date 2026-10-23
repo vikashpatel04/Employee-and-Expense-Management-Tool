@@ -259,12 +259,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      my_permissions: { Args: never; Returns: string[] }
-      ping: { Args: never; Returns: string }
-      setup_shop: {
+      create_shop: {
         Args: { owner_name: string; shop_name: string }
         Returns: string
       }
+      my_permissions: { Args: { p_shop: string }; Returns: string[] }
+      ping: { Args: never; Returns: string }
       shop_exists: { Args: never; Returns: boolean }
     }
     Enums: {

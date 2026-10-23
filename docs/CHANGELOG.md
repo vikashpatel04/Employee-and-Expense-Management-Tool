@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Added — 2026-10-23 (multi-shop)
+
+- A login can belong to several shops; permissions, settings, roles and data are per shop.
+- `create_shop` (first run, or an owner adding a shop) replaces `setup_shop`;
+  `my_permissions(p_shop)`.
+- Website: shop switcher and "Add a shop" for owners.
+- Write policies split into insert/update/delete; foreign-key indexes.
+
 ### Changed — 2026-10-23 (rules are settings)
 
 - `packages/core/src/settings.ts`: shop rule set with defaults, per-staff overrides, validation.

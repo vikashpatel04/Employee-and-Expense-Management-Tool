@@ -13,7 +13,7 @@
   },
   "setup": {
     "title": "Set up your shop",
-    "subtitle": "You'll be the owner. This can only be done once.",
+    "subtitle": "You'll be the owner. You can add more shops later.",
     "shopName": "Shop name",
     "yourName": "Your name",
     "create": "Create shop",
@@ -24,5 +24,13 @@
     "welcome": "Welcome, {{name}}",
     "owner": "Owner",
     "comingSoon": "Staff, attendance and salary screens arrive in the next phases."
+  },
+  "shops": {
+    "switchLabel": "Shop",
+    "switch": "Switch",
+    "add": "Add a shop",
+    "newTitle": "Add a shop",
+    "newSubtitle": "You'll be its owner. Staff, settings and leave rules are separate for each shop.",
+    "cancel": "Cancel"
   }
 }

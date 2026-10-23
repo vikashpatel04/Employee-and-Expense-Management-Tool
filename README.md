@@ -1,6 +1,6 @@
 # FinCrew + Staffora
 
-Staff, salary and expense management for a small shop. Open source (MIT), self-hosted on free
+Staff, salary and expense management for a small shop, or several. Open source (MIT), self-hosted on free
 tiers. Successor to StaffBook.
 
 - **FinCrew** — management app (website + Android) for the owner and anyone given access.

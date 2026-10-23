@@ -2,6 +2,26 @@
 
 Choices made during the build that PLAN.md doesn't spell out. Newest first.
 
+## 2026-10-23 — Multi-shop
+
+Owner asked for multi-shop options (PLAN originally said one shop).
+
+- **One login, many shops.** A login has one `people` row per shop it belongs to, each with its
+  own name, roles and owner flag (`unique (shop_id, auth_user_id)`). An owner can run several
+  branches; a supervisor can be a supervisor in one and plain staff in another.
+- **Every check is per shop.** RLS helpers take the row's shop:
+  `private.has_permission(shop_id, key)`, `private.is_owner(shop_id)`, `private.is_member(shop_id)`,
+  `private.person_id(shop_id)`. There is no "current shop" in the database; the apps pick one
+  (website: `fincrew_shop` cookie, falling back to the first shop) and RLS still decides access.
+- **Creating shops:** `create_shop(name, owner_name)` replaces `setup_shop`. On a fresh install
+  anyone signed in can create the first shop (first-run setup); after that only someone who owns
+  a shop can add one, and becomes its owner. Public sign-ups stay off.
+- **Everything else is per shop:** settings (`shops.settings`), leave templates, roles, holidays,
+  staff and money. Copying settings/templates between shops and cross-shop reports come later.
+- `my_permissions(p_shop)` now takes the shop.
+- Rewriting the policies also split the overlapping "for all" write policies into
+  insert/update/delete and added the missing foreign-key indexes (advisor notes).
+
 ## 2026-10-23 — No hard-coded rules: everything is a setting
 
 Owner's instruction: every value is customisable by the admin, and staff may have no leave.

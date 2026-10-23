@@ -2,8 +2,9 @@ import { redirect } from 'next/navigation';
 import { t } from '@/lib/i18n';
 import { createClient } from '@/lib/supabase/server';
 import { AuthCard } from '../components';
-import { SetupForm } from './setup-form';
+import { ShopForm } from '../shops/shop-form';
 
+/** First run: nobody has set up a shop yet. */
 export default async function SetupPage() {
   const supabase = await createClient();
   const { data: shopExists } = await supabase.rpc('shop_exists');
@@ -11,7 +12,7 @@ export default async function SetupPage() {
 
   return (
     <AuthCard title={t('setup.title')} subtitle={t('setup.subtitle')}>
-      <SetupForm
+      <ShopForm
         labels={{
           shopName: t('setup.shopName'),
           yourName: t('setup.yourName'),

@@ -10,16 +10,22 @@ PLAN §3. Status: **database done** (Phase 1); management screens come in Phase 
   A person can hold several roles; permissions are the union.
 - **Staff**: a `people` row with no roles. Sees only their own row.
 
+## Multi-shop
+
+A login can belong to several shops, with a separate record, roles and owner flag in each.
+Permissions are always "in this shop": owning shop A gives nothing in shop B. Tests:
+`supabase/tests/multishop.test.ts`.
+
 ## Database
 
-| Piece                         | Where                                                                                         |
-| ----------------------------- | --------------------------------------------------------------------------------------------- |
-| Permission keys               | `permissions` table + `packages/core/src/permissions.ts` (kept in sync by a test)             |
-| `private.has_permission(key)` | used in every RLS policy                                                                      |
-| `my_permissions()`            | apps call it to show/hide UI                                                                  |
-| Policies                      | `supabase/migrations/20261022000001_foundation.sql` (+ `20261023000001_harden_functions.sql`) |
-| Tests                         | `supabase/tests/foundation.test.ts`                                                           |
-| Function exposure             | helpers in `private` (not on the API); `supabase/tests/functions.test.ts`                     |
+| Piece                                  | Where                                                                                    |
+| -------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Permission keys                        | `permissions` table + `packages/core/src/permissions.ts` (kept in sync by a test)        |
+| `private.has_permission(shop_id, key)` | used in every RLS policy (multi-shop: always the row's shop)                             |
+| `my_permissions(p_shop)`               | apps call it to show/hide UI for the current shop                                        |
+| Policies                               | `supabase/migrations/20261022000001_foundation.sql` (+ `harden_functions`, `multi_shop`) |
+| Tests                                  | `supabase/tests/foundation.test.ts`                                                      |
+| Function exposure                      | helpers in `private` (not on the API); `supabase/tests/functions.test.ts`                |
 
 ## What each person can see (today)
 

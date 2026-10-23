@@ -19,7 +19,9 @@ beforeAll(async () => {
   stranger = await createAuthUser(db, 'stranger@elsewhere.test');
 
   shopId = await as(db, owner, async (tx) => {
-    const r = await tx.query<{ id: string }>(`select public.setup_shop('Test Shop', 'Asha') as id`);
+    const r = await tx.query<{ id: string }>(
+      `select public.create_shop('Test Shop', 'Asha') as id`,
+    );
     return r.rows[0]!.id;
   });
 
@@ -59,7 +61,7 @@ beforeAll(async () => {
 
 const perms = (tx: { query: Db['query'] }) =>
   tx
-    .query<{ k: string }>(`select k from public.my_permissions() k order by 1`)
+    .query<{ k: string }>(`select k from public.my_permissions($1) k order by 1`, [shopId])
     .then((r) => r.rows.map((x) => x.k));
 
 describe('permission catalogue', () => {
@@ -76,11 +78,15 @@ describe('ping', () => {
   });
 });
 
-describe('setup_shop', () => {
-  it('cannot be run a second time', async () => {
+describe('create_shop', () => {
+  it('someone who owns no shop cannot add one once a shop exists', async () => {
     await rejects(
-      as(db, stranger, (tx) => tx.query(`select public.setup_shop('Other', 'X')`)),
-      /already set up/,
+      as(db, stranger, (tx) => tx.query(`select public.create_shop('Other', 'X')`)),
+      /Only a shop owner/,
+    );
+    await rejects(
+      as(db, supervisor, (tx) => tx.query(`select public.create_shop('Other', 'X')`)),
+      /Only a shop owner/,
     );
   });
 
@@ -93,7 +99,7 @@ describe('setup_shop', () => {
 
   it('cannot be run by anonymous users', async () => {
     await rejects(
-      as(db, null, (tx) => tx.query(`select public.setup_shop('Other', 'X')`)),
+      as(db, null, (tx) => tx.query(`select public.create_shop('Other', 'X')`)),
       /permission denied/,
     );
   });

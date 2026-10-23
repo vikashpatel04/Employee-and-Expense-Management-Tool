@@ -61,10 +61,11 @@ setup against the live project, and sign-in on the Vercel deployment (2026-10-23
 
 ## Migrations applied to the live project
 
-| Migration                             | Applied    | How                             |
-| ------------------------------------- | ---------- | ------------------------------- |
-| `20261022000001_foundation.sql`       | 2026-10-23 | CI migrate job, run 39898016456 |
-| `20261023000001_harden_functions.sql` | 2026-10-23 | CI migrate job, run 39901338816 |
+| Migration                             | Applied                        | How                             |
+| ------------------------------------- | ------------------------------ | ------------------------------- |
+| `20261022000001_foundation.sql`       | 2026-10-23                     | CI migrate job, run 39898016456 |
+| `20261023000001_harden_functions.sql` | 2026-10-23                     | CI migrate job, run 39901338816 |
+| `20261023000002_multi_shop.sql`       | pending — applies on next push | CI migrate job                  |
 
 Migrations are applied by the CI **migrate** job on every push to `main`, so **everything in
 `supabase/migrations/` on `main` counts as applied** and must never change (CI enforces this).
@@ -75,6 +76,11 @@ Supabase project: `employee-expense-management`, ref `ufmlqvvfznemghmnvynz` (Mum
 lives in the git-ignored root `.env` for `pnpm db:types`.
 
 ## Next up
+
+**Multi-shop (2026-10-23, not yet live):** push to apply `20261023000002_multi_shop.sql`, then
+`pnpm db:types` and check the website: shop switcher on home, "Add a shop" for owners. During
+the minute between Vercel deploying and CI migrating, the home page may error; reload after CI
+is green.
 
 **Owner:** review the defaults in the settings reference (`docs/features/core-rules.md`); every
 rule is changeable, so this only decides what a new shop starts with. Phase 4 needs a settings
@@ -100,6 +106,12 @@ Remaining tables from PLAN §5 (staff, pay_settings, attendance, ledger_entries,
 the phase that first uses them (mostly Phase 4), each with RLS tests.
 
 ## Session log
+
+- **2026-10-23** — **Multi-shop.** Migration `20261023000002_multi_shop.sql`: one `people` row per
+  (shop, login), shop-scoped RLS helpers, `create_shop` (first run, or owners adding shops),
+  `my_permissions(p_shop)`, write policies split, FK indexes. 14 multi-shop tests (42 DB tests).
+  Website: current shop cookie, shop switcher, `/shops/new`. DB types hand-updated for the new
+  functions until `pnpm db:types` after the push.
 
 - **2026-10-23** — Owner asked for no hard-coded rules and support for staff with no leave. Added
   `settings.ts` (shop rules, defaults, per-staff overrides, validation); every Phase 2
