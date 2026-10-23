@@ -2,6 +2,15 @@
 
 Choices made during the build that PLAN.md doesn't spell out. Newest first.
 
+## 2026-10-23 — Live project checks
+
+- **Helper functions stay callable by anonymous users** (`has_permission`, `is_owner`,
+  `my_permissions`, `current_*`), via Supabase's default grant. Checked live: they return
+  `false` / `[]` / `null` and reveal no data. Optional hardening: revoke from `anon` in a later
+  migration.
+- **Generated `packages/db/src/database.types.ts` is committed and excluded from Prettier**, so
+  regenerating only shows real schema changes in diffs.
+
 ## 2026-10-23 — Migrations deploy from GitHub
 
 - **Migrations apply automatically** from the `migrate` job in `.github/workflows/ci.yml` on

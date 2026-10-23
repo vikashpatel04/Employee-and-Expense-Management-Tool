@@ -11,6 +11,9 @@
 
 ### Changed — 2026-10-23
 
+- `packages/db` now has real types generated from the live project; removed the temporary cast in
+  `apps/fincrew-web/src/lib/session.ts`.
+- `scripts/db-types.mjs` validates the project ref and no longer triggers Node's DEP0190 warning.
 - Supabase CLI moved from `supabase/` package to the repo root; `packages/db` `gen:types`
   replaced by `pnpm db:types`.
 - `docs/SETUP.md` reordered: Supabase project → GitHub secrets → push (migrations apply) →

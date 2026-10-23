@@ -32,14 +32,11 @@ export async function requireMe(): Promise<Me | null> {
   }
 
   const { data: perms } = await supabase.rpc('my_permissions');
-  // people → shops is many-to-one, so this is a single object at runtime.
-  // TODO: drop the cast once packages/db types are generated from the live project.
-  const shop = person.shops as unknown as { name: string } | null;
   return {
     personId: person.id,
     name: person.name,
     isOwner: person.is_owner,
-    shopName: shop?.name ?? '',
-    permissions: (perms as string[] | null) ?? [],
+    shopName: person.shops?.name ?? '',
+    permissions: perms ?? [],
   };
 }

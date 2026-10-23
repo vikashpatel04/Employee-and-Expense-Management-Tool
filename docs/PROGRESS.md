@@ -38,10 +38,11 @@ Done:
   - [x] Create the Supabase project (sign-ups off), access token
   - [x] Create the GitHub repo, add the 5 secrets, push `main` → migrate job applied foundation
         (CI run 39898016456, 2026-10-23)
-  - [ ] Verify live DB (tables, RLS, permissions, anon blocked)
+  - [x] Verify live DB: 7 tables + 8 functions present (from generated types); anonymous API
+        calls refused on every table, insert, `setup_shop`, `shop_exists`; `ping()` answers
   - [ ] Create your owner login in Supabase Auth; sign in locally; run shop setup
   - [ ] Import the repo in Vercel (root `apps/fincrew-web`), set env vars
-  - [ ] `pnpm db:types`, then remove the cast in `apps/fincrew-web/src/lib/session.ts`
+  - [x] `pnpm db:types` (real types committed), cast removed from `session.ts`
 
 Verified locally: `pnpm typecheck`, `pnpm test` (42 tests), `pnpm build`; sign-in page renders and
 `/` redirects to `/login` when signed out. **Not yet verified against a real Supabase project.**
@@ -56,6 +57,8 @@ Migrations are applied by the CI **migrate** job on every push to `main`, so **e
 `supabase/migrations/` on `main` counts as applied** and must never change (CI enforces this).
 
 GitHub repo: https://github.com/vikashpatel04/Employee-and-Expense-Management-Tool
+Supabase project: `employee-expense-management`, ref `ufmlqvvfznemghmnvynz` (Mumbai). The ref
+lives in the git-ignored root `.env` for `pnpm db:types`.
 
 ## Next up
 
@@ -68,6 +71,8 @@ the phase that first uses them (mostly Phase 4), each with RLS tests.
 
 ## Session log
 
+- **2026-10-23** — Live DB verified from outside (schema via generated types, anonymous access
+  refused via REST). Real DB types generated; `db-types.mjs` validates the ref.
 - **2026-10-23** — Repo on GitHub; secrets set; first CI migrate run applied the foundation
   migration to the live project. (First run before secrets existed stopped safely at "Check
   secrets".)
