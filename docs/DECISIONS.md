@@ -2,6 +2,25 @@
 
 Choices made during the build that PLAN.md doesn't spell out. Newest first.
 
+## 2026-10-23 — Phase 4.1 data model
+
+- **Composite foreign keys for shop safety:** child rows reference `(shop_id, staff_id)`,
+  `(shop_id, template_id)` etc., so cross-shop links are impossible in the database, not just
+  blocked by policy.
+- **Late minutes aren't stored** on attendance (PLAN §5 listed `late_minutes`): `packages/core`
+  computes them from check-in and the shift in effect, so they can't go stale.
+- **Staff rows can't be deleted**; people leave via `leaving_date` / `status = 'left'`, which
+  keeps history and the ledger intact.
+- **Holidays** are managed with `settings.leave_templates` (no separate permission in PLAN §3).
+- **Template assignment** is part of staff setup, so it needs `staff.edit`.
+- **Attendance by date:** `attendance.mark` covers today and later; earlier days also need
+  `attendance.edit_past` (IST "today" from `private.today_ist()`). Staff can't mark themselves
+  through the API; self check-in will go through an edge function.
+- Template version rule fields (`carry_over`, `sandwich`, `accrual`, `weekly_offs`) are jsonb in
+  `packages/core`'s shapes, with defaults matching core's defaults; the app validates them with
+  core before writing. Staff overrides of late policy and pay rules are jsonb on pay settings.
+- Hourly "hours per day" is stored as `day_minutes` (integer).
+
 ## 2026-10-23 — Multi-shop
 
 Owner asked for multi-shop options (PLAN originally said one shop).
