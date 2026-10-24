@@ -28,8 +28,7 @@ GitHub: run `git status -sb`; the owner pushes (never push unless asked).
    (migration `20261024000002_advance_undo.sql`, **not pushed yet**).
 8. **Phase 5: FinCrew Android** — in progress (`docs/features/fincrew-mobile.md`). Done:
    app shell, sign-in, shop switch, **Today** (chips, lists, status sheet, Mark all present),
-   **Staff** (list + detail: Overview, Attendance, Ledger, Pay), More. **Owner to check Today** by signing in on the app (browser preview "fincrew-mobile-web"
-   on :8081 or `pnpm --filter @fincrew/mobile web`). Next: Money tab (expenses, salary, advances), then attendance code / requests (Phase 7 data),
+   **Staff** (list + detail: Overview, Attendance, Ledger, Pay), More. Checked with the owner signed in (2026-10-24). Next: Money tab (expenses, salary, advances), then attendance code / requests (Phase 7 data),
    push notifications, EAS build (needs the owner's Expo account).
 
 **Waiting on the owner:**
@@ -170,6 +169,10 @@ Tables still to add (with the phase that uses them, each with RLS tests): `staff
 `attendance_scans`, `invites`, `pin_credentials`, `push_tokens` (Phase 7).
 
 ## Session log
+
+- **2026-10-24** — Owner signed in on the app (browser preview :8081). Checked Today and Staff
+  with live data (details in `docs/features/fincrew-mobile.md` → Checked); all writes reverted.
+  Fix: "Mark all present" now confirms even for one person.
 
 - **2026-10-24** — Pushed `32d5d25` + `e44565e` (CI green; Vercel deployed). **Phase 5 slice B:
   Staff tab** — shared loaders `loadStaffList`, `loadStaffOverview`, `loadLedger`, `loadPay` in

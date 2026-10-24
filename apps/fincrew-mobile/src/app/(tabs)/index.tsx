@@ -81,6 +81,8 @@ export default function Today() {
   const save = async (
     cells: { staffId: string; date: string }[],
     status: SettableStatus | 'clear',
+    /** "Mark all present" confirms how many it marked. */
+    announce = false,
   ) => {
     if (!me) return;
     setBusy(true);
@@ -95,8 +97,7 @@ export default function Today() {
     setBusy(false);
     if (r.ok) {
       setPicked(null);
-      if (status === 'present' && cells.length > 1)
-        setMessage({ ok: true, text: t('home.marked', { count: r.count }) });
+      if (announce) setMessage({ ok: true, text: t('home.marked', { count: r.count }) });
       await load();
     } else {
       setMessage({ ok: false, text: attendanceError(r) });
@@ -245,6 +246,7 @@ export default function Today() {
               save(
                 groups.unmarked.map((p) => ({ staffId: p.row.staffId, date })),
                 'present',
+                true,
               )
             }
           />

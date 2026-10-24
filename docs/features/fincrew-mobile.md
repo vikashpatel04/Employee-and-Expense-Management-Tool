@@ -58,6 +58,19 @@ is a placeholder until the first store build.
 
 ## Checked
 
+2026-10-24, signed in by the owner, live shop at 375 × 812:
+
+- **Today**: real data (Sat 24/10/2026, Test Staff not marked); status sheet → Present; paid
+  leave refused with the shared rule ("Test Staff has 0 paid leave left this month."); Not
+  marked clears; Mark all present (confirmation now shown for one person too) and clear;
+  23/10 shows the half day; 22/10 "Nobody works here on this day".
+- **Staff**: list, search incl. "Nobody matches", Active/Left filter; detail Overview (settled
+  ₹0.00, advance ₹0.00, cut ₹1,000 / limit ₹5,000, October: 1 half day, 0.5 payable days; no
+  phone so no Call/WhatsApp), Attendance calendar and Change on today (header followed), Ledger
+  (empty: Test Staff has no lines — lines with data not seen yet), Pay (₹22,000 monthly, ₹100
+  overtime, 9:30 AM – 8:30 PM, 10 min grace, no template, shop's rules).
+- Database back to the one 23/10 half day afterwards.
+
 2026-10-24 (slice B): typecheck, tests and build pass; signed-out visits to `/staff` go to Sign
 in. Staff screens not yet seen with data (owner sign-in needed).
 
