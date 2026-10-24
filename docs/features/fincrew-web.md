@@ -113,13 +113,22 @@ the first. No design artboards yet: built from the system's existing web pattern
 - All website forms use `useFormAction` (`src/lib/use-form-action.ts`) so a refused save keeps
   the typed values.
 
+- **Roles** (`settings.roles`; `src/lib/roles.ts`): list with permission count and who has
+  each role (or "Nobody has it yet"); the owner is named as having everything. **New role**:
+  name + permission checkboxes grouped by area (labels from i18n `permissions.*`). **Role page**
+  (`roles/[id]`): what it may do (save = exactly the ticked ones), people with it (non-owner
+  people; "No login yet" hint; needs `staff.view` to list them), rename, two-step delete.
+  Saving revalidates the whole app, since permissions decide the sidebar and pages.
+
 Checked in the browser on 2026-10-24: holiday add and remove (test holidays removed again);
 leave form conditional fields and validation; rules form loads the defaults, shows fixed days /
 late amount / time fields as chosen, keeps typed values after an error. No template was created
-and the rules weren't saved on the live shop (the owner's choices).
+and the rules weren't saved on the live shop (the owner's choices). Roles: a test role was
+created, edited, given to Test Staff, renamed and deleted on the live shop, with the database
+checked at each step (left with no roles).
 
 ## Not built yet
 
 Staff detail: attendance calendar, edit details/leaving date, allowances and deductions editing,
-per-person rule overrides, Staffora invite; roles & permissions screen; CSV export, payslip
-PDF/print; requests.
+per-person rule overrides, Staffora invite; adding non-staff people (helpers) for roles; CSV
+export, payslip PDF/print; requests.

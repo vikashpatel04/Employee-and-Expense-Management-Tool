@@ -37,3 +37,6 @@ Permissions are always "in this shop": owning shop A gives nothing in shop B. Te
 
 Writes: `people` needs `staff.edit`; roles tables need `settings.roles`; shop needs `settings.shop`.
 Without the permission, updates silently affect zero rows (RLS), inserts error.
+
+Screen: website Settings → Roles (`docs/features/fincrew-web.md`). Labels for each key live in
+`packages/i18n` (`permissions.*`, `permissionAreas.*`); its test checks none is missing.

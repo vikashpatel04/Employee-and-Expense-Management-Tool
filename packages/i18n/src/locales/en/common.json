@@ -419,7 +419,8 @@
       "label": "Settings sections",
       "holidays": "Holidays",
       "leave": "Leave templates",
-      "rules": "Pay & attendance rules"
+      "rules": "Pay & attendance rules",
+      "roles": "Roles"
     },
     "saving": "Saving…",
     "errors": {
@@ -646,6 +647,92 @@
       },
       "save": "Save rules",
       "done": "Rules saved. The next salary run uses them; finalized payslips never change."
+    },
+    "roles": {
+      "subtitle": "A role is a set of permissions for people who help run the shop. Staff always see their own records in Staffora without one.",
+      "empty": "No roles yet, so only you can change things in this shop.",
+      "owner": "{{name}} is the owner and has every permission, always.",
+      "new": "New role",
+      "newHint": "Name it and tick what it may do. You can give it to people next.",
+      "name": "Role name",
+      "create": "Create role",
+      "permCount_one": "{{count}} permission",
+      "permCount_other": "{{count}} permissions",
+      "nobody": "Nobody has it yet",
+      "peopleCount_one": "{{count}} person",
+      "peopleCount_other": "{{count}} people",
+      "detail": {
+        "back": "All roles",
+        "permissions": "What this role may do",
+        "savePermissions": "Save permissions",
+        "people": "People with this role",
+        "peopleHint": "Ticked people get every permission above, in this shop only.",
+        "savePeople": "Save people",
+        "noLogin": "No login yet: the role works once they sign in",
+        "noPeople": "Add staff first, then give them a role here.",
+        "needStaffView": "You need \"See the staff list\" to choose people.",
+        "rename": "Rename",
+        "delete": "Delete role",
+        "deleteConfirm": "Yes, delete this role",
+        "deleteHint": "People with it lose these permissions straight away.",
+        "saved": "Saved."
+      },
+      "errors": {
+        "name": "Enter a name for the role.",
+        "nameTaken": "A role with this name already exists."
+      }
+    }
+  },
+  "permissionAreas": {
+    "staff": "Staff",
+    "attendance": "Attendance",
+    "requests": "Leave & advance requests",
+    "advances": "Advances",
+    "salary": "Salary",
+    "expenses": "Expenses",
+    "reports": "Reports",
+    "settings": "Settings"
+  },
+  "permissions": {
+    "staff": {
+      "view": "See the staff list and details",
+      "edit": "Add and edit staff",
+      "pay": {
+        "view": "See pay settings",
+        "edit": "Change pay settings"
+      }
+    },
+    "attendance": {
+      "mark": "Mark attendance for others",
+      "edit_past": "Change past days",
+      "code": "See and change the attendance code"
+    },
+    "requests": {
+      "decide": "Approve or reject leave and advance requests"
+    },
+    "advances": {
+      "give": "Give advances and record repayments"
+    },
+    "salary": {
+      "view": "See salary and balances",
+      "run": "Work out, finalize and pay salary",
+      "undo_payment": "Undo a payment or advance"
+    },
+    "expenses": {
+      "add": "Add expenses",
+      "view_all": "See everyone's expenses",
+      "edit": "Edit and delete expenses",
+      "categories": "Manage expense categories"
+    },
+    "reports": {
+      "view": "See reports",
+      "export": "Export reports"
+    },
+    "settings": {
+      "leave_templates": "Holidays and leave templates",
+      "attendance": "Attendance and late rules",
+      "roles": "Roles and permissions (can give anyone any permission, themselves included)",
+      "shop": "Shop settings and pay & attendance rules"
     }
   }
 }

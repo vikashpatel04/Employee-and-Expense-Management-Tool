@@ -2,6 +2,22 @@
 
 Choices made during the build that PLAN.md doesn't spell out. Newest first.
 
+## 2026-10-24 — Roles screen
+
+- Permission and area names shown on screen come from i18n (`permissions.*`,
+  `permissionAreas.*`), not the database `permissions.description`, so they translate later. A
+  test in `packages/i18n` fails if a key in core `PERMISSIONS` has no label.
+- The owner isn't offered roles (they hold every permission); the screen says so.
+- Saving a role's permissions or people makes them exactly what's ticked (delete the unticked,
+  add the new). Saving people only touches people the editor can see (RLS on `people` needs
+  `staff.view`), so it never removes someone hidden from them; without `staff.view` the people
+  list isn't shown.
+- People without a login can be given a role; it takes effect when they sign in (Staffora invite,
+  later). Non-staff helpers (a manager not on payroll) need a way to be added first: later.
+- Deleting a role is two clicks ("Delete role", then "Yes, delete this role"); its permissions
+  and people go with it (cascade).
+- `settings.roles` can grant any permission, including to themselves: the label says so.
+
 ## 2026-10-24 — Settings screens
 
 - **Who can change what**: holidays and leave templates need `settings.leave_templates` (as the

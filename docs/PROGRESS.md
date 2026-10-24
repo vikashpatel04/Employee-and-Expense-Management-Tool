@@ -5,19 +5,19 @@ _Last updated: 2026-10-24_
 ## Start here (handover for a new session)
 
 **Where we are:** Phases 1–3 done; Phase 4 (FinCrew website) in progress — data layer live,
-screens slices 1–6 done and checked in the browser: app shell + shop switcher, staff list/add,
+screens slices 1–7 done and checked in the browser: app shell + shop switcher, staff list/add,
 staff detail (overview, ledger, pay), attendance grid, salary run, advances + undo, settings
-(holidays, leave templates + assignment, shop rules). Local `main` may be ahead of
+(holidays, leave templates + assignment, shop rules, roles & permissions). Local `main` may be ahead of
 GitHub: run `git status -sb`; the owner pushes (never push unless asked).
 
 **Next work, in order** (owner said "continue"; pick the top unfinished one):
 
 1. ~~Advances on the web~~ — done (slice 5).
-2. **Settings screens**: ~~holidays, leave templates + assignment, shop rules~~ — done (slice 6).
-   Left: **roles & permissions** (`roles`, `role_permissions`, `person_roles`; `settings.roles`),
-   and per-person rule overrides (`pay_settings.pay_rules_override` / `late_policy_override`).
+2. ~~Settings screens~~ — done (slices 6–7: holidays, leave templates + assignment, shop rules,
+   roles & permissions).
 3. **Staff detail extras**: edit name/phone, leaving date/status, allowances & deductions,
-   advance limit/cut, opening balance.
+   opening balance, per-person rule overrides (`pay_settings.pay_rules_override` /
+   `late_policy_override`), leave template change from the Pay tab.
 4. Payslip print/PDF, attendance CSV, clear a mark; then Phase 5 (Android), 6 (expenses), 7 (Staffora).
 
 **Waiting on the owner:**
@@ -37,7 +37,7 @@ via i18n; design follows the Claude Design system (`docs/DESIGN.md`).
 
 **How to check work:**
 
-- Tests/types/build: `pnpm test` (core 225, ui 6, db 90 — PGlite, no Docker), `pnpm typecheck`,
+- Tests/types/build: `pnpm test` (core 225, ui 6, i18n 1, db 90 — PGlite, no Docker), `pnpm typecheck`,
   `pnpm build`, `pnpm ui:tokens --check`, `bash scripts/check-migrations.sh origin/main HEAD`.
 - Live DB (CLI is logged in): `pnpm exec supabase db query --linked --project-ref
 ufmlqvvfznemghmnvynz "<sql>"`; advisors: `pnpm exec supabase db advisors --linked --project-ref
@@ -158,6 +158,13 @@ Tables still to add (with the phase that uses them, each with RLS tests): `staff
 `attendance_scans`, `invites`, `pin_credentials`, `push_tokens` (Phase 7).
 
 ## Session log
+
+- **2026-10-24** — **Slice 7: roles & permissions** — Settings → Roles: list (permission count,
+  who has it), new role (name + permissions by area), role page (permissions, people, rename,
+  two-step delete). Permission labels are i18n strings; new `@fincrew/i18n` test checks every
+  `PERMISSIONS` key has one. Checked in the browser on the live shop with a test role (created,
+  permissions changed, given to Test Staff, renamed, deleted; DB checked at each step and left with
+  0 roles). Next: staff detail extras.
 
 - **2026-10-24** — **Slice 6: settings** — Settings in the sidebar with Holidays (by year, add /
   replace / remove, paid or not), Leave templates (list with plain-words summary and head count;

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Added — 2026-10-24 (Phase 4.3 slice 7)
+
+- Settings → Roles: create roles, tick permissions, give them to people, rename, delete.
+- `@fincrew/i18n` test: every permission key has a label.
+
 ### Added — 2026-10-24 (Phase 4.3 slice 6)
 
 - Settings: holidays, leave templates (rules by date, assign staff, rename, archive), pay &
