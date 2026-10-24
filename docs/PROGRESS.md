@@ -39,7 +39,8 @@ first, then `CLAUDE.md`, then the feature doc for whatever you touch._
   `loadMyPayslips` / `loadPayslipView`, advances, reports, roles, leave setup, self-service:
   code, check-ins, requests + `decideRequest`, logins / invites).
 - **Git:** everything up to `9fd9e02` is pushed (CI run 40104302836 green, Vercel deployed);
-  local `main` has docs-only commits after it (this handover), not pushed. The owner pushes, or
+  local `main` has docs-only commits after it (this handover), not pushed. Working from another
+  PC: `docs/NEW-MACHINE.md`. The owner pushes, or
   tells you to push in that moment. Pushing `.github/workflows` changes needs the `workflow`
   scope — the owner added it to the GitHub CLI sign-in, which git now uses.
 
@@ -260,6 +261,10 @@ Tables still to add (with the phase that uses them, each with RLS tests): `staff
 (storage), `push_tokens` (Phase 7/8).
 
 ## Session log
+
+- **2026-10-24** — Owner continuing tonight on another PC: added `docs/NEW-MACHINE.md` (setup,
+  env files, what doesn't carry over, switching back) and an **Owner rules** section in
+  `CLAUDE.md` (the rules that were only in Claude's memory on the first PC).
 
 - **2026-10-24** — Owner resetting the session: rewrote **Start here** (state of all three
   apps, what the owner can use now, next work in the agreed order, live test data, checks,
