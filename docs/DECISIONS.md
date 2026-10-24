@@ -2,6 +2,29 @@
 
 Choices made during the build that PLAN.md doesn't spell out. Newest first.
 
+## 2026-10-24 — Settings screens
+
+- **Who can change what**: holidays and leave templates need `settings.leave_templates` (as the
+  RLS policies already say); moving staff onto a template needs `staff.edit` (assignments are part
+  of a person's setup); shop rules need `settings.shop`, because they live in `shops.settings` and
+  only that permission may update the shop row. `settings.attendance` has no screen of its own yet;
+  splitting late/code rules out for it would need a database function (later, if a shop wants it).
+- **Shop rules are saved whole**: the form writes the full `ShopRules` into `shops.settings`
+  (other keys kept), so later changes to code defaults never change a shop's rules silently.
+  Until the first save, the defaults from `resolveShopRules` apply.
+- **A new leave template starts blank** (no weekly offs, 0 paid leave, lapse, full month,
+  sandwich off): nothing is assumed. Templates can't be deleted (no delete policy; old payslips
+  were worked out with them), only archived; an archived template can't take new staff.
+- **No "no template" assignment**: assignments always name a template. To take someone off leave
+  from a date, move them to a template with no weekly offs and 0 paid leave.
+- **A holiday on a date that already has one replaces it** (upsert on shop + date).
+- **Forms submit through `useFormAction`** (`src/lib/use-form-action.ts`), not `<form action>`:
+  React 19 resets a form after its action, which wiped what was typed whenever a save was refused.
+- **Client components may import `t`** from `@/lib/i18n` (i18next initialises synchronously with
+  the bundled English strings); the settings forms do, instead of passing every label as a prop.
+- Settings screens have no Claude Design artboards yet; they reuse the system's web patterns
+  (cards, segmented controls, lists) from the existing screens.
+
 ## 2026-10-23 — Salary run screen
 
 - The website works out payslips with `packages/core` on the server (`computeMonth`) and stores

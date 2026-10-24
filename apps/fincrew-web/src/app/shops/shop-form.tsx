@@ -1,16 +1,16 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useFormAction } from '@/lib/use-form-action';
 import { buttonClass, inputClass } from '../components';
 import { createShop, type CreateShopState } from './actions';
 
 type Labels = { shopName: string; yourName: string; create: string; creating: string };
 
 export function ShopForm({ labels, ownerName }: { labels: Labels; ownerName?: string }) {
-  const [state, action, pending] = useActionState<CreateShopState, FormData>(createShop, {});
+  const [state, onSubmit, pending] = useFormAction<CreateShopState>(createShop, {});
 
   return (
-    <form action={action} className="space-y-4">
+    <form onSubmit={onSubmit} className="space-y-4">
       <label className="text-label-sm block">
         {labels.shopName}
         <input name="shopName" required maxLength={120} className={inputClass} />

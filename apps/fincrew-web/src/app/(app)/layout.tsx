@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { LogOut } from 'lucide-react';
 import { t } from '@/lib/i18n';
 import { requireMe } from '@/lib/session';
+import { settingsSections } from '@/lib/settings-access';
 import { AuthCard, buttonClass } from '../components';
 import { signOut } from '../login/actions';
 import { NavLinks, type NavItem } from './nav';
@@ -35,6 +36,9 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   if (can('salary.view')) items.push({ href: '/salary', label: t('nav.salary'), icon: 'rupee' });
   if (can('salary.view') || can('advances.give')) {
     items.push({ href: '/advances', label: t('nav.advances'), icon: 'advance' });
+  }
+  if (settingsSections(me.permissions).length > 0) {
+    items.push({ href: '/settings', label: t('nav.settings'), icon: 'settings' });
   }
 
   return (

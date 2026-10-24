@@ -9,7 +9,8 @@ the design's text styles and Lucide icons (24px, 2px stroke, the design system's
   "N shops"; opens the list to switch, plus "Add a shop" for owners), the sections, sign out.
   On a phone the sidebar stacks above the content.
 - **Sections appear only when built and permitted**: Dashboard always; Staff with `staff.view`.
-  Attendance, Salary, Expenses, Advances, Requests, Reports and Settings join as they ship.
+  Attendance, Salary, Advances and Settings (any settings permission) are in; Expenses, Requests
+  and Reports join as they ship.
 - Pages outside the shell: `/login`, `/setup` (first run), `/shops/new`.
 
 ## Staff — `(app)/staff`
@@ -89,8 +90,36 @@ the live shop: ledger lines are permanent, so a finalized Test Staff could never
 Checked in the browser on 2026-10-23: both pages render; advance rules saved for Test Staff
 (limit ₹5,000, cut ₹1,000). No advance was given on the live shop (permanent ledger line).
 
+## Settings — `(app)/settings`
+
+Tabs for the sections this person may change (`src/lib/settings-access.ts`); `/settings` opens
+the first. No design artboards yet: built from the system's existing web patterns.
+
+- **Holidays** (`settings.leave_templates`): by year (‹ ›), each with weekday, date and Paid /
+  Unpaid; add (date, name, paid) — same date replaces; Remove. Used by the attendance grid and
+  salary run as before.
+- **Leave templates** (`settings.leave_templates`): list with today's rules in words
+  (`src/lib/leave-text.ts`), "From" date and how many active staff are on it today
+  (`src/lib/leave-setup.ts`). **New template**: name + rules (weekly off per weekday: working /
+  paid off / unpaid off; paid leaves per month; carry-over with cap or leave-year end month;
+  part-month accrual and rounding; sandwich rule with triggers, applies-to and sides), checked
+  with core `validateTemplateVersion`. **Template page** (`leave/[id]`): rules by date (In use
+  today / Starts later), **change the rules from a date** (same date replaces), staff on it today,
+  rename, archive / bring back, and **move staff** (tick people + from date → dated
+  `staff_leave_templates` rows; needs `staff.edit`).
+- **Pay & attendance rules** (`settings.shop`): every `ShopRules` field (pay, coming late,
+  attendance code, small expense limit) prefilled from `shops.settings` via `resolveShopRules`;
+  saved whole after `validateShopRules`. Field reference: `docs/features/core-rules.md`.
+- All website forms use `useFormAction` (`src/lib/use-form-action.ts`) so a refused save keeps
+  the typed values.
+
+Checked in the browser on 2026-10-24: holiday add and remove (test holidays removed again);
+leave form conditional fields and validation; rules form loads the defaults, shows fixed days /
+late amount / time fields as chosen, keeps typed values after an error. No template was created
+and the rules weren't saved on the live shop (the owner's choices).
+
 ## Not built yet
 
 Staff detail: attendance calendar, edit details/leaving date, allowances and deductions editing,
-leave template assignment, advance limit/cut, Staffora invite; holidays and leave-template screens, CSV export, payslip PDF/print,
-requests, settings screens for every rule in `docs/features/core-rules.md`.
+per-person rule overrides, Staffora invite; roles & permissions screen; CSV export, payslip
+PDF/print; requests.

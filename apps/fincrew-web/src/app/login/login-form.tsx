@@ -1,16 +1,16 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useFormAction } from '@/lib/use-form-action';
 import { buttonClass, inputClass } from '../components';
 import { signIn, type SignInState } from './actions';
 
 type Labels = { email: string; password: string; signIn: string; signingIn: string };
 
 export function LoginForm({ labels }: { labels: Labels }) {
-  const [state, action, pending] = useActionState<SignInState, FormData>(signIn, {});
+  const [state, onSubmit, pending] = useFormAction<SignInState>(signIn, {});
 
   return (
-    <form action={action} className="space-y-4">
+    <form onSubmit={onSubmit} className="space-y-4">
       <label className="text-label-sm block">
         {labels.email}
         <input name="email" type="email" autoComplete="email" required className={inputClass} />

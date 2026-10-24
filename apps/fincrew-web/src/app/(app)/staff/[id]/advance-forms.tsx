@@ -1,8 +1,9 @@
 'use client';
 
-import { useActionState, useState, useTransition } from 'react';
+import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { formatDisplayDate, paiseToInput } from '@fincrew/core';
+import { useFormAction } from '@/lib/use-form-action';
 import { buttonClass, dateFieldProps, inputClass } from '../../../components';
 import { recordAdvance, saveAdvanceSettings, undoLine, type AdvanceState } from './advance-actions';
 
@@ -39,14 +40,14 @@ export function AdvanceForm({
   today: string;
   labels: AdvanceLabels;
 }) {
-  const [state, action, pending] = useActionState<AdvanceState, FormData>(
+  const [state, onSubmit, pending] = useFormAction<AdvanceState>(
     recordAdvance.bind(null, staffId),
     {},
   );
   const [kind, setKind] = useState<'given' | 'repaid'>('given');
 
   return (
-    <form action={action} className="flex flex-col gap-3">
+    <form onSubmit={onSubmit} className="flex flex-col gap-3">
       <fieldset>
         <legend className="text-label-sm">{labels.kind.label}</legend>
         <div className="mt-1 flex gap-1 rounded-[var(--radius-md)] bg-[var(--surface-muted)] p-1">
@@ -133,12 +134,12 @@ export function AdvanceSettingsForm({
   cut: number | null;
   labels: { limit: string; cut: string; save: string; saving: string };
 }) {
-  const [state, action, pending] = useActionState<AdvanceState, FormData>(
+  const [state, onSubmit, pending] = useFormAction<AdvanceState>(
     saveAdvanceSettings.bind(null, staffId),
     {},
   );
   return (
-    <form action={action} className="flex flex-col gap-3">
+    <form onSubmit={onSubmit} className="flex flex-col gap-3">
       <label className="text-label-sm block">
         {labels.limit}
         <input

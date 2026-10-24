@@ -7,6 +7,7 @@ import {
   CalendarDays,
   House,
   IndianRupee,
+  Settings,
   Users,
   type LucideIcon,
 } from 'lucide-react';
@@ -17,6 +18,7 @@ const ICONS: Record<string, LucideIcon> = {
   users: Users,
   rupee: IndianRupee,
   advance: ArrowUpRight,
+  settings: Settings,
 };
 
 export type NavItem = { href: string; label: string; icon: keyof typeof ICONS };

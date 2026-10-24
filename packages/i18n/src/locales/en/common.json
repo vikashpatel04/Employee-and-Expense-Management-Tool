@@ -42,7 +42,8 @@
     "switchShop": "Switch shop. Current shop: {{name}}",
     "attendance": "Attendance",
     "salary": "Salary",
-    "advances": "Advances"
+    "advances": "Advances",
+    "settings": "Settings"
   },
   "staff": {
     "title": "Staff",
@@ -393,6 +394,258 @@
       "noPermission": "You don't have permission for this.",
       "overLimit": "This advance crosses the person's limit. Tick “Give it anyway” to confirm.",
       "failed": "Couldn't save: {{reason}}"
+    }
+  },
+  "months": {
+    "long": [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December"
+    ]
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Rules for {{shop}}. Every rule here is yours to change.",
+    "tabs": {
+      "label": "Settings sections",
+      "holidays": "Holidays",
+      "leave": "Leave templates",
+      "rules": "Pay & attendance rules"
+    },
+    "saving": "Saving…",
+    "errors": {
+      "noPermission": "You don't have permission to change this.",
+      "failed": "Couldn't save: {{reason}}",
+      "invalid": "Please fix: {{problems}}",
+      "whole": "{{field}}: enter a whole number, 0 or more.",
+      "amount": "{{field}}: enter an amount in rupees.",
+      "time": "{{field}}: enter a time like 09:30."
+    },
+    "holidays": {
+      "subtitle": "Shop holidays apply to everyone. A paid holiday is paid like a working day.",
+      "year": "Year {{year}}",
+      "prevYear": "Previous year",
+      "nextYear": "Next year",
+      "empty": "No holidays in {{year}}.",
+      "count_one": "{{count}} holiday",
+      "count_other": "{{count}} holidays",
+      "add": "Add a holiday",
+      "addHint": "A holiday on a date that already has one replaces it.",
+      "fields": {
+        "date": "Date",
+        "name": "Name",
+        "paid": "Paid holiday"
+      },
+      "paid": "Paid",
+      "unpaid": "Unpaid",
+      "save": "Add holiday",
+      "remove": "Remove",
+      "removeLabel": "Remove {{name}}",
+      "done": "Holiday saved.",
+      "errors": {
+        "name": "Enter a name for the holiday."
+      }
+    },
+    "leave": {
+      "subtitle": "Weekly offs and paid leave for a group of staff. Rules change from a date, so past months keep the rules they had.",
+      "empty": "No leave templates yet. Staff without a template get no weekly offs and no paid leave.",
+      "new": "New template",
+      "newHint": "Start with a name and the rules. You can move staff onto it next.",
+      "name": "Template name",
+      "create": "Create template",
+      "staffCount_one": "{{count}} person now",
+      "staffCount_other": "{{count}} people now",
+      "archived": "Archived",
+      "since": "From {{date}}",
+      "noVersion": "No rules yet",
+      "summary": {
+        "noOffs": "No weekly offs",
+        "offPaid": "{{day}} off (paid)",
+        "offUnpaid": "{{day}} off (unpaid)",
+        "noLeaves": "No paid leave",
+        "leaves_one": "{{count}} paid leave a month",
+        "leaves_other": "{{count}} paid leaves a month",
+        "carry": {
+          "lapse": "unused leave lapses",
+          "carry": "unused leave carries over",
+          "carryCap": "unused leave carries over (up to {{cap}} days)",
+          "carry_within_year": "unused leave carries over until the end of {{month}}",
+          "payout": "unused leave is paid out at the end of {{month}}"
+        },
+        "prorated": "part months by days employed",
+        "sandwich": "sandwich rule on"
+      },
+      "detail": {
+        "back": "All templates",
+        "versions": "Rules by date",
+        "current": "In use today",
+        "upcoming": "Starts later",
+        "change": "Change the rules from a date",
+        "changeHint": "Saving on a date that already has rules replaces them. Earlier months keep their rules; finalized payslips never change.",
+        "rename": "Rename",
+        "archive": "Archive template",
+        "unarchive": "Bring back",
+        "archiveHint": "An archived template can't be given to more staff. People on it keep it until you move them.",
+        "staff": "Staff on this template today",
+        "noStaff": "Nobody is on this template today.",
+        "assign": "Move staff to this template",
+        "assignHint": "Each person you tick uses this template from the date you choose.",
+        "assignFrom": "From",
+        "assignSave": "Move staff",
+        "nowOn": "Now on {{name}}",
+        "noTemplate": "No template",
+        "assigned_one": "{{count}} person moved.",
+        "assigned_other": "{{count}} people moved.",
+        "saved": "Saved."
+      },
+      "form": {
+        "effectiveFrom": "Rules apply from",
+        "weeklyOffs": "Weekly offs",
+        "weeklyOffsHint": "A paid off day is paid like a working day.",
+        "dayKinds": {
+          "work": "Working",
+          "paid": "Paid off",
+          "unpaid": "Unpaid off"
+        },
+        "paidLeaves": "Paid leaves per month",
+        "paidLeavesHint": "0 means no paid leave.",
+        "carry": "Unused paid leave at month end",
+        "carryModes": {
+          "lapse": "Lapses",
+          "carry": "Carries over",
+          "carry_within_year": "Carries over within the leave year, then lapses",
+          "payout": "Carries over, then is paid out at the end of the leave year"
+        },
+        "cap": "Most days that can be banked",
+        "capHint": "Leave empty for no limit.",
+        "resetMonth": "Leave year ends with",
+        "accrual": "Leave in a part month (joining or leaving)",
+        "accrualModes": {
+          "full": "A full month's leave",
+          "prorated": "By days employed"
+        },
+        "rounding": "Rounding",
+        "roundings": {
+          "down": "Round down",
+          "nearest": "Round to nearest",
+          "up": "Round up"
+        },
+        "sandwich": "Sandwich rule",
+        "sandwichOn": "Make a paid off day unpaid when the person is away next to it",
+        "triggers": "Counts as away",
+        "triggerNames": {
+          "absent": "Absent",
+          "unpaid_leave": "Unpaid leave",
+          "half_day": "Half day",
+          "unmarked": "Not marked"
+        },
+        "appliesTo": "Applies to",
+        "appliesToNames": {
+          "weekly_off": "Weekly offs",
+          "holiday": "Holidays"
+        },
+        "sides": "When",
+        "sidesNames": {
+          "both": "Away on both sides",
+          "either": "Away on either side"
+        },
+        "save": "Save rules"
+      },
+      "errors": {
+        "name": "Enter a name for the template.",
+        "nameTaken": "A template with this name already exists.",
+        "noStaff": "Tick at least one person.",
+        "archived": "This template is archived. Bring it back first."
+      }
+    },
+    "rules": {
+      "subtitle": "These apply to everyone in the shop, unless a staff member's pay settings say otherwise.",
+      "pay": {
+        "title": "Pay",
+        "dayRate": "Day rate for a monthly salary",
+        "dayRateModes": {
+          "calendar_days": "Salary ÷ days in that month",
+          "fixed_days": "Salary ÷ a fixed number of days"
+        },
+        "dayRateHint": "A fully paid month always pays exactly the salary.",
+        "fixedDays": "Fixed number of days",
+        "offDayWork": "Working on a weekly off or holiday",
+        "offDayWorkModes": {
+          "extra": "The off day's pay plus an extra day",
+          "replace": "Paid once, as a working day",
+          "none": "Only the off day's own pay"
+        },
+        "unmarkedDay": "A working day nobody marked",
+        "unmarkedModes": {
+          "unpaid": "Unpaid (the salary run warns)",
+          "paid": "Paid (the salary run warns)"
+        },
+        "holidayOnWeeklyOff": "A holiday that falls on a weekly off",
+        "holidayModes": {
+          "holiday": "The holiday decides if it is paid",
+          "weekly_off": "The weekly off decides if it is paid"
+        },
+        "markOnOffDay": "Absent or leave marked on an off day",
+        "markModes": {
+          "ignore": "The off day stands",
+          "apply": "The mark replaces it (paid leave uses balance)"
+        }
+      },
+      "late": {
+        "title": "Coming late",
+        "mode": "When someone is late",
+        "modes": {
+          "notice_only": "Show it only",
+          "deduct": "Show it and cut pay"
+        },
+        "freeLateDays": "Free late days each month",
+        "halfDay": "Late by more than this many minutes becomes a half day",
+        "halfDayHint": "Leave empty to never turn lateness into a half day.",
+        "halfDayUsesFreeDay": "A half day from lateness also uses a free late day",
+        "earlyLeaving": "Count leaving early the same way as coming late",
+        "countsFrom": "Once past grace time, count late minutes from",
+        "countsFromModes": {
+          "shift_start": "Shift start",
+          "grace_end": "End of grace time"
+        },
+        "charge": "Pay cut for a late day",
+        "chargeModes": {
+          "per_minute": "By the minute (day rate ÷ shift minutes)",
+          "per_late_day": "A fixed amount per late day"
+        },
+        "chargeAmount": "Amount per late day"
+      },
+      "code": {
+        "title": "Attendance code",
+        "rotation": "New code",
+        "rotationModes": {
+          "daily": "Every day at a set time",
+          "manual": "Only when I change it"
+        },
+        "rotateAt": "Time of change",
+        "minGap": "Minimum minutes between check-in and check-out",
+        "cooldown": "Ignore repeat taps for (minutes)",
+        "checkOutRequired": "Staff must check out",
+        "maxWrong": "Wrong codes allowed",
+        "wrongWindow": "Within (minutes)",
+        "lockout": "Then wait (minutes)"
+      },
+      "expenses": {
+        "title": "Expenses",
+        "smallLimit": "Small expense limit",
+        "smallLimitHint": "Expenses below this start as Not tracked. Leave empty for none."
+      },
+      "save": "Save rules",
+      "done": "Rules saved. The next salary run uses them; finalized payslips never change."
     }
   }
 }

@@ -1,7 +1,8 @@
 'use client';
 
-import { useActionState, useState } from 'react';
+import { useState } from 'react';
 import { formatDisplayDate, minutesToInput, paiseToInput } from '@fincrew/core';
+import { useFormAction } from '@/lib/use-form-action';
 import { buttonClass, dateFieldProps, inputClass } from '../../../components';
 import { savePay, type PayState } from './actions';
 
@@ -43,14 +44,11 @@ export function PayForm({
   current: Current;
   labels: Labels;
 }) {
-  const [state, action, pending] = useActionState<PayState, FormData>(
-    savePay.bind(null, staffId),
-    {},
-  );
+  const [state, onSubmit, pending] = useFormAction<PayState>(savePay.bind(null, staffId), {});
   const [payType, setPayType] = useState<PayType>(current?.payType ?? 'monthly');
 
   return (
-    <form action={action} className="flex flex-col gap-4">
+    <form onSubmit={onSubmit} className="flex flex-col gap-4">
       <label className="text-label-sm block">
         {labels.effectiveFrom}
         <input

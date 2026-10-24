@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+### Added — 2026-10-24 (Phase 4.3 slice 6)
+
+- Settings: holidays, leave templates (rules by date, assign staff, rename, archive), pay &
+  attendance rules.
+
+### Fixed — 2026-10-24
+
+- Website forms keep what was typed when a save is refused (React 19 reset forms after an action).
+
 ### Added — 2026-10-23 (Phase 4.3 slice 5)
 
 - Advances: give, record repaid, advance rules, undo payments/advances, Advances page.

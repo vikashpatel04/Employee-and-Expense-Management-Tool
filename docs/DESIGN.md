@@ -72,7 +72,8 @@ CI fails if the generated files are stale.
 ## Still to design
 
 Phase 3 is done (system, key screens, `packages/ui`). Later screens are designed in the same
-canvases when needed: settings screens (leave templates, holidays, rules, roles), advances,
+canvases when needed: settings screens (built on 2026-10-24 from existing web patterns; artboards
+still to add: leave templates, holidays, rules, roles), advances,
 expenses, Staffora requests. Fill the design-system gaps listed above as screens need them.
 
 ## How the website uses it

@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useActionState } from 'react';
 import { formatDisplayDate } from '@fincrew/core';
+import { useFormAction } from '@/lib/use-form-action';
 import { buttonClass, dateFieldProps, inputClass, quietButtonClass } from '../../../components';
 import { addStaff, type AddStaffState } from '../actions';
 
@@ -16,10 +16,10 @@ type Labels = {
 };
 
 export function AddStaffForm({ labels, today }: { labels: Labels; today: string }) {
-  const [state, action, pending] = useActionState<AddStaffState, FormData>(addStaff, {});
+  const [state, onSubmit, pending] = useFormAction<AddStaffState>(addStaff, {});
 
   return (
-    <form action={action} className="flex max-w-md flex-col gap-4">
+    <form onSubmit={onSubmit} className="flex max-w-md flex-col gap-4">
       <label className="text-label-sm block">
         {labels.name}
         <input

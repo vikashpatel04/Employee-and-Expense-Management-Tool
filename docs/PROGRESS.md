@@ -1,21 +1,21 @@
 # Progress
 
-_Last updated: 2026-10-23_
+_Last updated: 2026-10-24_
 
 ## Start here (handover for a new session)
 
 **Where we are:** Phases 1–3 done; Phase 4 (FinCrew website) in progress — data layer live,
-screens slices 1–5 done and checked in the browser: app shell + shop switcher, staff list/add,
-staff detail (overview, ledger, pay), attendance grid, salary run, advances + undo. Local `main` may be ahead of
+screens slices 1–6 done and checked in the browser: app shell + shop switcher, staff list/add,
+staff detail (overview, ledger, pay), attendance grid, salary run, advances + undo, settings
+(holidays, leave templates + assignment, shop rules). Local `main` may be ahead of
 GitHub: run `git status -sb`; the owner pushes (never push unless asked).
 
 **Next work, in order** (owner said "continue"; pick the top unfinished one):
 
 1. ~~Advances on the web~~ — done (slice 5).
-2. **Settings screens** (owner rule: every rule is an admin setting): holidays; leave templates
-   (versions: weekly offs, paid leaves, carry-over, sandwich, accrual — `validateTemplateVersion`);
-   assign template to staff; shop rules (`shops.settings` → `resolveShopRules`/`validateShopRules`,
-   reference in `docs/features/core-rules.md`); roles & permissions.
+2. **Settings screens**: ~~holidays, leave templates + assignment, shop rules~~ — done (slice 6).
+   Left: **roles & permissions** (`roles`, `role_permissions`, `person_roles`; `settings.roles`),
+   and per-person rule overrides (`pay_settings.pay_rules_override` / `late_policy_override`).
 3. **Staff detail extras**: edit name/phone, leaving date/status, allowances & deductions,
    advance limit/cut, opening balance.
 4. Payslip print/PDF, attendance CSV, clear a mark; then Phase 5 (Android), 6 (expenses), 7 (Staffora).
@@ -27,6 +27,9 @@ GitHub: run `git status -sb`; the owner pushes (never push unless asked).
   could never be deleted afterwards. Until then it's deletable (people delete cascades; drafts
   have no ledger lines).
 - Review rule defaults (`docs/features/core-rules.md`), leaked-password protection (Supabase Auth).
+- Create the shop's real **leave templates** (Settings → Leave templates) and move staff onto
+  them, and save **Settings → Pay & attendance rules** once (it stores the full rule set). Not done
+  for the owner: templates can't be deleted (only archived), so names and rules are their call.
 
 **Owner rules (also in CLAUDE.md and memory):** no co-author on commits; owner pushes; docs in
 every commit; every rule is a setting (no hard-coding); dates DD/MM/YYYY everywhere; all strings
@@ -66,16 +69,16 @@ https://claude.ai/artifact/8jzomFcfJazHfn6yiUFQQP · Website https://fincrew-web
 
 ## Phase status (docs/PLAN.md §8)
 
-| #   | Phase                        | Status                                                                                                                                     |
-| --- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| 1   | Foundation                   | **Done** (2026-10-23)                                                                                                                      |
-| 2   | Core logic (`packages/core`) | **Done**: 225 tests, every rule a setting; `docs/features/core-rules.md`                                                                   |
-| 3   | Design                       | **Done** (2026-10-23): design system, key screens (owner reviewed), `packages/ui` tokens                                                   |
-| 4   | FinCrew web core             | **In progress**: data layer live; 4.3 screens: slices 1–4 (shell, staff, staff detail + pay, attendance grid, salary run) done and checked |
-| 5   | FinCrew Android              | Not started                                                                                                                                |
-| 6   | Expenses                     | Not started                                                                                                                                |
-| 7   | Staffora                     | Not started                                                                                                                                |
-| 8   | Polish                       | Not started                                                                                                                                |
+| #   | Phase                        | Status                                                                                                                                                         |
+| --- | ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Foundation                   | **Done** (2026-10-23)                                                                                                                                          |
+| 2   | Core logic (`packages/core`) | **Done**: 225 tests, every rule a setting; `docs/features/core-rules.md`                                                                                       |
+| 3   | Design                       | **Done** (2026-10-23): design system, key screens (owner reviewed), `packages/ui` tokens                                                                       |
+| 4   | FinCrew web core             | **In progress**: data layer live; 4.3 screens: slices 1–6 (shell, staff, staff detail + pay, attendance grid, salary run, advances, settings) done and checked |
+| 5   | FinCrew Android              | Not started                                                                                                                                                    |
+| 6   | Expenses                     | Not started                                                                                                                                                    |
+| 7   | Staffora                     | Not started                                                                                                                                                    |
+| 8   | Polish                       | Not started                                                                                                                                                    |
 
 ## Phase 1 — Foundation
 
@@ -155,6 +158,15 @@ Tables still to add (with the phase that uses them, each with RLS tests): `staff
 `attendance_scans`, `invites`, `pin_credentials`, `push_tokens` (Phase 7).
 
 ## Session log
+
+- **2026-10-24** — **Slice 6: settings** — Settings in the sidebar with Holidays (by year, add /
+  replace / remove, paid or not), Leave templates (list with plain-words summary and head count;
+  new template; template page with rules by date, change from a date, rename, archive, move staff
+  from a date) and Pay & attendance rules (every `ShopRules` field). Also fixed every website form
+  losing what was typed when a save was refused (React 19 form reset): forms now submit through
+  `useFormAction`. Checked in the browser: holiday add/remove (test holidays removed again),
+  form validation and conditional fields; no template created and rules not saved on the live shop.
+  Next: roles & permissions.
 
 - **2026-10-23** — **Slice 5: advances** (give/repaid with limit confirmation, advance rules, undo
   in ledger, Advances page). Test Staff now has limit ₹5,000 and cut ₹1,000 (still deletable: no
