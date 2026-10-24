@@ -16,12 +16,13 @@ import { toShopRules } from '@/lib/mappers';
 import { requireMe } from '@/lib/session';
 import { createClient } from '@/lib/supabase/server';
 import { Avatar, quietButtonClass } from '../../../components';
+import { AttendanceTab } from './attendance-tab';
 import { AdvanceForm, AdvanceSettingsForm, UndoButton } from './advance-forms';
 import { DetailsForm, ItemButtons, ItemForm, OpeningForm, TemplateForm } from './extra-forms';
 import { OverridesForm } from './overrides-form';
 import { PayForm } from './pay-form';
 
-type Tab = 'overview' | 'ledger' | 'pay';
+type Tab = 'overview' | 'attendance' | 'ledger' | 'pay';
 
 const card = 'rounded-[var(--radius-lg)] bg-[var(--surface)] p-5 shadow-[var(--elevation-1)]';
 const MONTH = new Intl.DateTimeFormat('en-IN', { month: 'long', year: 'numeric', timeZone: 'UTC' });
@@ -31,7 +32,7 @@ export default async function StaffDetailPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ tab?: string; saved?: string }>;
+  searchParams: Promise<{ tab?: string; saved?: string; month?: string; day?: string }>;
 }) {
   const me = (await requireMe())!;
   const { id } = await params;
@@ -44,6 +45,7 @@ export default async function StaffDetailPage({
   const canPay = self || can('staff.pay.view');
   const tabs: Tab[] = [
     'overview',
+    'attendance',
     ...(canLedger ? (['ledger'] as const) : []),
     ...(canPay ? (['pay'] as const) : []),
   ];
@@ -115,12 +117,23 @@ export default async function StaffDetailPage({
           canGive={can('advances.give')}
           canEditStaff={can('staff.edit')}
           canEditPay={can('staff.pay.edit')}
+          canRun={can('salary.run')}
           details={{
             name,
             phone,
             joiningDate: s.joining_date,
             leavingDate: s.leaving_date,
           }}
+        />
+      )}
+      {tab === 'attendance' && (
+        <AttendanceTab
+          staffId={id}
+          shopId={me.shopId}
+          month={sp.month}
+          day={sp.day}
+          canMark={can('attendance.mark')}
+          canEditPast={can('attendance.edit_past')}
         />
       )}
       {tab === 'ledger' && <Ledger staffId={id} canUndo={can('salary.undo_payment')} />}
@@ -149,17 +162,31 @@ async function Overview(props: {
   canGive: boolean;
   canEditStaff: boolean;
   canEditPay: boolean;
+  canRun: boolean;
   details: { name: string; phone: string | null; joiningDate: string; leavingDate: string | null };
 }) {
   const supabase = await createClient();
   const { data: opening } = props.canEditPay
     ? await supabase
         .from('ledger_entries')
-        .select('amount_paise, date')
+        .select('id, amount_paise, date')
         .eq('staff_id', props.staffId)
         .eq('type', 'opening_balance')
         .maybeSingle()
     : { data: null };
+  // Corrections are adjustment lines linked to the opening line.
+  const { data: fixes } = opening
+    ? await supabase
+        .from('ledger_entries')
+        .select('amount_paise')
+        .eq('staff_id', props.staffId)
+        .eq('type', 'adjustment')
+        .eq('ref_table', 'ledger_entries')
+        .eq('ref_id', opening.id)
+    : { data: null };
+  const openingNow = opening
+    ? Number(opening.amount_paise) + (fixes ?? []).reduce((a, f) => a + Number(f.amount_paise), 0)
+    : 0;
   const [{ data: bal }, { data: adv }] = props.canMoney
     ? await Promise.all([
         supabase
@@ -292,12 +319,32 @@ async function Overview(props: {
         <section className={card}>
           <h2 className="text-title-md">{t('staffDetail.opening.title')}</h2>
           {opening ? (
-            <p className="text-body mt-1 text-[var(--ink-muted)]">
-              {t('staffDetail.opening.set', {
-                amount: formatINR(Number(opening.amount_paise)),
-                date: formatDate(opening.date),
-              })}
-            </p>
+            <>
+              <p className="text-body mt-1 text-[var(--ink-muted)]">
+                {t(openingNow < 0 ? 'staffDetail.opening.setOwes' : 'staffDetail.opening.setDue', {
+                  name: props.name,
+                  amount: formatINR(Math.abs(openingNow)),
+                  date: formatDate(opening.date),
+                })}
+                {(fixes ?? []).length > 0 && ` ${t('staffDetail.opening.wasCorrected')}`}
+              </p>
+              {props.canRun && (
+                <details className="group mt-3">
+                  <summary className="text-label-sm min-h-11 cursor-pointer list-none text-[var(--accent-ink)] underline [&::-webkit-details-marker]:hidden">
+                    {t('staffDetail.opening.correct')}
+                  </summary>
+                  <p className="text-body mt-1 mb-3 text-[var(--ink-muted)]">
+                    {t('staffDetail.opening.correctHint')}
+                  </p>
+                  <OpeningForm
+                    staffId={props.staffId}
+                    name={props.name}
+                    defaultDate={opening.date}
+                    current={openingNow}
+                  />
+                </details>
+              )}
+            </>
           ) : (
             <>
               <p className="text-body mt-1 mb-4 text-[var(--ink-muted)]">

@@ -132,7 +132,8 @@
     "settings": "Settings",
     "menu": "Menu",
     "closeMenu": "Close menu",
-    "expenses": "Expenses"
+    "expenses": "Expenses",
+    "reports": "Reports"
   },
   "staff": {
     "title": "Staff",
@@ -182,6 +183,7 @@
     "tabs": {
       "label": "Sections",
       "overview": "Overview",
+      "attendance": "Attendance",
       "ledger": "Ledger",
       "pay": "Pay"
     },
@@ -320,10 +322,19 @@
       "confirm": "I've checked it: it can't be changed later",
       "save": "Set opening balance",
       "saved": "Opening balance saved.",
-      "set": "Opening balance {{amount}} on {{date}}. It is in the ledger and can’t be changed.",
       "errors": {
         "confirm": "Tick the box to confirm the amount."
-      }
+      },
+      "setDue": "The shop owed {{name}} {{amount}} on {{date}}.",
+      "setOwes": "{{name}} owed the shop {{amount}} on {{date}}.",
+      "wasCorrected": "(corrected)",
+      "correct": "Correct it",
+      "correctHint": "Enter the right figure. The difference is added to the ledger as a correction on the same date; nothing is erased.",
+      "confirmCorrection": "I've checked the new figure",
+      "correctSave": "Save correction",
+      "corrected": "Opening balance corrected.",
+      "noChange": "That's already the opening balance.",
+      "correctionNote": "Opening balance corrected"
     },
     "rules": {
       "label": "Own rules",
@@ -345,6 +356,14 @@
       "own_one": "{{count}} rule of their own",
       "own_other": "{{count}} rules of their own",
       "none": "Shop's rules"
+    },
+    "attendance": {
+      "calendar": "Attendance calendar",
+      "notEmployed": "Not working here in {{month}}.",
+      "times": "In {{in}} · Out {{out}}",
+      "fromRules": "From the leave template and holidays (not marked by anyone).",
+      "change": "Change",
+      "payable": "{{days}} payable days so far"
     }
   },
   "ledgerTypes": {
@@ -874,6 +893,24 @@
       "errors": {
         "name": "Enter a name for the role.",
         "nameTaken": "A role with this name already exists."
+      },
+      "helpers": {
+        "title": "Helpers",
+        "hint": "People who help run the shop but aren't on the payroll, like a manager or an accountant. Add them here, then give them a role. They sign in once they're invited (comes with the staff app).",
+        "name": "Name",
+        "phone": "Phone (optional)",
+        "add": "Add helper",
+        "added": "{{name}} added. Give them a role next.",
+        "tag": "Helper",
+        "roleCount_one": "{{count}} role",
+        "roleCount_other": "{{count}} roles",
+        "remove": "Remove",
+        "removeConfirm": "Yes, remove",
+        "removeLabel": "Remove {{name}}",
+        "errors": {
+          "name": "Enter a name.",
+          "isStaff": "This person is on the payroll. Change them on the Staff page."
+        }
       }
     },
     "categories": {
@@ -1120,5 +1157,37 @@
       "yes": "Yes",
       "no": "No"
     }
+  },
+  "reports": {
+    "title": "Reports",
+    "subtitle": "{{shop}} · {{from}} – {{to}}",
+    "range": "Months shown",
+    "months_one": "{{count}} month",
+    "months_other": "{{count}} months",
+    "csv": "Download CSV",
+    "nothing": "Your role can't see salary, advances or all expenses, so there's nothing to report.",
+    "tiles": {
+      "total": "Total cost",
+      "totalMeta": "Salary and shop expenses",
+      "salaryMeta": "Gross pay on payslips",
+      "expensesMeta_one": "{{count}} expense",
+      "expensesMeta_other": "{{count}} expenses",
+      "advancesMeta": "Given minus repaid in cash"
+    },
+    "byMonth": "Month by month",
+    "byCategory": "Shop expenses by category",
+    "noExpenses": "No shop expenses in these months.",
+    "share": "Share of the biggest month",
+    "draft": "Draft",
+    "columns": {
+      "month": "Month",
+      "salary": "Salary",
+      "paid": "Paid to staff",
+      "advances": "Advances given",
+      "expenses": "Shop expenses",
+      "total": "Total cost",
+      "category": "Category"
+    },
+    "footnote": "Salary = gross pay on each month's latest payslips (Draft until finalized). Paid to staff = salary payments made that month. Advances given = given minus repaid in cash; undone ones are left out. Shop expenses leave out Not tracked and staff charges."
   }
 }

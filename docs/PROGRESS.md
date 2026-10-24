@@ -23,11 +23,14 @@ GitHub: run `git status -sb`; the owner pushes (never push unless asked).
 5. ~~Web dashboard~~ — done (slice 10, designed first in Claude Design: "Web · dashboard").
 6. ~~Phase 6: Expenses~~ — live (slice 12, `docs/features/expenses.md`; migration applied by
    CI 2026-10-24). Left for later: expense reports beyond the month view.
-7. **Phase 5: FinCrew Android** (Expo): Today screen, staff, money, attendance code screen,
-   push notifications — follow the Android artboards on the FinCrew key screens canvas and
-   `themes` from `@fincrew/ui`. Web leftovers (small, any time): staff detail attendance
-   calendar tab, adding non-staff helpers for roles, correcting an opening balance, web
-   attendance code screen (needs the Phase 7 code edge function).
+7. ~~Website extras~~ — done (slice 13): staff Attendance tab, helpers for roles, opening
+   balance corrections, Reports + CSV; fix: undoing an advance now lowers the advance to recover
+   (migration `20261024000002_advance_undo.sql`, **not pushed yet**).
+8. **Phase 5: FinCrew Android** (Expo): Today screen, staff, money, expenses, attendance code
+   screen, push notifications — follow the Android artboards on the FinCrew key screens canvas
+   and `themes` from `@fincrew/ui`; reuse `packages/core` and the same tables/RLS. The website is
+   the reference for every flow (`docs/features/*`). Still needs Phase 7 data: attendance codes,
+   invites/logins for staff and helpers, requests.
 
 **Waiting on the owner:**
 
@@ -46,7 +49,7 @@ via i18n; design follows the Claude Design system (`docs/DESIGN.md`).
 
 **How to check work:**
 
-- Tests/types/build: `pnpm test` (core 225, ui 6, i18n 1, db 107 — PGlite, no Docker), `pnpm typecheck`,
+- Tests/types/build: `pnpm test` (core 225, ui 6, i18n 1, db 109 — PGlite, no Docker), `pnpm typecheck`,
   `pnpm build`, `pnpm ui:tokens --check`, `bash scripts/check-migrations.sh origin/main HEAD`.
 - Live DB (CLI is logged in): `pnpm exec supabase db query --linked --project-ref
 ufmlqvvfznemghmnvynz "<sql>"`; advisors: `pnpm exec supabase db advisors --linked --project-ref
@@ -167,6 +170,23 @@ Tables still to add (with the phase that uses them, each with RLS tests): `staff
 `attendance_scans`, `invites`, `pin_credentials`, `push_tokens` (Phase 7).
 
 ## Session log
+
+- **2026-10-24** — **Slice 13: website extras** (owner: "complete website extras so the app has
+  everything it needs to refer"). Staff detail **Attendance** tab (design "Staff detail ·
+  Attendance": Monday-first month calendar, chosen day's status / minutes late / in-out times,
+  Change = set or clear, month counts). Settings → Roles **Helpers** (people not on the payroll:
+  add with name/phone, remove; tagged "Helper" in role people lists). **Opening balance
+  correction** (adjustment line for the difference, linked to the opening line, same date;
+  needs `salary.run`). **Reports** (designed first, "Web · reports"): 3/6/12 months, tiles, month
+  by month (salary gross incl. drafts tagged, paid to staff minus undone, advances given net of
+  repaid minus undone, shop expenses, total cost) with bars, shop expenses by category × month,
+  CSV; sidebar with `reports.view`. **Bug fixed:** undoing an advance reversed its ledger line
+  but the outstanding advance still counted it → `private.advance_outstanding` ignores advances
+  whose line was reversed (2 new DB tests; dry-run on live, rolled back). Fix: a hidden table
+  label made Reports 597 px wide on phones (scroll boxes are now `relative`). Checked on the live
+  shop: attendance tab mark/clear, helper add/remove, reports and CSV, phone widths; DB back to
+  the one 23/10 half day and no helper. Opening correction not tried live (Test Staff has no
+  opening balance; setting one is permanent).
 
 - **2026-10-24** — Owner: "Push it". Pushed `862e1f1` (dashboard, small screens, expenses); CI
   green incl. migrate; live DB has `expenses`, `expense_categories`, private `bills` bucket with

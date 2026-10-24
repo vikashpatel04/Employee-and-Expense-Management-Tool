@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+### Added — 2026-10-24 (slice 13: website extras)
+
+- Staff detail Attendance tab (calendar, day detail, change a day).
+- Helpers (people not on the payroll) in Settings → Roles.
+- Correct an opening balance (correction line on the ledger).
+- Reports: month-by-month money and expenses by category, 3/6/12 months, CSV.
+
+### Fixed — 2026-10-24
+
+- Undoing an advance now also lowers the advance to recover (and salary-run cuts).
+- Reports page no longer widens the phone screen.
+
 ### Added — 2026-10-24 (Phase 6: expenses)
 
 - Expenses with paid by / charged to / pay back, staff ledger lines, bill photos, categories,

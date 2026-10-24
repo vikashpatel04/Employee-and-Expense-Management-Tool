@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   ArrowUpRight,
+  ChartColumn,
   CalendarDays,
   House,
   IndianRupee,
@@ -19,6 +20,7 @@ const ICONS: Record<string, LucideIcon> = {
   users: Users,
   rupee: IndianRupee,
   receipt: Receipt,
+  reports: ChartColumn,
   advance: ArrowUpRight,
   settings: Settings,
 };

@@ -204,3 +204,54 @@ export async function saveOpening(
   refresh(staffId);
   return { done: t('staffDetail.opening.saved') };
 }
+
+/**
+ * Correct the opening balance: the ledger is append-only, so this adds a correction line
+ * (`adjustment`, linked to the opening line, dated the same day) for the difference between the
+ * new figure and the current one. Corrections need `salary.run` (ledger insert rules).
+ */
+export async function correctOpening(
+  staffId: string,
+  _prev: ExtraState,
+  form: FormData,
+): Promise<ExtraState> {
+  const me = await allowed('salary.run');
+  if (!me) return { error: t('settings.errors.noPermission') };
+  const amount = parseRupees(text(form, 'amount'));
+  if (amount === null) return { error: t('staffDetail.pay.form.errors.amount') };
+  if (form.get('confirm') !== 'on') return { error: t('staffDetail.opening.errors.confirm') };
+  const target = text(form, 'direction') === 'owes' ? -amount : amount;
+
+  const supabase = await createClient();
+  const { data: opening } = await supabase
+    .from('ledger_entries')
+    .select('id, date, amount_paise')
+    .eq('staff_id', staffId)
+    .eq('type', 'opening_balance')
+    .maybeSingle();
+  if (!opening) return failed();
+  const { data: fixes } = await supabase
+    .from('ledger_entries')
+    .select('amount_paise')
+    .eq('staff_id', staffId)
+    .eq('type', 'adjustment')
+    .eq('ref_table', 'ledger_entries')
+    .eq('ref_id', opening.id);
+  const now =
+    Number(opening.amount_paise) + (fixes ?? []).reduce((a, f) => a + Number(f.amount_paise), 0);
+  if (target === now) return { done: t('staffDetail.opening.noChange') };
+
+  const { error } = await supabase.from('ledger_entries').insert({
+    shop_id: me.shopId,
+    staff_id: staffId,
+    date: opening.date,
+    type: 'adjustment',
+    amount_paise: target - now,
+    ref_table: 'ledger_entries',
+    ref_id: opening.id,
+    note: t('staffDetail.opening.correctionNote'),
+  });
+  if (error) return failed(error.message);
+  refresh(staffId);
+  return { done: t('staffDetail.opening.corrected') };
+}

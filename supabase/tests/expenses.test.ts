@@ -73,8 +73,9 @@ beforeAll(async () => {
   [asha, ravi, priya, meena, kiran] = (await Promise.all(
     ['asha', 'ravi', 'priya', 'meena', 'kiran'].map((x) => createAuthUser(db, `${x}@shop.test`)),
   )) as [string, string, string, string, string];
-  shop1 = (await q<{ id: string }>(asha, `select public.create_shop('Main Road', 'Asha') as id`))[0]!
-    .id;
+  shop1 = (
+    await q<{ id: string }>(asha, `select public.create_shop('Main Road', 'Asha') as id`)
+  )[0]!.id;
   shop2 = (
     await q<{ id: string }>(asha, `select public.create_shop('Market Branch', 'Asha') as id`)
   )[0]!.id;
@@ -148,7 +149,9 @@ describe('expense categories', () => {
       /row-level security/,
     );
     expect(
-      await q(ravi, `update expense_categories set name = 'Chai' where id = $1 returning id`, [tea]),
+      await q(ravi, `update expense_categories set name = 'Chai' where id = $1 returning id`, [
+        tea,
+      ]),
     ).toEqual([]);
     expect(
       await q(asha, `delete from expense_categories where id = $1 returning id`, [tea]),
@@ -194,15 +197,19 @@ describe('expenses', () => {
   it('rejects impossible combinations', async () => {
     await rejects(add(asha, { amount: 100, reimburse: true }), /check/);
     await rejects(
-      q(asha, `insert into expenses (shop_id, date, amount_paise, category_id, charged_to_kind)
-               values ($1, '2026-10-20', 100, $2, 'staff')`, [shop1, tea]),
+      q(
+        asha,
+        `insert into expenses (shop_id, date, amount_paise, category_id, charged_to_kind)
+               values ($1, '2026-10-20', 100, $2, 'staff')`,
+        [shop1, tea],
+      ),
       /check/,
     );
     await rejects(add(asha, { amount: 0 }), /check/);
     await rejects(add(asha, { amount: 100, bill: `${shop2}/x.jpg` }), /check/);
   });
 
-  it('without expenses.add nobody adds; another shop can\'t be charged', async () => {
+  it("without expenses.add nobody adds; another shop can't be charged", async () => {
     await rejects(add(meena, { amount: 100 }), /row-level security/);
     await rejects(add(asha, { amount: 100, chargedTo: ['staff', kiranP] }), /foreign key/);
     await rejects(add(asha, { amount: 100, category: shop2Cat }), /foreign key/);
@@ -242,9 +249,11 @@ describe('expenses', () => {
     expect(await balance(meenaP)).toBe(12_000);
   });
 
-  it('expenses.edit is needed to change or delete; the author alone can\'t', async () => {
+  it("expenses.edit is needed to change or delete; the author alone can't", async () => {
     expect(
-      await q(ravi, `update expenses set amount_paise = 1 where id = $1 returning id`, [raviExpense]),
+      await q(ravi, `update expenses set amount_paise = 1 where id = $1 returning id`, [
+        raviExpense,
+      ]),
     ).toEqual([]);
     expect(await q(ravi, `delete from expenses where id = $1 returning id`, [raviExpense])).toEqual(
       [],
@@ -258,10 +267,14 @@ describe('expenses', () => {
     expect(all.filter((l) => l.type === 'reversal').length).toBe(3);
   });
 
-  it('expense lines can\'t be written to the ledger directly', async () => {
+  it("expense lines can't be written to the ledger directly", async () => {
     await rejects(
-      q(asha, `insert into ledger_entries (shop_id, staff_id, date, type, amount_paise)
-               values ($1, $2, '2026-10-20', 'staff_charge', -100)`, [shop1, meenaP]),
+      q(
+        asha,
+        `insert into ledger_entries (shop_id, staff_id, date, type, amount_paise)
+               values ($1, $2, '2026-10-20', 'staff_charge', -100)`,
+        [shop1, meenaP],
+      ),
       /row-level security/,
     );
   });
@@ -277,9 +290,9 @@ describe('bill photos (storage)', () => {
     );
 
   it('the bucket exists and is private', async () => {
-    expect(
-      await q(asha, `select public from storage.buckets where id = 'bills'`),
-    ).toEqual([{ public: false }]);
+    expect(await q(asha, `select public from storage.buckets where id = 'bills'`)).toEqual([
+      { public: false },
+    ]);
   });
 
   it('expenses.add uploads into its own shop only', async () => {

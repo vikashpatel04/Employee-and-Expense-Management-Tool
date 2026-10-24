@@ -2,13 +2,14 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { formatDisplayDate } from '@fincrew/core';
+import { formatDisplayDate, paiseToInput } from '@fincrew/core';
 import { t } from '@/lib/i18n';
 import { useFormAction } from '@/lib/use-form-action';
 import { buttonClass, dateFieldProps, inputClass, quietButtonClass } from '../../../components';
 import { FormMessage } from '../../settings/holidays/holiday-forms';
 import {
   addItem,
+  correctOpening,
   endItem,
   removeItem,
   saveDetails,
@@ -247,12 +248,19 @@ export function OpeningForm({
   staffId,
   name,
   defaultDate,
+  current,
 }: {
   staffId: string;
   name: string;
   defaultDate: string;
+  /** Correcting a balance already set: its current (corrected) amount, ledger sign. */
+  current?: number;
 }) {
-  const [state, onSubmit, pending] = useFormAction<ExtraState>(saveOpening.bind(null, staffId), {});
+  const correcting = current !== undefined;
+  const [state, onSubmit, pending] = useFormAction<ExtraState>(
+    (correcting ? correctOpening : saveOpening).bind(null, staffId),
+    {},
+  );
   const o = 'staffDetail.opening';
   const segment =
     'text-label-sm flex min-h-10 flex-1 cursor-pointer items-center justify-center rounded-[var(--radius-sm)] px-3 text-center has-[:checked]:bg-[var(--surface)] has-[:checked]:shadow-[var(--elevation-1)] has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-[var(--focus)]';
@@ -267,7 +275,7 @@ export function OpeningForm({
                 type="radio"
                 name="direction"
                 value={k}
-                defaultChecked={k === 'dueTo'}
+                defaultChecked={k === (correcting && current! < 0 ? 'owes' : 'dueTo')}
                 className="sr-only"
               />
               {t(`${o}.${k}`, { name })}
@@ -282,18 +290,19 @@ export function OpeningForm({
             name="amount"
             required
             inputMode="decimal"
+            defaultValue={correcting ? paiseToInput(Math.abs(current!)) : undefined}
             className={`${inputClass} text-money-md`}
           />
         </label>
-        <DateField name="date" label={t(`${o}.date`)} value={defaultDate} />
+        {!correcting && <DateField name="date" label={t(`${o}.date`)} value={defaultDate} />}
       </div>
       <label className="text-body flex min-h-12 items-center gap-3">
         <input type="checkbox" name="confirm" className={checkbox} />
-        {t(`${o}.confirm`)}
+        {correcting ? t(`${o}.confirmCorrection`) : t(`${o}.confirm`)}
       </label>
       <FormMessage state={state} />
       <button type="submit" disabled={pending} className={quietButtonClass}>
-        {pending ? t('staffDetail.saving') : t(`${o}.save`)}
+        {pending ? t('staffDetail.saving') : correcting ? t(`${o}.correctSave`) : t(`${o}.save`)}
       </button>
     </form>
   );

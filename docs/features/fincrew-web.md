@@ -70,6 +70,23 @@ then cleared; opening balance error path only.
 Checked in the browser on 2026-10-23 against the live project: shell, staff list, Add staff
 ("Test Staff"), staff detail tabs, saving pay (₹22,000 monthly, 9:30 AM – 8:30 PM).
 
+## Website extras (slice 13)
+
+- **Staff detail · Attendance** (`staff/[id]/attendance-tab.tsx`, `day-change.tsx`):
+  `?tab=attendance&month=YYYY-MM&day=YYYY-MM-DD`. Monday-first calendar from
+  `loadAttendanceMonth` (status colour + icon, late dot, today bold, chosen day ringed); day
+  card: status, minutes late, in/out times (`checkOut` now on grid cells), "From the leave
+  template and holidays" when nobody marked it, **Change** (set a status or Not marked; same
+  rules as the grid); month counts and payable days. Status icons/tokens: `src/lib/status-style.ts`.
+- **Helpers** (Settings → Roles, `staff.edit`): add (name, phone), list with role count, remove
+  (two clicks). Role people lists tag them "Helper". Actions `addHelper` / `removeHelper`.
+- **Opening balance**: Overview shows the corrected figure ("(corrected)"); **Correct it**
+  (`salary.run`) → `correctOpening` adds the difference as a correction line.
+- **Reports** (`(app)/reports`, `reports.view`; data `src/lib/reports.ts`): range 3/6/12 months;
+  tiles (total cost, salary, shop expenses, advances given); month-by-month table with
+  salary/expense bars; shop expenses by category × month; CSV `reports/export?months=`
+  (`reports.export`). Design "Web · reports".
+
 ## Expenses
 
 See `docs/features/expenses.md` (page, add/edit panel, categories, bills, CSV, dashboard tile).
@@ -197,5 +214,4 @@ only the 23/10 half day).
 
 ## Not built yet
 
-Staff detail attendance calendar, Staffora invite, correcting an
-opening balance; adding non-staff people (helpers) for roles; requests.
+Staffora invites (staff and helper logins), requests, attendance code screen (Phase 7).

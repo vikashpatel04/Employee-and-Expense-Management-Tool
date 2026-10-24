@@ -78,6 +78,7 @@ export default async function RolePage({
                   id: p.id,
                   name: p.name,
                   hasLogin: p.hasLogin,
+                  isStaff: p.isStaff,
                   checked: role.people.includes(p.id),
                 }))}
               />

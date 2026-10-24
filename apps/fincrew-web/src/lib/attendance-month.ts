@@ -36,8 +36,9 @@ export type GridCell = {
   late: boolean;
   /** Marked by someone (vs filled from the calendar). */
   marked: boolean;
-  /** Check-in, minutes after IST midnight, when recorded. */
+  /** Check-in / check-out, minutes after IST midnight, when recorded. */
   checkIn?: number;
+  checkOut?: number;
   /** Minutes late (as counted by the late policy), when late. */
   lateMinutes?: number;
 };
@@ -150,6 +151,7 @@ export async function loadAttendanceMonth(
         late,
         marked: day.source === 'record',
         checkIn: rec?.checkIn,
+        checkOut: rec?.checkOut,
         lateMinutes: late ? lateness!.lateMinutes : undefined,
       };
     });

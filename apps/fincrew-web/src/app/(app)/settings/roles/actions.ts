@@ -175,3 +175,45 @@ export async function deleteRole(roleId: string): Promise<RoleState> {
   refresh();
   redirect('/settings/roles');
 }
+
+/**
+ * A helper: someone who helps run the shop but isn't on the payroll (a person with no staff
+ * record). Adding people needs `staff.edit` (RLS on people).
+ */
+export async function addHelper(_prev: RoleState, form: FormData): Promise<RoleState> {
+  const me = await requireMe();
+  if (!me || !me.permissions.includes('staff.edit'))
+    return { error: t('settings.errors.noPermission') };
+  const name = String(form.get('name') ?? '').trim();
+  if (!name) return { error: t('settings.roles.helpers.errors.name') };
+  const phone = String(form.get('phone') ?? '').trim() || null;
+  const supabase = await createClient();
+  const { error } = await supabase.from('people').insert({ shop_id: me.shopId, name, phone });
+  if (error) return { error: t('settings.errors.failed', { reason: error.message }) };
+  refresh();
+  return { done: t('settings.roles.helpers.added', { name }) };
+}
+
+/** Remove a helper (never staff or the owner); their roles go with them. */
+export async function removeHelper(personId: string): Promise<RoleState> {
+  const me = await requireMe();
+  if (!me || !me.permissions.includes('staff.edit'))
+    return { error: t('settings.errors.noPermission') };
+  const supabase = await createClient();
+  const { data: staff } = await supabase
+    .from('staff')
+    .select('person_id')
+    .eq('person_id', personId)
+    .maybeSingle();
+  if (staff) return { error: t('settings.roles.helpers.errors.isStaff') };
+  const { error, count } = await supabase
+    .from('people')
+    .delete({ count: 'exact' })
+    .eq('id', personId)
+    .eq('shop_id', me.shopId)
+    .eq('is_owner', false);
+  if (error || count === 0)
+    return { error: t('settings.errors.failed', { reason: error?.message ?? '—' }) };
+  refresh();
+  return {};
+}

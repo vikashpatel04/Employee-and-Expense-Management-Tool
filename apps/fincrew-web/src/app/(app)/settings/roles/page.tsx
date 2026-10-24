@@ -6,7 +6,7 @@ import { loadRoles, permissionGroups } from '@/lib/roles';
 import { requireMe } from '@/lib/session';
 import { SETTINGS_SECTIONS } from '@/lib/settings-access';
 import { createClient } from '@/lib/supabase/server';
-import { NewRoleForm } from './role-forms';
+import { HelperForm, NewRoleForm, RemoveHelperButton } from './role-forms';
 
 const card = 'rounded-[var(--radius-lg)] bg-[var(--surface)] p-5 shadow-[var(--elevation-1)]';
 
@@ -19,6 +19,7 @@ export default async function RolesPage() {
   const { roles, people } = await loadRoles(supabase, me.shopId);
   const names = new Map(people.map((p) => [p.id, p.name]));
   const owner = people.find((p) => p.isOwner);
+  const helpers = people.filter((p) => !p.isOwner && !p.isStaff);
 
   return (
     <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
@@ -66,11 +67,51 @@ export default async function RolesPage() {
           </ul>
         )}
       </section>
-      <section className={card}>
-        <h2 className="text-title-md">{t('settings.roles.new')}</h2>
-        <p className="text-body mt-1 mb-4 text-[var(--ink-muted)]">{t('settings.roles.newHint')}</p>
-        <NewRoleForm groups={permissionGroups()} />
-      </section>
+      <div className="flex flex-col gap-4">
+        <section className={card}>
+          <h2 className="text-title-md">{t('settings.roles.new')}</h2>
+          <p className="text-body mt-1 mb-4 text-[var(--ink-muted)]">
+            {t('settings.roles.newHint')}
+          </p>
+          <NewRoleForm groups={permissionGroups()} />
+        </section>
+        {me.permissions.includes('staff.edit') && (
+          <section className={`${card} flex flex-col gap-3`}>
+            <div>
+              <h2 className="text-title-md">{t('settings.roles.helpers.title')}</h2>
+              <p className="text-body mt-1 text-[var(--ink-muted)]">
+                {t('settings.roles.helpers.hint')}
+              </p>
+            </div>
+            {helpers.length > 0 && (
+              <ul className="rounded-[var(--radius-md)] border border-[var(--line)]">
+                {helpers.map((h) => (
+                  <li
+                    key={h.id}
+                    className="flex min-h-12 items-center justify-between gap-3 border-b border-[var(--line)] px-3 py-2 last:border-0"
+                  >
+                    <span className="flex min-w-0 flex-col">
+                      <span className="text-label-sm">{h.name}</span>
+                      <span className="text-caption text-[var(--ink-muted)]">
+                        {[
+                          h.phone,
+                          t('settings.roles.helpers.roleCount', {
+                            count: roles.filter((r) => r.people.includes(h.id)).length,
+                          }),
+                        ]
+                          .filter(Boolean)
+                          .join(' · ')}
+                      </span>
+                    </span>
+                    <RemoveHelperButton personId={h.id} name={h.name} />
+                  </li>
+                ))}
+              </ul>
+            )}
+            <HelperForm />
+          </section>
+        )}
+      </div>
     </div>
   );
 }

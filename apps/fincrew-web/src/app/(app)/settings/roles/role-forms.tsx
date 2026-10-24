@@ -1,14 +1,17 @@
 'use client';
 
 import { useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import type { PermissionKey } from '@fincrew/core';
 import { t } from '@/lib/i18n';
 import { useFormAction } from '@/lib/use-form-action';
 import { buttonClass, inputClass, quietButtonClass } from '../../../components';
 import { FormMessage } from '../holidays/holiday-forms';
 import {
+  addHelper,
   createRole,
   deleteRole,
+  removeHelper,
   renameRole,
   savePeople,
   savePermissions,
@@ -90,7 +93,7 @@ export function PeopleForm({
   people,
 }: {
   roleId: string;
-  people: { id: string; name: string; hasLogin: boolean; checked: boolean }[];
+  people: { id: string; name: string; hasLogin: boolean; isStaff: boolean; checked: boolean }[];
 }) {
   const [state, onSubmit, pending] = useFormAction<RoleState>(savePeople.bind(null, roleId), {});
   return (
@@ -107,7 +110,14 @@ export function PeopleForm({
                 className={checkbox}
               />
               <span className="flex min-w-0 flex-col">
-                <span className="text-label-sm">{p.name}</span>
+                <span className="text-label-sm">
+                  {p.name}
+                  {!p.isStaff && (
+                    <span className="text-caption ml-2 rounded-full bg-[var(--surface-muted)] px-2 py-0.5 text-[var(--ink-muted)]">
+                      {t('settings.roles.helpers.tag')}
+                    </span>
+                  )}
+                </span>
                 {!p.hasLogin && (
                   <span className="text-caption text-[var(--ink-muted)]">
                     {t('settings.roles.detail.noLogin')}
@@ -165,6 +175,65 @@ export function DeleteRoleButton({ roleId }: { roleId: string }) {
         className={`${quietButtonClass} w-fit ${asking ? 'border-[var(--danger)] text-[var(--danger)]' : ''} disabled:opacity-[var(--opacity-disabled)]`}
       >
         {asking ? t('settings.roles.detail.deleteConfirm') : t('settings.roles.detail.delete')}
+      </button>
+      {error && (
+        <span role="alert" className="text-caption text-[var(--danger)]">
+          {error}
+        </span>
+      )}
+    </span>
+  );
+}
+
+/** Add a helper (name and phone). */
+export function HelperForm() {
+  const [state, onSubmit, pending] = useFormAction<RoleState>(addHelper, {});
+  return (
+    <form onSubmit={onSubmit} className="flex flex-col gap-3">
+      <div className="grid gap-3 sm:grid-cols-2">
+        <label className="text-label-sm block">
+          {t('settings.roles.helpers.name')}
+          <input name="name" required maxLength={80} className={inputClass} />
+        </label>
+        <label className="text-label-sm block">
+          {t('settings.roles.helpers.phone')}
+          <input name="phone" type="tel" inputMode="tel" maxLength={20} className={inputClass} />
+        </label>
+      </div>
+      <FormMessage state={state} />
+      <button type="submit" disabled={pending} className={`${quietButtonClass} w-fit`}>
+        {pending ? t('settings.saving') : t('settings.roles.helpers.add')}
+      </button>
+    </form>
+  );
+}
+
+/** Two-step remove for a helper. */
+export function RemoveHelperButton({ personId, name }: { personId: string; name: string }) {
+  const router = useRouter();
+  const [asking, setAsking] = useState(false);
+  const [pending, start] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+  return (
+    <span className="inline-flex flex-col items-end">
+      <button
+        type="button"
+        disabled={pending}
+        aria-label={asking ? undefined : t('settings.roles.helpers.removeLabel', { name })}
+        onClick={() =>
+          asking
+            ? start(async () => {
+                const r = await removeHelper(personId);
+                if (r.error) setError(r.error);
+                else router.refresh();
+              })
+            : setAsking(true)
+        }
+        className={`text-caption min-h-8 rounded-[var(--radius-sm)] px-2 underline disabled:opacity-[var(--opacity-disabled)] ${
+          asking ? 'text-[var(--danger)]' : 'text-[var(--accent-ink)]'
+        }`}
+      >
+        {asking ? t('settings.roles.helpers.removeConfirm') : t('settings.roles.helpers.remove')}
       </button>
       {error && (
         <span role="alert" className="text-caption text-[var(--danger)]">

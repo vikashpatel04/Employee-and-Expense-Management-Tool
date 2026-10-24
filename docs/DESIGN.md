@@ -46,7 +46,7 @@ Use the Artifact tool, not a web fetch:
 - **FinCrew key screens:** https://claude.ai/artifact/WydRUvQzCNMAoXcNVh7pWC (Android light + dark:
   Today, status sheet, shop switcher, Attendance code, Staff detail tabs, Salary run draft/final,
   Add expense; web: attendance grid (pinned names and totals), salary review table, dashboard,
-  attendance on a phone (day view), expenses with the add panel — the last three added
+  attendance on a phone (day view), expenses with the add panel, reports — the last four added
   2026-10-24)
 - **Staffora key screens:** https://claude.ai/artifact/9YMxty5q9jFvuut8ay8dTe (Home before/after
   check-in, Scan QR, Enter code incl. wrong code, Checked in, Money ledger/payslips; light + dark)

@@ -42,6 +42,8 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   if (can('salary.view') || can('advances.give')) {
     items.push({ href: '/advances', label: t('nav.advances'), icon: 'advance' });
   }
+  if (can('reports.view'))
+    items.push({ href: '/reports', label: t('nav.reports'), icon: 'reports' });
   if (settingsSections(me.permissions).length > 0) {
     items.push({ href: '/settings', label: t('nav.settings'), icon: 'settings' });
   }

@@ -12,25 +12,27 @@ export function permissionGroups(): { area: string; keys: PermissionKey[] }[] {
 }
 
 /**
- * A shop's roles with their permissions and people, and everyone who could hold one. People are
- * read under RLS, so without `staff.view` the list is just yourself.
+ * A shop's roles with their permissions and people, and everyone who could hold one: staff and
+ * helpers (people who aren't on the payroll). People are read under RLS, so without `staff.view`
+ * the list is just yourself.
  */
 export async function loadRoles(
   supabase: Awaited<ReturnType<typeof createClient>>,
   shopId: string,
 ) {
-  const [{ data: roles }, { data: perms }, { data: members }, { data: people }] = await Promise.all(
-    [
+  const [{ data: roles }, { data: perms }, { data: members }, { data: people }, { data: staff }] =
+    await Promise.all([
       supabase.from('roles').select('id, name').eq('shop_id', shopId).order('name'),
       supabase.from('role_permissions').select('role_id, permission_key').eq('shop_id', shopId),
       supabase.from('person_roles').select('role_id, person_id').eq('shop_id', shopId),
       supabase
         .from('people')
-        .select('id, name, is_owner, auth_user_id')
+        .select('id, name, phone, is_owner, auth_user_id')
         .eq('shop_id', shopId)
         .order('name'),
-    ],
-  );
+      supabase.from('staff').select('person_id').eq('shop_id', shopId),
+    ]);
+  const staffIds = new Set((staff ?? []).map((s) => s.person_id));
   return {
     roles: (roles ?? []).map((r) => ({
       ...r,
@@ -40,8 +42,11 @@ export async function loadRoles(
     people: (people ?? []).map((p) => ({
       id: p.id,
       name: p.name,
+      phone: p.phone,
       isOwner: p.is_owner,
       hasLogin: p.auth_user_id != null,
+      /** On the payroll; everyone else (not the owner) is a helper. */
+      isStaff: staffIds.has(p.id),
     })),
   };
 }

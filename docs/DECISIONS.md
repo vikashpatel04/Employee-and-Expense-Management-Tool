@@ -2,6 +2,22 @@
 
 Choices made during the build that PLAN.md doesn't spell out. Newest first.
 
+## 2026-10-24 — Website extras
+
+- **Helpers** are `people` rows with no `staff` row (needs `staff.edit`, like adding staff).
+  They hold roles like anyone else; they can sign in once invites exist (Phase 7). Removing one
+  deletes the person (their roles go with them); staff and the owner can't be removed there.
+- **Opening balance corrections** are `adjustment` ledger lines (`ref_table = 'ledger_entries'`,
+  `ref_id` = the opening line, dated like it) for the difference; the opening line itself never
+  changes. Needs `salary.run` (the ledger insert rule for adjustments).
+- **Reports** use only what the person may see: salary columns need `salary.view`, advances
+  `salary.view` or `advances.give`, expenses `expenses.view_all`. Salary = gross on each month's
+  latest payslips, drafts included and tagged. Undone payments/advances are left out.
+- **Advance to recover ignores undone advances**: `private.advance_outstanding` skips advances
+  whose ledger line has a reversal (migration `20261024000002_advance_undo.sql`).
+- Staff detail Attendance calendar starts weeks on **Monday** (as designed); the grid and Day
+  view keep day order.
+
 ## 2026-10-24 — Expenses
 
 - **Ledger lines come from a trigger**, like advances: the app can't write `staff_charge` or
