@@ -22,10 +22,8 @@ _Handover written 2026-10-24 before a session compaction. Read this section firs
   used by website and app: attendance month, write attendance, paid-leave check, session,
   dashboard, expenses + **expense saving**, reports, salary month + **salary run / finalize /
   pay**, **advances**, leave setup, roles, staff loaders).
-- **Git:** local `main` is **4 commits ahead** of GitHub (`092ffe8` Staff tab, `42c0c73` checked +
-  Mark-all confirmation, `60c5c09` handover, then the Money tab commit). Not pushed. The owner
-  pushes, or tells you to push in that moment.
-  Everything before that is pushed; CI green; Vercel deployed; migrations up to
+- **Git:** everything up to `ce87e6b` (Money tab) is pushed (2026-10-24); CI green; Vercel
+  deployed. The owner pushes, or tells you to push in that moment. Migrations up to
   `20261024000002_advance_undo.sql` are live.
 
 **Next work, in order** (owner usually says "continue"; pick the top unfinished one)
