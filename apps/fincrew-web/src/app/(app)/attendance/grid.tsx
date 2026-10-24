@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import {
   Check,
   Contrast,
+  Eraser,
   Moon,
   Sparkles,
   Umbrella,
@@ -14,7 +15,7 @@ import {
 } from 'lucide-react';
 import type { GridRow } from '@/lib/attendance-month';
 import { Avatar } from '../../components';
-import { setAttendance } from './actions';
+import { clearAttendance, setAttendance } from './actions';
 
 const ICON: Record<string, LucideIcon> = {
   present: Check,
@@ -47,6 +48,7 @@ export type GridLabels = {
   selectedOther: string;
   setTo: string;
   clear: string;
+  clearMark: string;
   hint: string;
   readOnly: string;
   markToday: string;
@@ -54,6 +56,8 @@ export type GridLabels = {
   saving: string;
   savedOne: string;
   savedOther: string;
+  clearedOne: string;
+  clearedOther: string;
 };
 
 const fill = (s: string, vars: Record<string, string | number>) =>
@@ -107,15 +111,28 @@ export function AttendanceGrid({
       return next;
     });
 
-  const save = (cells: { staffId: string; date: string }[], status: (typeof SETTABLE)[number]) =>
+  const save = (
+    cells: { staffId: string; date: string }[],
+    status: (typeof SETTABLE)[number] | 'clear',
+  ) =>
     start(async () => {
       setMessage(null);
-      const res = await setAttendance(cells, status);
+      const res =
+        status === 'clear' ? await clearAttendance(cells) : await setAttendance(cells, status);
       if (res.ok) {
         setSelected(new Set());
         setMessage({
           ok: true,
-          text: fill(res.count === 1 ? labels.savedOne : labels.savedOther, { count: res.count }),
+          text: fill(
+            status === 'clear'
+              ? res.count === 1
+                ? labels.clearedOne
+                : labels.clearedOther
+              : res.count === 1
+                ? labels.savedOne
+                : labels.savedOther,
+            { count: res.count },
+          ),
         });
         router.refresh();
       } else {
@@ -167,6 +184,23 @@ export function AttendanceGrid({
                   </button>
                 );
               })}
+              <button
+                type="button"
+                disabled={pending}
+                onClick={() =>
+                  save(
+                    [...selected].map((k) => {
+                      const [staffId, date] = k.split('|') as [string, string];
+                      return { staffId, date };
+                    }),
+                    'clear',
+                  )
+                }
+                className="text-caption inline-flex min-h-10 items-center gap-1 rounded-[var(--radius-pill)] px-3 text-[var(--status-unmarked)] outline-[1.5px] outline-[var(--line-strong)] outline-dashed disabled:opacity-[var(--opacity-disabled)]"
+              >
+                <Eraser size={16} strokeWidth={2.6} aria-hidden="true" />
+                {labels.clearMark}
+              </button>
               <span className="flex-1" />
               <button
                 type="button"

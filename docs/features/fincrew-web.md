@@ -141,7 +141,25 @@ and the rules weren't saved on the live shop (the owner's choices). Roles: a tes
 created, edited, given to Test Staff, renamed and deleted on the live shop, with the database
 checked at each step (left with no roles).
 
+## Payslip, CSV, clearing marks
+
+- **Payslip** — `app/payslips/[id]` (outside the shell): shop, month, employee, joined, pay
+  period (DD/MM/YYYY, cut to joining/leaving), days, earnings and deductions lines (labels from
+  `salary.lines.*`), gross, total deductions, net before advance, advance cut, net pay; for
+  finalized payslips also paid so far and still to pay; a Draft notice otherwise. "Print or save
+  as PDF" (`print-button.tsx`, light theme while printing). Linked as "Payslip" from each
+  person's expanded row on Salary (opens a new tab).
+- **Attendance CSV** — `(app)/attendance/export/route.ts` (GET `?month=YYYY-MM`,
+  `reports.export`), built from `loadAttendanceMonth` and `src/lib/csv.ts` (`toCsv`: RFC 4180
+  quoting, CRLF, BOM). "Download CSV" in the Attendance header.
+- **Clear a mark** — grid toolbar "Not marked" → `clearAttendance` (deletes the rows; today
+  needs `attendance.mark`, earlier days `attendance.edit_past`); message "Cleared N days".
+
+Checked in the browser on 2026-10-24: payslip for Test Staff's October draft (₹355, matches the
+run), CSV headers and bytes, print theme switch, mark today present then clear it (DB back to
+only the 23/10 half day).
+
 ## Not built yet
 
-Staff detail: attendance calendar, Staffora invite, correcting an opening balance; adding
-non-staff people (helpers) for roles; CSV export, payslip PDF/print; requests.
+Dashboard (placeholder); staff detail attendance calendar, Staffora invite, correcting an
+opening balance; adding non-staff people (helpers) for roles; requests.

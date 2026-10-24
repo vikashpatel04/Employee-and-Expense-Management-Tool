@@ -5,6 +5,7 @@ import {
   ChevronRight,
   Check,
   Contrast,
+  Download,
   Moon,
   Sparkles,
   Umbrella,
@@ -81,6 +82,19 @@ export default async function AttendancePage({
           count: rows.length,
           today: formatDate(today),
         })}
+        actions={
+          can('reports.export') &&
+          rows.length > 0 && (
+            <a
+              href={`/attendance/export?month=${ym(year, month)}`}
+              download
+              className={`${quietButtonClass} inline-flex items-center gap-2`}
+            >
+              <Download size={20} aria-hidden="true" />
+              {t('attendance.export.button')}
+            </a>
+          )
+        }
       />
 
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -167,6 +181,7 @@ export default async function AttendancePage({
             selectedOther: t('attendance.selected_other', { count: '{{count}}' }),
             setTo: t('attendance.setTo'),
             clear: t('attendance.clear'),
+            clearMark: t('attendance.clearMark'),
             hint: t('attendance.hint'),
             readOnly: t('attendance.readOnly'),
             markToday: t('attendance.markToday'),
@@ -174,6 +189,8 @@ export default async function AttendancePage({
             saving: t('attendance.saving'),
             savedOne: t('attendance.saved_one', { count: '{{count}}' }),
             savedOther: t('attendance.saved_other', { count: '{{count}}' }),
+            clearedOne: t('attendance.cleared_one', { count: '{{count}}' }),
+            clearedOther: t('attendance.cleared_other', { count: '{{count}}' }),
           }}
         />
       )}

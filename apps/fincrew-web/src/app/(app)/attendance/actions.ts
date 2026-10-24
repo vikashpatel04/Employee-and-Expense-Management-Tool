@@ -67,6 +67,46 @@ export async function setAttendance(
   return { ok: true, count: cells.length };
 }
 
+/**
+ * Remove the marks on these days, so each goes back to what the rules give it (not marked, or
+ * the weekly off / holiday from the template). Same permission and date checks as setting a mark.
+ */
+export async function clearAttendance(
+  cells: { staffId: string; date: string }[],
+): Promise<SetResult> {
+  const me = await requireMe();
+  if (!me || !me.permissions.includes('attendance.mark'))
+    return { ok: false, error: t('attendance.readOnly') };
+  if (cells.length === 0 || cells.length > 2000)
+    return { ok: false, error: t('attendance.errors.failed', { reason: 'invalid request' }) };
+  const today = todayIST();
+  for (const c of cells) {
+    if (!isBusinessDate(c.date))
+      return { ok: false, error: t('attendance.errors.failed', { reason: c.date }) };
+    if (compareDates(c.date, today) > 0) return { ok: false, error: t('attendance.errors.future') };
+    if (compareDates(c.date, today) < 0 && !me.permissions.includes('attendance.edit_past')) {
+      return { ok: false, error: t('attendance.errors.past') };
+    }
+  }
+
+  const supabase = await createClient();
+  for (const [staffId, group] of groupBy(cells, (c) => c.staffId)) {
+    const { error } = await supabase
+      .from('attendance')
+      .delete()
+      .eq('shop_id', me.shopId)
+      .eq('staff_id', staffId)
+      .in(
+        'date',
+        group.map((c) => c.date),
+      );
+    if (error)
+      return { ok: false, error: t('attendance.errors.failed', { reason: error.message }) };
+  }
+  revalidatePath('/attendance');
+  return { ok: true, count: cells.length };
+}
+
 /** Explain the first person who'd go past their paid leave for a month, or null. */
 async function paidLeaveProblem(
   supabase: Awaited<ReturnType<typeof createClient>>,

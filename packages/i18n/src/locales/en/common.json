@@ -329,7 +329,14 @@
       "future": "Days after today can't be marked yet.",
       "leave": "{{name}} has {{left}} paid leave left this month.",
       "failed": "Couldn't save: {{reason}}"
-    }
+    },
+    "clearMark": "Not marked",
+    "export": {
+      "button": "Download CSV",
+      "noPermission": "You need the \"Export reports\" permission to download this."
+    },
+    "cleared_one": "Cleared {{count}} day.",
+    "cleared_other": "Cleared {{count}} days."
   },
   "salary": {
     "title": "Salary",
@@ -818,5 +825,31 @@
       "roles": "Roles and permissions (can give anyone any permission, themselves included)",
       "shop": "Shop settings and pay & attendance rules"
     }
+  },
+  "payslip": {
+    "title": "Payslip",
+    "month": "{{month}}",
+    "employee": "Employee",
+    "joined": "Joined",
+    "period": "Pay period",
+    "draft": "Draft: not final. Numbers can change until the month is finalized.",
+    "revision": "Revision {{n}}",
+    "days": "Days",
+    "extraDays": "Extra working days",
+    "payable": "Payable days",
+    "earnings": "Earnings",
+    "deductions": "Deductions",
+    "gross": "Gross pay",
+    "totalDeductions": "Total deductions",
+    "netBeforeAdvance": "Net before advance",
+    "net": "Net pay",
+    "paid": "Paid so far",
+    "due": "Still to pay",
+    "print": "Print or save as PDF",
+    "back": "Back to salary",
+    "open": "Payslip",
+    "openLabel": "Open the payslip for {{name}}",
+    "generated": "Made on {{date}} with FinCrew",
+    "noDeductions": "No deductions"
   }
 }

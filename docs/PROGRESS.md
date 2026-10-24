@@ -5,9 +5,10 @@ _Last updated: 2026-10-24_
 ## Start here (handover for a new session)
 
 **Where we are:** Phases 1–3 done; Phase 4 (FinCrew website) in progress — data layer live,
-screens slices 1–8 done and checked in the browser: app shell + shop switcher, staff list/add,
+screens slices 1–9 done and checked in the browser: app shell + shop switcher, staff list/add,
 staff detail (overview, ledger, pay, edit details, allowances/deductions, opening balance, own
-rules, leave template), attendance grid, salary run, advances + undo, settings
+rules, leave template), attendance grid (+ clear a mark, CSV), salary run, printable payslip,
+advances + undo, settings
 (holidays, leave templates + assignment, shop rules, roles & permissions). Local `main` may be ahead of
 GitHub: run `git status -sb`; the owner pushes (never push unless asked).
 
@@ -18,8 +19,11 @@ GitHub: run `git status -sb`; the owner pushes (never push unless asked).
    roles & permissions).
 3. ~~Staff detail extras~~ — done (slice 8). Still open there: attendance calendar tab,
    Staffora invite (Phase 7), adding non-staff helpers for roles.
-4. **Payslip print/PDF, attendance CSV, clear an attendance mark**; then Phase 5 (Android),
-   6 (expenses), 7 (Staffora).
+4. ~~Payslip print/PDF, attendance CSV, clear an attendance mark~~ — done (slice 9).
+5. **Web dashboard** (`(app)/page.tsx` is still a placeholder): today's attendance (marked /
+   not marked / late), money due to staff, advances to recover, this month's salary status, with
+   links into each screen. That closes Phase 4; then Phase 5 (Android), 6 (expenses),
+   7 (Staffora).
 
 **Waiting on the owner:**
 
@@ -70,16 +74,16 @@ https://claude.ai/artifact/8jzomFcfJazHfn6yiUFQQP · Website https://fincrew-web
 
 ## Phase status (docs/PLAN.md §8)
 
-| #   | Phase                        | Status                                                                                                                                                         |
-| --- | ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | Foundation                   | **Done** (2026-10-23)                                                                                                                                          |
-| 2   | Core logic (`packages/core`) | **Done**: 225 tests, every rule a setting; `docs/features/core-rules.md`                                                                                       |
-| 3   | Design                       | **Done** (2026-10-23): design system, key screens (owner reviewed), `packages/ui` tokens                                                                       |
-| 4   | FinCrew web core             | **In progress**: data layer live; 4.3 screens: slices 1–6 (shell, staff, staff detail + pay, attendance grid, salary run, advances, settings) done and checked |
-| 5   | FinCrew Android              | Not started                                                                                                                                                    |
-| 6   | Expenses                     | Not started                                                                                                                                                    |
-| 7   | Staffora                     | Not started                                                                                                                                                    |
-| 8   | Polish                       | Not started                                                                                                                                                    |
+| #   | Phase                        | Status                                                                                                                                                                                                        |
+| --- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Foundation                   | **Done** (2026-10-23)                                                                                                                                                                                         |
+| 2   | Core logic (`packages/core`) | **Done**: 225 tests, every rule a setting; `docs/features/core-rules.md`                                                                                                                                      |
+| 3   | Design                       | **Done** (2026-10-23): design system, key screens (owner reviewed), `packages/ui` tokens                                                                                                                      |
+| 4   | FinCrew web core             | **In progress**: data layer live; 4.3 screens: slices 1–9 done and checked (shell, staff, staff detail + extras, attendance grid + CSV, salary run, payslip print, advances, settings, roles); dashboard left |
+| 5   | FinCrew Android              | Not started                                                                                                                                                                                                   |
+| 6   | Expenses                     | Not started                                                                                                                                                                                                   |
+| 7   | Staffora                     | Not started                                                                                                                                                                                                   |
+| 8   | Polish                       | Not started                                                                                                                                                                                                   |
 
 ## Phase 1 — Foundation
 
@@ -159,6 +163,16 @@ Tables still to add (with the phase that uses them, each with RLS tests): `staff
 `attendance_scans`, `invites`, `pin_credentials`, `push_tokens` (Phase 7).
 
 ## Session log
+
+- **2026-10-24** — **Slice 9: payslip print, attendance CSV, clear a mark** — `/payslips/[id]`:
+  printable payslip outside the shell (shop, month, employee, pay period, days, earnings,
+  deductions, advance cut, net, paid so far / still to pay; Draft notice), "Print or save as
+  PDF" via the browser, prints in the light theme even in dark mode; linked from each person's
+  row on Salary. `/attendance/export?month=YYYY-MM`: CSV (UTF-8 BOM, DD/MM/YYYY day columns,
+  payable / late / absent) behind `reports.export`, "Download CSV" on Attendance. Grid toolbar
+  "Not marked" clears marks (delete, same date permissions). Checked in the browser: payslip
+  numbers match the run (₹355 draft), CSV bytes and content, mark + clear today (DB back to the
+  one 23/10 half day). Next: web dashboard.
 
 - **2026-10-24** — **Slice 8: staff detail extras** — Overview: Details (name, phone, joining,
   leaving date → status left/active) and one-time Opening balance (confirm tick; ledger line).

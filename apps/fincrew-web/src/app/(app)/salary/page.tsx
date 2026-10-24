@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { AlertTriangle, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { AlertTriangle, ChevronDown, ChevronLeft, ChevronRight, FileText } from 'lucide-react';
 import { formatINR, monthOf, type DaySummary, type PayslipLine } from '@fincrew/core';
 import { todayIST } from '@/lib/format';
 import { t } from '@/lib/i18n';
@@ -424,6 +424,15 @@ export default async function SalaryPage({
                         {p.leave &&
                           ` ${t('salary.days.leaveLeft', { month: mName, left: p.leave.carried ?? 0 })}`}
                       </span>
+                      <Link
+                        href={`/payslips/${p.id}`}
+                        target="_blank"
+                        aria-label={t('payslip.openLabel', { name: p.name })}
+                        className={`${quietButtonClass} inline-flex w-fit items-center gap-2`}
+                      >
+                        <FileText size={20} aria-hidden="true" />
+                        {t('payslip.open')}
+                      </Link>
                       {canRun && run && p.state === 'finalized' && (
                         <PayControl
                           pay={paySalary.bind(null, run.id, p.id)}

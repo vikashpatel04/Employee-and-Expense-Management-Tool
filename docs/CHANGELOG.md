@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added — 2026-10-24 (Phase 4.3 slice 9)
+
+- Printable payslip (print or save as PDF), attendance CSV download, clear attendance marks.
+
 ### Added — 2026-10-24 (Phase 4.3 slice 8)
 
 - Staff detail: edit details and leaving date, opening balance, allowances and deductions (add,

@@ -2,6 +2,20 @@
 
 Choices made during the build that PLAN.md doesn't spell out. Newest first.
 
+## 2026-10-24 — Payslip print, CSV, clearing marks
+
+- **Payslip PDF = the browser's "Save as PDF"** from a print-ready page (`/payslips/[id]`), not
+  a server PDF library: no new dependency, same layout on screen and paper. `payslips.pdf_path`
+  stays unused until Staffora needs stored files (Phase 7). While printing, the page switches to
+  the light theme (`beforeprint`) so dark mode can't print light text on white paper.
+- The payslip page is outside the app shell (no sidebar to hide) and relies on RLS: people see
+  their own finalized payslips, `salary.view` sees all, anything else is "not found".
+- **Attendance CSV** is wide (one row per person, one column per day) like the grid, UTF-8 with a
+  BOM so Excel shows names and ₹ correctly, and needs `reports.export` (PLAN §3: reports export).
+  Days after today are blank; status words are the app's own labels.
+- **Clearing a mark deletes the attendance row**, so the day falls back to what the rules give
+  (not marked, weekly off or holiday). Same permission and past/future checks as setting one.
+
 ## 2026-10-24 — Staff detail extras
 
 - **Leaving date sets the status**: any leaving date (even a future one) marks the person `left`
