@@ -244,18 +244,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "attendance_codes_shop_id_fkey"
-            columns: ["shop_id"]
-            isOneToOne: false
-            referencedRelation: "shops"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "attendance_codes_shop_id_created_by_fkey"
             columns: ["shop_id", "created_by"]
             isOneToOne: false
             referencedRelation: "people"
             referencedColumns: ["shop_id", "id"]
+          },
+          {
+            foreignKeyName: "attendance_codes_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -273,7 +273,7 @@ export type Database = {
         Insert: {
           at?: string
           device_id?: string | null
-          id?: number
+          id?: never
           kind?: string | null
           method: string
           result: string
@@ -283,7 +283,7 @@ export type Database = {
         Update: {
           at?: string
           device_id?: string | null
-          id?: number
+          id?: never
           kind?: string | null
           method?: string
           result?: string
@@ -297,6 +297,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "shops"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_scans_shop_id_staff_id_fkey"
+            columns: ["shop_id", "staff_id"]
+            isOneToOne: false
+            referencedRelation: "advance_balances"
+            referencedColumns: ["shop_id", "staff_id"]
           },
           {
             foreignKeyName: "attendance_scans_shop_id_staff_id_fkey"
@@ -629,6 +636,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "invites_shop_id_created_by_fkey"
+            columns: ["shop_id", "created_by"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["shop_id", "id"]
+          },
+          {
             foreignKeyName: "invites_shop_id_fkey"
             columns: ["shop_id"]
             isOneToOne: false
@@ -638,13 +652,6 @@ export type Database = {
           {
             foreignKeyName: "invites_shop_id_person_id_fkey"
             columns: ["shop_id", "person_id"]
-            isOneToOne: false
-            referencedRelation: "people"
-            referencedColumns: ["shop_id", "id"]
-          },
-          {
-            foreignKeyName: "invites_shop_id_created_by_fkey"
-            columns: ["shop_id", "created_by"]
             isOneToOne: false
             referencedRelation: "people"
             referencedColumns: ["shop_id", "id"]
@@ -1277,6 +1284,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "requests_shop_id_decided_by_fkey"
+            columns: ["shop_id", "decided_by"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["shop_id", "id"]
+          },
+          {
             foreignKeyName: "requests_shop_id_fkey"
             columns: ["shop_id"]
             isOneToOne: false
@@ -1284,11 +1298,11 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "requests_shop_id_decided_by_fkey"
-            columns: ["shop_id", "decided_by"]
+            foreignKeyName: "requests_shop_id_staff_id_fkey"
+            columns: ["shop_id", "staff_id"]
             isOneToOne: false
-            referencedRelation: "people"
-            referencedColumns: ["shop_id", "id"]
+            referencedRelation: "advance_balances"
+            referencedColumns: ["shop_id", "staff_id"]
           },
           {
             foreignKeyName: "requests_shop_id_staff_id_fkey"
@@ -1625,7 +1639,12 @@ export type Database = {
       }
       attendance_code: { Args: { p_shop: string }; Returns: Json }
       check_in: {
-        Args: { p_code: string; p_device: string; p_method: string; p_shop: string }
+        Args: {
+          p_code: string
+          p_device: string
+          p_method: string
+          p_shop: string
+        }
         Returns: Json
       }
       create_invite: { Args: { p_person: string }; Returns: Json }
@@ -1635,7 +1654,12 @@ export type Database = {
       }
       finalize_payslip: { Args: { p_payslip: string }; Returns: undefined }
       invite_accept: {
-        Args: { p_auth_user: string; p_device: string; p_pin: string; p_token: string }
+        Args: {
+          p_auth_user: string
+          p_device: string
+          p_pin: string
+          p_token: string
+        }
         Returns: Json
       }
       invite_lookup: { Args: { p_token: string }; Returns: Json }

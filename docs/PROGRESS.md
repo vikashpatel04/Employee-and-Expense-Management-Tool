@@ -22,22 +22,22 @@ _Handover written 2026-10-24 before a session compaction. Read this section firs
   used by website and app: attendance month, write attendance, paid-leave check, session,
   dashboard, expenses + **expense saving**, reports, salary month + **salary run / finalize /
   pay**, **advances**, leave setup, roles, staff loaders).
-- **Git:** everything up to `abd06ff` (Money tab + docs) is pushed (2026-10-24); CI green;
-  Vercel deployed. Local `main` is **2 commits ahead**: `02bafc9` Phase 7 data and the Phase 7
-  screens commit — not pushed. The owner pushes, or tells you to push in that moment. Migrations up to
+- **Git:** everything up to `4a82685` (Phase 7 screens) is pushed (2026-10-24); CI green (run
+  40098230155 applied the Phase 7 migrations and deployed `staff-auth`); Vercel deployed. Local
+  commits after that hold the live-check fixes and docs, not pushed. (Pushing changes to
+  `.github/workflows` needs the `workflow` scope; the owner added it to the GitHub CLI sign-in,
+  which git now uses.) The owner pushes, or tells you to push in that moment. Migrations up to
   `20261024000002_advance_undo.sql` are live.
 
 - **Phase 7 in progress** (owner's go, 2026-10-24; `docs/features/staff-self-service.md`):
   database for attendance codes + check-in, requests, invites + PIN sign-in, the `staff-auth`
   edge function, and the FinCrew screens (website `/code`, `/qr`, `/requests`, staff sign-in
-  card, public `/join/<token>`; app code + requests screens) are written and tested, **not yet
-  live**: the next push applies 3 migrations and deploys the function (CI). After it: watch the
-  run, `pnpm db:types` (the types were added by hand meanwhile; regenerate and commit), then check
-  the new screens on live (list in the feature doc → Checked).
+  card, public `/join/<token>`; app code + requests screens) are **live and checked** (details in
+  the feature doc → Checked). Staffora (the staff app) is next.
 
 **Next work, in order** (owner usually says "continue"; pick the top unfinished one)
 
-1. **Phase 7, continued**: after the push and live checks, build the **Staffora app**
+1. **Phase 7, continued**: build the **Staffora app**
    (`apps/staffora-mobile`, Expo like FinCrew; scheme `staffora` for invite links; designs on the
    Staffora canvas): first run from the invite (name, PIN twice, phone bound via `staff-auth`
    accept), PIN screen on open (`staff-auth` login; device id kept on the phone), Home with Scan
@@ -65,7 +65,9 @@ _Handover written 2026-10-24 before a session compaction. Read this section firs
 **Live test data (keep it reversible)**: Test Staff (joined 23/10/2026, ₹22,000 monthly,
 9:30 AM – 8:30 PM, advance limit ₹5,000 / cut ₹1,000, attendance 23/10 half day and 24/10 present
 (marked by the owner), October draft payslip ₹355, no ledger lines, self attendance off, no
-sign-in); an archived "Test category". Everything else tested was reverted.
+sign-in, three decided requests whose notes start "TEST:" — requests can't be deleted); an archived
+"Test category"; the shop's attendance code (made while checking). Everything else tested was
+reverted.
 
 **Owner rules (also in CLAUDE.md and memory)**: no co-author on commits; the owner pushes (push
 only when asked in that moment); docs in every commit; every rule is a setting (no
@@ -81,7 +83,9 @@ password; never write permanent ledger lines or advances on the live shop withou
 - Live DB (CLI logged in): `pnpm exec supabase db query --linked --project-ref
 ufmlqvvfznemghmnvynz "<sql>"`; advisors: `... db advisors --linked --project-ref
 ufmlqvvfznemghmnvynz --type all` (accepted warnings only: authenticated-callable
-  `create_shop`/`finalize_payslip`/`my_permissions`/`shop_exists`, Supabase's
+  `create_shop`/`finalize_payslip`/`my_permissions`/`shop_exists` and the Phase 7 owner-side
+  functions `attendance_code`/`regenerate_attendance_code`/`check_in`/`create_invite`/
+  `revoke_invite`/`staff_logins`/`unlock_login`/`reset_staff_phone`, Supabase's
   `rls_auto_enable`, leaked-password protection). **Dry-run a new migration** on live before
   asking to push: write `begin; <migration> select 'applied'; rollback;` to a file and run
   `... db query --linked --project-ref ufmlqvvfznemghmnvynz -f <file>`.
@@ -139,7 +143,7 @@ ref `ufmlqvvfznemghmnvynz` (never touch `cheque-tracker-dev`).
 | 4   | FinCrew web core             | **Done** (2026-10-24): data layer live; screens slices 1–10 (dashboard, shell, staff + extras, attendance grid + CSV, salary run, payslip print, advances, settings, roles) |
 | 5   | FinCrew Android              | **In progress**: shell, sign-in, Today, Staff, Money (checked live); Phase 7 screens next                                                                                   |
 | 6   | Expenses                     | **Done** (2026-10-24): website and Android                                                                                                                                  |
-| 7   | Staffora                     | **In progress**: data (codes, requests, invites + PIN, edge function) done; screens next                                                                                    |
+| 7   | Staffora                     | **In progress**: data + edge function + FinCrew screens live (2026-10-24); Staffora app next                                                                                |
 | 8   | Polish                       | Not started                                                                                                                                                                 |
 
 ## Phase 1 — Foundation
@@ -196,6 +200,11 @@ setup against the live project, and sign-in on the Vercel deployment (2026-10-23
 | `20261023000003_staff_attendance.sql` | 2026-10-23 | CI migrate job, run 39950298454 |
 | `20261023000004_money.sql`            | 2026-10-23 | CI migrate job, run 39953812217 |
 | `20261023000005_add_staff.sql`        | 2026-10-23 | CI migrate job, run 39968572884 |
+| `20261024000001_expenses.sql`         | 2026-10-24 | CI migrate job                  |
+| `20261024000002_advance_undo.sql`     | 2026-10-24 | CI migrate job                  |
+| `20261024000003_attendance_codes.sql` | 2026-10-24 | CI migrate job, run 40098230155 |
+| `20261024000004_requests.sql`         | 2026-10-24 | CI migrate job, run 40098230155 |
+| `20261024000005_staff_login.sql`      | 2026-10-24 | CI migrate job, run 40098230155 |
 
 Migrations are applied by the CI **migrate** job on every push to `main`, so **everything in
 `supabase/migrations/` on `main` counts as applied** and must never change (CI enforces this).
@@ -219,6 +228,14 @@ Tables still to add (with the phase that uses them, each with RLS tests): `staff
 (storage), `push_tokens` (Phase 7/8).
 
 ## Session log
+
+- **2026-10-24** — Pushed Phase 7 (owner added the GitHub `workflow` scope so the CI file change
+  could go up). CI run 40098230155: 3 migrations applied, `staff-auth` deployed. `pnpm db:types`
+  regenerated. Checked on live: code page / QR / new code (website + app), sign-in card with
+  invite → join page through the live edge function, cancel, check-in switch, requests decided in
+  both apps (leave approved as unpaid wrote the days). Fixes: app Requests Decided tab (stale note,
+  context line), app QR `accessible` prop on web. Test data cleaned except three decided "TEST:"
+  requests (can't be deleted).
 
 - **2026-10-24** — **Phase 7 screens.** Design first: new artboards Requests (Android),
   Web · attendance code, Web · requests, Web · staff sign-in card. Shared

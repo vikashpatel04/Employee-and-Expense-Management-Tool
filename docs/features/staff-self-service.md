@@ -7,9 +7,9 @@ and requests list need. Migrations `20261024000003_attendance_codes.sql`,
 `requests.test.ts`, `staff-login.test.ts`, `staff-auth.test.ts`; core
 `packages/core/src/staff-login.test.ts`.
 
-Status: **database, edge function, settings and FinCrew screens (website + Android) done, not
-yet live** (they apply and deploy on the next push; then `pnpm db:types`). Staffora (the staff
-app) is next.
+Status: **live** (pushed 2026-10-24, CI run 40098230155 applied the 3 migrations and deployed
+`staff-auth`; types regenerated). FinCrew screens (website + Android) checked on live. Staffora
+(the staff app) is next; check-in and PIN sign-in get their real end-to-end test with it.
 
 ## Attendance code (PLAN §4.5)
 
@@ -129,9 +129,26 @@ existed already.
 
 ## Checked
 
-2026-10-24, before the push (the live database doesn't have these tables yet): typecheck, tests
-(core 234, db 160) and the website build pass; the website dashboard still loads with the new
-sidebar links; `/join/<token>` shows the "couldn't check" message while the function isn't
-deployed. **To check after the push**: `/code` and the QR, invite → join page → (Staffora) and the
-sign-in card states, requests (needs a request from Staffora, or one inserted for Test Staff),
-the Android code and requests screens.
+2026-10-24 on live, signed in as the owner:
+
+- **Code**: website `/code` showed a code changing at 12:00 AM (daily default), New code (asks
+  first) gave a different code and the QR followed; `/qr` full screen; 0 of 1 checked in. App:
+  Attendance code button on Today, code screen, full-screen QR. (The QR is made by the `qrcode`
+  library from the digits; it wasn't machine-decoded here.)
+- **Sign-in card** (Test Staff): Not invited → Invite made a link (valid 48 h, WhatsApp message
+  ready) → `/join/<token>` greeted "Hi Test Staff" through the deployed edge function; a wrong
+  link says it doesn't work; Cancel invite → Not invited; the code check-in switch saves both
+  ways. Not done on live: accepting an invite / PIN sign-in (that creates a real sign-in; it's
+  covered by the tests and gets its live check with Staffora).
+- **Requests**: two inserted for Test Staff (leave 02–03/11, advance ₹1,500) showed on the
+  website and the app with context (no paid leave left → form starts on Unpaid; owes ₹0 · limit
+  ₹5,000 · cut ₹1,000); the app's Today banner counted them. Rejected one in the app, rejected the
+  advance on the website with a reply, approved a third (leave 04–05/11) as unpaid → those days
+  were written as unpaid leave; Decided tabs show who / when / how. No advance or ledger line was
+  made. Fixed after the check: the app's Decided tab kept the old "Rejected." note and showed the
+  advance context line; the app QR passed `accessible` to the web DOM.
+- Cleanup: the two leave days and the invite were removed; the three decided test requests stay
+  (requests can't be deleted; they're marked "TEST:"). Self attendance back off.
+- Advisors after the push: only the expected "signed-in users can execute" warnings for the new
+  owner-side functions (each checks its permission inside); the service-role-only functions
+  aren't callable by users.

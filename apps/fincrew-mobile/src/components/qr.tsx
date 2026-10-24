@@ -1,4 +1,5 @@
 import QRCode from 'qrcode';
+import { View } from 'react-native';
 import Svg, { Path, Rect } from 'react-native-svg';
 
 /**
@@ -13,17 +14,13 @@ export function Qr({ text, size, label }: { text: string; size: number; label: s
   for (let r = 0; r < n; r++)
     for (let c = 0; c < n; c++) if (qr.modules.get(r, c)) d += `M${c + quiet} ${r + quiet}h1v1h-1z`;
   const box = n + quiet * 2;
+  // The label sits on a wrapping view: react-native-svg passes `accessible` on to the DOM on web.
   return (
-    <Svg
-      width={size}
-      height={size}
-      viewBox={`0 0 ${box} ${box}`}
-      accessible
-      accessibilityLabel={label}
-      accessibilityRole="image"
-    >
-      <Rect width={box} height={box} fill="#ffffff" />
-      <Path d={d} fill="#11171a" />
-    </Svg>
+    <View accessible accessibilityLabel={label} accessibilityRole="image">
+      <Svg width={size} height={size} viewBox={`0 0 ${box} ${box}`}>
+        <Rect width={box} height={box} fill="#ffffff" />
+        <Path d={d} fill="#11171a" />
+      </Svg>
+    </View>
   );
 }

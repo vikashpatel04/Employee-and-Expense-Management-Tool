@@ -193,7 +193,10 @@ export default function RequestsScreen() {
         <Segmented
           label={t('requests.tabs.label')}
           value={show}
-          onChange={setShow}
+          onChange={(v) => {
+            setDone(null);
+            setShow(v);
+          }}
           options={[
             { value: 'pending', label: t('requests.tabs.pending', { count: pendingCount }) },
             { value: 'decided', label: t('requests.tabs.decided') },
@@ -251,7 +254,7 @@ export default function RequestsScreen() {
               <View style={{ gap: 2 }}>
                 <Text variant="title-md">{what(r)}</Text>
                 {r.note ? <Text>{`“${r.note}”`}</Text> : null}
-                {context.get(r.id) && (
+                {r.status === 'pending' && context.get(r.id) && (
                   <Text variant="caption" muted>
                     {contextText(context.get(r.id))}
                   </Text>
