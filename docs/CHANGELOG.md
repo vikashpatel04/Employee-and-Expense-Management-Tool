@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Changed — 2026-10-24 (Phase 4.3 slice 11)
+
+- Attendance grid keeps names and Days/Late/Absent in view while the days scroll.
+- Phones: the sidebar becomes a top bar with a Menu button; Attendance opens in a Day view
+  (Day | Month switch).
+
 ### Added — 2026-10-24 (Phase 4.3 slice 10)
 
 - Website dashboard: today's attendance, money due, advances, this month's salary, coming up.

@@ -157,6 +157,7 @@ export default async function AttendancePage({
           canMark={can('attendance.mark')}
           canEditPast={can('attendance.edit_past')}
           offLabels={offLabels}
+          monthName={monthName(year, month)}
           labels={{
             status: t('status', { returnObjects: true }) as unknown as Record<string, string>,
             weekdaysTiny: t('weekdays.tiny', { returnObjects: true }) as unknown as string[],

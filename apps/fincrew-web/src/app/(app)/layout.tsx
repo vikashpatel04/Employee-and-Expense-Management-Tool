@@ -6,11 +6,13 @@ import { settingsSections } from '@/lib/settings-access';
 import { AuthCard, buttonClass } from '../components';
 import { signOut } from '../login/actions';
 import { NavLinks, type NavItem } from './nav';
+import { NavShell } from './nav-shell';
 import { ShopSwitcher } from './shop-switcher';
 
 /**
  * Signed-in shell (design: "Web · attendance grid"): sidebar with the shop switcher and the
- * sections this person may open, main area beside it; the sidebar stacks above on a phone.
+ * sections this person may open, main area beside it; on a phone the sidebar folds into a top
+ * bar with a Menu button (`nav-shell.tsx`).
  * Sections appear here as they are built.
  */
 export default async function AppLayout({ children }: { children: ReactNode }) {
@@ -43,11 +45,16 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex min-h-dvh flex-wrap items-stretch">
-      <nav
-        aria-label={t('nav.main')}
-        className="flex flex-[1_1_208px] flex-col gap-1 bg-[var(--surface)] px-3 py-5 shadow-[inset_-1px_0_0_var(--line)]"
+      <NavShell
+        label={t('nav.main')}
+        brand={t('appName')}
+        shopName={me.shopName}
+        menuLabel={t('nav.menu')}
+        closeLabel={t('nav.closeMenu')}
       >
-        <span className="text-title-md px-3 pb-3 text-[var(--accent-ink)]">{t('appName')}</span>
+        <span className="text-title-md hidden px-3 pb-3 text-[var(--accent-ink)] md:block">
+          {t('appName')}
+        </span>
         <ShopSwitcher me={me} />
         <NavLinks items={items} label={t('nav.main')} />
         <form action={signOut} className="mt-auto pt-4">
@@ -56,7 +63,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
             {t('auth.signOut')}
           </button>
         </form>
-      </nav>
+      </NavShell>
       <main className="flex min-w-0 flex-[999_1_560px] flex-col gap-5 px-4 py-6 sm:px-8">
         {children}
       </main>

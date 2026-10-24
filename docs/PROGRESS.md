@@ -21,7 +21,11 @@ GitHub: run `git status -sb`; the owner pushes (never push unless asked).
    Staffora invite (Phase 7), adding non-staff helpers for roles.
 4. ~~Payslip print/PDF, attendance CSV, clear an attendance mark~~ — done (slice 9).
 5. ~~Web dashboard~~ — done (slice 10, designed first in Claude Design: "Web · dashboard").
-6. **Phase 5: FinCrew Android** (Expo): Today screen, staff, money, attendance code screen,
+6. **Phase 6: Expenses, before Android** (owner, 2026-10-24: "the app should be built with
+   expense since this is one of the feature"): tables + RLS + tests, ledger lines for staff
+   charges / reimbursements, bill photos (Storage), categories, web screens designed in Claude
+   Design first, dashboard tile.
+7. **Phase 5: FinCrew Android** (Expo): Today screen, staff, money, attendance code screen,
    push notifications — follow the Android artboards on the FinCrew key screens canvas and
    `themes` from `@fincrew/ui`. Web leftovers (small, any time): staff detail attendance
    calendar tab, adding non-staff helpers for roles, correcting an opening balance, web
@@ -165,6 +169,16 @@ Tables still to add (with the phase that uses them, each with RLS tests): `staff
 `attendance_scans`, `invites`, `pin_credentials`, `push_tokens` (Phase 7).
 
 ## Session log
+
+- **2026-10-24** — Owner: the grid's totals only show after scrolling, too much for small
+  screens. **Slice 11: attendance on small screens** — designed first (desktop grid artboard
+  updated with pinned columns; new "Web · attendance on a phone (day view)"), then built: names
+  and Days/Late/Absent pinned while days scroll; below `md` the sidebar folds into a top bar
+  with a Menu button (`nav-shell.tsx`) and Attendance opens in a **Day view** (date switcher,
+  chips, one row per person with month totals and minutes late, tap to select + Set to) with a
+  Day | Month switch. Checked at 1000 px (both sides stay pinned while scrolling) and 375 px
+  (no sideways scroll on any page; marked and cleared Test Staff from the Day view, DB back to
+  the one 23/10 half day). Next: expenses.
 
 - **2026-10-24** — Owner asked me to push: pushed slices 1–9 (`e1cbba7`), CI green.
   **Slice 10: dashboard** — designed first as "Web · dashboard" on the FinCrew key screens

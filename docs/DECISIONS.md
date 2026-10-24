@@ -2,6 +2,15 @@
 
 Choices made during the build that PLAN.md doesn't spell out. Newest first.
 
+## 2026-10-24 — Small screens
+
+- The website switches layout at Tailwind `md` (768 px): below it the sidebar folds into a top
+  bar with a Menu button, and Attendance opens in a Day view (one row per person) because a
+  31-day grid can't fit; the Month grid is one tap away. At `md` and up the grid shows, with
+  the name column and the totals pinned (`position: sticky`) so only the days scroll.
+- Switching day or view clears the selection, so "Set to" never acts on days you can't see.
+- Expenses come before the Android app (owner's call), as Phase 6 then Phase 5.
+
 ## 2026-10-24 — Dashboard
 
 - Designed in Claude Design first (owner's request), on the FinCrew key screens canvas next to

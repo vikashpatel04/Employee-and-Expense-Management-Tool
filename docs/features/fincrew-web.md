@@ -70,7 +70,19 @@ then cleared; opening balance error path only.
 Checked in the browser on 2026-10-23 against the live project: shell, staff list, Add staff
 ("Test Staff"), staff detail tabs, saving pay (₹22,000 monthly, 9:30 AM – 8:30 PM).
 
+## Small screens
+
+- Below `md` the sidebar is a 56 px top bar (FinCrew, shop name, Menu) — `(app)/nav-shell.tsx`;
+  the menu holds the shop switcher, sections and sign out, and closes after navigating.
+- Attendance on a phone: **Day view** (design "Web · attendance on a phone (day view)"):
+  previous/next day within the month up to today, chips (present incl. half days, absent,
+  late, not marked), one row per person (status, minutes late, Days · Late · Absent for the
+  month so far), tap rows to select then the same Set to / Not marked toolbar; Day | Month
+  switch.
+
 ## Attendance grid — `(app)/attendance`
+
+- Names (left) and Days / Late / Absent (right) are pinned; only the days scroll.
 
 - Staff × days for one month (`?month=YYYY-MM`, no future months), per the design. Every cell's
   status comes from `packages/core` `evaluateDays` with the shop's rules and each person's

@@ -126,7 +126,9 @@
     "attendance": "Attendance",
     "salary": "Salary",
     "advances": "Advances",
-    "settings": "Settings"
+    "settings": "Settings",
+    "menu": "Menu",
+    "closeMenu": "Close menu"
   },
   "staff": {
     "title": "Staff",
@@ -419,7 +421,20 @@
       "noPermission": "You need the \"Export reports\" permission to download this."
     },
     "cleared_one": "Cleared {{count}} day.",
-    "cleared_other": "Cleared {{count}} days."
+    "cleared_other": "Cleared {{count}} days.",
+    "views": {
+      "label": "Show",
+      "day": "Day",
+      "month": "Month"
+    },
+    "prevDay": "Previous day",
+    "nextDay": "Next day",
+    "today": "Today",
+    "dayHint": "Tap people to select them, then set one status for all of them.",
+    "dayTotals": "Days {{days}} · Late {{late}} · Absent {{absent}}",
+    "minutesLate": "{{minutes}} min late",
+    "dayFootnote": "Days, Late and Absent are for {{month}} so far.",
+    "dayEmpty": "Nobody works here on this day."
   },
   "salary": {
     "title": "Salary",

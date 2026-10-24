@@ -4,6 +4,9 @@ import { useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Check,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
   Contrast,
   Eraser,
   Moon,
@@ -13,7 +16,9 @@ import {
   X,
   type LucideIcon,
 } from 'lucide-react';
+import { formatDisplayDate, weekday } from '@fincrew/core';
 import type { GridRow } from '@/lib/attendance-month';
+import { t } from '@/lib/i18n';
 import { Avatar } from '../../components';
 import { clearAttendance, setAttendance } from './actions';
 
@@ -74,6 +79,7 @@ export function AttendanceGrid({
   canMark,
   canEditPast,
   offLabels,
+  monthName,
   labels,
 }: {
   days: { date: string; weekday: number }[];
@@ -82,10 +88,22 @@ export function AttendanceGrid({
   canMark: boolean;
   canEditPast: boolean;
   offLabels: Record<string, string>;
+  monthName: string;
   labels: GridLabels;
 }) {
   const router = useRouter();
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  // Phones show one day at a time (design: "Web · attendance on a phone"); md+ always the grid.
+  const [view, setView] = useState<'day' | 'month'>('day');
+  const pastDates = days.map((d) => d.date).filter((d) => d <= today);
+  const [dayDate, setDayDate] = useState(
+    pastDates.includes(today) ? today : (pastDates.at(-1) ?? days[0]?.date ?? today),
+  );
+  const switchTo = (next: { view?: 'day' | 'month'; date?: string }) => {
+    setSelected(new Set());
+    if (next.view) setView(next.view);
+    if (next.date) setDayDate(next.date);
+  };
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const [pending, start] = useTransition();
 
@@ -141,7 +159,11 @@ export function AttendanceGrid({
     });
 
   const count = selected.size;
-  const cols = `176px repeat(${days.length}, 28px) repeat(3, 56px)`;
+  // Names (left) and totals (right) stay pinned while the days scroll between them.
+  const cols = `176px repeat(${days.length}, 28px) 174px`;
+  const pinLeft = 'sticky left-0 z-10 bg-[var(--surface)] shadow-[1px_0_0_var(--line)]';
+  const pinRight =
+    'sticky right-0 z-10 grid grid-cols-3 gap-0.5 bg-[var(--surface)] shadow-[-1px_0_0_var(--line)]';
 
   return (
     <div className="flex flex-col gap-4">
@@ -212,7 +234,10 @@ export function AttendanceGrid({
             </div>
           ) : (
             <p className="text-body flex min-h-10 flex-1 items-center text-[var(--ink-muted)]">
-              {labels.hint}
+              <span className={view === 'day' ? 'hidden md:inline' : ''}>{labels.hint}</span>
+              <span className={view === 'day' ? 'md:hidden' : 'hidden'}>
+                {t('attendance.dayHint')}
+              </span>
             </p>
           )}
           <button
@@ -243,7 +268,48 @@ export function AttendanceGrid({
         </p>
       )}
 
-      <div className="overflow-x-auto rounded-[var(--radius-lg)] bg-[var(--surface)] p-2 shadow-[var(--elevation-1)]">
+      <div
+        role="group"
+        aria-label={t('attendance.views.label')}
+        className="flex gap-1 rounded-[var(--radius-md)] bg-[var(--surface-muted)] p-1 md:hidden"
+      >
+        {(['day', 'month'] as const).map((v) => (
+          <button
+            key={v}
+            type="button"
+            aria-pressed={view === v}
+            onClick={() => switchTo({ view: v })}
+            className={`text-label-sm min-h-10 flex-1 rounded-[var(--radius-sm)] ${
+              view === v
+                ? 'bg-[var(--surface)] shadow-[var(--elevation-1)]'
+                : 'text-[var(--ink-muted)]'
+            }`}
+          >
+            {t(`attendance.views.${v}`)}
+          </button>
+        ))}
+      </div>
+
+      {view === 'day' && (
+        <div className="md:hidden">
+          <DayView
+            rows={rows}
+            date={dayDate}
+            dates={pastDates}
+            today={today}
+            monthName={monthName}
+            statusLabels={labels.status}
+            selected={selected}
+            editable={editable}
+            onToggle={toggle}
+            onDate={(d) => switchTo({ date: d })}
+          />
+        </div>
+      )}
+
+      <div
+        className={`${view === 'day' ? 'hidden md:block' : ''} overflow-x-auto rounded-[var(--radius-lg)] bg-[var(--surface)] py-2 shadow-[var(--elevation-1)]`}
+      >
         <div
           role="table"
           aria-label={labels.grid}
@@ -256,7 +322,7 @@ export function AttendanceGrid({
           >
             <span
               role="columnheader"
-              className="text-caption px-2 font-semibold text-[var(--ink-muted)]"
+              className={`text-caption self-stretch px-3 font-semibold text-[var(--ink-muted)] ${pinLeft} flex items-end`}
             >
               {labels.columns.staff}
             </span>
@@ -274,15 +340,17 @@ export function AttendanceGrid({
                 </span>
               </span>
             ))}
-            {[labels.columns.days, labels.columns.late, labels.columns.absent].map((h) => (
-              <span
-                key={h}
-                role="columnheader"
-                className="text-caption pr-1.5 text-right font-semibold text-[var(--ink-muted)]"
-              >
-                {h}
-              </span>
-            ))}
+            <span className={`${pinRight} self-stretch items-end pr-2`}>
+              {[labels.columns.days, labels.columns.late, labels.columns.absent].map((h) => (
+                <span
+                  key={h}
+                  role="columnheader"
+                  className="text-caption text-right font-semibold text-[var(--ink-muted)]"
+                >
+                  {h}
+                </span>
+              ))}
+            </span>
           </div>
 
           {rows.map((r) => (
@@ -294,7 +362,7 @@ export function AttendanceGrid({
             >
               <span
                 role="rowheader"
-                className="flex min-w-0 items-center gap-2 px-2 font-[family-name:var(--font-sans)]"
+                className={`flex min-w-0 items-center gap-2 self-stretch px-3 font-[family-name:var(--font-sans)] ${pinLeft}`}
               >
                 <Avatar name={r.name} size={28} />
                 <span className="flex min-w-0 flex-col">
@@ -345,19 +413,189 @@ export function AttendanceGrid({
                   </button>
                 );
               })}
-              <span role="cell" className="text-money-sm pr-1.5 text-right">
-                {r.payableDays}
-              </span>
-              <span role="cell" className="text-money-sm pr-1.5 text-right text-[var(--ink-muted)]">
-                {r.lateDays}
-              </span>
-              <span role="cell" className="text-money-sm pr-1.5 text-right text-[var(--ink-muted)]">
-                {r.absentDays}
+              <span className={`${pinRight} items-center self-stretch pr-2`}>
+                <span role="cell" className="text-money-sm text-right">
+                  {r.payableDays}
+                </span>
+                <span role="cell" className="text-money-sm text-right text-[var(--ink-muted)]">
+                  {r.lateDays}
+                </span>
+                <span role="cell" className="text-money-sm text-right text-[var(--ink-muted)]">
+                  {r.absentDays}
+                </span>
               </span>
             </div>
           ))}
         </div>
       </div>
+    </div>
+  );
+}
+
+/** One day, one row per person (phones): status, minutes late, and the month's totals so far. */
+function DayView({
+  rows,
+  date,
+  dates,
+  today,
+  monthName,
+  statusLabels,
+  selected,
+  editable,
+  onToggle,
+  onDate,
+}: {
+  rows: GridRow[];
+  date: string;
+  dates: string[];
+  today: string;
+  monthName: string;
+  statusLabels: Record<string, string>;
+  selected: Set<string>;
+  editable: (status: string, date: string) => boolean;
+  onToggle: (key: string) => void;
+  onDate: (date: string) => void;
+}) {
+  const weekdays = t('weekdays.short', { returnObjects: true }) as unknown as string[];
+  const at = dates.indexOf(date);
+  const prev = at > 0 ? dates[at - 1] : undefined;
+  const next = at >= 0 && at < dates.length - 1 ? dates[at + 1] : undefined;
+  const people = rows
+    .map((r) => ({ row: r, cell: r.cells.find((c) => c.date === date)! }))
+    .filter((x) => x.cell && x.cell.status !== 'not_employed' && x.cell.status !== 'future');
+  const count = (f: (x: (typeof people)[number]) => boolean) => people.filter(f).length;
+  const chips = [
+    ['present', count((x) => ['present', 'half_day'].includes(x.cell.status)), Check],
+    ['absent', count((x) => x.cell.status === 'absent'), X],
+    ['late', count((x) => x.cell.late), Clock],
+    ['unmarked', count((x) => x.cell.status === 'unmarked'), null],
+  ] as const;
+  const arrow =
+    'grid h-12 w-12 place-items-center rounded-[var(--radius-sm)] disabled:opacity-[var(--opacity-disabled)]';
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center justify-between gap-1 rounded-[var(--radius-md)] bg-[var(--surface)] p-1 shadow-[var(--elevation-1)]">
+        <button
+          type="button"
+          aria-label={t('attendance.prevDay')}
+          disabled={!prev}
+          onClick={() => prev && onDate(prev)}
+          className={arrow}
+        >
+          <ChevronLeft size={20} aria-hidden="true" />
+        </button>
+        <span className="flex flex-col items-center" aria-live="polite">
+          <span className="text-label-sm">
+            {weekdays[weekday(date)]} {formatDisplayDate(date)}
+          </span>
+          {date === today && (
+            <span className="text-caption text-[var(--ink-muted)]">{t('attendance.today')}</span>
+          )}
+        </span>
+        <button
+          type="button"
+          aria-label={t('attendance.nextDay')}
+          disabled={!next}
+          onClick={() => next && onDate(next)}
+          className={arrow}
+        >
+          <ChevronRight size={20} aria-hidden="true" />
+        </button>
+      </div>
+
+      <ul className="flex gap-2 overflow-x-auto">
+        {chips.map(([k, n, Icon]) => (
+          <li
+            key={k}
+            className="flex min-h-12 min-w-20 flex-1 items-center gap-1.5 rounded-[var(--radius-md)] px-2.5 py-1.5"
+            style={
+              k === 'unmarked'
+                ? {
+                    outline: '1.5px dashed var(--line-strong)',
+                    outlineOffset: '-2px',
+                    color: 'var(--status-unmarked)',
+                  }
+                : { background: `var(--status-${k}-soft)`, color: `var(--status-${k})` }
+            }
+          >
+            {Icon && <Icon size={18} strokeWidth={2.6} aria-hidden="true" />}
+            <span className="flex flex-col">
+              <span className="text-money-sm">{n}</span>
+              <span className="text-micro">{statusLabels[k]}</span>
+            </span>
+          </li>
+        ))}
+      </ul>
+
+      {people.length === 0 ? (
+        <p className="text-body text-[var(--ink-muted)]">{t('attendance.dayEmpty')}</p>
+      ) : (
+        <ul className="overflow-hidden rounded-[var(--radius-lg)] bg-[var(--surface)] shadow-[var(--elevation-1)]">
+          {people.map(({ row: r, cell: c }) => {
+            const key = `${r.staffId}|${date}`;
+            const isSel = selected.has(key);
+            const can = editable(c.status, date);
+            const Icon = ICON[c.status];
+            const token = TOKEN[c.status];
+            return (
+              <li key={r.staffId} className="border-b border-[var(--line)] last:border-0">
+                <button
+                  type="button"
+                  aria-pressed={can ? isSel : undefined}
+                  disabled={!can}
+                  onClick={() => onToggle(key)}
+                  className={`flex min-h-16 w-full items-center gap-3 px-3 py-2 text-left ${
+                    isSel
+                      ? 'bg-[var(--accent-soft)] shadow-[inset_3px_0_0_var(--accent)]'
+                      : 'bg-[var(--surface)]'
+                  }`}
+                >
+                  <Avatar name={r.name} size={36} />
+                  <span className="flex min-w-0 flex-1 flex-col">
+                    <span className="text-label-sm truncate">{r.name}</span>
+                    <span className="text-caption font-[family-name:var(--font-num)] text-[var(--ink-muted)] tabular-nums">
+                      {t('attendance.dayTotals', {
+                        days: r.payableDays,
+                        late: r.lateDays,
+                        absent: r.absentDays,
+                      })}
+                    </span>
+                  </span>
+                  <span className="flex flex-col items-end gap-0.5">
+                    <span
+                      className="text-caption inline-flex items-center gap-1 rounded-[var(--radius-pill)] px-2.5 py-1"
+                      style={
+                        token
+                          ? {
+                              background: `var(--status-${token}-soft)`,
+                              color: `var(--status-${token})`,
+                            }
+                          : {
+                              outline: '1.5px dashed var(--line-strong)',
+                              outlineOffset: '-2px',
+                              color: 'var(--status-unmarked)',
+                            }
+                      }
+                    >
+                      {Icon && <Icon size={14} strokeWidth={2.6} aria-hidden="true" />}
+                      {statusLabels[c.status] ?? c.status}
+                    </span>
+                    {c.late && (
+                      <span className="text-micro font-semibold text-[var(--status-late)]">
+                        {t('attendance.minutesLate', { minutes: c.lateMinutes ?? 0 })}
+                      </span>
+                    )}
+                  </span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+      <p className="text-caption text-[var(--ink-muted)]">
+        {t('attendance.dayFootnote', { month: monthName })}
+      </p>
     </div>
   );
 }
