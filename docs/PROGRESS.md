@@ -22,9 +22,9 @@ _Handover written 2026-10-24 before a session compaction. Read this section firs
   used by website and app: attendance month, write attendance, paid-leave check, session,
   dashboard, expenses + **expense saving**, reports, salary month + **salary run / finalize /
   pay**, **advances**, leave setup, roles, staff loaders).
-- **Git:** everything up to `4a82685` (Phase 7 screens) is pushed (2026-10-24); CI green (run
-  40098230155 applied the Phase 7 migrations and deployed `staff-auth`); Vercel deployed. Local
-  commits after that hold the live-check fixes and docs, not pushed. (Pushing changes to
+- **Git:** everything up to `9fd9e02` (Staffora slices A + B, staff-read-runs fix) is pushed
+  (2026-10-24); CI green (run 40104302836 applied `20261024000006_staff_read_runs.sql`); Vercel
+  deployed. (Pushing changes to
   `.github/workflows` needs the `workflow` scope; the owner added it to the GitHub CLI sign-in,
   which git now uses.) The owner pushes, or tells you to push in that moment. Migrations up to
   `20261024000002_advance_undo.sql` are live.
@@ -38,8 +38,8 @@ _Handover written 2026-10-24 before a session compaction. Read this section firs
   from the invite (PIN twice), PIN to open, Home with check-in by code / QR, checked-in, Me;
   slice B: Attendance calendar, Money (ledger, payslips, payslip page), ask for leave / advance
   with my requests. The owner has joined as Test Staff (a Staffora sign-in now exists for
-  Test Staff; the PIN is theirs). Migration `20261024000006_staff_read_runs.sql` is local only:
-  Payslips in Staffora stay empty until it's pushed.
+  Test Staff; the PIN is theirs). Migration `20261024000006_staff_read_runs.sql` is live; Staffora
+  Payslips checked.
   Checked up to the PIN step; the rest needs **the owner to finish joining as Test Staff** in the
   "staffora-mobile-web" preview (an open invite link for Test Staff exists, made 24/10 ~7:30 PM,
   48 h; or make a new one on Test Staff's page) — then check Home, Enter code (code from `/code`)
@@ -214,6 +214,7 @@ setup against the live project, and sign-in on the Vercel deployment (2026-10-23
 | `20261024000003_attendance_codes.sql` | 2026-10-24 | CI migrate job, run 40098230155 |
 | `20261024000004_requests.sql`         | 2026-10-24 | CI migrate job, run 40098230155 |
 | `20261024000005_staff_login.sql`      | 2026-10-24 | CI migrate job, run 40098230155 |
+| `20261024000006_staff_read_runs.sql`  | 2026-10-24 | CI migrate job, run 40104302836 |
 
 Migrations are applied by the CI **migrate** job on every push to `main`, so **everything in
 `supabase/migrations/` on `main` counts as applied** and must never change (CI enforces this).

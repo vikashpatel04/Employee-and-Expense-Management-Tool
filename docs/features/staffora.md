@@ -98,8 +98,9 @@ can't go before today, To moves the day count. Found and fixed:
 - **Payslips said "No payslips yet"**: staff can read their finalized payslips but not the salary
   run (its month), so the join dropped them (the website payslip page had the same gap for
   staff). Migration `20261024000006_staff_read_runs.sql` lets a person read a run they have a
-  finalized payslip in (test in `money.test.ts`); **needs the push** before Payslips and the
-  payslip page show.
+  finalized payslip in (test in `money.test.ts`). Pushed (CI run 40104302836); after it Payslips
+  showed October 2026 ₹1,065.00 Paid, and the payslip page 23/10–31/10/2026, 1.5 of 9 payable
+  days, net ₹1,065.00, paid ₹1,065.00, still to pay ₹0.00 — same as the website.
 
 Not tried yet: sending a request or checking in (both leave permanent rows), Lock / Remove.
 
