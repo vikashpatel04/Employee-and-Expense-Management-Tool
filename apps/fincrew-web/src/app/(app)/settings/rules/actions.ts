@@ -83,6 +83,12 @@ function readRules(form: FormData): ShopRules {
       wrongCodeWindowMinutes: whole('wrongWindow', `${r}.code.wrongWindow`),
       lockoutMinutes: whole('lockout', `${r}.code.lockout`),
     },
+    staffLogin: {
+      inviteHours: whole('inviteHours', `${r}.login.inviteHours`),
+      wrongPinsBeforeWait: whole('pinsBeforeWait', `${r}.login.pinsBeforeWait`),
+      pinWaitMinutes: whole('pinWait', `${r}.login.pinWait`),
+      wrongPinsBeforeLock: whole('pinsBeforeLock', `${r}.login.pinsBeforeLock`),
+    },
   };
   return smallExpenseLimit === undefined ? rules : { ...rules, smallExpenseLimit };
 }

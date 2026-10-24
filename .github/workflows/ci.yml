@@ -40,7 +40,8 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
           NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_placeholder
 
-  # Applies new migrations to the live Supabase project, only after every check passed.
+  # Applies new migrations (and deploys edge functions) to the live Supabase project, only after
+  # every check passed.
   migrate:
     needs: check
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -70,3 +71,7 @@ jobs:
         run: supabase db push --dry-run --password "$SUPABASE_DB_PASSWORD"
       - name: Apply migrations
         run: supabase db push --password "$SUPABASE_DB_PASSWORD"
+      # Edge functions (supabase/functions), after the migrations they call. Bundled on
+      # Supabase's side (--use-api); settings come from supabase/config.toml.
+      - name: Deploy edge functions
+        run: supabase functions deploy staff-auth --project-ref "$SUPABASE_PROJECT_ID" --use-api --no-verify-jwt

@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+### Added — 2026-10-24 (Phase 7 data)
+
+- Attendance codes (daily or manual change, regenerate) and check-in / check-out by code with
+  cooldown, minimum gap, wrong-code wait and phone binding; every attempt recorded.
+- Leave and advance requests (ask, cancel, approve / reject).
+- Staff invites and 4-digit PIN sign-in through the `staff-auth` edge function, with wrong-PIN
+  wait and lock; owner can see logins, unlock and reset the phone. Settings → Staff sign-in.
+- Migrations `20261024000003_attendance_codes.sql`, `20261024000004_requests.sql`,
+  `20261024000005_staff_login.sql`.
+
 ### Added — 2026-10-24 (Phase 5 slice C)
 
 - Android app Money tab: expenses (month view, add / edit / delete with bill photo), salary

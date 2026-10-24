@@ -2,6 +2,34 @@
 
 Choices made during the build that PLAN.md doesn't spell out. Newest first.
 
+## 2026-10-24 — Phase 7 data (codes, requests, sign-in)
+
+- **Attendance codes are stored as digits, not hashed** (PLAN §4.5 said hashed). Hashing a
+  6-digit code protects nothing (all million can be tried in a moment), and the owner must be
+  able to see today's code at any time. Instead the table has no API access at all; only
+  `attendance_code()` (needs `attendance.code`) shows it and `check_in()` compares it.
+- **Check-in runs in the database** (`check_in`, security definer) rather than an edge function:
+  one transaction with row locks, testable on PGlite like everything else, deployed with the
+  migrations. The rules mirror core `evaluateCheck`, and a test runs the same attempts through
+  both. A check-in on a day marked something else (absent, leave) makes it present: the person
+  is at the shop with today's code.
+- **The first accepted check-in binds the phone** when none is bound yet (normally the invite
+  binds it), so "reset phone" followed by the next check-in or sign-in moves the binding.
+- **Request approvals happen in the apps' shared code**, not a database function: approving
+  leave reuses `writeAttendance` (paid leave within the balance) and approving an advance reuses
+  `recordAdvance` (limit check), then the request records the result. Future leave days are
+  written ahead; the screens show them once the day comes.
+- **PIN sign-in**: the edge function only turns an accepted invite / PIN into a session; all
+  rules live in SQL (`invite_accept`, `pin_login`), mirrored by core `evaluatePinAttempt`. Each
+  staff sign-in is a normal Supabase user with a server-only email and **no stored password**:
+  a fresh random password is set right before each sign-in. A new invite for someone who
+  already signed in resets their PIN on the same sign-in (that's how a forgotten PIN is reset).
+- Wrong phone, or a person who has left, is refused before the PIN is checked, and doesn't count
+  as a wrong PIN (someone else's phone can't lock a person out).
+- The PIN wait / lock numbers and invite lifetime are shop settings (`staffLogin`, defaults
+  5 / 15 min / 10 / 48 h from PLAN §10), like every other rule. The PIN is always 4 digits.
+- Invites can be made for any non-owner person (staff or helper); helpers have no phone binding.
+
 ## 2026-10-24 — Android Money tab
 
 - **Saving moved to `@fincrew/data`** before building the screens: `saveExpense` /

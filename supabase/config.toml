@@ -386,6 +386,12 @@ deno_version = 2
 # [edge_runtime.secrets]
 # secret_key = "env(SECRET_VALUE)"
 
+# Staff sign-in with an invite link and a PIN (supabase/functions/staff-auth). Callers are not
+# signed in yet, so the gateway must not require a user JWT; the function checks everything.
+[functions.staff-auth]
+enabled = true
+verify_jwt = false
+
 [analytics]
 enabled = true
 port = 54327

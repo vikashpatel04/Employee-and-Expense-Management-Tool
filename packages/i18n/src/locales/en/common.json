@@ -859,7 +859,14 @@
         "smallLimitHint": "Expenses below this start as Not tracked. Leave empty for none."
       },
       "save": "Save rules",
-      "done": "Rules saved. The next salary run uses them; finalized payslips never change."
+      "done": "Rules saved. The next salary run uses them; finalized payslips never change.",
+      "login": {
+        "title": "Staff sign-in",
+        "inviteHours": "Invite link works for (hours)",
+        "pinsBeforeWait": "Wrong PINs before a wait",
+        "pinWait": "Wait (minutes)",
+        "pinsBeforeLock": "Wrong PINs before the login locks"
+      }
     },
     "roles": {
       "subtitle": "A role is a set of permissions for people who help run the shop. Staff always see their own records in Staffora without one.",

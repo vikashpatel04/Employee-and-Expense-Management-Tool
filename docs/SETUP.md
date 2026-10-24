@@ -45,6 +45,14 @@ How migrations flow: add a new file in `supabase/migrations/` → push → CI te
 CI fails if one is edited, deleted, renamed, or if a new one has an older timestamp
 (`scripts/check-migrations.sh`).
 
+### Edge functions
+
+The CI **migrate** job also deploys the edge functions after the migrations
+(`supabase functions deploy staff-auth --use-api --no-verify-jwt`, bundled on Supabase's side, no
+Docker). They read `SUPABASE_URL` and the service role key from their own environment on
+Supabase — nothing to set by hand. To deploy one by hand: `pnpm exec supabase functions deploy
+staff-auth --project-ref <ref> --use-api --no-verify-jwt`.
+
 ## 3. Owner login and shop
 
 1. **Authentication → Users → Add user → Create new user**: your email + a strong password,

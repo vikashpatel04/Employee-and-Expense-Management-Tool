@@ -26,6 +26,11 @@ _Handover written 2026-10-24 before a session compaction. Read this section firs
   deployed. The owner pushes, or tells you to push in that moment. Migrations up to
   `20261024000002_advance_undo.sql` are live.
 
+- **Phase 7 started** (owner's go, 2026-10-24): database for attendance codes + check-in,
+  requests, invites + PIN sign-in, and the `staff-auth` edge function are written and tested
+  (`docs/features/staff-self-service.md`), **not yet live** (next push applies the migrations
+  and deploys the function; then `pnpm db:types` — the types were added by hand meanwhile).
+
 **Next work, in order** (owner usually says "continue"; pick the top unfinished one)
 
 1. **Android app leftovers** (small): payslip share on WhatsApp (design "Salary run"), undo a
@@ -126,7 +131,7 @@ ref `ufmlqvvfznemghmnvynz` (never touch `cheque-tracker-dev`).
 | 4   | FinCrew web core             | **Done** (2026-10-24): data layer live; screens slices 1–10 (dashboard, shell, staff + extras, attendance grid + CSV, salary run, payslip print, advances, settings, roles) |
 | 5   | FinCrew Android              | **In progress**: shell, sign-in, Today, Staff, Money (checked live); Phase 7 screens next                                                                                   |
 | 6   | Expenses                     | **Done** (2026-10-24): website and Android                                                                                                                                  |
-| 7   | Staffora                     | Not started                                                                                                                                                                 |
+| 7   | Staffora                     | **In progress**: data (codes, requests, invites + PIN, edge function) done; screens next                                                                                    |
 | 8   | Polish                       | Not started                                                                                                                                                                 |
 
 ## Phase 1 — Foundation
@@ -203,10 +208,17 @@ Open items (low priority, fold into the next migration that touches these tables
 - Leaked-password protection in Supabase Auth: owner's call (may need a paid plan).
 
 Tables still to add (with the phase that uses them, each with RLS tests): `staff_documents`
-(storage), `requests` (leave/advance requests), `attendance_codes`,
-`attendance_scans`, `invites`, `pin_credentials`, `push_tokens` (Phase 7).
+(storage), `push_tokens` (Phase 7/8).
 
 ## Session log
+
+- **2026-10-24** — **Phase 7 data.** Migrations `20261024000003_attendance_codes.sql` (codes,
+  check-in in SQL mirroring core `evaluateCheck`, scans log, attendance stamp keeps self
+  check-ins), `20261024000004_requests.sql`, `20261024000005_staff_login.sql` (invites, bcrypt
+  PINs, lock/wait mirroring new core `evaluatePinAttempt`, owner unlock / reset phone); edge
+  function `staff-auth` (+ CI deploy step, `config.toml` verify_jwt off); core `staffLogin`
+  settings + website Settings section. Tests: core 234, db 160 (incl. parity tests SQL ↔ core).
+  All three migrations dry-run on live in one rolled-back transaction. Not pushed.
 
 - **2026-10-24** — **Phase 5 slice C: Android Money tab.** Moved expense saving, salary
   run/finalize/pay and advances into `@fincrew/data` (website actions now wrap them; salary and

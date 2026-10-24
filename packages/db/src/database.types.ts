@@ -217,6 +217,96 @@ export type Database = {
           },
         ]
       }
+      attendance_codes: {
+        Row: {
+          code: string
+          created_at: string
+          created_by: string | null
+          id: string
+          shop_id: string
+          valid_from: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          shop_id: string
+          valid_from?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          shop_id?: string
+          valid_from?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_codes_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_codes_shop_id_created_by_fkey"
+            columns: ["shop_id", "created_by"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["shop_id", "id"]
+          },
+        ]
+      }
+      attendance_scans: {
+        Row: {
+          at: string
+          device_id: string | null
+          id: number
+          kind: string | null
+          method: string
+          result: string
+          shop_id: string
+          staff_id: string
+        }
+        Insert: {
+          at?: string
+          device_id?: string | null
+          id?: number
+          kind?: string | null
+          method: string
+          result: string
+          shop_id: string
+          staff_id: string
+        }
+        Update: {
+          at?: string
+          device_id?: string | null
+          id?: number
+          kind?: string | null
+          method?: string
+          result?: string
+          shop_id?: string
+          staff_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_scans_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_scans_shop_id_staff_id_fkey"
+            columns: ["shop_id", "staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["shop_id", "person_id"]
+          },
+        ]
+      }
       audit_log: {
         Row: {
           action: string
@@ -500,6 +590,64 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "shops"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      invites: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          expires_at: string
+          id: string
+          person_id: string
+          revoked_at: string | null
+          shop_id: string
+          token_hash: string
+          used_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          expires_at: string
+          id?: string
+          person_id: string
+          revoked_at?: string | null
+          shop_id: string
+          token_hash: string
+          used_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string
+          id?: string
+          person_id?: string
+          revoked_at?: string | null
+          shop_id?: string
+          token_hash?: string
+          used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invites_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invites_shop_id_person_id_fkey"
+            columns: ["shop_id", "person_id"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["shop_id", "id"]
+          },
+          {
+            foreignKeyName: "invites_shop_id_created_by_fkey"
+            columns: ["shop_id", "created_by"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["shop_id", "id"]
           },
         ]
       }
@@ -1023,6 +1171,134 @@ export type Database = {
           },
         ]
       }
+      pin_credentials: {
+        Row: {
+          failed_attempts: number
+          locked: boolean
+          person_id: string
+          pin_hash: string
+          shop_id: string
+          updated_at: string
+          wait_until: string | null
+        }
+        Insert: {
+          failed_attempts?: number
+          locked?: boolean
+          person_id: string
+          pin_hash: string
+          shop_id: string
+          updated_at?: string
+          wait_until?: string | null
+        }
+        Update: {
+          failed_attempts?: number
+          locked?: boolean
+          person_id?: string
+          pin_hash?: string
+          shop_id?: string
+          updated_at?: string
+          wait_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pin_credentials_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pin_credentials_shop_id_person_id_fkey"
+            columns: ["shop_id", "person_id"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["shop_id", "id"]
+          },
+        ]
+      }
+      requests: {
+        Row: {
+          advance_id: string | null
+          amount_paise: number | null
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          decision_note: string | null
+          from_date: string | null
+          id: string
+          kind: string
+          leave_status: string | null
+          note: string | null
+          shop_id: string
+          staff_id: string
+          status: string
+          to_date: string | null
+        }
+        Insert: {
+          advance_id?: string | null
+          amount_paise?: number | null
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
+          from_date?: string | null
+          id?: string
+          kind: string
+          leave_status?: string | null
+          note?: string | null
+          shop_id: string
+          staff_id: string
+          status?: string
+          to_date?: string | null
+        }
+        Update: {
+          advance_id?: string | null
+          amount_paise?: number | null
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
+          from_date?: string | null
+          id?: string
+          kind?: string
+          leave_status?: string | null
+          note?: string | null
+          shop_id?: string
+          staff_id?: string
+          status?: string
+          to_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "requests_advance_id_fkey"
+            columns: ["advance_id"]
+            isOneToOne: false
+            referencedRelation: "advances"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "requests_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "requests_shop_id_decided_by_fkey"
+            columns: ["shop_id", "decided_by"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["shop_id", "id"]
+          },
+          {
+            foreignKeyName: "requests_shop_id_staff_id_fkey"
+            columns: ["shop_id", "staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["shop_id", "person_id"]
+          },
+        ]
+      }
       role_permissions: {
         Row: {
           permission_key: string
@@ -1347,14 +1623,44 @@ export type Database = {
         }
         Returns: string
       }
+      attendance_code: { Args: { p_shop: string }; Returns: Json }
+      check_in: {
+        Args: { p_code: string; p_device: string; p_method: string; p_shop: string }
+        Returns: Json
+      }
+      create_invite: { Args: { p_person: string }; Returns: Json }
       create_shop: {
         Args: { owner_name: string; shop_name: string }
         Returns: string
       }
       finalize_payslip: { Args: { p_payslip: string }; Returns: undefined }
+      invite_accept: {
+        Args: { p_auth_user: string; p_device: string; p_pin: string; p_token: string }
+        Returns: Json
+      }
+      invite_lookup: { Args: { p_token: string }; Returns: Json }
       my_permissions: { Args: { p_shop: string }; Returns: string[] }
+      pin_login: {
+        Args: { p_device: string; p_person: string; p_pin: string }
+        Returns: Json
+      }
       ping: { Args: never; Returns: string }
+      regenerate_attendance_code: { Args: { p_shop: string }; Returns: Json }
+      reset_staff_phone: { Args: { p_person: string }; Returns: undefined }
+      revoke_invite: { Args: { p_person: string }; Returns: undefined }
       shop_exists: { Args: never; Returns: boolean }
+      staff_logins: {
+        Args: { p_shop: string }
+        Returns: {
+          has_pin: boolean
+          invite_expires_at: string
+          locked: boolean
+          person_id: string
+          phone_bound: boolean
+          wait_until: string
+        }[]
+      }
+      unlock_login: { Args: { p_person: string }; Returns: undefined }
     }
     Enums: {
       [_ in never]: never

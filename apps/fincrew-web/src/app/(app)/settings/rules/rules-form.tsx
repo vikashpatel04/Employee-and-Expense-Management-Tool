@@ -107,7 +107,7 @@ export function RulesForm({ rules }: { rules: ShopRules }) {
   const [dayRate, setDayRate] = useState(rules.pay.dayRateBasis.mode);
   const [chargeMode, setChargeMode] = useState(rules.late.charge.mode);
   const [rotation, setRotation] = useState(rules.attendanceCode.rotation.mode);
-  const { pay, late, attendanceCode: code } = rules;
+  const { pay, late, attendanceCode: code, staffLogin: login } = rules;
 
   return (
     <form
@@ -272,6 +272,31 @@ export function RulesForm({ rules }: { rules: ShopRules }) {
               name="lockout"
               label={t(`${r}.code.lockout`)}
               value={code.lockoutMinutes}
+            />
+          </div>
+        </Section>
+
+        <Section title={t(`${r}.login.title`)}>
+          <NumberField
+            name="inviteHours"
+            label={t(`${r}.login.inviteHours`)}
+            value={login.inviteHours}
+          />
+          <div className="grid gap-3 sm:grid-cols-3">
+            <NumberField
+              name="pinsBeforeWait"
+              label={t(`${r}.login.pinsBeforeWait`)}
+              value={login.wrongPinsBeforeWait}
+            />
+            <NumberField
+              name="pinWait"
+              label={t(`${r}.login.pinWait`)}
+              value={login.pinWaitMinutes}
+            />
+            <NumberField
+              name="pinsBeforeLock"
+              label={t(`${r}.login.pinsBeforeLock`)}
+              value={login.wrongPinsBeforeLock}
             />
           </div>
         </Section>

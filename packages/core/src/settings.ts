@@ -5,6 +5,7 @@
  */
 import { DEFAULT_CODE_SETTINGS, type CodeSettings } from './attendance-code';
 import { DEFAULT_LATE_POLICY, type LatePolicy } from './late';
+import { DEFAULT_STAFF_LOGIN, type StaffLoginSettings } from './staff-login';
 import type { Paise } from './money';
 
 export interface PayRules {
@@ -46,6 +47,7 @@ export interface ShopRules {
   pay: PayRules;
   late: LatePolicy;
   attendanceCode: CodeSettings;
+  staffLogin: StaffLoginSettings;
   /** Expenses below this default to "Not tracked"; none = never. */
   smallExpenseLimit?: Paise;
 }
@@ -54,6 +56,7 @@ export const DEFAULT_SHOP_RULES: ShopRules = {
   pay: DEFAULT_PAY_RULES,
   late: DEFAULT_LATE_POLICY,
   attendanceCode: DEFAULT_CODE_SETTINGS,
+  staffLogin: DEFAULT_STAFF_LOGIN,
 };
 
 /** Fill a stored (possibly partial or older) rule set with defaults, group by group. */
@@ -62,6 +65,7 @@ export function resolveShopRules(
     pay?: Partial<PayRules>;
     late?: Partial<LatePolicy>;
     attendanceCode?: Partial<CodeSettings>;
+    staffLogin?: Partial<StaffLoginSettings>;
     smallExpenseLimit?: Paise;
   } = {},
 ): ShopRules {
@@ -69,6 +73,7 @@ export function resolveShopRules(
     pay: { ...DEFAULT_PAY_RULES, ...stored.pay },
     late: { ...DEFAULT_LATE_POLICY, ...stored.late },
     attendanceCode: { ...DEFAULT_CODE_SETTINGS, ...stored.attendanceCode },
+    staffLogin: { ...DEFAULT_STAFF_LOGIN, ...stored.staffLogin },
   };
   return stored.smallExpenseLimit === undefined
     ? rules
@@ -111,6 +116,14 @@ export function validateShopRules(r: ShopRules): string[] {
   }
   if (!wholeAtLeast(c.maxWrongCodes, 1))
     problems.push('attendanceCode.maxWrongCodes must be 1 or more');
+  const l = r.staffLogin;
+  for (const k of ['inviteHours', 'wrongPinsBeforeWait', 'wrongPinsBeforeLock'] as const) {
+    if (!wholeAtLeast(l[k], 1)) problems.push(`staffLogin.${k} must be 1 or more`);
+  }
+  if (!wholeAtLeast(l.pinWaitMinutes, 0))
+    problems.push('staffLogin.pinWaitMinutes must be 0 or more');
+  if (l.wrongPinsBeforeLock < l.wrongPinsBeforeWait)
+    problems.push('staffLogin.wrongPinsBeforeLock must be at least wrongPinsBeforeWait');
   if (r.smallExpenseLimit !== undefined && !wholeAtLeast(r.smallExpenseLimit, 0)) {
     problems.push('smallExpenseLimit must be 0 or more');
   }

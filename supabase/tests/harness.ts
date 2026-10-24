@@ -6,6 +6,7 @@
  * exactly how PostgREST runs queries on Supabase.
  */
 import { PGlite, type Transaction } from '@electric-sql/pglite';
+import { pgcrypto } from '@electric-sql/pglite/contrib/pgcrypto';
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
@@ -20,6 +21,10 @@ const SUPABASE_STUB = `
   alter default privileges in schema public grant all on tables to anon, authenticated, service_role;
   alter default privileges in schema public grant all on sequences to anon, authenticated, service_role;
   alter default privileges in schema public grant all on functions to anon, authenticated, service_role;
+
+  -- Supabase keeps extensions (pgcrypto, …) in their own schema.
+  create schema extensions;
+  grant usage on schema extensions to anon, authenticated, service_role;
 
   create schema auth;
   grant usage on schema auth to anon, authenticated, service_role;
@@ -60,7 +65,7 @@ const SUPABASE_STUB = `
 export type Db = PGlite;
 
 export async function freshDb(): Promise<Db> {
-  const db = await PGlite.create();
+  const db = await PGlite.create({ extensions: { pgcrypto } });
   await db.exec(SUPABASE_STUB);
   const files = readdirSync(MIGRATIONS_DIR)
     .filter((f) => f.endsWith('.sql'))

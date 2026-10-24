@@ -22,11 +22,22 @@ describe('exposed (public schema) functions', () => {
     );
     expect(r.rows.map((x) => x.name)).toEqual([
       'add_staff',
+      'attendance_code',
+      'check_in',
+      'create_invite',
       'create_shop',
       'finalize_payslip',
+      'invite_accept',
+      'invite_lookup',
       'my_permissions',
+      'pin_login',
       'ping',
+      'regenerate_attendance_code',
+      'reset_staff_phone',
+      'revoke_invite',
       'shop_exists',
+      'staff_logins',
+      'unlock_login',
     ]);
   });
 
