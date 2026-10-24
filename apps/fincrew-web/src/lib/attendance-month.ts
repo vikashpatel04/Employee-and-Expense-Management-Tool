@@ -36,6 +36,10 @@ export type GridCell = {
   late: boolean;
   /** Marked by someone (vs filled from the calendar). */
   marked: boolean;
+  /** Check-in, minutes after IST midnight, when recorded. */
+  checkIn?: number;
+  /** Minutes late (as counted by the late policy), when late. */
+  lateMinutes?: number;
 };
 
 export type GridRow = {
@@ -140,7 +144,14 @@ export async function loadAttendanceMonth(
         shift && rec && day.status === 'present' ? dayLateness(rec, shift, policy) : null;
       const late = !!lateness && (lateness.lateMinutes > 0 || lateness.earlyMinutes > 0);
       if (late) lateDays++;
-      return { date, status: day.status, late, marked: day.source === 'record' };
+      return {
+        date,
+        status: day.status,
+        late,
+        marked: day.source === 'record',
+        checkIn: rec?.checkIn,
+        lateMinutes: late ? lateness!.lateMinutes : undefined,
+      };
     });
 
     const summary = summarizeDays(evaluated);

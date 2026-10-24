@@ -2,6 +2,18 @@
 
 Choices made during the build that PLAN.md doesn't spell out. Newest first.
 
+## 2026-10-24 — Dashboard
+
+- Designed in Claude Design first (owner's request), on the FinCrew key screens canvas next to
+  the other web artboards, then built to match.
+- Each part appears only with its permission: today's attendance needs `staff.view` (Mark today
+  present also `attendance.mark`), Due to staff and the salary card `salary.view`, Advances
+  `salary.view` or `advances.give`; holidays show to everyone, leaving dates need `staff.view`.
+- "Present" on the dashboard counts half days too; lateness comes from the same core rules as
+  the grid (`loadAttendanceMonth` now also returns each cell's check-in and minutes late).
+- The design's "Attendance code" button is left out on the web until the code exists
+  (Phase 7 edge function); the Android Today screen gets it in Phase 5.
+
 ## 2026-10-24 — Payslip print, CSV, clearing marks
 
 - **Payslip PDF = the browser's "Save as PDF"** from a print-ready page (`/payslips/[id]`), not

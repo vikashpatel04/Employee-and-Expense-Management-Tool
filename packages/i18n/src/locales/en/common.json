@@ -21,9 +21,92 @@
     "failed": "Couldn't set up the shop: {{reason}}"
   },
   "home": {
-    "welcome": "Welcome, {{name}}",
-    "owner": "Owner",
-    "comingSoon": "Attendance, salary and expenses screens arrive next. Start by adding your staff."
+    "greeting": {
+      "morning": "Good morning, {{name}}",
+      "afternoon": "Good afternoon, {{name}}",
+      "evening": "Good evening, {{name}}"
+    },
+    "subtitle": "{{shop}} · {{date}} · {{count}} staff",
+    "subtitleShort": "{{shop}} · {{date}}",
+    "markToday": "Mark today present",
+    "marking": "Saving…",
+    "marked_one": "Marked {{count}} person present.",
+    "marked_other": "Marked {{count}} people present.",
+    "nothing": "Your role here has no sections to show yet. The owner can add permissions in Settings → Roles.",
+    "today": {
+      "title": "Today's attendance",
+      "open": "Open attendance",
+      "unmarked": "Not marked yet",
+      "late": "Came late",
+      "allMarked": "Everyone is marked for today.",
+      "nobody": "Nobody works here today.",
+      "lateMeta": "In at {{time}} · {{minutes}} min late",
+      "lateNoTime": "{{minutes}} min late",
+      "offs": "{{days}} off",
+      "chips": {
+        "present": "Present",
+        "absent": "Absent",
+        "late": "Late",
+        "unmarked": "Not marked"
+      }
+    },
+    "money": {
+      "due": "Due to staff",
+      "dueMeta_one": "{{count}} person · see Staff",
+      "dueMeta_other": "{{count}} people · see Staff",
+      "advances": "Advances to recover",
+      "advMeta_one": "{{count}} person · cut {{cut}} a month",
+      "advMeta_other": "{{count}} people · cut {{cut}} a month",
+      "advMetaNoCut_one": "{{count}} person",
+      "advMetaNoCut_other": "{{count}} people",
+      "none": "Nothing"
+    },
+    "salary": {
+      "title": "Salary · {{month}}",
+      "steps": "Salary steps",
+      "step": {
+        "worked": "Worked out",
+        "finalized": "Finalized",
+        "paid": "Paid"
+      },
+      "state": {
+        "not_run": "Not worked out",
+        "draft": "Draft",
+        "finalized": "Finalized",
+        "paid": "Paid"
+      },
+      "net": "Net pay",
+      "paid": "Paid",
+      "left": "Still to pay",
+      "note": {
+        "not_run": "Work out {{month}} once attendance is complete.",
+        "draft": "Review each person, then finalize.",
+        "draftUnmarked_one": "Review each person, then finalize. {{count}} person has days not marked.",
+        "draftUnmarked_other": "Review each person, then finalize. {{count}} people have days not marked.",
+        "finalized": "{{paid}} of {{count}} paid. Pay the rest from the salary screen.",
+        "paid": "Everyone is paid for {{month}}."
+      },
+      "button": {
+        "not_run": "Work out salary",
+        "draft": "Review salary",
+        "finalized": "Pay salary",
+        "paid": "Open salary"
+      }
+    },
+    "soon": {
+      "title": "Coming up",
+      "none": "Nothing in the next 30 days.",
+      "holidayPaid": "{{name}} · paid holiday",
+      "holidayUnpaid": "{{name}} · unpaid holiday",
+      "leaving": "{{name}} leaves",
+      "lastDay": "Last day {{date}}",
+      "salary": "{{month}} salary",
+      "salaryFrom": "Work it out from {{date}}",
+      "today": "today",
+      "tomorrow": "tomorrow",
+      "in_one": "in {{count}} day",
+      "in_other": "in {{count}} days"
+    }
   },
   "shops": {
     "switchLabel": "Shop",

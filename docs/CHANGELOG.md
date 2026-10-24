@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added — 2026-10-24 (Phase 4.3 slice 10)
+
+- Website dashboard: today's attendance, money due, advances, this month's salary, coming up.
+
 ### Added — 2026-10-24 (Phase 4.3 slice 9)
 
 - Printable payslip (print or save as PDF), attendance CSV download, clear attendance marks.

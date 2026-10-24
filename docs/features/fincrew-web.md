@@ -3,6 +3,26 @@
 Phase 4.3, built from the reviewed key screens (`docs/DESIGN.md`) with `@fincrew/ui/tokens.css`,
 the design's text styles and Lucide icons (24px, 2px stroke, the design system's fallback set).
 
+## Dashboard — `(app)/page.tsx`
+
+Design: "Web · dashboard" (FinCrew key screens canvas). Data: `src/lib/dashboard.ts`
+(`loadToday`, `loadMoney`, `loadSalary`, `loadSoon`).
+
+- Greeting by IST time of day, shop · weekday date · staff working today; **Mark today
+  present** (`mark-today-button.tsx`, same `setAttendance` as the grid) for everyone not marked.
+- **Today's attendance**: chips (present incl. half days, absent, late, not marked), "Not marked
+  yet" and "Came late" lists (check-in time, minutes late) linking to staff detail; "Everyone is
+  marked for today" when done.
+- **Due to staff** (positive ledger balances) and **Advances to recover** (outstanding, people,
+  monthly cut) tiles linking to Staff and Advances.
+- **Salary · month**: state (Not worked out / Draft / Finalized / Paid), three steps, net / paid
+  / still to pay, a note (people with unmarked days, how many paid) and the next action.
+- **Coming up** (30 days): holidays (paid or not, "in N days"), last working days, and this
+  month's salary (from the month's last day) until it's finalized.
+
+Checked in the browser on 2026-10-24 against the live shop (1 staff, ₹355 draft), at 1280 and
+375 px; Mark today present then cleared again from the grid.
+
 ## App shell — `apps/fincrew-web/src/app/(app)/layout.tsx`
 
 - Sidebar (design: "Web · attendance grid"): FinCrew, the **shop switcher** card (current shop,
@@ -161,5 +181,5 @@ only the 23/10 half day).
 
 ## Not built yet
 
-Dashboard (placeholder); staff detail attendance calendar, Staffora invite, correcting an
+Staff detail attendance calendar, Staffora invite, correcting an
 opening balance; adding non-staff people (helpers) for roles; requests.
