@@ -67,7 +67,7 @@ limit 1), true); set local role authenticated; … rollback;`
   Stale `.next/types` after moving routes breaks `tsc`: delete `.next`.
 - HTML `pattern` is compiled with the **`v` flag**: no unescaped `/` in `[...]`; write patterns
   with `String.raw` (see `dateFieldProps` in `apps/fincrew-web/src/app/components.tsx`).
-- Postgres **jsonb reorders keys**: compare stored JSON with `sameJson` (`src/lib/salary-month.ts`).
+- Postgres **jsonb reorders keys**: compare stored JSON with `sameJson` (`packages/data/src/salary-month.ts`).
 - Anything exported from a `'use server'` file is a callable endpoint: keep helpers in `src/lib`.
 - Composite FKs mean cross-shop rows fail with `foreign key`; unique `(staff_id, effective_from)`
   on dated tables.
@@ -170,6 +170,11 @@ Tables still to add (with the phase that uses them, each with RLS tests): `staff
 `attendance_scans`, `invites`, `pin_credentials`, `push_tokens` (Phase 7).
 
 ## Session log
+
+- **2026-10-24** — Owner: "Push it and continue". Pushed `5006ace` (CI green incl. migrate; the
+  advance-undo fix is live). **Phase 5 started**: moved the website's data loaders into a new
+  shared package `packages/data` (`@fincrew/data`) so the Android app reuses them; website
+  imports updated; typecheck, tests and build pass.
 
 - **2026-10-24** — **Slice 13: website extras** (owner: "complete website extras so the app has
   everything it needs to refer"). Staff detail **Attendance** tab (design "Staff detail ·

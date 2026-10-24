@@ -15,9 +15,9 @@ import {
   daysBetween,
   type LeaveTemplateVersion,
 } from '@fincrew/core';
+import { groupBy, toAssignment, toTemplateVersion } from '@fincrew/data';
 import { todayIST } from '@/lib/format';
 import { t } from '@/lib/i18n';
-import { groupBy, toAssignment, toTemplateVersion } from '@/lib/mappers';
 import { requireMe } from '@/lib/session';
 import { createClient } from '@/lib/supabase/server';
 

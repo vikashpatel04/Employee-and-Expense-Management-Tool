@@ -14,7 +14,7 @@ import {
   type LeaveTemplateVersion,
   type SalaryResult,
 } from '@fincrew/core';
-import type { createClient } from './supabase/server';
+import type { Supabase } from './client';
 import {
   groupBy,
   toAssignment,
@@ -23,8 +23,6 @@ import {
   toShopRules,
   toTemplateVersion,
 } from './mappers';
-
-type Supabase = Awaited<ReturnType<typeof createClient>>;
 
 export type ComputedPayslip = {
   staffId: string;
@@ -178,7 +176,7 @@ export async function computeMonth(
 
 /** Amount paid against each payslip: payments minus their reversals. */
 export async function paidByPayslip(
-  supabase: Awaited<ReturnType<typeof createClient>>,
+  supabase: Supabase,
   payslipIds: string[],
 ): Promise<Map<string, number>> {
   const out = new Map<string, number>();

@@ -17,6 +17,8 @@ Staff, salary and expense management for one shop. Read these before doing anyth
   in the same commit. A new session must be able to continue from the docs alone.
 - Money is integer paise everywhere. Business dates are Asia/Kolkata `YYYY-MM-DD`.
 - `packages/core` is pure TypeScript (no Supabase/React). Tests first.
+- `packages/data` is the shared data layer (Supabase rows → core → screen data) for the website
+  and the Android app; app-only UI helpers stay in each app.
 - Schema changes only via new files in `supabase/migrations/`. Pushing to `main` applies them to
   the live database (CI `migrate` job), so **never edit, rename or delete a migration that is on
   `main`**; CI blocks it. New files need a later timestamp than the newest one.

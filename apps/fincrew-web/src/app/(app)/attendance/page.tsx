@@ -13,7 +13,7 @@ import {
   X,
 } from 'lucide-react';
 import { monthOf } from '@fincrew/core';
-import { loadAttendanceMonth } from '@/lib/attendance-month';
+import { loadAttendanceMonth } from '@fincrew/data';
 import { formatDate, todayIST } from '@/lib/format';
 import { t } from '@/lib/i18n';
 import { requireMe } from '@/lib/session';

@@ -23,14 +23,14 @@ import {
   weekday,
 } from '@fincrew/core';
 import {
+  loadExpenseMonth,
   loadMoney,
   loadSalary,
   loadSoon,
   loadToday,
   type SalaryState,
   type SoonItem,
-} from '@/lib/dashboard';
-import { loadExpenseMonth } from '@/lib/expenses';
+} from '@fincrew/data';
 import { formatDate, todayIST } from '@/lib/format';
 import { t } from '@/lib/i18n';
 import { requireMe } from '@/lib/session';

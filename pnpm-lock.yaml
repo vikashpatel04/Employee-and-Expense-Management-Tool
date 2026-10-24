@@ -26,6 +26,9 @@ importers:
       '@fincrew/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@fincrew/data':
+        specifier: workspace:*
+        version: link:../../packages/data
       '@fincrew/db':
         specifier: workspace:*
         version: link:../../packages/db
@@ -81,6 +84,22 @@ importers:
       vitest:
         specifier: ^5.0.5
         version: 5.0.5(@types/node@24.19.2)(vite@8.3.5(@types/node@24.19.2)(jiti@2.7.0))
+
+  packages/data:
+    dependencies:
+      '@fincrew/core':
+        specifier: workspace:*
+        version: link:../core
+      '@fincrew/db':
+        specifier: workspace:*
+        version: link:../db
+      '@supabase/supabase-js':
+        specifier: ^2.118.0
+        version: 2.118.0
+    devDependencies:
+      typescript:
+        specifier: ~5.9.3
+        version: 5.9.3
 
   packages/db:
     dependencies:

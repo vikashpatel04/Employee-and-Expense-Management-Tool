@@ -10,8 +10,8 @@ import {
   type PayRules,
 } from '@fincrew/core';
 import type { Json } from '@fincrew/db';
+import { toShopRules } from '@fincrew/data';
 import { t } from '@/lib/i18n';
-import { toShopRules } from '@/lib/mappers';
 import { requireMe } from '@/lib/session';
 import { createClient } from '@/lib/supabase/server';
 

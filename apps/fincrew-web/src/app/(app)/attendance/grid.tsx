@@ -17,7 +17,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { formatDisplayDate, weekday } from '@fincrew/core';
-import type { GridRow } from '@/lib/attendance-month';
+import type { GridRow } from '@fincrew/data';
 import { t } from '@/lib/i18n';
 import { Avatar } from '../../components';
 import { clearAttendance, setAttendance } from './actions';

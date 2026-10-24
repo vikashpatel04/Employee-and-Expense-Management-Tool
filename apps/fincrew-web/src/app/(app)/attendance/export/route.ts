@@ -1,5 +1,5 @@
 import { monthOf } from '@fincrew/core';
-import { loadAttendanceMonth } from '@/lib/attendance-month';
+import { loadAttendanceMonth } from '@fincrew/data';
 import { toCsv } from '@/lib/csv';
 import { formatDate, todayIST } from '@/lib/format';
 import { t } from '@/lib/i18n';

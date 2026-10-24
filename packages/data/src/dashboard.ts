@@ -1,9 +1,7 @@
 import { addDays, monthOf, type BusinessDate } from '@fincrew/core';
 import { loadAttendanceMonth } from './attendance-month';
 import { paidByPayslip } from './salary-month';
-import type { createClient } from './supabase/server';
-
-type Supabase = Awaited<ReturnType<typeof createClient>>;
+import type { Supabase } from './client';
 
 /** Today's attendance for everyone working today (dashboard "Today's attendance"). */
 export async function loadToday(supabase: Supabase, shopId: string, today: BusinessDate) {

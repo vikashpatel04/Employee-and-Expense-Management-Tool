@@ -10,9 +10,9 @@ import {
   type DaySummary,
   type PayslipLine,
 } from '@fincrew/core';
+import { paidByPayslip } from '@fincrew/data';
 import { formatDate, todayIST } from '@/lib/format';
 import { t } from '@/lib/i18n';
-import { paidByPayslip } from '@/lib/salary-month';
 import { requireMe } from '@/lib/session';
 import { createClient } from '@/lib/supabase/server';
 import { quietButtonClass } from '../../components';

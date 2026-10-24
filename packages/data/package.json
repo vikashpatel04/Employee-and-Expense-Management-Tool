@@ -1,0 +1,20 @@
+{
+  "name": "@fincrew/data",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p ."
+  },
+  "dependencies": {
+    "@fincrew/core": "workspace:*",
+    "@fincrew/db": "workspace:*",
+    "@supabase/supabase-js": "^2.118.0"
+  },
+  "devDependencies": {
+    "typescript": "~5.9.3"
+  }
+}

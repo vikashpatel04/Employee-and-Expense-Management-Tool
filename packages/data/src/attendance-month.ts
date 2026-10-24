@@ -17,7 +17,7 @@ import {
   type DayStatus,
   type LeaveTemplateVersion,
 } from '@fincrew/core';
-import type { createClient } from './supabase/server';
+import type { Supabase } from './client';
 import {
   groupBy,
   toAssignment,
@@ -26,8 +26,6 @@ import {
   toShopRules,
   toTemplateVersion,
 } from './mappers';
-
-type Supabase = Awaited<ReturnType<typeof createClient>>;
 
 export type GridCell = {
   date: BusinessDate;

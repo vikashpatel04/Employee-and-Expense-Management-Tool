@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@fincrew/core": "workspace:*",
+    "@fincrew/data": "workspace:*",
     "@fincrew/db": "workspace:*",
     "@fincrew/i18n": "workspace:*",
     "@fincrew/ui": "workspace:*",

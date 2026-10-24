@@ -1,16 +1,12 @@
 import { effectiveOn, type BusinessDate } from '@fincrew/core';
 import { groupBy, toAssignment, toTemplateVersion } from './mappers';
-import type { createClient } from './supabase/server';
+import type { Supabase } from './client';
 
 /**
  * A shop's leave templates with their dated versions, and which template each current staff
  * member is on today (settings screens).
  */
-export async function loadLeaveSetup(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  shopId: string,
-  today: BusinessDate,
-) {
+export async function loadLeaveSetup(supabase: Supabase, shopId: string, today: BusinessDate) {
   const [{ data: templates }, { data: versions }, { data: assignments }, { data: staff }] =
     await Promise.all([
       supabase

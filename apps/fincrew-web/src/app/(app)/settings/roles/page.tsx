@@ -1,8 +1,8 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { ChevronRight } from 'lucide-react';
+import { loadRoles, permissionGroups } from '@fincrew/data';
 import { t } from '@/lib/i18n';
-import { loadRoles, permissionGroups } from '@/lib/roles';
 import { requireMe } from '@/lib/session';
 import { SETTINGS_SECTIONS } from '@/lib/settings-access';
 import { createClient } from '@/lib/supabase/server';

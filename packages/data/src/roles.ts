@@ -1,5 +1,5 @@
 import { PERMISSIONS, type PermissionKey } from '@fincrew/core';
-import type { createClient } from './supabase/server';
+import type { Supabase } from './client';
 
 /** Permissions grouped by area ("staff", "salary", …), in the catalogue's order (PLAN §3). */
 export function permissionGroups(): { area: string; keys: PermissionKey[] }[] {
@@ -16,10 +16,7 @@ export function permissionGroups(): { area: string; keys: PermissionKey[] }[] {
  * helpers (people who aren't on the payroll). People are read under RLS, so without `staff.view`
  * the list is just yourself.
  */
-export async function loadRoles(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  shopId: string,
-) {
+export async function loadRoles(supabase: Supabase, shopId: string) {
   const [{ data: roles }, { data: perms }, { data: members }, { data: people }, { data: staff }] =
     await Promise.all([
       supabase.from('roles').select('id, name').eq('shop_id', shopId).order('name'),

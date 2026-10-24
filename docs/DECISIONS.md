@@ -2,6 +2,15 @@
 
 Choices made during the build that PLAN.md doesn't spell out. Newest first.
 
+## 2026-10-24 — Shared data package (start of Phase 5)
+
+- **`packages/data`** (`@fincrew/data`) holds the data loading that turns Supabase rows into
+  what screens show, using `packages/core` rules: mappers, attendance month, dashboard,
+  expenses, reports, salary month, leave setup, roles. It takes any `SupabaseClient<Database>`
+  (`Supabase` type), so the website's server client and the Android app's client run the same
+  code. Moved from `apps/fincrew-web/src/lib` with history. UI-only helpers (i18n, format,
+  icons, CSV) stay in each app.
+
 ## 2026-10-24 — Website extras
 
 - **Helpers** are `people` rows with no `staff` row (needs `staff.edit`, like adding staff).
@@ -148,7 +157,7 @@ Choices made during the build that PLAN.md doesn't spell out. Newest first.
 ## 2026-10-23 — Attendance grid
 
 - The grid computes everything with `packages/core` on the server (same inputs the salary run
-  will use, via `src/lib/mappers.ts`), so a cell, the Days total and the payslip can't disagree.
+  will use, via `packages/data/src/mappers.ts`), so a cell, the Days total and the payslip can't disagree.
 - Days/Late/Absent count **up to today** in the current month (future paid offs aren't counted).
 - Paid-leave balance for the check: opening = the previous month's `leave_balances.carried`
   (written when that month's salary is finalized; 0 before any finalized month) + this month's

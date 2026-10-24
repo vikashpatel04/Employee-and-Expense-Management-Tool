@@ -10,9 +10,9 @@ import {
   type LedgerType,
   type PayRules,
 } from '@fincrew/core';
+import { toShopRules } from '@fincrew/data';
 import { formatDate, todayIST } from '@/lib/format';
 import { t } from '@/lib/i18n';
-import { toShopRules } from '@/lib/mappers';
 import { requireMe } from '@/lib/session';
 import { createClient } from '@/lib/supabase/server';
 import { Avatar, quietButtonClass } from '../../../components';

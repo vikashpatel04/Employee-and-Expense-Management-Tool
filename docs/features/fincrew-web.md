@@ -5,7 +5,7 @@ the design's text styles and Lucide icons (24px, 2px stroke, the design system's
 
 ## Dashboard — `(app)/page.tsx`
 
-Design: "Web · dashboard" (FinCrew key screens canvas). Data: `src/lib/dashboard.ts`
+Design: "Web · dashboard" (FinCrew key screens canvas). Data: `packages/data/src/dashboard.ts`
 (`loadToday`, `loadMoney`, `loadSalary`, `loadSoon`).
 
 - Greeting by IST time of day, shop · weekday date · staff working today; **Mark today
@@ -82,7 +82,7 @@ Checked in the browser on 2026-10-23 against the live project: shell, staff list
   (two clicks). Role people lists tag them "Helper". Actions `addHelper` / `removeHelper`.
 - **Opening balance**: Overview shows the corrected figure ("(corrected)"); **Correct it**
   (`salary.run`) → `correctOpening` adds the difference as a correction line.
-- **Reports** (`(app)/reports`, `reports.view`; data `src/lib/reports.ts`): range 3/6/12 months;
+- **Reports** (`(app)/reports`, `reports.view`; data `packages/data/src/reports.ts`): range 3/6/12 months;
   tiles (total cost, salary, shop expenses, advances given); month-by-month table with
   salary/expense bars; shop expenses by category × month; CSV `reports/export?months=`
   (`reports.export`). Design "Web · reports".
@@ -116,7 +116,7 @@ See `docs/features/expenses.md` (page, add/edit panel, categories, bills, CSV, d
   future days and days outside employment can't be selected.
 - **Paid leave is refused beyond the month's balance** (PLAN §4.3): opening = last finalized
   month's carried balance, plus `earnedLeave` from the template; no template = no paid leave.
-- Data loading: `src/lib/attendance-month.ts`; DB → core conversions: `src/lib/mappers.ts`
+- Data loading: `packages/data/src/attendance-month.ts`; DB → core conversions: `packages/data/src/mappers.ts`
   (shared with the salary run). Save: `attendance/actions.ts` (`setAttendance`, upsert per day).
 
 Checked in the browser on 2026-10-23 with Test Staff: Mark today present, paid leave refused
@@ -131,7 +131,7 @@ Checked in the browser on 2026-10-23 with Test Staff: Mark today present, paid l
 - Table per person (design: "Web · salary run review"): days, earned, overtime, allowances
   (incl. leave payout), gross, deductions, advance cut, net, payslip status. A row expands to the
   payslip lines, the month's days and Finalize / Pay for that person.
-- **Work out / Run again** (`runSalary`): `src/lib/salary-month.ts` `computeMonth` runs
+- **Work out / Run again** (`runSalary`): `packages/data/src/salary-month.ts` `computeMonth` runs
   `calculateSalary` and the leave roll (opening = last month's carried; payout days fed back in)
   for everyone employed that month. A draft is updated in place; after finalizing, a new revision
   is created only if lines or the advance cut changed (key-order-safe compare, jsonb reorders).
@@ -167,7 +167,7 @@ the first. No design artboards yet: built from the system's existing web pattern
   salary run as before.
 - **Leave templates** (`settings.leave_templates`): list with today's rules in words
   (`src/lib/leave-text.ts`), "From" date and how many active staff are on it today
-  (`src/lib/leave-setup.ts`). **New template**: name + rules (weekly off per weekday: working /
+  (`packages/data/src/leave-setup.ts`). **New template**: name + rules (weekly off per weekday: working /
   paid off / unpaid off; paid leaves per month; carry-over with cap or leave-year end month;
   part-month accrual and rounding; sandwich rule with triggers, applies-to and sides), checked
   with core `validateTemplateVersion`. **Template page** (`leave/[id]`): rules by date (In use
@@ -180,7 +180,7 @@ the first. No design artboards yet: built from the system's existing web pattern
 - All website forms use `useFormAction` (`src/lib/use-form-action.ts`) so a refused save keeps
   the typed values.
 
-- **Roles** (`settings.roles`; `src/lib/roles.ts`): list with permission count and who has
+- **Roles** (`settings.roles`; `packages/data/src/roles.ts`): list with permission count and who has
   each role (or "Nobody has it yet"); the owner is named as having everything. **New role**:
   name + permission checkboxes grouped by area (labels from i18n `permissions.*`). **Role page**
   (`roles/[id]`): what it may do (save = exactly the ticked ones), people with it (non-owner

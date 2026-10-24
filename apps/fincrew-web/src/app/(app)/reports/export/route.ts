@@ -1,7 +1,7 @@
+import { lastMonths, loadReport } from '@fincrew/data';
 import { toCsv } from '@/lib/csv';
 import { todayIST } from '@/lib/format';
 import { t } from '@/lib/i18n';
-import { lastMonths, loadReport } from '@/lib/reports';
 import { requireMe } from '@/lib/session';
 import { createClient } from '@/lib/supabase/server';
 

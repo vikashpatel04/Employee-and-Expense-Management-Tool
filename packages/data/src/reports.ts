@@ -1,8 +1,6 @@
 import { expenseTotals, monthEnd, monthOf, monthStart, type BusinessDate } from '@fincrew/core';
 import { toExpense } from './expenses';
-import type { createClient } from './supabase/server';
-
-type Supabase = Awaited<ReturnType<typeof createClient>>;
+import type { Supabase } from './client';
 
 export type ReportMonth = {
   year: number;

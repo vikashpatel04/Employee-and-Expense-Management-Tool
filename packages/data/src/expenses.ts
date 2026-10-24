@@ -1,8 +1,7 @@
 import { expenseTotals, monthEnd, monthStart, type Expense, type PaymentMode } from '@fincrew/core';
 import type { Database } from '@fincrew/db';
-import type { createClient } from './supabase/server';
+import type { Supabase } from './client';
 
-type Supabase = Awaited<ReturnType<typeof createClient>>;
 export type ExpenseRow = Database['public']['Tables']['expenses']['Row'];
 export type CategoryRow = Database['public']['Tables']['expense_categories']['Row'];
 

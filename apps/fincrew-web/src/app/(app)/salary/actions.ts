@@ -2,9 +2,9 @@
 
 import { revalidatePath } from 'next/cache';
 import type { Json } from '@fincrew/db';
+import { computeMonth, paidByPayslip, sameJson } from '@fincrew/data';
 import { todayIST } from '@/lib/format';
 import { t } from '@/lib/i18n';
-import { computeMonth, paidByPayslip, sameJson } from '@/lib/salary-month';
 import { requireMe } from '@/lib/session';
 import { createClient } from '@/lib/supabase/server';
 

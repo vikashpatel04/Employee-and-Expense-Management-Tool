@@ -1,6 +1,6 @@
 import { monthOf } from '@fincrew/core';
+import { loadExpenseMonth } from '@fincrew/data';
 import { toCsv } from '@/lib/csv';
-import { loadExpenseMonth } from '@/lib/expenses';
 import { formatDate, todayIST } from '@/lib/format';
 import { t } from '@/lib/i18n';
 import { requireMe } from '@/lib/session';
