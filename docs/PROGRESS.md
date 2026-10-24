@@ -21,10 +21,11 @@ GitHub: run `git status -sb`; the owner pushes (never push unless asked).
    Staffora invite (Phase 7), adding non-staff helpers for roles.
 4. ~~Payslip print/PDF, attendance CSV, clear an attendance mark~~ — done (slice 9).
 5. ~~Web dashboard~~ — done (slice 10, designed first in Claude Design: "Web · dashboard").
-6. **Phase 6: Expenses, before Android** (owner, 2026-10-24: "the app should be built with
-   expense since this is one of the feature"): tables + RLS + tests, ledger lines for staff
-   charges / reimbursements, bill photos (Storage), categories, web screens designed in Claude
-   Design first, dashboard tile.
+6. **Phase 6: Expenses** — built (slice 12, `docs/features/expenses.md`), **waiting for the
+   owner's push** (new migration `20261024000001_expenses.sql`). After the push: watch CI,
+   `pnpm db:types` (replaces the hand-added expense types in `packages/db`), then check in the
+   browser: add categories, add / edit / delete expenses incl. staff charge and pay-back (watch
+   Test Staff's ledger; use a test category), bill photo upload and view, CSV.
 7. **Phase 5: FinCrew Android** (Expo): Today screen, staff, money, attendance code screen,
    push notifications — follow the Android artboards on the FinCrew key screens canvas and
    `themes` from `@fincrew/ui`. Web leftovers (small, any time): staff detail attendance
@@ -48,7 +49,7 @@ via i18n; design follows the Claude Design system (`docs/DESIGN.md`).
 
 **How to check work:**
 
-- Tests/types/build: `pnpm test` (core 225, ui 6, i18n 1, db 90 — PGlite, no Docker), `pnpm typecheck`,
+- Tests/types/build: `pnpm test` (core 225, ui 6, i18n 1, db 107 — PGlite, no Docker), `pnpm typecheck`,
   `pnpm build`, `pnpm ui:tokens --check`, `bash scripts/check-migrations.sh origin/main HEAD`.
 - Live DB (CLI is logged in): `pnpm exec supabase db query --linked --project-ref
 ufmlqvvfznemghmnvynz "<sql>"`; advisors: `pnpm exec supabase db advisors --linked --project-ref
@@ -87,7 +88,7 @@ https://claude.ai/artifact/8jzomFcfJazHfn6yiUFQQP · Website https://fincrew-web
 | 3   | Design                       | **Done** (2026-10-23): design system, key screens (owner reviewed), `packages/ui` tokens                                                                                    |
 | 4   | FinCrew web core             | **Done** (2026-10-24): data layer live; screens slices 1–10 (dashboard, shell, staff + extras, attendance grid + CSV, salary run, payslip print, advances, settings, roles) |
 | 5   | FinCrew Android              | Not started                                                                                                                                                                 |
-| 6   | Expenses                     | Not started                                                                                                                                                                 |
+| 6   | Expenses                     | **Built, waiting for push** (2026-10-24): migration, RLS + 17 tests, web screens; check live after the push                                                                 |
 | 7   | Staffora                     | Not started                                                                                                                                                                 |
 | 8   | Polish                       | Not started                                                                                                                                                                 |
 
@@ -165,10 +166,20 @@ Open items (low priority, fold into the next migration that touches these tables
 - Leaked-password protection in Supabase Auth: owner's call (may need a paid plan).
 
 Tables still to add (with the phase that uses them, each with RLS tests): `staff_documents`
-(storage), `requests` (leave/advance requests), expense tables (Phase 6), `attendance_codes`,
+(storage), `requests` (leave/advance requests), `attendance_codes`,
 `attendance_scans`, `invites`, `pin_credentials`, `push_tokens` (Phase 7).
 
 ## Session log
+
+- **2026-10-24** — **Slice 12: expenses** — migration (categories, expenses, ledger posting
+  trigger with reverse-and-repost on change, RLS, private `bills` bucket + Storage policies),
+  17 DB tests (Storage stand-in added to the PGlite harness), migration dry-run on the live DB in
+  a rolled-back transaction (applies cleanly; nothing kept). Web: Expenses page (tiles, by
+  category, list, add/edit side panel with photo shrinking, CSV), Settings → Expense
+  categories (icons, colours, archive, "Add the usual ones"), sidebar item, dashboard tile.
+  Designed first ("Web · expenses"). Not yet checked against real data: the tables go live
+  with the push; pages load empty without them. Expense types in `packages/db` were added by
+  hand until `pnpm db:types` can run.
 
 - **2026-10-24** — Owner: the grid's totals only show after scrolling, too much for small
   screens. **Slice 11: attendance on small screens** — designed first (desktop grid artboard

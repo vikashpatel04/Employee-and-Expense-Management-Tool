@@ -7,6 +7,7 @@ import {
   CalendarDays,
   House,
   IndianRupee,
+  Receipt,
   Settings,
   Users,
   type LucideIcon,
@@ -17,6 +18,7 @@ const ICONS: Record<string, LucideIcon> = {
   calendar: CalendarDays,
   users: Users,
   rupee: IndianRupee,
+  receipt: Receipt,
   advance: ArrowUpRight,
   settings: Settings,
 };

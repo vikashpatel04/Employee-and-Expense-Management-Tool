@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Added — 2026-10-24 (Phase 6: expenses)
+
+- Expenses with paid by / charged to / pay back, staff ledger lines, bill photos, categories,
+  month view with totals, CSV, dashboard tile. Migration `20261024000001_expenses.sql`.
+
 ### Changed — 2026-10-24 (Phase 4.3 slice 11)
 
 - Attendance grid keeps names and Days/Late/Absent in view while the days scroll.

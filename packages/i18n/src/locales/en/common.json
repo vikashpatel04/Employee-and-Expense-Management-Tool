@@ -59,7 +59,10 @@
       "advMeta_other": "{{count}} people · cut {{cut}} a month",
       "advMetaNoCut_one": "{{count}} person",
       "advMetaNoCut_other": "{{count}} people",
-      "none": "Nothing"
+      "none": "Nothing",
+      "expenses": "Shop expenses this month",
+      "expensesMeta_one": "{{count}} expense · see Expenses",
+      "expensesMeta_other": "{{count}} expenses · see Expenses"
     },
     "salary": {
       "title": "Salary · {{month}}",
@@ -128,7 +131,8 @@
     "advances": "Advances",
     "settings": "Settings",
     "menu": "Menu",
-    "closeMenu": "Close menu"
+    "closeMenu": "Close menu",
+    "expenses": "Expenses"
   },
   "staff": {
     "title": "Staff",
@@ -609,7 +613,8 @@
       "holidays": "Holidays",
       "leave": "Leave templates",
       "rules": "Pay & attendance rules",
-      "roles": "Roles"
+      "roles": "Roles",
+      "categories": "Expense categories"
     },
     "saving": "Saving…",
     "errors": {
@@ -870,6 +875,66 @@
         "name": "Enter a name for the role.",
         "nameTaken": "A role with this name already exists."
       }
+    },
+    "categories": {
+      "subtitle": "Groups for shop expenses, each with an icon and a colour. Archive one to stop using it; old expenses keep it.",
+      "empty": "No categories yet.",
+      "suggested": "Add the usual ones",
+      "suggestedHint": "Tea and snacks, Transport, Electricity, Rent, Packing, Repairs, Stationery, Staff welfare, Other. Rename or archive any of them later.",
+      "suggestedNames": {
+        "tea": "Tea and snacks",
+        "transport": "Transport",
+        "power": "Electricity",
+        "rent": "Rent",
+        "packing": "Packing",
+        "repairs": "Repairs",
+        "stationery": "Stationery",
+        "welfare": "Staff welfare",
+        "other": "Other"
+      },
+      "add": "Add a category",
+      "name": "Name",
+      "icon": "Icon",
+      "colour": "Colour",
+      "save": "Save",
+      "create": "Add category",
+      "archive": "Archive",
+      "unarchive": "Bring back",
+      "archived": "Archived",
+      "saved": "Saved.",
+      "errors": {
+        "name": "Enter a name.",
+        "nameTaken": "A category with this name already exists."
+      },
+      "icons": {
+        "receipt": "Receipt",
+        "coffee": "Tea",
+        "truck": "Transport",
+        "zap": "Power",
+        "home": "Rent",
+        "package": "Packing",
+        "wrench": "Repairs",
+        "pen": "Stationery",
+        "users": "Staff",
+        "phone": "Phone",
+        "bag": "Shopping",
+        "fuel": "Fuel",
+        "shirt": "Clothes",
+        "megaphone": "Ads",
+        "sparkles": "Cleaning",
+        "grid": "Other"
+      },
+      "colours": {
+        "teal": "Teal",
+        "green": "Green",
+        "olive": "Olive",
+        "blue": "Blue",
+        "violet": "Violet",
+        "plum": "Plum",
+        "amber": "Amber",
+        "red": "Red",
+        "slate": "Slate"
+      }
     }
   },
   "permissionAreas": {
@@ -949,5 +1014,111 @@
     "openLabel": "Open the payslip for {{name}}",
     "generated": "Made on {{date}} with FinCrew",
     "noDeductions": "No deductions"
+  },
+  "expenses": {
+    "title": "Expenses",
+    "subtitle_one": "{{shop}} · {{count}} expense in {{month}}",
+    "subtitle_other": "{{shop}} · {{count}} expenses in {{month}}",
+    "add": "Add expense",
+    "prevMonth": "Previous month",
+    "nextMonth": "Next month",
+    "csv": "Download CSV",
+    "tiles": {
+      "shop": "Shop expenses",
+      "staff": "Charged to staff",
+      "reimbursed": "Paid back to staff",
+      "notTracked": "Not tracked",
+      "count_one": "{{count}} expense",
+      "count_other": "{{count}} expenses",
+      "staffMeta": "On their ledgers, recovered from salary",
+      "reimbursedMeta": "Added to what they're owed",
+      "notTrackedMeta": "Left out of all totals"
+    },
+    "byCategory": "By category",
+    "editCategories": "Edit categories",
+    "list": "All expenses",
+    "empty": "No expenses in {{month}}.",
+    "noCategories": "Add expense categories first (Settings → Expense categories).",
+    "noCategoriesAsk": "Ask the owner to add expense categories first.",
+    "ownOnly": "You see the expenses you added.",
+    "meta": {
+      "owner": "Owner",
+      "shop_cash": "Shop cash",
+      "staffPaid": "Paid by {{name}}",
+      "paidBack": "paid back",
+      "chargedTo": "charged to {{name}}"
+    },
+    "tags": {
+      "staff": "Staff",
+      "not_tracked": "Not tracked"
+    },
+    "hasBill": "Has a bill photo",
+    "edit": "Edit",
+    "form": {
+      "addTitle": "Add expense",
+      "editTitle": "Edit expense",
+      "viewTitle": "Expense",
+      "close": "Close",
+      "amount": "Amount (₹)",
+      "date": "Date",
+      "category": "Category",
+      "paidBy": "Paid by",
+      "paidByOptions": {
+        "owner": "Owner",
+        "shop_cash": "Shop cash",
+        "staff": "Staff"
+      },
+      "whoPaid": "Who paid",
+      "reimburse": "Pay them back (adds to what the shop owes them)",
+      "chargedTo": "Charged to",
+      "chargedOptions": {
+        "shop": "Shop",
+        "staff": "Staff member",
+        "not_tracked": "Not tracked"
+      },
+      "chargedHint": {
+        "shop": "Counts in {{month}} shop expenses.",
+        "staff": "Adds a staff charge to their ledger, recovered from salary.",
+        "not_tracked": "Kept for the record. Left out of all totals."
+      },
+      "smallHint": "Below your small expense limit ({{limit}}), so it starts as Not tracked.",
+      "staffMember": "Staff member",
+      "chooseStaff": "Choose a person",
+      "paidWith": "Paid with",
+      "note": "Note (optional)",
+      "notePlaceholder": "What was it for?",
+      "bill": "Bill photo (optional)",
+      "billAdd": "Add bill photo",
+      "billReplace": "Replace photo",
+      "billView": "View bill",
+      "billRemove": "Remove the photo",
+      "billHint": "Saved small, about 200 KB.",
+      "billBad": "Couldn't read that photo. Use a JPG or PNG picture.",
+      "save": "Save expense",
+      "saving": "Saving…",
+      "delete": "Delete expense",
+      "deleteConfirm": "Yes, delete it",
+      "deleteHint": "Any staff charge or pay-back is undone on their ledger.",
+      "saved": "Expense saved.",
+      "errors": {
+        "amount": "Enter the amount in rupees.",
+        "category": "Choose a category.",
+        "staffPaid": "Choose who paid.",
+        "staffCharged": "Choose who it is charged to.",
+        "failed": "Couldn't save: {{reason}}"
+      }
+    },
+    "csvColumns": {
+      "date": "Date",
+      "category": "Category",
+      "amount": "Amount (₹)",
+      "mode": "Paid with",
+      "paidBy": "Paid by",
+      "chargedTo": "Charged to",
+      "paidBack": "Paid back",
+      "note": "Note",
+      "yes": "Yes",
+      "no": "No"
+    }
   }
 }

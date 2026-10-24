@@ -2,6 +2,29 @@
 
 Choices made during the build that PLAN.md doesn't spell out. Newest first.
 
+## 2026-10-24 — Expenses
+
+- **Ledger lines come from a trigger**, like advances: the app can't write `staff_charge` or
+  `reimbursement` lines directly. Editing an expense reverses the lines it posted and posts new
+  ones (reversals dated the day of the change), so the ledger stays append-only and the
+  history shows what changed. Edits that move no money (note, category, mode, bill) post nothing.
+- **Expenses can be deleted** (with `expenses.edit`); their ledger lines are reversed, and the
+  audit log keeps the row.
+- **Who sees an expense**: `expenses.view_all`, its author, and the staff member it is paid by
+  or charged to (it's on their ledger). Only `expenses.edit` changes one, the author included.
+- **Bill photos**: private bucket `bills`, path `<shop>/<expense>-<time>.jpg` (a new photo gets
+  a new path, then the old file is removed). The browser shrinks photos to about 200 KB before
+  sending; the server refuses anything over 1 MB or not an image. Viewing is a one-minute
+  signed link. Storage read rule: your own upload (uploads read their row back) or a bill an
+  expense you can see points at.
+- **Category colours** reuse the status colour tokens (both themes) under neutral keys
+  (`teal`, `green`, … `slate`): the design system has no category palette yet (DESIGN gap).
+- **No default categories in the database**: an empty shop offers "Add the usual ones" (nine
+  suggestions from i18n), so nothing is assumed and names stay translatable.
+- **Expenses CSV** follows the attendance CSV (BOM, DD/MM/YYYY, `reports.export`).
+- `packages/db` types for the two tables were written by hand in the generator's shape until
+  the migration is live; `pnpm db:types` after the push replaces them.
+
 ## 2026-10-24 — Small screens
 
 - The website switches layout at Tailwind `md` (768 px): below it the sidebar folds into a top

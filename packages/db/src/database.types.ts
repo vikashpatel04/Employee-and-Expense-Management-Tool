@@ -323,6 +323,137 @@ export type Database = {
           },
         ]
       }
+      expense_categories: {
+        Row: {
+          archived: boolean
+          colour: string
+          created_at: string
+          icon: string
+          id: string
+          name: string
+          shop_id: string
+        }
+        Insert: {
+          archived?: boolean
+          colour?: string
+          created_at?: string
+          icon?: string
+          id?: string
+          name: string
+          shop_id: string
+        }
+        Update: {
+          archived?: boolean
+          colour?: string
+          created_at?: string
+          icon?: string
+          id?: string
+          name?: string
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expense_categories_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      expenses: {
+        Row: {
+          amount_paise: number
+          bill_path: string | null
+          category_id: string
+          charged_to_kind: string
+          charged_to_staff_id: string | null
+          created_at: string
+          created_by: string | null
+          date: string
+          id: string
+          note: string | null
+          paid_by_kind: string
+          paid_by_staff_id: string | null
+          payment_mode: string
+          reimburse: boolean
+          shop_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount_paise: number
+          bill_path?: string | null
+          category_id: string
+          charged_to_kind?: string
+          charged_to_staff_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          date: string
+          id?: string
+          note?: string | null
+          paid_by_kind?: string
+          paid_by_staff_id?: string | null
+          payment_mode?: string
+          reimburse?: boolean
+          shop_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount_paise?: number
+          bill_path?: string | null
+          category_id?: string
+          charged_to_kind?: string
+          charged_to_staff_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          date?: string
+          id?: string
+          note?: string | null
+          paid_by_kind?: string
+          paid_by_staff_id?: string | null
+          payment_mode?: string
+          reimburse?: boolean
+          shop_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expenses_shop_id_category_id_fkey"
+            columns: ["shop_id", "category_id"]
+            isOneToOne: false
+            referencedRelation: "expense_categories"
+            referencedColumns: ["shop_id", "id"]
+          },
+          {
+            foreignKeyName: "expenses_shop_id_charged_to_staff_id_fkey"
+            columns: ["shop_id", "charged_to_staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["shop_id", "person_id"]
+          },
+          {
+            foreignKeyName: "expenses_shop_id_created_by_fkey"
+            columns: ["shop_id", "created_by"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["shop_id", "id"]
+          },
+          {
+            foreignKeyName: "expenses_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expenses_shop_id_paid_by_staff_id_fkey"
+            columns: ["shop_id", "paid_by_staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["shop_id", "person_id"]
+          },
+        ]
+      }
       holidays: {
         Row: {
           created_at: string

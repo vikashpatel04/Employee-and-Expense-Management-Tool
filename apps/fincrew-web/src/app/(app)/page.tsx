@@ -7,6 +7,7 @@ import {
   Clock,
   Hourglass,
   IndianRupee,
+  Receipt,
   Sparkles,
   Users,
   X,
@@ -29,6 +30,7 @@ import {
   type SalaryState,
   type SoonItem,
 } from '@/lib/dashboard';
+import { loadExpenseMonth } from '@/lib/expenses';
 import { formatDate, todayIST } from '@/lib/format';
 import { t } from '@/lib/i18n';
 import { requireMe } from '@/lib/session';
@@ -58,12 +60,14 @@ export default async function DashboardPage() {
   const showToday = can('staff.view');
   const showMoney = can('salary.view');
   const showAdvances = can('salary.view') || can('advances.give');
+  const showExpenses = can('expenses.view_all');
   const supabase = await createClient();
-  const [todayData, money, salary, soon] = await Promise.all([
+  const [todayData, money, salary, soon, spent] = await Promise.all([
     showToday ? loadToday(supabase, me.shopId, today) : null,
     showAdvances ? loadMoney(supabase, me.shopId) : null,
     showMoney ? loadSalary(supabase, me.shopId, year, month) : null,
     loadSoon(supabase, me.shopId, today, can('staff.view')),
+    showExpenses ? loadExpenseMonth(supabase, me.shopId, year, month) : null,
   ]);
   // Until it's finalized, this month's salary is something coming up.
   const soonItems: SoonItem[] = [
@@ -75,7 +79,7 @@ export default async function DashboardPage() {
 
   const minutes = minutesOfDayIST(new Date());
   const greeting = minutes < 12 * 60 ? 'morning' : minutes < 17 * 60 ? 'afternoon' : 'evening';
-  const nothing = !showToday && !showAdvances && soonItems.length === 0;
+  const nothing = !showToday && !showAdvances && !showExpenses && soonItems.length === 0;
 
   return (
     <>
@@ -177,9 +181,19 @@ export default async function DashboardPage() {
         )}
 
         <div className="flex flex-col gap-4">
-          {money && (
+          {(money || spent) && (
             <div className="grid gap-4 sm:grid-cols-2">
-              {showMoney && (
+              {spent && (
+                <Tile
+                  href="/expenses"
+                  icon={Receipt}
+                  label={t('home.money.expenses')}
+                  tone="var(--ink)"
+                  amount={spent.totals.total}
+                  meta={t('home.money.expensesMeta', { count: spent.counts.shop })}
+                />
+              )}
+              {money && showMoney && (
                 <Tile
                   href="/staff"
                   icon={Hourglass}
@@ -193,23 +207,25 @@ export default async function DashboardPage() {
                   }
                 />
               )}
-              <Tile
-                href="/advances"
-                icon={ArrowUpRight}
-                label={t('home.money.advances')}
-                tone="var(--money-advance)"
-                amount={money.advances}
-                meta={
-                  money.advanceCount === 0
-                    ? t('home.money.none')
-                    : money.monthlyCut > 0
-                      ? t('home.money.advMeta', {
-                          count: money.advanceCount,
-                          cut: formatINR(money.monthlyCut),
-                        })
-                      : t('home.money.advMetaNoCut', { count: money.advanceCount })
-                }
-              />
+              {money && (
+                <Tile
+                  href="/advances"
+                  icon={ArrowUpRight}
+                  label={t('home.money.advances')}
+                  tone="var(--money-advance)"
+                  amount={money.advances}
+                  meta={
+                    money.advanceCount === 0
+                      ? t('home.money.none')
+                      : money.monthlyCut > 0
+                        ? t('home.money.advMeta', {
+                            count: money.advanceCount,
+                            cut: formatINR(money.monthlyCut),
+                          })
+                        : t('home.money.advMetaNoCut', { count: money.advanceCount })
+                  }
+                />
+              )}
             </div>
           )}
 

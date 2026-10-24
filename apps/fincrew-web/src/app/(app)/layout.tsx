@@ -36,6 +36,9 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   }
   if (can('staff.view')) items.push({ href: '/staff', label: t('nav.staff'), icon: 'users' });
   if (can('salary.view')) items.push({ href: '/salary', label: t('nav.salary'), icon: 'rupee' });
+  if (can('expenses.add') || can('expenses.view_all') || can('expenses.edit')) {
+    items.push({ href: '/expenses', label: t('nav.expenses'), icon: 'receipt' });
+  }
   if (can('salary.view') || can('advances.give')) {
     items.push({ href: '/advances', label: t('nav.advances'), icon: 'advance' });
   }

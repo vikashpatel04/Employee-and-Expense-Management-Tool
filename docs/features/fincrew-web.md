@@ -70,6 +70,10 @@ then cleared; opening balance error path only.
 Checked in the browser on 2026-10-23 against the live project: shell, staff list, Add staff
 ("Test Staff"), staff detail tabs, saving pay (₹22,000 monthly, 9:30 AM – 8:30 PM).
 
+## Expenses
+
+See `docs/features/expenses.md` (page, add/edit panel, categories, bills, CSV, dashboard tile).
+
 ## Small screens
 
 - Below `md` the sidebar is a 56 px top bar (FinCrew, shop name, Menu) — `(app)/nav-shell.tsx`;
