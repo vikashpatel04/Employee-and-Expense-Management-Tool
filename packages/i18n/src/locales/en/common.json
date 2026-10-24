@@ -1261,7 +1261,81 @@
       "until": "Until {{date}}",
       "ended": "Ended",
       "balanceDue": "Due to them",
-      "balanceOwes": "They owe the shop"
+      "balanceOwes": "They owe the shop",
+      "pay": "Pay {{amount}}",
+      "paid": "Paid {{amount}}."
+    },
+    "money": {
+      "none": "You don't have access to money in this shop.",
+      "segments": {
+        "label": "Money area",
+        "expenses": "Expenses",
+        "salary": "Salary",
+        "advances": "Advances"
+      },
+      "expenses": {
+        "shopTotal": "Shop expenses · {{month}}",
+        "noCategories": "Add expense categories on the website first (Settings → Expense categories).",
+        "allCategories": "All {{count}}",
+        "takePhoto": "Take photo",
+        "pickPhoto": "Pick photo",
+        "notFound": "This expense isn't here any more."
+      },
+      "salary": {
+        "byMonth": "Salary by month",
+        "hint": "Open a month to work out salary, check each payslip, finalize and pay.",
+        "meta": {
+          "draft_one": "{{count}} person · draft, not finalized",
+          "draft_other": "{{count}} people · draft, not finalized",
+          "paid_one": "{{count}} person · all paid",
+          "paid_other": "{{count}} people · all paid"
+        },
+        "metaDue_one": "{{count}} person · {{due}} still to pay",
+        "metaDue_other": "{{count}} people · {{due}} still to pay",
+        "netPay_one": "Net pay · {{count}} person",
+        "netPay_other": "Net pay · {{count}} people",
+        "stillToPay_one": "Still to pay · {{count}} person",
+        "stillToPay_other": "Still to pay · {{count}} people",
+        "staff_one": "{{count}} person",
+        "staff_other": "{{count}} people",
+        "payableDays": "{{days}} payable days",
+        "cut": "advance cut {{amount}}",
+        "due": "Due",
+        "tapHint": "Tap a name to see the working.",
+        "finalizeHint": "Staff see their payslips after you finalize. Later fixes are added as adjustments.",
+        "payAll": "Pay all due",
+        "payOne": "Pay {{amount}}",
+        "confirmFinalize": "Finalize {{month}} salary?",
+        "confirmFinalizeBody": "Each payslip is posted to the staff ledger. This can't be undone; running again later adds only the differences.",
+        "payTitle": "Pay {{name}}",
+        "payAllTitle_one": "Pay {{count}} person",
+        "payAllTitle_other": "Pay {{count}} people",
+        "paySub": "{{month}} salary · {{amount}}",
+        "short": {
+          "unmarked_days_one": "{{count}} day not marked",
+          "unmarked_days_other": "{{count}} days not marked",
+          "no_pay_settings_one": "No pay set for {{count}} day",
+          "no_pay_settings_other": "No pay set for {{count}} days",
+          "missing_check_out_one": "{{count}} day without check-out",
+          "missing_check_out_other": "{{count}} days without check-out",
+          "negative_net_pay": "Deductions are more than earnings",
+          "paid_leave_over_balance": "More paid leave than the balance"
+        }
+      },
+      "advances": {
+        "total_one": "Advances outstanding · {{count}} person",
+        "total_other": "Advances outstanding · {{count}} people",
+        "whoOwes": "Who owes",
+        "cutMonthly": "Cut {{amount}} a month",
+        "cutAtRun": "Cut decided at each salary run",
+        "limit": "limit {{amount}}",
+        "noLimit": "no limit",
+        "owes": "Owes {{amount}}",
+        "who": "Give advance to",
+        "paidBack": "Paid back",
+        "overLimit": "This goes past {{name}}'s advance limit. Give it anyway?",
+        "giveAnyway": "Give anyway"
+      }
     }
   }
 }

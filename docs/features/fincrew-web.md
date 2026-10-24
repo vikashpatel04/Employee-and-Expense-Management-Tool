@@ -138,6 +138,9 @@ Checked in the browser on 2026-10-23 with Test Staff: Mark today present, paid l
 - **Finalize** (`finalizeSalary`, all drafts or one): `finalize_payslip` posts the ledger lines
   and the leave month. **Pay** (`paySalary`, one or everyone, with mode): a `salary_payment` for
   what's left of net pay (payments minus their reversals; `paidByPayslip`).
+- Since 2026-10-24 the steps and the page's data live in `packages/data/src/salary-run.ts`
+  (`loadSalaryRun`, `runSalary`, `finalizeSalary`, `paySalary`), shared with the Android app;
+  `salary/actions.ts` only checks the session, adds the messages and refreshes the page.
 
 Checked in the browser on 2026-10-23 with Test Staff, **drafts only**: 0.5 days → ₹355 (22,000 ÷
 31 × 0.5), unmarked-days warning, Run again → "0 new, 1 updated". Finalize and Pay were not run on
@@ -152,7 +155,9 @@ the live shop: ledger lines are permanent, so a finalized Test Staff could never
 - **Undo** (`salary.undo_payment`) on salary payments and advances in the Ledger tab: exact
   reversal, once; reversed lines show "Undone".
 - **/advances** (`salary.view` or `advances.give`): people with an advance to recover, monthly
-  cut, limit, total. Actions: `staff/[id]/advance-actions.ts`.
+  cut, limit, total (`loadAdvanceBalances`). Actions: `staff/[id]/advance-actions.ts`
+  (`recordAdvance` and undo use `recordAdvance` / `undoLedgerLine` from
+  `packages/data/src/advances.ts`, shared with the Android app).
 
 Checked in the browser on 2026-10-23: both pages render; advance rules saved for Test Staff
 (limit ₹5,000, cut ₹1,000). No advance was given on the live shop (permanent ledger line).

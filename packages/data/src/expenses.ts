@@ -1,6 +1,7 @@
 import { expenseTotals, monthEnd, monthStart, type Expense, type PaymentMode } from '@fincrew/core';
 import type { Database } from '@fincrew/db';
 import type { Supabase } from './client';
+import { toShopRules } from './mappers';
 
 export type ExpenseRow = Database['public']['Tables']['expenses']['Row'];
 export type CategoryRow = Database['public']['Tables']['expense_categories']['Row'];
@@ -63,5 +64,38 @@ export async function loadExpenseMonth(
       .sort((a, b) => a.name.localeCompare(b.name)),
     totals: { ...totals, reimbursed },
     counts,
+  };
+}
+
+/**
+ * What the add / edit expense form needs: the expense (when editing), categories, staff names
+ * and the shop's small-expense limit (below it a new expense starts as Not tracked).
+ */
+export async function loadExpenseForm(
+  supabase: Supabase,
+  shopId: string,
+  expenseId?: string | null,
+) {
+  const [{ data: expense }, { data: categories }, { data: staff }, { data: shop }] =
+    await Promise.all([
+      expenseId
+        ? supabase
+            .from('expenses')
+            .select('*')
+            .eq('id', expenseId)
+            .eq('shop_id', shopId)
+            .maybeSingle()
+        : Promise.resolve({ data: null }),
+      supabase.from('expense_categories').select('*').eq('shop_id', shopId).order('name'),
+      supabase.from('staff').select('person_id, status, people!inner(name)').eq('shop_id', shopId),
+      supabase.from('shops').select('settings').eq('id', shopId).maybeSingle(),
+    ]);
+  return {
+    expense: (expense as ExpenseRow | null) ?? null,
+    categories: categories ?? [],
+    staff: (staff ?? [])
+      .map((s) => ({ id: s.person_id, name: s.people.name, active: s.status === 'active' }))
+      .sort((a, b) => a.name.localeCompare(b.name)),
+    smallLimit: toShopRules(shop?.settings).smallExpenseLimit ?? null,
   };
 }

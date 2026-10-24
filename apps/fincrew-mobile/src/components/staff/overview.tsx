@@ -1,21 +1,51 @@
 import { useEffect, useState } from 'react';
 import { Linking, View } from 'react-native';
-import { ArrowUpRight, Hourglass, MessageCircle, Phone } from 'lucide-react-native';
+import { ArrowUpRight, Hourglass, IndianRupee, MessageCircle, Phone } from 'lucide-react-native';
 import { businessDateOf, formatINR, monthOf } from '@fincrew/core';
-import { loadAttendanceMonth, type GridRow, type StaffOverview } from '@fincrew/data';
-import { Button, Card, SummaryChip, Text } from '@/components/ui';
+import {
+  loadAttendanceMonth,
+  loadPayslipsDue,
+  paySalary,
+  type GridRow,
+  type StaffOverview,
+} from '@fincrew/data';
+import { AdvanceSheet } from '@/components/advance-sheet';
+import { FormMessage } from '@/components/form';
+import { Sheet } from '@/components/sheet';
+import { Button, Card, Segmented, SummaryChip, Text } from '@/components/ui';
+import { monthLabel } from '@/lib/money';
 import { t } from '@/lib/i18n';
 import { useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
 import { space, useTheme } from '@/lib/theme';
 
-/** Overview (design: Staff detail · Overview): balance, advance, call/WhatsApp, this month's days. */
-export function OverviewSection({ info }: { info: StaffOverview }) {
-  const { me } = useSession();
+type Due = Awaited<ReturnType<typeof loadPayslipsDue>>;
+const MODES = ['cash', 'upi', 'bank', 'card'] as const;
+
+/**
+ * Overview (design: Staff detail · Overview): balance, advance, quick actions (give advance,
+ * call, WhatsApp), this month's days, and "Pay" for finalized salary still due. Giving and paying
+ * go through `@fincrew/data` (recordAdvance / paySalary) like the Money tab.
+ */
+export function OverviewSection({
+  info,
+  onChanged,
+}: {
+  info: StaffOverview;
+  onChanged: () => void;
+}) {
+  const { me, can } = useSession();
   const { c } = useTheme();
   const [row, setRow] = useState<GridRow | null>(null);
+  const [due, setDue] = useState<Due>([]);
+  const [advanceOpen, setAdvanceOpen] = useState(false);
+  const [payOpen, setPayOpen] = useState(false);
+  const [mode, setMode] = useState<string>('cash');
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const today = businessDateOf(new Date());
   const { year, month } = monthOf(today);
+  const canPay = can('salary.run');
 
   useEffect(() => {
     if (!me) return;
@@ -23,6 +53,46 @@ export function OverviewSection({ info }: { info: StaffOverview }) {
       setRow(rows.find((r) => r.staffId === info.id) ?? null),
     );
   }, [me, info.id, year, month, today]);
+
+  useEffect(() => {
+    if (canPay) void loadPayslipsDue(supabase, info.id).then(setDue);
+  }, [canPay, info.id, info.balance]);
+
+  const dueTotal = due.reduce((a, d) => a + d.due, 0);
+  const modes = t('salary.modes', { returnObjects: true }) as unknown as Record<string, string>;
+
+  /** Pay every month still due, oldest first. */
+  const pay = async () => {
+    if (!me) return;
+    setBusy(true);
+    setMessage(null);
+    for (const d of due) {
+      const r = await paySalary(supabase, {
+        ...me,
+        runId: d.runId,
+        payslipId: d.payslipId,
+        mode,
+        today,
+      });
+      if (!r.ok) {
+        setBusy(false);
+        setPayOpen(false);
+        setMessage({
+          ok: false,
+          text:
+            r.reason === 'no_permission'
+              ? t('salary.errors.noPermission')
+              : t('salary.errors.failed', { reason: r.message }),
+        });
+        onChanged();
+        return;
+      }
+    }
+    setBusy(false);
+    setPayOpen(false);
+    setMessage({ ok: true, text: t('mobile.staff.paid', { amount: formatINR(dueTotal) }) });
+    onChanged();
+  };
 
   const months = t('months.long', { returnObjects: true }) as unknown as string[];
   const digits = (info.phone ?? '').replace(/\D/g, '');
@@ -76,6 +146,27 @@ export function OverviewSection({ info }: { info: StaffOverview }) {
       )}
       {balance == null && <Text muted>{t('mobile.staff.noMoney')}</Text>}
 
+      {message && <FormMessage ok={message.ok} text={message.text} />}
+
+      {canPay && dueTotal > 0 && (
+        <Button
+          label={t('mobile.staff.pay', { amount: formatINR(dueTotal) })}
+          icon={IndianRupee}
+          block
+          onPress={() => setPayOpen(true)}
+        />
+      )}
+
+      {can('advances.give') && info.status === 'active' && (
+        <Button
+          label={t('advances.give')}
+          variant="secondary"
+          icon={ArrowUpRight}
+          block
+          onPress={() => setAdvanceOpen(true)}
+        />
+      )}
+
       {info.phone && (
         <View style={{ flexDirection: 'row', gap: space['space-2'] }}>
           <View style={{ flex: 1 }}>
@@ -115,6 +206,54 @@ export function OverviewSection({ info }: { info: StaffOverview }) {
           </Text>
         </View>
       )}
+      <AdvanceSheet
+        open={advanceOpen}
+        onClose={() => setAdvanceOpen(false)}
+        person={{
+          staffId: info.id,
+          name: info.name,
+          outstanding: info.advance ?? undefined,
+          limit: info.advanceLimit,
+        }}
+        onSaved={(text) => {
+          setMessage({ ok: true, text });
+          onChanged();
+        }}
+      />
+
+      <Sheet
+        open={payOpen}
+        onClose={() => setPayOpen(false)}
+        title={t('mobile.money.salary.payTitle', { name: info.name })}
+        subtitle={due.map((d) => `${monthLabel(d.year, d.month)} · ${formatINR(d.due)}`).join('\n')}
+      >
+        <Text variant="label-sm">{t('salary.payMode')}</Text>
+        <Segmented
+          label={t('salary.payMode')}
+          value={mode}
+          onChange={setMode}
+          options={MODES.map((m) => ({ value: m, label: modes[m] ?? m }))}
+        />
+        <View style={{ flexDirection: 'row', gap: space['space-2'], marginTop: space['space-4'] }}>
+          <View style={{ flex: 1 }}>
+            <Button
+              label={t('mobile.today.sheet.cancel')}
+              variant="secondary"
+              block
+              onPress={() => setPayOpen(false)}
+            />
+          </View>
+          <View style={{ flex: 1.4 }}>
+            <Button
+              label={t('mobile.staff.pay', { amount: formatINR(dueTotal) })}
+              icon={IndianRupee}
+              busy={busy}
+              block
+              onPress={pay}
+            />
+          </View>
+        </View>
+      </Sheet>
     </View>
   );
 }

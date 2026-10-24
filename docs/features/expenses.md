@@ -36,7 +36,8 @@ Phase 6 (built before Android at the owner's request, 2026-10-24). Rules: docs/P
   date, category grid, Paid by (+ who, Pay them back), Charged to (+ who; starts as Not tracked
   below the shop's small-expense limit until changed), Paid with, note, bill photo (shrunk in
   the browser to about 200 KB, `src/lib/compress-image.ts`), delete (two clicks).
-  Actions: `expenses/actions.ts`; bill link `expenses/bill/[id]` (one-minute signed URL);
+  Actions: `expenses/actions.ts` (thin wrappers over `saveExpense` / `deleteExpense` in
+  `packages/data/src/expense-write.ts`, shared with the Android app); bill link `expenses/bill/[id]` (one-minute signed URL);
   CSV `expenses/export?month=` (`reports.export`).
 - **Settings → Expense categories** (`expenses.categories`): list with icon/colour, edit,
   archive / bring back, add (name, icon picker, colour swatches); with no active category it
@@ -53,4 +54,4 @@ in the DB tests (live would leave permanent lines on Test Staff's ledger).
 ## Not built yet
 
 Expense reports beyond the month view (Phase 6 "reports"), editing your own expense without
-`expenses.edit`, Android screens.
+`expenses.edit`. Android screens: built 2026-10-24 (`docs/features/fincrew-mobile.md` → Money).

@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { formatINR } from '@fincrew/core';
+import { loadAdvanceBalances } from '@fincrew/data';
 import { t } from '@/lib/i18n';
 import { requireMe } from '@/lib/session';
 import { createClient } from '@/lib/supabase/server';
@@ -12,26 +13,7 @@ export default async function AdvancesPage() {
   const can = (k: string) => me.permissions.includes(k);
   if (!can('salary.view') && !can('advances.give')) redirect('/');
 
-  const supabase = await createClient();
-  const [{ data: balances }, { data: staff }] = await Promise.all([
-    supabase
-      .from('advance_balances')
-      .select('staff_id, outstanding_paise, advance_limit_paise, advance_cut_paise')
-      .eq('shop_id', me.shopId),
-    supabase.from('staff').select('person_id, people!inner(name)').eq('shop_id', me.shopId),
-  ]);
-  const names = new Map((staff ?? []).map((s) => [s.person_id, s.people.name]));
-  const rows = (balances ?? [])
-    .map((b) => ({
-      id: b.staff_id!,
-      name: names.get(b.staff_id!) ?? '',
-      outstanding: Number(b.outstanding_paise ?? 0),
-      cut: b.advance_cut_paise == null ? null : Number(b.advance_cut_paise),
-      limit: b.advance_limit_paise == null ? null : Number(b.advance_limit_paise),
-    }))
-    .filter((r) => r.outstanding > 0)
-    .sort((a, b) => b.outstanding - a.outstanding);
-  const total = rows.reduce((a, r) => a + r.outstanding, 0);
+  const { rows, total } = await loadAdvanceBalances(await createClient(), me.shopId);
 
   return (
     <>
@@ -62,12 +44,12 @@ export default async function AdvancesPage() {
             </thead>
             <tbody>
               {rows.map((r) => (
-                <tr key={r.id} className="border-t border-[var(--line)]">
+                <tr key={r.staffId} className="border-t border-[var(--line)]">
                   <td className="px-4 py-3">
                     <span className="flex items-center gap-3">
                       <Avatar name={r.name} size={32} />
                       <Link
-                        href={`/staff/${r.id}`}
+                        href={`/staff/${r.staffId}`}
                         className="text-label-sm text-[var(--accent-ink)] underline-offset-2 hover:underline"
                       >
                         {r.name}

@@ -14,35 +14,25 @@ _Handover written 2026-10-24 before a session compaction. Read this section firs
   flow in PLAN §6.2 except requests and the attendance code (both need Phase 7 data).
 - **Phase 5 FinCrew Android in progress** (`apps/fincrew-mobile`, Expo SDK 58 + Expo Router,
   `docs/features/fincrew-mobile.md`): sign-in, shop switch, tabs Today · Staff · Money · More.
-  **Today** and **Staff** (list + detail Overview / Attendance / Ledger / Pay) are built and were
-  **checked with the owner signed in on live data** (2026-10-24). **Money** tab is the
-  "Coming next" placeholder; More has the website link + sign out.
+  **Today**, **Staff** (list + detail Overview / Attendance / Ledger / Pay, with Give advance and
+  Pay) and **Money** (Expenses with add/edit, Salary run, Advances) are built and were
+  **checked with the owner signed in on live data** (2026-10-24; finalize / pay / give advance
+  not run live — permanent lines). More has the website link + sign out.
 - Shared code: `packages/core` (rules), **`packages/data`** (Supabase rows → core → screen data,
   used by website and app: attendance month, write attendance, paid-leave check, session,
-  dashboard, expenses, reports, salary month, leave setup, roles, staff loaders).
-- **Git:** local `main` is **2 commits ahead** of GitHub (`092ffe8` Staff tab, `42c0c73` checked +
-  Mark-all confirmation). Not pushed. The owner pushes, or tells you to push in that moment.
+  dashboard, expenses + **expense saving**, reports, salary month + **salary run / finalize /
+  pay**, **advances**, leave setup, roles, staff loaders).
+- **Git:** local `main` is **4 commits ahead** of GitHub (`092ffe8` Staff tab, `42c0c73` checked +
+  Mark-all confirmation, `60c5c09` handover, then the Money tab commit). Not pushed. The owner
+  pushes, or tells you to push in that moment.
   Everything before that is pushed; CI green; Vercel deployed; migrations up to
   `20261024000002_advance_undo.sql` are live.
 
 **Next work, in order** (owner usually says "continue"; pick the top unfinished one)
 
-1. **Android Money tab** (PLAN §6.1: segment Expenses · Salary · Advances), following the
-   Android "Salary run" / "Add expense" artboards on the FinCrew canvas:
-   - **Expenses**: month totals by category, list, add/edit (amount first, category grid, paid by,
-     charged to, mode, note, bill photo). Reuse `loadExpenseMonth` / `toExpense`. The website's
-     save logic is in `apps/fincrew-web/src/app/(app)/expenses/actions.ts` (server action) — move
-     the shared part (validation, bill path, insert/update, old-bill removal) into
-     `@fincrew/data` first, like `writeAttendance`, so the app can't skip rules. Photos: pick or
-     take with an Expo library (install with `npx expo install`), shrink to ~200 KB, upload to the
-     `bills` bucket at `<shop>/<expense>-<time>.jpg`.
-   - **Salary**: month picker, work out → draft review → finalize → pay all / pay one. The logic
-     is in the website's `salary/actions.ts` (`runSalary`, `finalizeSalary`, `paySalary`) using
-     `computeMonth` from `@fincrew/data` — move the run/finalize/pay steps into `@fincrew/data`
-     first, then call them from both apps. Payslip share on WhatsApp can come later.
-   - **Advances**: outstanding by person (`advance_balances`), give / record repaid with the
-     over-limit confirm (DB hint `over_limit`), like `staff/[id]/advance-actions.ts`.
-   - Then the staff detail quick actions in the app (Give advance, Pay) using the same code.
+1. **Android app leftovers** (small): payslip share on WhatsApp (design "Salary run"), undo a
+   line from the app's Ledger (`undoLedgerLine` is shared already), advance rules and pay
+   changes in the app (website only now). Bill photo upload from a real phone is unchecked.
 2. Move the website's staff detail page onto the shared loaders (`loadStaffOverview`,
    `loadLedger`, `loadPay`) when it's next touched.
 3. **Phase 7 data the Android app also needs**: attendance codes (table + edge function, code
@@ -113,6 +103,11 @@ ufmlqvvfznemghmnvynz --type all` (accepted warnings only: authenticated-callable
   `foldername`).
 - Expo: add native libraries with `npx expo install` (from `apps/fincrew-mobile`); pnpm isolated
   installs work; the app keeps Expo's TypeScript 6. One React version inside the app.
+- Expo web on Windows: after adding a **new folder** under `src/`, Metro may not see it ("Unable
+  to resolve @/components/…") — stop and start the "fincrew-mobile-web" preview.
+- RN web Pressables: `.click()` from JS works; find them by `aria-label` or text
+  (`[role=button]`, `[role=tab]`, `[role=radio]`). To test expenses on live, the only category
+  ("Test category") is archived — unarchive it for the check and archive it again after.
 - Design canvases: read with the Artifact tool (`project/canvas.json` + the artboard files),
   re-read `canvas.json` right before publishing; new artboards go in the "FinCrew web" row
   (y 2528; next free x ≈ 8070) or the Android rows.
@@ -131,8 +126,8 @@ ref `ufmlqvvfznemghmnvynz` (never touch `cheque-tracker-dev`).
 | 2   | Core logic (`packages/core`) | **Done**: 225 tests, every rule a setting; `docs/features/core-rules.md`                                                                                                    |
 | 3   | Design                       | **Done** (2026-10-23): design system, key screens (owner reviewed), `packages/ui` tokens                                                                                    |
 | 4   | FinCrew web core             | **Done** (2026-10-24): data layer live; screens slices 1–10 (dashboard, shell, staff + extras, attendance grid + CSV, salary run, payslip print, advances, settings, roles) |
-| 5   | FinCrew Android              | **In progress**: shell, sign-in, Today, Staff (checked live); Money next                                                                                                    |
-| 6   | Expenses                     | **Done on the web** (2026-10-24), live; Android Money tab next                                                                                                              |
+| 5   | FinCrew Android              | **In progress**: shell, sign-in, Today, Staff, Money (checked live); Phase 7 screens next                                                                                   |
+| 6   | Expenses                     | **Done** (2026-10-24): website and Android                                                                                                                                  |
 | 7   | Staffora                     | Not started                                                                                                                                                                 |
 | 8   | Polish                       | Not started                                                                                                                                                                 |
 
@@ -214,6 +209,16 @@ Tables still to add (with the phase that uses them, each with RLS tests): `staff
 `attendance_scans`, `invites`, `pin_credentials`, `push_tokens` (Phase 7).
 
 ## Session log
+
+- **2026-10-24** — **Phase 5 slice C: Android Money tab.** Moved expense saving, salary
+  run/finalize/pay and advances into `@fincrew/data` (website actions now wrap them; salary and
+  advances pages use `loadSalaryRun` / `loadAdvanceBalances`). Design first: new artboards
+  "Money · expenses / salary / advances" on the FinCrew canvas. App: Money tab (Expenses, Salary,
+  Advances), add/edit expense with bill photo (`expo-image-picker`, `expo-image-manipulator`,
+  `expo-crypto`), salary run screen, advance sheet; staff detail Give advance and Pay. Checked
+  live with the owner's sign-in (details in `docs/features/fincrew-mobile.md`); test category
+  re-archived, live data unchanged. Typecheck, tests (core 225, ui 6, i18n 1, db 109) and the
+  website build pass.
 
 - **2026-10-24** — Owner compacting the session: rewrote the **Start here** handover (state,
   next work with where the logic to move lives, live test data, checks, gotchas). Local `main`

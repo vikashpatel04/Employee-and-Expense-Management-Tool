@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Added — 2026-10-24 (Phase 5 slice C)
+
+- Android app Money tab: expenses (month view, add / edit / delete with bill photo), salary
+  (months, work out, check, finalize, pay all or one), advances (who owes, give or record paid
+  back with the over-limit confirm). Staff detail: Give advance and Pay what's due.
+- Expense, salary and advance saving moved into `@fincrew/data`; the website uses the same code.
+
 ### Added — 2026-10-24 (Phase 5 slice B)
 
 - Android app Staff tab: list with search and filters, staff detail with Overview, Attendance

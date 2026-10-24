@@ -3,16 +3,16 @@
 import { randomUUID } from 'node:crypto';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { parseDisplayDate, parseRupees, validateExpense } from '@fincrew/core';
+import {
+  deleteExpense as deleteShared,
+  saveExpense as saveShared,
+  type ExpenseWriteResult,
+} from '@fincrew/data';
 import { t } from '@/lib/i18n';
 import { requireMe } from '@/lib/session';
 import { createClient } from '@/lib/supabase/server';
 
 export type ExpenseState = { error?: string };
-
-const MODES = ['cash', 'upi', 'bank', 'card'] as const;
-const PAID_BY = ['owner', 'shop_cash', 'staff'] as const;
-const CHARGED = ['shop', 'staff', 'not_tracked'] as const;
 
 function refresh() {
   revalidatePath('/expenses');
@@ -20,10 +20,35 @@ function refresh() {
   revalidatePath('/staff', 'layout');
 }
 
+const f = 'expenses.form.errors';
+
+/** A refused save → the form's message (same keys as the Android app). */
+function message(r: Exclude<ExpenseWriteResult, { ok: true }>): string {
+  switch (r.reason) {
+    case 'no_permission':
+      return t('settings.errors.noPermission');
+    case 'amount':
+      return t(`${f}.amount`);
+    case 'date':
+      return t('common.invalidDate');
+    case 'category':
+      return t(`${f}.category`);
+    case 'staff_paid':
+      return t(`${f}.staffPaid`);
+    case 'staff_charged':
+      return t(`${f}.staffCharged`);
+    case 'bill':
+      return t('expenses.form.billBad');
+    case 'invalid':
+      return t(`${f}.failed`, { reason: r.problems.join('; ') });
+    case 'failed':
+      return t(`${f}.failed`, { reason: r.message });
+  }
+}
+
 /**
- * Add (`expenseId` null, needs expenses.add) or change (needs expenses.edit) an expense. A bill
- * photo arrives already shrunk by the browser and goes to Storage at `<shop>/<expense>-<time>.jpg`;
- * the database posts or re-posts any staff ledger lines (staff charge, pay-back).
+ * Add (`expenseId` null) or change an expense with the shared rules (`saveExpense` in
+ * `@fincrew/data`). A bill photo arrives already shrunk by the browser.
  */
 export async function saveExpense(
   expenseId: string | null,
@@ -31,110 +56,46 @@ export async function saveExpense(
   form: FormData,
 ): Promise<ExpenseState> {
   const me = await requireMe();
-  if (!me || !me.permissions.includes(expenseId ? 'expenses.edit' : 'expenses.add'))
-    return { error: t('settings.errors.noPermission') };
+  if (!me) return { error: t('settings.errors.noPermission') };
   const text = (k: string) => String(form.get(k) ?? '').trim();
-  const f = 'expenses.form.errors';
-
-  const amount = parseRupees(text('amount'));
-  if (!amount) return { error: t(`${f}.amount`) };
-  const date = parseDisplayDate(text('date'));
-  if (!date) return { error: t('common.invalidDate') };
-  const categoryId = text('category');
-  if (!categoryId) return { error: t(`${f}.category`) };
-  const mode = MODES.find((m) => m === text('mode')) ?? 'cash';
-  const paidBy = PAID_BY.find((m) => m === text('paidBy')) ?? 'owner';
-  const charged = CHARGED.find((m) => m === text('chargedTo')) ?? 'shop';
-  const paidStaff = paidBy === 'staff' ? text('paidByStaff') : '';
-  const chargedStaff = charged === 'staff' ? text('chargedToStaff') : '';
-  if (paidBy === 'staff' && !paidStaff) return { error: t(`${f}.staffPaid`) };
-  if (charged === 'staff' && !chargedStaff) return { error: t(`${f}.staffCharged`) };
-
-  const row = {
-    shop_id: me.shopId,
-    date,
-    amount_paise: amount,
-    category_id: categoryId,
-    payment_mode: mode,
-    note: text('note') || null,
-    paid_by_kind: paidBy,
-    paid_by_staff_id: paidStaff || null,
-    charged_to_kind: charged,
-    charged_to_staff_id: chargedStaff || null,
-    reimburse: paidBy === 'staff' && form.get('reimburse') === 'on',
-  };
-  const problems = validateExpense({
-    date,
-    amount,
-    categoryId,
-    paymentMode: mode,
-    paidBy: paidBy === 'staff' ? { kind: 'staff', staffId: paidStaff } : { kind: paidBy },
-    chargedTo: charged === 'staff' ? { kind: 'staff', staffId: chargedStaff } : { kind: charged },
-    reimburse: row.reimburse,
-  });
-  if (problems.length) return { error: t(`${f}.failed`, { reason: problems.join('; ') }) };
-
-  const supabase = await createClient();
-  const id = expenseId ?? randomUUID();
-  const { data: before } = expenseId
-    ? await supabase.from('expenses').select('bill_path').eq('id', expenseId).maybeSingle()
-    : { data: null };
-
-  // Bill photo: a new one replaces the old; "remove" clears it.
   const bill = form.get('bill');
-  let billPath: string | null | undefined = form.get('removeBill') === 'on' ? null : undefined;
-  if (bill instanceof File && bill.size > 0) {
-    if (bill.size > 1024 * 1024 || !bill.type.startsWith('image/'))
-      return { error: t('expenses.form.billBad') };
-    billPath = `${me.shopId}/${id}-${Date.now()}.jpg`;
-    const { error } = await supabase.storage
-      .from('bills')
-      .upload(billPath, bill, { contentType: 'image/jpeg', upsert: false });
-    if (error) return { error: t(`${f}.failed`, { reason: error.message }) };
-  }
-
-  const saved = expenseId
-    ? await supabase
-        .from('expenses')
-        .update({ ...row, ...(billPath !== undefined ? { bill_path: billPath } : {}) })
-        .eq('id', expenseId)
-        .eq('shop_id', me.shopId)
-        .select('id')
-    : await supabase
-        .from('expenses')
-        .insert({ ...row, id, bill_path: billPath ?? null })
-        .select('id');
-  if (saved.error || (saved.data ?? []).length === 0) {
-    if (billPath) await supabase.storage.from('bills').remove([billPath]);
-    return { error: t(`${f}.failed`, { reason: saved.error?.message ?? '—' }) };
-  }
-  // The old photo goes once the row no longer points at it (needs expenses.edit; best effort).
-  if (billPath !== undefined && before?.bill_path)
-    await supabase.storage.from('bills').remove([before.bill_path]);
-
+  const r = await saveShared(await createClient(), {
+    shopId: me.shopId,
+    permissions: me.permissions,
+    expenseId,
+    form: {
+      amount: text('amount'),
+      date: text('date'),
+      categoryId: text('category'),
+      mode: text('mode'),
+      paidBy: text('paidBy'),
+      paidByStaffId: text('paidByStaff'),
+      chargedTo: text('chargedTo'),
+      chargedToStaffId: text('chargedToStaff'),
+      reimburse: form.get('reimburse') === 'on',
+      note: text('note'),
+    },
+    bill: bill instanceof File ? { body: bill, size: bill.size, type: bill.type } : null,
+    removeBill: form.get('removeBill') === 'on',
+    newId: randomUUID,
+  });
+  if (!r.ok) return { error: message(r) };
   refresh();
-  redirect(`/expenses?month=${date.slice(0, 7)}&saved=1`);
+  redirect(`/expenses?month=${r.date.slice(0, 7)}&saved=1`);
 }
 
 /** Delete an expense; the database undoes any staff ledger lines it posted. */
 export async function deleteExpense(expenseId: string, month: string): Promise<ExpenseState> {
   const me = await requireMe();
-  if (!me || !me.permissions.includes('expenses.edit'))
-    return { error: t('settings.errors.noPermission') };
-  const supabase = await createClient();
-  const { data: row } = await supabase
-    .from('expenses')
-    .select('bill_path')
-    .eq('id', expenseId)
-    .maybeSingle();
-  const { error, count } = await supabase
-    .from('expenses')
-    .delete({ count: 'exact' })
-    .eq('id', expenseId)
-    .eq('shop_id', me.shopId);
-  if (error || count === 0)
-    return { error: t('expenses.form.errors.failed', { reason: error?.message ?? '—' }) };
-  if (row?.bill_path) await supabase.storage.from('bills').remove([row.bill_path]);
+  if (!me) return { error: t('settings.errors.noPermission') };
+  const r = await deleteShared(await createClient(), { ...me, expenseId });
+  if (!r.ok)
+    return {
+      error:
+        r.reason === 'no_permission'
+          ? t('settings.errors.noPermission')
+          : t(`${f}.failed`, { reason: r.message }),
+    };
   refresh();
   redirect(`/expenses?month=${month}`);
 }

@@ -129,7 +129,7 @@ export default function StaffDetail() {
               options={tabs.map((x) => ({ value: x, label: t(`staffDetail.tabs.${x}`) }))}
             />
 
-            {tab === 'overview' && <OverviewSection info={info} />}
+            {tab === 'overview' && <OverviewSection info={info} onChanged={load} />}
             {tab === 'attendance' && (
               <AttendanceSection staffId={info.id} name={info.name} onChanged={load} />
             )}

@@ -43,6 +43,8 @@ function Gate({ fontsLoaded }: { fontsLoaded: boolean }) {
         <Stack.Protected guard={!!session}>
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="staff/[id]" />
+          <Stack.Screen name="expense" />
+          <Stack.Screen name="salary/[month]" />
         </Stack.Protected>
         <Stack.Protected guard={!session}>
           <Stack.Screen name="sign-in" />

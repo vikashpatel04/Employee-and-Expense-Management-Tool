@@ -1,8 +1,8 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { AlertTriangle, ChevronDown, ChevronLeft, ChevronRight, FileText } from 'lucide-react';
-import { formatINR, monthOf, type DaySummary, type PayslipLine } from '@fincrew/core';
-import { paidByPayslip } from '@fincrew/data';
+import { formatINR, monthOf, type PayslipLine } from '@fincrew/core';
+import { loadSalaryRun } from '@fincrew/data';
 import { todayIST } from '@/lib/format';
 import { t } from '@/lib/i18n';
 import { requireMe } from '@/lib/session';
@@ -20,8 +20,6 @@ const shiftMonth = (y: number, m: number, by: number) => {
 const ym = (y: number, m: number) => `${y}-${String(m).padStart(2, '0')}`;
 const cols =
   'grid-cols-[minmax(200px,1.6fr)_56px_repeat(6,minmax(96px,1fr))_minmax(112px,1fr)_minmax(150px,1.2fr)_40px]';
-
-type Warning = { code: string; count?: number };
 
 export default async function SalaryPage({
   searchParams,
@@ -45,69 +43,11 @@ export default async function SalaryPage({
   const mName = monthName(year, month);
 
   const supabase = await createClient();
-  const { data: run } = await supabase
-    .from('salary_runs')
-    .select('id')
-    .eq('shop_id', me.shopId)
-    .eq('year', year)
-    .eq('month', month)
-    .maybeSingle();
-  const { data: slips } = run
-    ? await supabase
-        .from('payslips')
-        .select('*, staff!inner(people!inner(name))')
-        .eq('run_id', run.id)
-        .order('revision', { ascending: false })
-    : { data: [] };
-
-  const latest = new Map<string, NonNullable<typeof slips>[number]>();
-  for (const s of slips ?? []) if (!latest.has(s.staff_id)) latest.set(s.staff_id, s);
-  const rows = [...latest.values()].sort((a, b) =>
-    a.staff.people.name.localeCompare(b.staff.people.name),
-  );
-  const paid = await paidByPayslip(
-    supabase,
-    rows.map((r) => r.id),
-  );
-
-  const people = rows.map((r) => {
-    const lines = r.lines as unknown as PayslipLine[];
-    const sum = (kinds: string[]) =>
-      lines.filter((l) => kinds.includes(l.kind)).reduce((a, l) => a + l.amount, 0);
-    const net = Number(r.net_pay_paise);
-    const paidAmount = paid.get(r.id) ?? 0;
-    const state: 'draft' | 'finalized' | 'paid' =
-      r.status === 'draft' ? 'draft' : paidAmount >= net ? 'paid' : 'finalized';
-    return {
-      id: r.id,
-      name: r.staff.people.name,
-      revision: r.revision,
-      lines,
-      summary: r.summary as unknown as DaySummary,
-      warnings: (r.warnings as unknown as Warning[]) ?? [],
-      leave: r.leave as unknown as { carried?: number; paidOut?: number } | null,
-      earned: sum(['earned']),
-      overtime: sum(['overtime']),
-      allowances: sum(['allowance', 'leave_payout']),
-      gross: Number(r.gross_paise),
-      deductions: Number(r.deductions_paise),
-      cut: Number(r.advance_cut_paise),
-      net,
-      paidAmount,
-      state,
-    };
-  });
+  const { runId, people, overall } = await loadSalaryRun(supabase, me.shopId, year, month);
+  const run = runId ? { id: runId } : null;
   const total = (
     k: 'earned' | 'overtime' | 'allowances' | 'gross' | 'deductions' | 'cut' | 'net',
   ) => people.reduce((a, p) => a + p[k], 0);
-  const overall =
-    people.length === 0
-      ? 'none'
-      : people.some((p) => p.state === 'draft')
-        ? 'draft'
-        : people.every((p) => p.state === 'paid')
-          ? 'paid'
-          : 'finalized';
   const warnings = people.flatMap((p) =>
     p.warnings.map((w) => t(`salary.warnings.${w.code}`, { name: p.name, count: w.count ?? 0 })),
   );

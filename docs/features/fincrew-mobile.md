@@ -42,8 +42,11 @@ is a placeholder until the first store build.
 - **Staff detail** (`staff/[id].tsx`, design "Staff detail"): back, avatar, name, joined,
   today's status / minutes late / check-in; tabs by permission (Ledger: self or `salary.view`;
   Pay: self or `staff.pay.view`), components in `src/components/staff/`:
-  - **Overview**: balance (due / owes / settled), advance to recover with cut and limit, Call and
-    WhatsApp, this month's present / late / paid leave / half day and payable days.
+  - **Overview**: balance (due / owes / settled), advance to recover with cut and limit,
+    **Pay ₹…** (with `salary.run`, when finalized salary is still due: pays every unpaid month,
+    oldest first, `loadPayslipsDue` + `paySalary`), **Give advance** (`advances.give`, active
+    staff; the shared advance sheet), Call and WhatsApp, this month's present / late / paid
+    leave / half day and payable days.
   - **Attendance**: Monday-first month calendar (status colour + icon, late dot, today bold),
     chosen day's status, minutes late, in/out times, **Change** with the shared status sheet
     (`writeAttendance`), month counts.
@@ -53,10 +56,55 @@ is a placeholder until the first store build.
 - Shared loaders in `packages/data/src/staff.ts`: `loadStaffList`, `loadStaffOverview`,
   `loadLedger`, `loadPay`. Shared components: `status-sheet.tsx` (StatusPicker sheet used by
   Today and staff Attendance), `Segmented`, `IconButton` in `ui.tsx`.
-- **More**: who is signed in, the website link, sign out. **Money** says "Coming next" and points
-  to the website.
+- **Money** (`(tabs)/money.tsx`, design "Money · expenses / salary / advances"): segments by
+  permission (Expenses: `expenses.add` / `view_all` / `edit`; Salary: `salary.view`; Advances:
+  `salary.view` or `advances.give`), components in `src/components/money/`:
+  - **Expenses** (`expenses.tsx`): month switcher, shop total with charged to staff / paid back /
+    not tracked, by category bars, expenses by day (category icon and colour, note or category,
+    who paid, mode, staff / not-tracked tag, bill icon); tap → the expense; **Add expense**
+    (needs an active category). Data: `loadExpenseMonth`; reloads when you come back.
+  - **Add / edit expense** (`src/app/expense.tsx`, design "Add expense"): amount with quick
+    amounts, day stepper (no future days), category grid (7 + "All N"), Paid by (+ who from a
+    sheet, Pay them back), Charged to (+ who; below the small-expense limit a new one starts as
+    Not tracked), bill photo (camera or gallery with `expo-image-picker`, shrunk to ~200 KB
+    JPEG with `expo-image-manipulator`, `src/lib/bill-photo.ts`; shows the saved photo through a
+    signed link), Paid with, note, delete (two taps). Read-only without edit permission. Saves
+    through `saveExpense` / `deleteExpense` (`@fincrew/data`), ids from `expo-crypto`.
+  - **Salary** (`salary.tsx`): this month and the 3 before with state (Not worked out / Draft /
+    Finalized / Paid), net and what's still to pay; tap → the run.
+  - **Salary run** (`src/app/salary/[month].tsx`, design "Salary run"): month switcher, state
+    pill, net (or still to pay), gross / deductions / advance cuts, "Check before finalizing"
+    warnings, people (days, advance cut or first warning, net, Paid / Due); tap a person for the
+    payslip lines and **Pay ₹…** for them. Bottom: Work out salary / Run again, Finalize salary,
+    Pay all due. Finalize and pay ask first in a sheet (permanent ledger lines; pay asks the
+    mode). Uses `loadSalaryRun`, `runSalary`, `finalizeSalary`, `paySalary`.
+  - **Advances** (`advances.tsx`): total to recover, who owes (cut each month or decided at the
+    run, limit); tap a person or **Give advance** (pick a person) → advance sheet.
+  - **Advance sheet** (`src/components/advance-sheet.tsx`): Give advance / Paid back, amount, day,
+    mode, note; past the limit the database refuses and the sheet asks **Give anyway**
+    (`recordAdvance`, `confirmOverLimit`).
+- Form pieces (`src/components/form.tsx`): Field, AmountField, DayStepper, MonthStepper, Notice,
+  FormMessage, BottomBar. Money helpers (`src/lib/money.ts`): month names from i18n, category
+  icons/colours (same keys as the website).
+- **More**: who is signed in, the website link, sign out.
 
 ## Checked
+
+2026-10-24 (slice C, Money), owner signed in, live shop at 375 × 812:
+
+- **Expenses**: empty month; with the test category made active for the check: Save with
+  nothing → "Enter the amount in rupees."; amount only → "Choose a category."; added ₹125.50
+  (UPI, note) → list, totals and by-category updated on return; edited (day before, Not tracked
+  → hint "Kept for the record…", moved to Not tracked total); deleted (two taps). Category
+  archived again; no expenses, bills or ledger lines left.
+- **Salary**: months list (October draft ₹355, others Not worked out); run screen shows totals,
+  the unmarked-days warning, the payslip lines; Finalize asks first (cancelled — not finalized).
+- **Advances**: total ₹0.00, Give advance → person picker → form with "Owes ₹0.00 · limit
+  ₹5,000.00"; empty amount refused. Staff detail shows Give advance (same sheet).
+- **Not checked live** (would write permanent lines or need a phone): finalizing and paying,
+  giving an advance and the over-limit "Give anyway" (covered by the DB tests and the website),
+  staff detail Pay, taking/uploading a bill photo (file picker / camera), Android device.
+- Website after the move to shared code: build passes; salary and advances pages render the same.
 
 2026-10-24, signed in by the owner, live shop at 375 × 812:
 
@@ -80,5 +128,6 @@ owner to sign in (never typed for them).
 
 ## Next
 
-Give advance / pay from staff detail (with Money), Money (expenses, salary, advances), attendance code screen and
-requests (with Phase 7 data), push notifications, widgets (Phase 8), EAS builds.
+Payslip share on WhatsApp, pay a part of a payslip, undo a line from the app's Ledger, advance
+rules and pay changes in the app; attendance code screen and requests (with Phase 7 data), push
+notifications, widgets (Phase 8), EAS builds.

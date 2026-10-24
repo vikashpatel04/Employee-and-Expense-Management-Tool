@@ -2,6 +2,27 @@
 
 Choices made during the build that PLAN.md doesn't spell out. Newest first.
 
+## 2026-10-24 — Android Money tab
+
+- **Saving moved to `@fincrew/data`** before building the screens: `saveExpense` /
+  `deleteExpense` (`expense-write.ts`), `runSalary` / `finalizeSalary` / `paySalary` /
+  `loadSalaryRun` / `loadPayslipsDue` (`salary-run.ts`), `recordAdvance` / `undoLedgerLine` /
+  `loadAdvanceBalances` (`advances.ts`). They take typed text (rupees, DD/MM/YYYY), check the
+  permission and return reason codes; each app turns them into its own messages. Website server
+  actions are now thin wrappers.
+- A new expense's id is made by the caller (`newId`: Node's `randomUUID` on the website,
+  `expo-crypto` in the app) because the bill file is named after it before the row exists.
+- Phone bill photos are shrunk with `expo-image-manipulator` (JPEG, smaller widths/quality until
+  ≤ 200 KB) and uploaded as bytes (base64 decoded in `src/lib/bill-photo.ts`, no extra library).
+  The camera button is hidden in the browser preview (gallery only there).
+- **Finalize and pay ask first** in the app (a sheet with what will happen, and the payment
+  mode): both write permanent ledger lines.
+- Staff detail **Pay** pays every finalized month still due for that person, oldest first (one
+  `paySalary` per payslip). Paying part of a payslip isn't supported yet (website neither).
+- Days are picked with a ‹ › day stepper (no future days) rather than a calendar picker: no
+  extra native library, and most entries are today or a few days back.
+- Money segments follow the website's permissions; a person with none of them sees a short note.
+
 ## 2026-10-24 — Android Staff tab
 
 - Staff detail data comes from shared loaders (`loadStaffOverview`, `loadLedger`, `loadPay`);

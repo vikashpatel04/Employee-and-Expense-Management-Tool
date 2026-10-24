@@ -31,6 +31,14 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "FinCrew uses the camera to photograph expense bills.",
+          "photosPermission": "FinCrew lets you pick a bill photo for an expense.",
+          "microphonePermission": false
+        }
       ]
     ],
     "experiments": {

@@ -1,7 +1,8 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { parseDisplayDate, parseRupees } from '@fincrew/core';
+import { parseRupees } from '@fincrew/core';
+import { recordAdvance as recordShared, undoLedgerLine } from '@fincrew/data';
 import { todayIST } from '@/lib/format';
 import { t } from '@/lib/i18n';
 import { requireMe } from '@/lib/session';
@@ -9,11 +10,9 @@ import { createClient } from '@/lib/supabase/server';
 
 export type AdvanceState = { error?: string; needsConfirm?: boolean; done?: string };
 
-const MODES = ['cash', 'upi', 'bank', 'card'];
-
 /**
- * Give an advance or record cash repaid. The database posts the ledger line and refuses an
- * advance past the person's limit unless `over_limit_confirmed` (PLAN §4.7): the form then asks.
+ * Give an advance or record cash repaid with the shared rules (`recordAdvance` in
+ * `@fincrew/data`): past the person's limit the form asks to confirm (PLAN §4.7).
  */
 export async function recordAdvance(
   staffId: string,
@@ -21,36 +20,35 @@ export async function recordAdvance(
   form: FormData,
 ): Promise<AdvanceState> {
   const me = await requireMe();
-  if (!me || !me.permissions.includes('advances.give'))
-    return { error: t('advances.errors.noPermission') };
+  if (!me) return { error: t('advances.errors.noPermission') };
   const text = (k: string) => String(form.get(k) ?? '').trim();
-
-  const kind = text('kind') === 'repaid' ? 'repaid' : 'given';
-  const amount = parseRupees(text('amount'));
-  if (!amount) return { error: t('staffDetail.pay.form.errors.amount') };
-  const date = parseDisplayDate(text('date'));
-  if (!date) return { error: t('common.invalidDate') };
-  const mode = MODES.includes(text('mode')) ? text('mode') : 'cash';
-
-  const supabase = await createClient();
-  const { error } = await supabase.from('advances').insert({
-    shop_id: me.shopId,
-    staff_id: staffId,
-    date,
-    kind,
-    amount_paise: amount,
-    payment_mode: mode,
-    note: text('note') || null,
-    over_limit_confirmed: form.get('confirmOverLimit') === 'on',
+  const r = await recordShared(await createClient(), {
+    ...me,
+    staffId,
+    kind: text('kind') === 'repaid' ? 'repaid' : 'given',
+    amount: text('amount'),
+    date: text('date'),
+    mode: text('mode'),
+    note: text('note'),
+    confirmOverLimit: form.get('confirmOverLimit') === 'on',
   });
-  if (error) {
-    if (error.hint === 'over_limit')
-      return { needsConfirm: true, error: t('advances.errors.overLimit') };
-    return { error: t('advances.errors.failed', { reason: error.message }) };
+  if (!r.ok) {
+    switch (r.reason) {
+      case 'no_permission':
+        return { error: t('advances.errors.noPermission') };
+      case 'amount':
+        return { error: t('staffDetail.pay.form.errors.amount') };
+      case 'date':
+        return { error: t('common.invalidDate') };
+      case 'over_limit':
+        return { needsConfirm: true, error: t('advances.errors.overLimit') };
+      case 'failed':
+        return { error: t('advances.errors.failed', { reason: r.message }) };
+    }
   }
   revalidatePath(`/staff/${staffId}`);
   revalidatePath('/advances');
-  return { done: t(kind === 'given' ? 'advances.done.given' : 'advances.done.repaid') };
+  return { done: t(r.kind === 'given' ? 'advances.done.given' : 'advances.done.repaid') };
 }
 
 /** Per-person advance limit and monthly cut (blank = none / decide at each salary run). */
@@ -88,25 +86,20 @@ export async function saveAdvanceSettings(
 /** Undo a ledger line (payment or advance) with an exact reversal, once (PLAN §4.7). */
 export async function undoLine(staffId: string, lineId: string): Promise<AdvanceState> {
   const me = await requireMe();
-  if (!me || !me.permissions.includes('salary.undo_payment'))
-    return { error: t('advances.errors.noPermission') };
-  const supabase = await createClient();
-  const { data: line } = await supabase
-    .from('ledger_entries')
-    .select('amount_paise, staff_id')
-    .eq('id', lineId)
-    .maybeSingle();
-  if (!line || line.staff_id !== staffId)
-    return { error: t('advances.errors.failed', { reason: '—' }) };
-  const { error } = await supabase.from('ledger_entries').insert({
-    shop_id: me.shopId,
-    staff_id: staffId,
-    date: todayIST(),
-    type: 'reversal',
-    amount_paise: -Number(line.amount_paise),
-    reverses_id: lineId,
+  if (!me) return { error: t('advances.errors.noPermission') };
+  const r = await undoLedgerLine(await createClient(), {
+    ...me,
+    staffId,
+    lineId,
+    today: todayIST(),
   });
-  if (error) return { error: t('advances.errors.failed', { reason: error.message }) };
+  if (!r.ok)
+    return {
+      error:
+        r.reason === 'no_permission'
+          ? t('advances.errors.noPermission')
+          : t('advances.errors.failed', { reason: r.message }),
+    };
   revalidatePath(`/staff/${staffId}`);
   revalidatePath('/salary');
   return { done: t('advances.done.undone') };

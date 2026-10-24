@@ -16,3 +16,6 @@ export * from './leave-setup';
 export * from './reports';
 export * from './roles';
 export * from './salary-month';
+export * from './expense-write';
+export * from './salary-run';
+export * from './advances';
