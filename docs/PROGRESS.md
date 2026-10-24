@@ -4,79 +4,124 @@ _Last updated: 2026-10-24_
 
 ## Start here (handover for a new session)
 
-**Where we are:** Phases 1–4 done. Phase 4 (FinCrew website): data layer live, screens
-slices 1–10 done and checked in the browser: dashboard, app shell + shop switcher, staff list/add,
-staff detail (overview, ledger, pay, edit details, allowances/deductions, opening balance, own
-rules, leave template), attendance grid (+ clear a mark, CSV), salary run, printable payslip,
-advances + undo, settings
-(holidays, leave templates + assignment, shop rules, roles & permissions). Local `main` may be ahead of
-GitHub: run `git status -sb`; the owner pushes (never push unless asked).
+_Handover written 2026-10-24 before a session compaction. Read this section first, then
+`CLAUDE.md`, then the feature doc for whatever you touch._
 
-**Next work, in order** (owner said "continue"; pick the top unfinished one):
+**Where we are**
 
-1. ~~Advances on the web~~ — done (slice 5).
-2. ~~Settings screens~~ — done (slices 6–7: holidays, leave templates + assignment, shop rules,
-   roles & permissions).
-3. ~~Staff detail extras~~ — done (slice 8). Still open there: attendance calendar tab,
-   Staffora invite (Phase 7), adding non-staff helpers for roles.
-4. ~~Payslip print/PDF, attendance CSV, clear an attendance mark~~ — done (slice 9).
-5. ~~Web dashboard~~ — done (slice 10, designed first in Claude Design: "Web · dashboard").
-6. ~~Phase 6: Expenses~~ — live (slice 12, `docs/features/expenses.md`; migration applied by
-   CI 2026-10-24). Left for later: expense reports beyond the month view.
-7. ~~Website extras~~ — done (slice 13): staff Attendance tab, helpers for roles, opening
-   balance corrections, Reports + CSV; fix: undoing an advance now lowers the advance to recover
-   (migration `20261024000002_advance_undo.sql`, **not pushed yet**).
-8. **Phase 5: FinCrew Android** — in progress (`docs/features/fincrew-mobile.md`). Done:
-   app shell, sign-in, shop switch, **Today** (chips, lists, status sheet, Mark all present),
-   **Staff** (list + detail: Overview, Attendance, Ledger, Pay), More. Checked with the owner signed in (2026-10-24). Next: Money tab (expenses, salary, advances), then attendance code / requests (Phase 7 data),
-   push notifications, EAS build (needs the owner's Expo account).
+- Phases 1–4 done; **Phase 6 Expenses done on the website** (live); website extras done (staff
+  Attendance tab, helpers, opening balance correction, Reports). The website covers every owner
+  flow in PLAN §6.2 except requests and the attendance code (both need Phase 7 data).
+- **Phase 5 FinCrew Android in progress** (`apps/fincrew-mobile`, Expo SDK 58 + Expo Router,
+  `docs/features/fincrew-mobile.md`): sign-in, shop switch, tabs Today · Staff · Money · More.
+  **Today** and **Staff** (list + detail Overview / Attendance / Ledger / Pay) are built and were
+  **checked with the owner signed in on live data** (2026-10-24). **Money** tab is the
+  "Coming next" placeholder; More has the website link + sign out.
+- Shared code: `packages/core` (rules), **`packages/data`** (Supabase rows → core → screen data,
+  used by website and app: attendance month, write attendance, paid-leave check, session,
+  dashboard, expenses, reports, salary month, leave setup, roles, staff loaders).
+- **Git:** local `main` is **2 commits ahead** of GitHub (`092ffe8` Staff tab, `42c0c73` checked +
+  Mark-all confirmation). Not pushed. The owner pushes, or tells you to push in that moment.
+  Everything before that is pushed; CI green; Vercel deployed; migrations up to
+  `20261024000002_advance_undo.sql` are live.
 
-**Waiting on the owner:**
+**Next work, in order** (owner usually says "continue"; pick the top unfinished one)
 
-- Whether to **finalize/pay Test Staff's October draft** on the live shop to test end to end.
-  Ledger lines are permanent, so Test Staff (person `55e7a159-1a4b-4615-a1a3-bdbbcdc6b304`)
-  could never be deleted afterwards. Until then it's deletable (people delete cascades; drafts
-  have no ledger lines).
-- Review rule defaults (`docs/features/core-rules.md`), leaked-password protection (Supabase Auth).
-- Create the shop's real **leave templates** (Settings → Leave templates) and move staff onto
-  them, and save **Settings → Pay & attendance rules** once (it stores the full rule set). Not done
-  for the owner: templates can't be deleted (only archived), so names and rules are their call.
+1. **Android Money tab** (PLAN §6.1: segment Expenses · Salary · Advances), following the
+   Android "Salary run" / "Add expense" artboards on the FinCrew canvas:
+   - **Expenses**: month totals by category, list, add/edit (amount first, category grid, paid by,
+     charged to, mode, note, bill photo). Reuse `loadExpenseMonth` / `toExpense`. The website's
+     save logic is in `apps/fincrew-web/src/app/(app)/expenses/actions.ts` (server action) — move
+     the shared part (validation, bill path, insert/update, old-bill removal) into
+     `@fincrew/data` first, like `writeAttendance`, so the app can't skip rules. Photos: pick or
+     take with an Expo library (install with `npx expo install`), shrink to ~200 KB, upload to the
+     `bills` bucket at `<shop>/<expense>-<time>.jpg`.
+   - **Salary**: month picker, work out → draft review → finalize → pay all / pay one. The logic
+     is in the website's `salary/actions.ts` (`runSalary`, `finalizeSalary`, `paySalary`) using
+     `computeMonth` from `@fincrew/data` — move the run/finalize/pay steps into `@fincrew/data`
+     first, then call them from both apps. Payslip share on WhatsApp can come later.
+   - **Advances**: outstanding by person (`advance_balances`), give / record repaid with the
+     over-limit confirm (DB hint `over_limit`), like `staff/[id]/advance-actions.ts`.
+   - Then the staff detail quick actions in the app (Give advance, Pay) using the same code.
+2. Move the website's staff detail page onto the shared loaders (`loadStaffOverview`,
+   `loadLedger`, `loadPay`) when it's next touched.
+3. **Phase 7 data the Android app also needs**: attendance codes (table + edge function, code
+   screen with QR / regenerate), invites + PIN logins (staff and helpers), requests (leave /
+   advance) — then the FinCrew code screen and requests banner, then the Staffora app.
+4. Push notifications (expo-notifications + `push_tokens`), EAS build (owner's Expo account;
+   Android package id `app.fincrew.mobile` is a placeholder), Phase 8 polish (widgets,
+   translations, offline marking, StaffBook import, backup).
 
-**Owner rules (also in CLAUDE.md and memory):** no co-author on commits; owner pushes; docs in
-every commit; every rule is a setting (no hard-coding); dates DD/MM/YYYY everywhere; all strings
-via i18n; design follows the Claude Design system (`docs/DESIGN.md`).
+**Waiting on the owner**
 
-**How to check work:**
+- Whether to **finalize/pay Test Staff's October draft** on the live shop to test salary end to
+  end. Ledger lines are permanent, so Test Staff (person `55e7a159-1a4b-4615-a1a3-bdbbcdc6b304`)
+  could never be deleted afterwards. Never do it without their OK.
+- Their real setup: leave templates (Settings → Leave templates), save Settings → Pay &
+  attendance rules once, expense categories ("Add the usual ones").
+- Review rule defaults (`docs/features/core-rules.md`); leaked-password protection in Supabase
+  Auth; an Expo account for EAS when the app is ready to install.
 
-- Tests/types/build: `pnpm test` (core 225, ui 6, i18n 1, db 109 — PGlite, no Docker), `pnpm typecheck`,
-  `pnpm build`, `pnpm ui:tokens --check`, `bash scripts/check-migrations.sh origin/main HEAD`.
-- Live DB (CLI is logged in): `pnpm exec supabase db query --linked --project-ref
-ufmlqvvfznemghmnvynz "<sql>"`; advisors: `pnpm exec supabase db advisors --linked --project-ref
-ufmlqvvfznemghmnvynz --type all`. To test as the owner inside SQL: `begin; select
-set_config('request.jwt.claim.sub', (select auth_user_id::text from public.people where is_owner
-limit 1), true); set local role authenticated; … rollback;`
-- Browser: `.claude/launch.json` → preview "fincrew-web" on :3000 (or a dev server the owner
-  started). Signed-in pages need the **owner to sign in** in the pane (never type their password).
-- After a pushed migration: watch CI (`gh run list`), then `pnpm db:types` and commit types.
+**Live test data (keep it reversible)**: Test Staff (joined 23/10/2026, ₹22,000 monthly,
+9:30 AM – 8:30 PM, advance limit ₹5,000 / cut ₹1,000, attendance 23/10 half day, October draft
+payslip ₹355, no ledger lines); an archived "Test category". Everything else tested was reverted.
 
-**Gotchas seen this session:**
+**Owner rules (also in CLAUDE.md and memory)**: no co-author on commits; the owner pushes (push
+only when asked in that moment); docs in every commit; every rule is a setting (no
+hard-coding); dates DD/MM/YYYY everywhere; all strings via i18n (no English fallbacks in code);
+design in Claude Design first for new screens (`docs/DESIGN.md`); never type the owner's
+password; never write permanent ledger lines or advances on the live shop without their OK.
 
-- Windows dev server sometimes keeps a **stale server bundle** after edits (client updates, SSR
-  doesn't → hydration mismatch). Fix: stop the preview, `rm -rf apps/fincrew-web/.next`, start.
-  Stale `.next/types` after moving routes breaks `tsc`: delete `.next`.
-- HTML `pattern` is compiled with the **`v` flag**: no unescaped `/` in `[...]`; write patterns
-  with `String.raw` (see `dateFieldProps` in `apps/fincrew-web/src/app/components.tsx`).
-- Postgres **jsonb reorders keys**: compare stored JSON with `sameJson` (`packages/data/src/salary-month.ts`).
-- Anything exported from a `'use server'` file is a callable endpoint: keep helpers in `src/lib`.
-- Composite FKs mean cross-shop rows fail with `foreign key`; unique `(staff_id, effective_from)`
-  on dated tables.
-- New public SQL functions must be added to `supabase/tests/functions.test.ts`'s pinned list.
-- Design canvases: read with the Artifact tool; read `project/canvas.json` + files before editing;
-  a newer version may exist (re-read before publishing).
+**How to check work**
 
-**Key links:** FinCrew screens https://claude.ai/artifact/WydRUvQzCNMAoXcNVh7pWC · Staffora screens
-https://claude.ai/artifact/9YMxty5q9jFvuut8ay8dTe · Design system
-https://claude.ai/artifact/8jzomFcfJazHfn6yiUFQQP · Website https://fincrew-web.vercel.app
+- `pnpm typecheck` (8 tasks incl. the app), `pnpm test` (core 225, ui 6, i18n 1, db 109 —
+  PGlite, no Docker), `pnpm build`, `pnpm ui:tokens --check`,
+  `bash scripts/check-migrations.sh origin/main HEAD`.
+- Live DB (CLI logged in): `pnpm exec supabase db query --linked --project-ref
+ufmlqvvfznemghmnvynz "<sql>"`; advisors: `... db advisors --linked --project-ref
+ufmlqvvfznemghmnvynz --type all` (accepted warnings only: authenticated-callable
+  `create_shop`/`finalize_payslip`/`my_permissions`/`shop_exists`, Supabase's
+  `rls_auto_enable`, leaked-password protection). **Dry-run a new migration** on live before
+  asking to push: write `begin; <migration> select 'applied'; rollback;` to a file and run
+  `... db query --linked --project-ref ufmlqvvfznemghmnvynz -f <file>`.
+- Website in the browser: preview "fincrew-web" (:3000). App in the browser: preview
+  "fincrew-mobile-web" (:8081, `expo start --web`; the first bundle takes ~1 min — poll with
+  curl until 200). Both need the **owner to sign in** in the pane (sessions persist per origin).
+  In the app, RN `accessibilityLabel` becomes `aria-label` and Pressables are `role=button`,
+  so drive it with JS clicks; pane screenshots can look scaled — measure layout with JS.
+- After a pushed migration: `gh run watch <id>`, then `pnpm db:types` and commit the types.
+  Vercel status: `gh api repos/vikashpatel04/Employee-and-Expense-Management-Tool/commits/<sha>/status`.
+
+**Gotchas seen so far**
+
+- Long Bash heredocs often fail to parse in this tool: write scripts/JSON edits with the Write
+  tool into the scratchpad and run them. Python on Windows writes CRLF unless
+  `open(..., newline='')`. Windows sometimes locks `common.json` for a moment (EUNKNOWN): retry.
+- Prettier re-pads Markdown tables: edit table rows with a regex, not exact strings.
+- Next.js: stale server bundle / `.next/types` after moving routes → stop preview, delete
+  `apps/fincrew-web/.next`. Don't delete `.next` while the owner's own dev server runs.
+- React 19 resets `<form action>` forms after the action: use `useFormAction`
+  (`src/lib/use-form-action.ts`).
+- Anything exported from a `'use server'` file is a callable endpoint; server components can't
+  take plain values (maps, objects) from `'use client'` files — keep those in `src/lib`.
+- HTML `pattern` uses the `v` flag (`dateFieldProps` uses `String.raw`).
+- jsonb reorders keys → `sameJson`. Composite FKs → cross-shop rows fail with `foreign key`.
+- Hidden `sr-only` labels inside `overflow-x-auto` boxes widen phone pages → make the scroll box
+  `relative`.
+- New public SQL functions go in `supabase/tests/functions.test.ts`'s pinned list. Storage in
+  tests: the PGlite harness has a small `storage` stand-in (buckets, objects with `owner_id`,
+  `foldername`).
+- Expo: add native libraries with `npx expo install` (from `apps/fincrew-mobile`); pnpm isolated
+  installs work; the app keeps Expo's TypeScript 6. One React version inside the app.
+- Design canvases: read with the Artifact tool (`project/canvas.json` + the artboard files),
+  re-read `canvas.json` right before publishing; new artboards go in the "FinCrew web" row
+  (y 2528; next free x ≈ 8070) or the Android rows.
+
+**Key links**: FinCrew screens https://claude.ai/artifact/WydRUvQzCNMAoXcNVh7pWC · Staffora
+screens https://claude.ai/artifact/9YMxty5q9jFvuut8ay8dTe · Design system
+https://claude.ai/artifact/8jzomFcfJazHfn6yiUFQQP · Website https://fincrew-web.vercel.app ·
+Repo https://github.com/vikashpatel04/Employee-and-Expense-Management-Tool · Supabase project
+ref `ufmlqvvfznemghmnvynz` (never touch `cheque-tracker-dev`).
 
 ## Phase status (docs/PLAN.md §8)
 
@@ -86,8 +131,8 @@ https://claude.ai/artifact/8jzomFcfJazHfn6yiUFQQP · Website https://fincrew-web
 | 2   | Core logic (`packages/core`) | **Done**: 225 tests, every rule a setting; `docs/features/core-rules.md`                                                                                                    |
 | 3   | Design                       | **Done** (2026-10-23): design system, key screens (owner reviewed), `packages/ui` tokens                                                                                    |
 | 4   | FinCrew web core             | **Done** (2026-10-24): data layer live; screens slices 1–10 (dashboard, shell, staff + extras, attendance grid + CSV, salary run, payslip print, advances, settings, roles) |
-| 5   | FinCrew Android              | **In progress**: shell, sign-in, Today                                                                                                                                      |
-| 6   | Expenses                     | **Done on the web** (2026-10-24): live migration, RLS + 17 tests, screens checked on the live shop; reports and Android later                                               |
+| 5   | FinCrew Android              | **In progress**: shell, sign-in, Today, Staff (checked live); Money next                                                                                                    |
+| 6   | Expenses                     | **Done on the web** (2026-10-24), live; Android Money tab next                                                                                                              |
 | 7   | Staffora                     | Not started                                                                                                                                                                 |
 | 8   | Polish                       | Not started                                                                                                                                                                 |
 
@@ -169,6 +214,10 @@ Tables still to add (with the phase that uses them, each with RLS tests): `staff
 `attendance_scans`, `invites`, `pin_credentials`, `push_tokens` (Phase 7).
 
 ## Session log
+
+- **2026-10-24** — Owner compacting the session: rewrote the **Start here** handover (state,
+  next work with where the logic to move lives, live test data, checks, gotchas). Local `main`
+  2 commits ahead of GitHub.
 
 - **2026-10-24** — Owner signed in on the app (browser preview :8081). Checked Today and Staff
   with live data (details in `docs/features/fincrew-mobile.md` → Checked); all writes reverted.
