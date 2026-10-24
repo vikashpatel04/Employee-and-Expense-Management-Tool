@@ -22,25 +22,32 @@ _Handover written 2026-10-24 before a session compaction. Read this section firs
   used by website and app: attendance month, write attendance, paid-leave check, session,
   dashboard, expenses + **expense saving**, reports, salary month + **salary run / finalize /
   pay**, **advances**, leave setup, roles, staff loaders).
-- **Git:** everything up to `ce87e6b` (Money tab) is pushed (2026-10-24); CI green; Vercel
-  deployed. The owner pushes, or tells you to push in that moment. Migrations up to
+- **Git:** everything up to `abd06ff` (Money tab + docs) is pushed (2026-10-24); CI green;
+  Vercel deployed. Local `main` is **2 commits ahead**: `02bafc9` Phase 7 data and the Phase 7
+  screens commit — not pushed. The owner pushes, or tells you to push in that moment. Migrations up to
   `20261024000002_advance_undo.sql` are live.
 
-- **Phase 7 started** (owner's go, 2026-10-24): database for attendance codes + check-in,
-  requests, invites + PIN sign-in, and the `staff-auth` edge function are written and tested
-  (`docs/features/staff-self-service.md`), **not yet live** (next push applies the migrations
-  and deploys the function; then `pnpm db:types` — the types were added by hand meanwhile).
+- **Phase 7 in progress** (owner's go, 2026-10-24; `docs/features/staff-self-service.md`):
+  database for attendance codes + check-in, requests, invites + PIN sign-in, the `staff-auth`
+  edge function, and the FinCrew screens (website `/code`, `/qr`, `/requests`, staff sign-in
+  card, public `/join/<token>`; app code + requests screens) are written and tested, **not yet
+  live**: the next push applies 3 migrations and deploys the function (CI). After it: watch the
+  run, `pnpm db:types` (the types were added by hand meanwhile; regenerate and commit), then check
+  the new screens on live (list in the feature doc → Checked).
 
 **Next work, in order** (owner usually says "continue"; pick the top unfinished one)
 
-1. **Android app leftovers** (small): payslip share on WhatsApp (design "Salary run"), undo a
+1. **Phase 7, continued**: after the push and live checks, build the **Staffora app**
+   (`apps/staffora-mobile`, Expo like FinCrew; scheme `staffora` for invite links; designs on the
+   Staffora canvas): first run from the invite (name, PIN twice, phone bound via `staff-auth`
+   accept), PIN screen on open (`staff-auth` login; device id kept on the phone), Home with Scan
+   QR / Enter code (`check_in`, expo-camera), Attendance calendar, Money (ledger, payslips),
+   Requests (`askRequest` / `cancelRequest`), Me (change PIN — needs a small SQL function).
+2. **Android app leftovers** (small): payslip share on WhatsApp (design "Salary run"), undo a
    line from the app's Ledger (`undoLedgerLine` is shared already), advance rules and pay
    changes in the app (website only now). Bill photo upload from a real phone is unchecked.
-2. Move the website's staff detail page onto the shared loaders (`loadStaffOverview`,
+3. Move the website's staff detail page onto the shared loaders (`loadStaffOverview`,
    `loadLedger`, `loadPay`) when it's next touched.
-3. **Phase 7 data the Android app also needs**: attendance codes (table + edge function, code
-   screen with QR / regenerate), invites + PIN logins (staff and helpers), requests (leave /
-   advance) — then the FinCrew code screen and requests banner, then the Staffora app.
 4. Push notifications (expo-notifications + `push_tokens`), EAS build (owner's Expo account;
    Android package id `app.fincrew.mobile` is a placeholder), Phase 8 polish (widgets,
    translations, offline marking, StaffBook import, backup).
@@ -56,8 +63,9 @@ _Handover written 2026-10-24 before a session compaction. Read this section firs
   Auth; an Expo account for EAS when the app is ready to install.
 
 **Live test data (keep it reversible)**: Test Staff (joined 23/10/2026, ₹22,000 monthly,
-9:30 AM – 8:30 PM, advance limit ₹5,000 / cut ₹1,000, attendance 23/10 half day, October draft
-payslip ₹355, no ledger lines); an archived "Test category". Everything else tested was reverted.
+9:30 AM – 8:30 PM, advance limit ₹5,000 / cut ₹1,000, attendance 23/10 half day and 24/10 present
+(marked by the owner), October draft payslip ₹355, no ledger lines, self attendance off, no
+sign-in); an archived "Test category". Everything else tested was reverted.
 
 **Owner rules (also in CLAUDE.md and memory)**: no co-author on commits; the owner pushes (push
 only when asked in that moment); docs in every commit; every rule is a setting (no
@@ -211,6 +219,15 @@ Tables still to add (with the phase that uses them, each with RLS tests): `staff
 (storage), `push_tokens` (Phase 7/8).
 
 ## Session log
+
+- **2026-10-24** — **Phase 7 screens.** Design first: new artboards Requests (Android),
+  Web · attendance code, Web · requests, Web · staff sign-in card. Shared
+  `packages/data/src/self-service.ts`; `writeAttendance` gains `allowFuture` (approved leave),
+  `recordAdvance` returns the id. Website `/code`, `/qr`, `/requests`, dashboard banner, sidebar
+  links with the waiting count, staff "Staffora sign-in" card, public `/join/<token>` (proxy
+  allows `/join/`). App: code screen with full-screen QR, requests screen, Today button + banner.
+  `qrcode` added to both apps. Checks: typecheck, tests, build; website still loads. Not pushed;
+  the new screens need the push (migrations + edge function) before they can be seen working.
 
 - **2026-10-24** — **Phase 7 data.** Migrations `20261024000003_attendance_codes.sql` (codes,
   check-in in SQL mirroring core `evaluateCheck`, scans log, attendance stamp keeps self

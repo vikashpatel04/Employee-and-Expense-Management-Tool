@@ -1,8 +1,10 @@
 import type { ReactNode } from 'react';
 import { LogOut } from 'lucide-react';
+import { countPendingRequests } from '@fincrew/data';
 import { t } from '@/lib/i18n';
 import { requireMe } from '@/lib/session';
 import { settingsSections } from '@/lib/settings-access';
+import { createClient } from '@/lib/supabase/server';
 import { AuthCard, buttonClass } from '../components';
 import { signOut } from '../login/actions';
 import { NavLinks, type NavItem } from './nav';
@@ -33,6 +35,11 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   const items: NavItem[] = [{ href: '/', label: t('nav.dashboard'), icon: 'home' }];
   if (can('staff.view') || can('attendance.mark')) {
     items.push({ href: '/attendance', label: t('nav.attendance'), icon: 'calendar' });
+  }
+  if (can('attendance.code')) items.push({ href: '/code', label: t('nav.code'), icon: 'qr' });
+  if (can('requests.decide')) {
+    const waiting = await countPendingRequests(await createClient(), me.shopId);
+    items.push({ href: '/requests', label: t('nav.requests'), icon: 'inbox', badge: waiting });
   }
   if (can('staff.view')) items.push({ href: '/staff', label: t('nav.staff'), icon: 'users' });
   if (can('salary.view')) items.push({ href: '/salary', label: t('nav.salary'), icon: 'rupee' });

@@ -7,8 +7,9 @@ and requests list need. Migrations `20261024000003_attendance_codes.sql`,
 `requests.test.ts`, `staff-login.test.ts`, `staff-auth.test.ts`; core
 `packages/core/src/staff-login.test.ts`.
 
-Status: **database, edge function and settings done, not yet live** (they apply and deploy on
-the next push; then `pnpm db:types`). Screens: see "Screens" below.
+Status: **database, edge function, settings and FinCrew screens (website + Android) done, not
+yet live** (they apply and deploy on the next push; then `pnpm db:types`). Staffora (the staff
+app) is next.
 
 ## Attendance code (PLAN §4.5)
 
@@ -83,7 +84,54 @@ sets a new random password and signs in with it, returning `access_token` / `ref
 JWT verification is off for this function (`supabase/config.toml`): callers aren't signed in
 yet. CI deploys it after the migrations (`supabase functions deploy staff-auth --use-api`).
 
+## Shared code (`packages/data/src/self-service.ts`)
+
+`loadAttendanceCode`, `regenerateAttendanceCode`, `loadCheckIns` (today's accepted check-ins by
+person with method and minutes late from the grid's rules, refused attempts, people working
+today), `loadRequests` (pending oldest first / decided newest first, with names and who
+decided), `loadRequestContext` (paid leave left for the asked days via `paidLeaveShortfall`;
+advance owed / limit / cut), `countPendingRequests`, `decideRequest` (approve leave →
+`writeAttendance` with `allowFuture`; approve advance → `recordAdvance`, which now returns the
+advance id; then the request records it; refusals come back as reason codes), `askRequest` /
+`cancelRequest` (for Staffora), `loadStaffLogins`, `createInvite`, `inviteUrl`, `revokeInvite`,
+`unlockLogin`, `resetStaffPhone`, `setSelfAttendance`, `minutesUntil`, `dateOfInstant`.
+
 ## Screens
 
-Not built yet: website code page and requests, invite button on the staff page, FinCrew app code
-screen and requests banner, then Staffora.
+Designs (FinCrew canvas, 2026-10-24): "Requests" (Android), "Web · attendance code",
+"Web · requests", "Web · staff sign-in card"; the Android "Attendance code" / "· QR" artboards
+existed already.
+
+- **Website**
+  - `/code` (`attendance.code`; sidebar "Attendance code"): today's code in large digits, when it
+    changes, Copy code, New code (asks first), the QR (`src/lib/qr.tsx`, `qrcode` library, content
+    = the 6 digits), Full screen (`/qr`, no sidebar, for a counter display) and Print; today's
+    check-ins (in, out, scanned / typed, minutes late) and refused attempts.
+  - `/requests` (`requests.decide`; sidebar with the waiting count): Waiting / Decided. Each card:
+    person, when asked, Leave / Advance, dates or amount, note, context (paid leave left, or owed /
+    limit / cut). Leave: mark as paid or unpaid leave (starts on unpaid when the balance is short);
+    advance: paid with. Reply, Reject / Approve; past the limit "Approve anyway". Decided cards
+    say who decided, when, how. The dashboard shows "N requests waiting → Review".
+  - Staff detail → Overview, **Staffora sign-in** card (`staff.edit`): Not invited → "Invite to
+    Staffora" makes a link shown once (Copy, WhatsApp with a ready message); Invited (until when)
+    → New link / Cancel invite; Signed in (or locked / waiting) → Unlock, New phone, Reset PIN
+    (new link). "Can check in with the attendance code" switch (`staff.self_attendance`).
+  - `/join/<token>` (public): asks the edge function who the invite is for and shows "Join
+    <shop> on Staffora", **Open in Staffora** (`staffora://join/<token>`) and what happens next;
+    clear messages for used / expired / wrong links. Opening it uses nothing up.
+- **Android app**
+  - Today: "Attendance code" button (with `attendance.code`) and the "N requests waiting →
+    Review" banner (with `requests.decide`, refreshed when Today comes back into view).
+  - `src/app/code.tsx`: code, when it changes, Show QR (full screen, `src/components/qr.tsx`), New
+    code with a confirmation, today's check-ins and refused attempts.
+  - `src/app/requests.tsx`: Waiting / Decided, cards like the website; Approve / Reject open a
+    sheet (leave: paid / unpaid; advance: paid with; reply; "Approve anyway" past the limit).
+
+## Checked
+
+2026-10-24, before the push (the live database doesn't have these tables yet): typecheck, tests
+(core 234, db 160) and the website build pass; the website dashboard still loads with the new
+sidebar links; `/join/<token>` shows the "couldn't check" message while the function isn't
+deployed. **To check after the push**: `/code` and the QR, invite → join page → (Staffora) and the
+sign-in card states, requests (needs a request from Staffora, or one inserted for Test Staff),
+the Android code and requests screens.

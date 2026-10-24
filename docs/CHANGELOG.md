@@ -11,6 +11,11 @@
   wait and lock; owner can see logins, unlock and reset the phone. Settings → Staff sign-in.
 - Migrations `20261024000003_attendance_codes.sql`, `20261024000004_requests.sql`,
   `20261024000005_staff_login.sql`.
+- Website: Attendance code page (copy, new code, QR, full screen, print, today's check-ins),
+  Requests (approve / reject with paid or unpaid leave, advance mode), dashboard banner, Staffora
+  sign-in card on the staff page, public invite page `/join/<token>`.
+- Android app: Attendance code screen with full-screen QR, Requests screen, Today button and
+  banner.
 
 ### Added — 2026-10-24 (Phase 5 slice C)
 

@@ -6,6 +6,7 @@ import {
   ChevronRight,
   Clock,
   Hourglass,
+  Inbox,
   IndianRupee,
   Receipt,
   Sparkles,
@@ -23,6 +24,7 @@ import {
   weekday,
 } from '@fincrew/core';
 import {
+  countPendingRequests,
   loadExpenseMonth,
   loadMoney,
   loadSalary,
@@ -62,12 +64,13 @@ export default async function DashboardPage() {
   const showAdvances = can('salary.view') || can('advances.give');
   const showExpenses = can('expenses.view_all');
   const supabase = await createClient();
-  const [todayData, money, salary, soon, spent] = await Promise.all([
+  const [todayData, money, salary, soon, spent, waiting] = await Promise.all([
     showToday ? loadToday(supabase, me.shopId, today) : null,
     showAdvances ? loadMoney(supabase, me.shopId) : null,
     showMoney ? loadSalary(supabase, me.shopId, year, month) : null,
     loadSoon(supabase, me.shopId, today, can('staff.view')),
     showExpenses ? loadExpenseMonth(supabase, me.shopId, year, month) : null,
+    can('requests.decide') ? countPendingRequests(supabase, me.shopId) : 0,
   ]);
   // Until it's finalized, this month's salary is something coming up.
   const soonItems: SoonItem[] = [
@@ -104,6 +107,22 @@ export default async function DashboardPage() {
           )
         }
       />
+
+      {waiting > 0 && (
+        <Link
+          href="/requests"
+          className="flex min-h-16 items-center gap-3 rounded-[var(--radius-md)] bg-[var(--surface)] px-4 py-3 shadow-[var(--elevation-1)] hover:bg-[var(--surface-muted)]"
+        >
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[var(--accent-soft)] text-[var(--accent-ink)]">
+            <Inbox size={20} aria-hidden="true" />
+          </span>
+          <span className="text-label flex-1">{t('requests.banner', { count: waiting })}</span>
+          <span className="text-label-sm flex items-center gap-0.5 text-[var(--accent-ink)]">
+            {t('requests.review')}
+            <ChevronRight size={20} aria-hidden="true" />
+          </span>
+        </Link>
+      )}
 
       {nothing && (
         <p className="text-body-lg max-w-prose text-[var(--ink-muted)]">{t('home.nothing')}</p>

@@ -7,7 +7,9 @@ import {
   ChartColumn,
   CalendarDays,
   House,
+  Inbox,
   IndianRupee,
+  QrCode,
   Receipt,
   Settings,
   Users,
@@ -23,9 +25,17 @@ const ICONS: Record<string, LucideIcon> = {
   reports: ChartColumn,
   advance: ArrowUpRight,
   settings: Settings,
+  qr: QrCode,
+  inbox: Inbox,
 };
 
-export type NavItem = { href: string; label: string; icon: keyof typeof ICONS };
+export type NavItem = {
+  href: string;
+  label: string;
+  icon: keyof typeof ICONS;
+  /** A count shown beside the label (requests waiting). */
+  badge?: number;
+};
 
 /** Sidebar links; the current section gets the accent background (design: Web · attendance grid). */
 export function NavLinks({ items, label }: { items: NavItem[]; label: string }) {
@@ -47,7 +57,12 @@ export function NavLinks({ items, label }: { items: NavItem[]; label: string }) 
               }`}
             >
               <Icon size={20} strokeWidth={2} aria-hidden="true" />
-              <span>{item.label}</span>
+              <span className="flex-1">{item.label}</span>
+              {item.badge ? (
+                <span className="text-micro min-w-5 rounded-[var(--radius-pill)] bg-[var(--accent)] px-1.5 text-center text-[var(--on-accent)]">
+                  {item.badge}
+                </span>
+              ) : null}
             </Link>
           </li>
         );

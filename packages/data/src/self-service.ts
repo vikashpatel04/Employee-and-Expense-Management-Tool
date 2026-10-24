@@ -1,0 +1,396 @@
+import {
+  addDays,
+  businessDateOf,
+  compareDates,
+  formatDisplayDate,
+  monthOf,
+  type BusinessDate,
+} from '@fincrew/core';
+import type { Supabase } from './client';
+import { loadAdvanceBalances, recordAdvance, type AdvanceWriteResult } from './advances';
+import { loadAttendanceMonth } from './attendance-month';
+import { writeAttendance, type AttendanceWriteResult } from './attendance-write';
+import { PAYMENT_MODES } from './expense-write';
+import { paidLeaveShortfall } from './paid-leave';
+
+// ---------------------------------------------------------------------------
+// Attendance code (needs attendance.code; docs/features/staff-self-service.md)
+// ---------------------------------------------------------------------------
+
+export type AttendanceCode = { code: string; validFrom: string; nextChange: string | null };
+
+/** Today's code (made on first use after the daily change), or null without permission. */
+export async function loadAttendanceCode(
+  supabase: Supabase,
+  shopId: string,
+): Promise<AttendanceCode | null> {
+  const { data, error } = await supabase.rpc('attendance_code', { p_shop: shopId });
+  return error ? null : (data as AttendanceCode);
+}
+
+/** A new code now; the old one (and its QR) stops working. */
+export async function regenerateAttendanceCode(
+  supabase: Supabase,
+  shopId: string,
+): Promise<AttendanceCode | null> {
+  const { data, error } = await supabase.rpc('regenerate_attendance_code', { p_shop: shopId });
+  return error ? null : (data as AttendanceCode);
+}
+
+export type CheckInRow = {
+  staffId: string;
+  name: string;
+  /** Instants as ISO strings. */
+  checkIn: string | null;
+  checkOut: string | null;
+  method: 'scan' | 'typed' | null;
+  lateMinutes?: number;
+};
+
+/**
+ * Today's self check-ins for the code screen: who checked in / out by code and how, minutes
+ * late (same rule as the grid), and the attempts that were refused.
+ */
+export async function loadCheckIns(supabase: Supabase, shopId: string, today: BusinessDate) {
+  const from = new Date(`${today}T00:00:00+05:30`).toISOString();
+  const to = new Date(`${addDays(today, 1)}T00:00:00+05:30`).toISOString();
+  const [{ data: scans }, month] = await Promise.all([
+    supabase
+      .from('attendance_scans')
+      .select('staff_id, at, kind, method, result, staff!inner(people!inner(name))')
+      .eq('shop_id', shopId)
+      .gte('at', from)
+      .lt('at', to)
+      .order('at'),
+    loadAttendanceMonth(supabase, shopId, monthOf(today).year, monthOf(today).month, today),
+  ]);
+  const cells = new Map(month.rows.map((r) => [r.staffId, r.cells.find((c) => c.date === today)]));
+  const rows = new Map<string, CheckInRow>();
+  const refused: { name: string; at: string; result: string }[] = [];
+  for (const s of scans ?? []) {
+    const name = s.staff.people.name;
+    if (s.result !== 'accepted') {
+      refused.push({ name, at: s.at, result: s.result });
+      continue;
+    }
+    const row = rows.get(s.staff_id) ?? {
+      staffId: s.staff_id,
+      name,
+      checkIn: null,
+      checkOut: null,
+      method: null,
+      lateMinutes: cells.get(s.staff_id)?.lateMinutes,
+    };
+    if (s.kind === 'in') {
+      row.checkIn = s.at;
+      row.method = s.method as 'scan' | 'typed';
+    } else row.checkOut = s.at;
+    rows.set(s.staff_id, row);
+  }
+  const working = month.rows.filter((r) => {
+    const st = cells.get(r.staffId)?.status;
+    return (
+      st && st !== 'not_employed' && st !== 'future' && st !== 'weekly_off' && st !== 'holiday'
+    );
+  }).length;
+  return {
+    rows: [...rows.values()].sort((a, b) => (b.checkIn ?? '').localeCompare(a.checkIn ?? '')),
+    refused,
+    working,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Requests
+// ---------------------------------------------------------------------------
+
+export type RequestItem = {
+  id: string;
+  staffId: string;
+  name: string;
+  kind: 'leave' | 'advance';
+  from: string | null;
+  to: string | null;
+  amount: number | null;
+  note: string | null;
+  status: 'pending' | 'approved' | 'rejected' | 'cancelled';
+  createdAt: string;
+  decidedAt: string | null;
+  decidedBy: string | null;
+  decisionNote: string | null;
+  leaveStatus: 'paid_leave' | 'unpaid_leave' | null;
+};
+
+/** What helps decide: paid leave left for the days asked, or the advance state. */
+export type RequestContext =
+  | { kind: 'leave'; days: number; paidLeft: number | null }
+  | { kind: 'advance'; outstanding: number; limit: number | null; cut: number | null };
+
+/** Leave days asked for, inclusive. */
+export const requestDays = (from: string, to: string) => {
+  const days: string[] = [];
+  for (let d = from; compareDates(d, to) <= 0; d = addDays(d, 1)) days.push(d);
+  return days;
+};
+
+/**
+ * Requests in a shop that this person may see (deciders: everyone's; staff: their own),
+ * waiting ones oldest first, decided ones newest first (last 100).
+ */
+export async function loadRequests(
+  supabase: Supabase,
+  shopId: string,
+  which: 'pending' | 'decided',
+): Promise<RequestItem[]> {
+  let q = supabase
+    .from('requests')
+    .select(
+      '*, staff!inner(people!inner(name)), decider:people!requests_shop_id_decided_by_fkey(name)',
+    )
+    .eq('shop_id', shopId);
+  q =
+    which === 'pending'
+      ? q.eq('status', 'pending').order('created_at', { ascending: true })
+      : q.neq('status', 'pending').order('decided_at', { ascending: false }).limit(100);
+  const { data } = await q;
+  return (data ?? []).map((r) => ({
+    id: r.id,
+    staffId: r.staff_id,
+    name: r.staff.people.name,
+    kind: r.kind as RequestItem['kind'],
+    from: r.from_date,
+    to: r.to_date,
+    amount: r.amount_paise == null ? null : Number(r.amount_paise),
+    note: r.note,
+    status: r.status as RequestItem['status'],
+    createdAt: r.created_at,
+    decidedAt: r.decided_at,
+    decidedBy: r.decider?.name ?? null,
+    decisionNote: r.decision_note,
+    leaveStatus: r.leave_status as RequestItem['leaveStatus'],
+  }));
+}
+
+/** Context for each waiting request (paid leave left; advance owed / limit / cut). */
+export async function loadRequestContext(
+  supabase: Supabase,
+  shopId: string,
+  items: RequestItem[],
+): Promise<Map<string, RequestContext>> {
+  const out = new Map<string, RequestContext>();
+  const advances = items.some((i) => i.kind === 'advance')
+    ? new Map((await loadAdvanceBalances(supabase, shopId)).all.map((b) => [b.staffId, b]))
+    : new Map();
+  for (const i of items) {
+    if (i.kind === 'advance') {
+      const b = advances.get(i.staffId);
+      out.set(i.id, {
+        kind: 'advance',
+        outstanding: b?.outstanding ?? 0,
+        limit: b?.limit ?? null,
+        cut: b?.cut ?? null,
+      });
+    } else if (i.from && i.to) {
+      const days = requestDays(i.from, i.to);
+      const short = await paidLeaveShortfall(
+        supabase,
+        shopId,
+        days.map((date) => ({ staffId: i.staffId, date })),
+      );
+      out.set(i.id, { kind: 'leave', days: days.length, paidLeft: short ? short.left : null });
+    }
+  }
+  return out;
+}
+
+/** How many requests are waiting (the dashboard / Today banner). */
+export async function countPendingRequests(supabase: Supabase, shopId: string) {
+  const { count } = await supabase
+    .from('requests')
+    .select('id', { count: 'exact', head: true })
+    .eq('shop_id', shopId)
+    .eq('status', 'pending');
+  return count ?? 0;
+}
+
+export type DecideResult =
+  | { ok: true }
+  | { ok: false; reason: 'no_permission' | 'not_pending' }
+  | Exclude<AttendanceWriteResult, { ok: true }>
+  | Exclude<AdvanceWriteResult, { ok: true }>
+  | { ok: false; reason: 'failed'; message: string };
+
+/**
+ * Approve or reject a waiting request (needs requests.decide). Approving leave marks the days
+ * (`writeAttendance`, paid leave within the balance, future days allowed); approving an advance
+ * gives it today (`recordAdvance`, the limit asks to confirm). Then the request is closed with
+ * what was done.
+ */
+export async function decideRequest(
+  supabase: Supabase,
+  input: {
+    shopId: string;
+    permissions: readonly string[];
+    today: BusinessDate;
+    request: Pick<RequestItem, 'id' | 'staffId' | 'kind' | 'from' | 'to' | 'amount'>;
+    decision: 'approve' | 'reject';
+    leaveStatus?: 'paid_leave' | 'unpaid_leave';
+    mode?: string;
+    confirmOverLimit?: boolean;
+    note?: string | null;
+  },
+): Promise<DecideResult> {
+  const { request: r, shopId } = input;
+  if (!input.permissions.includes('requests.decide')) return { ok: false, reason: 'no_permission' };
+  const decisionNote = input.note?.trim() || null;
+
+  let update: {
+    status: string;
+    leave_status?: string;
+    advance_id?: string;
+    decision_note: string | null;
+  } = {
+    status: 'rejected',
+    decision_note: decisionNote,
+  };
+  if (input.decision === 'approve') {
+    if (r.kind === 'leave' && r.from && r.to) {
+      const leaveStatus = input.leaveStatus ?? 'paid_leave';
+      const w = await writeAttendance(supabase, {
+        shopId,
+        cells: requestDays(r.from, r.to).map((date) => ({ staffId: r.staffId, date })),
+        status: leaveStatus,
+        today: input.today,
+        permissions: input.permissions,
+        allowFuture: true,
+      });
+      if (!w.ok) return w;
+      update = { status: 'approved', leave_status: leaveStatus, decision_note: decisionNote };
+    } else if (r.kind === 'advance' && r.amount) {
+      const a = await recordAdvance(supabase, {
+        shopId,
+        permissions: input.permissions,
+        staffId: r.staffId,
+        kind: 'given',
+        amount: (r.amount / 100).toFixed(2),
+        date: formatDisplayDate(input.today),
+        mode: PAYMENT_MODES.find((m) => m === input.mode) ?? 'cash',
+        note: decisionNote,
+        confirmOverLimit: input.confirmOverLimit,
+      });
+      if (!a.ok) return a;
+      update = { status: 'approved', advance_id: a.id, decision_note: decisionNote };
+    }
+  }
+  const { data, error } = await supabase
+    .from('requests')
+    .update(update)
+    .eq('id', r.id)
+    .eq('status', 'pending')
+    .select('id');
+  if (error) return { ok: false, reason: 'failed', message: error.message };
+  if (!data?.length) return { ok: false, reason: 'not_pending' };
+  return { ok: true };
+}
+
+/** Staffora: ask for leave (dates) or an advance (paise) for yourself. */
+export async function askRequest(
+  supabase: Supabase,
+  input: { shopId: string; staffId: string; note?: string | null } & (
+    { kind: 'leave'; from: BusinessDate; to: BusinessDate } | { kind: 'advance'; amount: number }
+  ),
+) {
+  const { error } = await supabase.from('requests').insert({
+    shop_id: input.shopId,
+    staff_id: input.staffId,
+    kind: input.kind,
+    from_date: input.kind === 'leave' ? input.from : null,
+    to_date: input.kind === 'leave' ? input.to : null,
+    amount_paise: input.kind === 'advance' ? input.amount : null,
+    note: input.note?.trim() || null,
+  });
+  return error ? { ok: false as const, message: error.message } : { ok: true as const };
+}
+
+/** Staffora: cancel your own waiting request. */
+export async function cancelRequest(supabase: Supabase, requestId: string) {
+  const { data, error } = await supabase
+    .from('requests')
+    .update({ status: 'cancelled' })
+    .eq('id', requestId)
+    .eq('status', 'pending')
+    .select('id');
+  return !error && (data ?? []).length > 0;
+}
+
+// ---------------------------------------------------------------------------
+// Staffora sign-in (needs staff.edit)
+// ---------------------------------------------------------------------------
+
+export type StaffLogin = {
+  personId: string;
+  hasPin: boolean;
+  locked: boolean;
+  waitUntil: string | null;
+  inviteExpiresAt: string | null;
+  phoneBound: boolean;
+};
+
+/** Sign-in state per person (not the owner); empty without staff.edit. */
+export async function loadStaffLogins(supabase: Supabase, shopId: string) {
+  const { data } = await supabase.rpc('staff_logins', { p_shop: shopId });
+  return new Map<string, StaffLogin>(
+    (data ?? []).map((r) => [
+      r.person_id,
+      {
+        personId: r.person_id,
+        hasPin: r.has_pin,
+        locked: r.locked,
+        waitUntil: r.wait_until,
+        inviteExpiresAt: r.invite_expires_at,
+        phoneBound: r.phone_bound,
+      },
+    ]),
+  );
+}
+
+/** A one-time invite link token (cancels the person's earlier unused ones). */
+export async function createInvite(supabase: Supabase, personId: string) {
+  const { data, error } = await supabase.rpc('create_invite', { p_person: personId });
+  return error
+    ? { ok: false as const, message: error.message }
+    : { ok: true as const, ...(data as { token: string; expiresAt: string }) };
+}
+
+/** Where an invite link opens (the website's join page, which hands over to Staffora). */
+export const inviteUrl = (origin: string, token: string) =>
+  `${origin.replace(/\/$/, '')}/join/${token}`;
+
+export async function revokeInvite(supabase: Supabase, personId: string) {
+  return !(await supabase.rpc('revoke_invite', { p_person: personId })).error;
+}
+
+export async function unlockLogin(supabase: Supabase, personId: string) {
+  return !(await supabase.rpc('unlock_login', { p_person: personId })).error;
+}
+
+export async function resetStaffPhone(supabase: Supabase, personId: string) {
+  return !(await supabase.rpc('reset_staff_phone', { p_person: personId })).error;
+}
+
+/** Turn checking in with the attendance code on or off for a person (needs staff.edit). */
+export async function setSelfAttendance(supabase: Supabase, staffId: string, on: boolean) {
+  const { data, error } = await supabase
+    .from('staff')
+    .update({ self_attendance: on })
+    .eq('person_id', staffId)
+    .select('person_id');
+  return !error && (data ?? []).length > 0;
+}
+
+/** "In 13 h 45 min"-style helper input: minutes until an instant (never negative). */
+export const minutesUntil = (iso: string, now = new Date()) =>
+  Math.max(0, Math.round((Date.parse(iso) - now.getTime()) / 60_000));
+
+/** The business date of an ISO instant (IST). */
+export const dateOfInstant = (iso: string) => businessDateOf(new Date(iso));

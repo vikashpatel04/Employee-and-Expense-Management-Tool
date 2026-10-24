@@ -33,9 +33,11 @@ export async function writeAttendance(
     status: SettableStatus | 'clear';
     today: BusinessDate;
     permissions: readonly string[];
+    /** Approved leave may be written ahead for days still to come. */
+    allowFuture?: boolean;
   },
 ): Promise<AttendanceWriteResult> {
-  const { shopId, cells, status, today, permissions } = input;
+  const { shopId, cells, status, today, permissions, allowFuture } = input;
   if (!permissions.includes('attendance.mark')) return { ok: false, reason: 'no_permission' };
   if (
     (status !== 'clear' && !SETTABLE_STATUSES.includes(status)) ||
@@ -45,7 +47,7 @@ export async function writeAttendance(
     return { ok: false, reason: 'invalid' };
   for (const c of cells) {
     if (!isBusinessDate(c.date)) return { ok: false, reason: 'invalid' };
-    if (compareDates(c.date, today) > 0) return { ok: false, reason: 'future' };
+    if (compareDates(c.date, today) > 0 && !allowFuture) return { ok: false, reason: 'future' };
     if (compareDates(c.date, today) < 0 && !permissions.includes('attendance.edit_past'))
       return { ok: false, reason: 'past' };
   }

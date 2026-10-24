@@ -19,3 +19,4 @@ export * from './salary-month';
 export * from './expense-write';
 export * from './salary-run';
 export * from './advances';
+export * from './self-service';

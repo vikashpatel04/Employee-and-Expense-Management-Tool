@@ -21,6 +21,7 @@ import { AdvanceForm, AdvanceSettingsForm, UndoButton } from './advance-forms';
 import { DetailsForm, ItemButtons, ItemForm, OpeningForm, TemplateForm } from './extra-forms';
 import { OverridesForm } from './overrides-form';
 import { PayForm } from './pay-form';
+import { SignInSection } from './signin-section';
 
 type Tab = 'overview' | 'attendance' | 'ledger' | 'pay';
 
@@ -55,7 +56,7 @@ export default async function StaffDetailPage({
   const { data: s } = await supabase
     .from('staff')
     .select(
-      'person_id, joining_date, leaving_date, status, advance_limit_paise, advance_cut_paise, people!inner(name, phone)',
+      'person_id, joining_date, leaving_date, status, self_attendance, advance_limit_paise, advance_cut_paise, people!inner(name, phone)',
     )
     .eq('person_id', id)
     .eq('shop_id', me.shopId)
@@ -124,6 +125,17 @@ export default async function StaffDetailPage({
             joiningDate: s.joining_date,
             leavingDate: s.leaving_date,
           }}
+        />
+      )}
+      {tab === 'overview' && can('staff.edit') && (
+        <SignInSection
+          shopId={me.shopId}
+          shopName={me.shopName}
+          staffId={id}
+          name={name}
+          phone={phone}
+          active={s.status === 'active'}
+          selfAttendance={s.self_attendance}
         />
       )}
       {tab === 'attendance' && (

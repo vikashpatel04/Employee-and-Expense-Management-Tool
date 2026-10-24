@@ -86,6 +86,9 @@ is a placeholder until the first store build.
 - Form pieces (`src/components/form.tsx`): Field, AmountField, DayStepper, MonthStepper, Notice,
   FormMessage, BottomBar. Money helpers (`src/lib/money.ts`): month names from i18n, category
   icons/colours (same keys as the website).
+- **Attendance code** (`src/app/code.tsx`) and **Requests** (`src/app/requests.tsx`), opened
+  from Today's "Attendance code" button and "N requests waiting" banner: see
+  `docs/features/staff-self-service.md`.
 - **More**: who is signed in, the website link, sign out.
 
 ## Checked

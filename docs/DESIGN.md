@@ -46,9 +46,9 @@ Use the Artifact tool, not a web fetch:
 - **FinCrew key screens:** https://claude.ai/artifact/WydRUvQzCNMAoXcNVh7pWC (Android light + dark:
   Today, status sheet, shop switcher, Attendance code, Staff detail tabs, Salary run draft/final,
   Add expense, Money · expenses / salary / advances with the give-advance sheet (added
-  2026-10-24, x 5640–6580 in the light row); web: attendance grid (pinned names and totals), salary review table, dashboard,
+  2026-10-24, x 5640–6580 in the light row), Requests with the approve sheet (x 7050); web: attendance grid (pinned names and totals), salary review table, dashboard,
   attendance on a phone (day view), expenses with the add panel, reports — the last four added
-  2026-10-24)
+  2026-10-24; then attendance code, requests and the staff sign-in card, x 8070–11110)
 - **Staffora key screens:** https://claude.ai/artifact/9YMxty5q9jFvuut8ay8dTe (Home before/after
   check-in, Scan QR, Enter code incl. wrong code, Checked in, Money ledger/payslips; light + dark)
 - Reviewed by the owner (2026-10-23). Change made from their comment: Attendance code now has

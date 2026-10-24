@@ -36,7 +36,7 @@ export async function loadAdvanceBalances(supabase: Supabase, shopId: string) {
 }
 
 export type AdvanceWriteResult =
-  | { ok: true; kind: 'given' | 'repaid' }
+  | { ok: true; kind: 'given' | 'repaid'; id: string }
   | { ok: false; reason: 'no_permission' | 'amount' | 'date' | 'over_limit' }
   | { ok: false; reason: 'failed'; message: string };
 
@@ -68,21 +68,25 @@ export async function recordAdvance(
   if (!date) return { ok: false, reason: 'date' };
   const mode = PAYMENT_MODES.find((m) => m === input.mode) ?? 'cash';
 
-  const { error } = await supabase.from('advances').insert({
-    shop_id: input.shopId,
-    staff_id: input.staffId,
-    date,
-    kind,
-    amount_paise: amount,
-    payment_mode: mode,
-    note: input.note?.trim() || null,
-    over_limit_confirmed: !!input.confirmOverLimit,
-  });
+  const { data, error } = await supabase
+    .from('advances')
+    .insert({
+      shop_id: input.shopId,
+      staff_id: input.staffId,
+      date,
+      kind,
+      amount_paise: amount,
+      payment_mode: mode,
+      note: input.note?.trim() || null,
+      over_limit_confirmed: !!input.confirmOverLimit,
+    })
+    .select('id')
+    .single();
   if (error) {
     if (error.hint === 'over_limit') return { ok: false, reason: 'over_limit' };
     return { ok: false, reason: 'failed', message: error.message };
   }
-  return { ok: true, kind };
+  return { ok: true, kind, id: data.id };
 }
 
 /**

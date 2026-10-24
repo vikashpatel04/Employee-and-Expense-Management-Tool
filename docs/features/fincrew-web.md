@@ -122,6 +122,11 @@ See `docs/features/expenses.md` (page, add/edit panel, categories, bills, CSV, d
 Checked in the browser on 2026-10-23 with Test Staff: Mark today present, paid leave refused
 ("0 paid leave left"), half day → Days 0.5; empty previous month.
 
+## Attendance code, requests, Staffora sign-in (Phase 7)
+
+`/code`, `/qr`, `/requests`, the staff Overview "Staffora sign-in" card and the public
+`/join/<token>` page: see `docs/features/staff-self-service.md`.
+
 ## Salary run — `(app)/salary`
 
 - `salary.view` sees it; `salary.run` works out, finalizes and pays. Month switcher (no future

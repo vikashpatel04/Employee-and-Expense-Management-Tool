@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Check, ChevronLeft, ChevronRight } from 'lucide-react-native';
+import { router, useFocusEffect } from 'expo-router';
+import { Check, ChevronLeft, ChevronRight, Inbox, QrCode } from 'lucide-react-native';
 import {
   addDays,
   businessDateOf,
@@ -11,6 +12,7 @@ import {
   weekday,
 } from '@fincrew/core';
 import {
+  countPendingRequests,
   loadAttendanceMonth,
   writeAttendance,
   type GridCell,
@@ -57,6 +59,15 @@ export default function Today() {
   const [picked, setPicked] = useState<Person | null>(null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
+  const [waiting, setWaiting] = useState(0);
+
+  // Requests waiting (banner), refreshed whenever Today comes back into view.
+  useFocusEffect(
+    useCallback(() => {
+      if (me && can('requests.decide'))
+        void countPendingRequests(supabase, me.shopId).then(setWaiting);
+    }, [me, can]),
+  );
 
   const load = useCallback(async () => {
     if (!me) return;
@@ -154,7 +165,61 @@ export default function Today() {
         refreshControl={<RefreshControl refreshing={loading} onRefresh={load} />}
       >
         <ShopHeader />
-        <Text variant="title-xl">{t('mobile.today.title')}</Text>
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: space['space-2'],
+          }}
+        >
+          <Text variant="title-xl">{t('mobile.today.title')}</Text>
+          {can('attendance.code') && (
+            <Button
+              label={t('code.title')}
+              variant="secondary"
+              icon={QrCode}
+              onPress={() => router.push('/code')}
+            />
+          )}
+        </View>
+
+        {waiting > 0 && (
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => router.push('/requests')}
+            style={({ pressed }) => ({
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: space['space-3'],
+              minHeight: 64,
+              paddingHorizontal: space['space-4'],
+              paddingVertical: space['space-3'],
+              borderRadius: 12,
+              backgroundColor: pressed ? c['surface-muted'] : c.surface,
+            })}
+          >
+            <View
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 18,
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: c['accent-soft'],
+              }}
+            >
+              <Inbox size={20} color={c['accent-ink']} />
+            </View>
+            <Text variant="label" style={{ flex: 1 }}>
+              {t('requests.banner', { count: waiting })}
+            </Text>
+            <Text variant="label-sm" color={c['accent-ink']}>
+              {t('requests.review')}
+            </Text>
+            <ChevronRight size={20} color={c['accent-ink']} />
+          </Pressable>
+        )}
 
         <Card style={{ flexDirection: 'row', alignItems: 'center', padding: space['space-1'] }}>
           <IconButton

@@ -29,6 +29,14 @@ Choices made during the build that PLAN.md doesn't spell out. Newest first.
 - The PIN wait / lock numbers and invite lifetime are shop settings (`staffLogin`, defaults
   5 / 15 min / 10 / 48 h from PLAN §10), like every other rule. The PIN is always 4 digits.
 - Invites can be made for any non-owner person (staff or helper); helpers have no phone binding.
+- **Invite links open the website** (`/join/<token>`, public) which hands over to the Staffora
+  app with the `staffora://join/<token>` scheme. A plain https link works in WhatsApp and on any
+  phone; the page explains what to do if the app isn't there. The link is shown once when made
+  (only its hash is stored); "New link" makes another.
+- **QR codes are drawn by the apps** from the `qrcode` library (website SVG on the server,
+  react-native-svg in the app) — no image service, the content is just the 6 digits.
+- Copying the code is on the website only for now (the app would need a clipboard library);
+  the app shows the QR full screen instead.
 
 ## 2026-10-24 — Android Money tab
 
