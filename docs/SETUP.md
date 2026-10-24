@@ -78,3 +78,13 @@ pnpm db:types                 # after every new migration
 
 Secrets rule: the **service role key** never goes in app code, Vercel or GitHub; only in Supabase
 edge function secrets (PLAN §9).
+
+## 6. Android app (FinCrew)
+
+1. Copy `apps/fincrew-mobile/.env.example` to `apps/fincrew-mobile/.env.local` and fill in the
+   same public Supabase URL and publishable key as the website (never the secret key).
+2. `pnpm --filter @fincrew/mobile web` runs the app in a browser at phone size;
+   `pnpm --filter @fincrew/mobile start` runs the Expo dev server for a phone or emulator.
+3. Real Android builds use EAS (Expo's cloud build) and need your Expo account — to be set up
+   when the app is ready to install. The Android package id (`app.fincrew.mobile`) can still
+   change until then.

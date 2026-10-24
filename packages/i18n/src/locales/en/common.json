@@ -1189,5 +1189,53 @@
       "category": "Category"
     },
     "footnote": "Salary = gross pay on each month's latest payslips (Draft until finalized). Paid to staff = salary payments made that month. Advances given = given minus repaid in cash; undone ones are left out. Shop expenses leave out Not tracked and staff charges."
+  },
+  "mobile": {
+    "tabs": {
+      "today": "Today",
+      "staff": "Staff",
+      "money": "Money",
+      "more": "More"
+    },
+    "today": {
+      "title": "Today",
+      "prevDay": "Previous day",
+      "nextDay": "Next day",
+      "isToday": "Today",
+      "notMarked": "Not marked",
+      "marked": "Marked",
+      "showAll": "Show all",
+      "markAll": "Mark all present",
+      "marking": "Saving…",
+      "nobody": "Nobody works here on this day.",
+      "checkIn": "In {{time}}",
+      "lateMin": "{{minutes}} min late",
+      "readOnly": "You can see attendance but not change it.",
+      "sheet": {
+        "title": "Set attendance",
+        "cancel": "Cancel",
+        "clear": "Not marked",
+        "close": "Close"
+      }
+    },
+    "shops": {
+      "title": "Your shops",
+      "current": "Current",
+      "switch": "Switch",
+      "count_one": "{{count}} shop",
+      "count_other": "{{count}} shops"
+    },
+    "more": {
+      "title": "More",
+      "signedInAs": "Signed in as {{name}}",
+      "owner": "Owner",
+      "website": "Settings, reports and the rest are on the website for now.",
+      "openWebsite": "Open the website"
+    },
+    "next": {
+      "title": "Coming next",
+      "body": "This part of the app is being built. Use the website meanwhile."
+    },
+    "noShop": "This login isn't part of a shop yet. Ask the owner for access."
   }
 }

@@ -26,11 +26,12 @@ GitHub: run `git status -sb`; the owner pushes (never push unless asked).
 7. ~~Website extras~~ — done (slice 13): staff Attendance tab, helpers for roles, opening
    balance corrections, Reports + CSV; fix: undoing an advance now lowers the advance to recover
    (migration `20261024000002_advance_undo.sql`, **not pushed yet**).
-8. **Phase 5: FinCrew Android** (Expo): Today screen, staff, money, expenses, attendance code
-   screen, push notifications — follow the Android artboards on the FinCrew key screens canvas
-   and `themes` from `@fincrew/ui`; reuse `packages/core` and the same tables/RLS. The website is
-   the reference for every flow (`docs/features/*`). Still needs Phase 7 data: attendance codes,
-   invites/logins for staff and helpers, requests.
+8. **Phase 5: FinCrew Android** — in progress (`docs/features/fincrew-mobile.md`). Done:
+   app shell, sign-in, shop switch, **Today** (chips, lists, status sheet, Mark all present),
+   More. **Owner to check Today** by signing in on the app (browser preview "fincrew-mobile-web"
+   on :8081 or `pnpm --filter @fincrew/mobile web`). Next: Staff tab (list + detail tabs),
+   Money tab (expenses, salary, advances), then attendance code / requests (Phase 7 data),
+   push notifications, EAS build (needs the owner's Expo account).
 
 **Waiting on the owner:**
 
@@ -87,7 +88,7 @@ https://claude.ai/artifact/8jzomFcfJazHfn6yiUFQQP · Website https://fincrew-web
 | 2   | Core logic (`packages/core`) | **Done**: 225 tests, every rule a setting; `docs/features/core-rules.md`                                                                                                    |
 | 3   | Design                       | **Done** (2026-10-23): design system, key screens (owner reviewed), `packages/ui` tokens                                                                                    |
 | 4   | FinCrew web core             | **Done** (2026-10-24): data layer live; screens slices 1–10 (dashboard, shell, staff + extras, attendance grid + CSV, salary run, payslip print, advances, settings, roles) |
-| 5   | FinCrew Android              | Not started                                                                                                                                                                 |
+| 5   | FinCrew Android              | **In progress**: shell, sign-in, Today                                                                                                                                      |
 | 6   | Expenses                     | **Done on the web** (2026-10-24): live migration, RLS + 17 tests, screens checked on the live shop; reports and Android later                                               |
 | 7   | Staffora                     | Not started                                                                                                                                                                 |
 | 8   | Polish                       | Not started                                                                                                                                                                 |
@@ -170,6 +171,17 @@ Tables still to add (with the phase that uses them, each with RLS tests): `staff
 `attendance_scans`, `invites`, `pin_credentials`, `push_tokens` (Phase 7).
 
 ## Session log
+
+- **2026-10-24** — **Phase 5 slice A: Android app foundations + Today.** New app
+  `apps/fincrew-mobile` (Expo SDK 58, Expo Router, pnpm isolated installs, TS 6 in the app).
+  Moved more shared logic into `@fincrew/data`: `loadMemberships` / `loadMe` (website session
+  uses them), `paidLeaveShortfall` and `writeAttendance` (set/clear marks with the date and
+  paid-leave rules; the website's attendance actions now call it). App: theme from
+  `@fincrew/ui`, Anek Latin, Supabase client with the session on the phone, sign-in + guard,
+  shop switch sheet, tabs Today · Staff · Money · More, Today screen per the design. Checked in
+  the browser at 375 px: starts, signed-out → Sign in, matches the design. Today not yet seen
+  with data (owner sign-in needed). Removed the starter's own `.claude/settings.json` (it only
+  enabled an Expo plugin) and example screens.
 
 - **2026-10-24** — Owner: "Push it and continue". Pushed `5006ace` (CI green incl. migrate; the
   advance-undo fix is live). **Phase 5 started**: moved the website's data loaders into a new

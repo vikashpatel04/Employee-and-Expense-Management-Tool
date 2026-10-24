@@ -5,7 +5,10 @@
  */
 export * from './client';
 export * from './mappers';
+export * from './paid-leave';
+export * from './session';
 export * from './attendance-month';
+export * from './attendance-write';
 export * from './dashboard';
 export * from './expenses';
 export * from './leave-setup';

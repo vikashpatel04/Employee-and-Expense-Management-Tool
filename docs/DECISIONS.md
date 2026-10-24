@@ -2,6 +2,22 @@
 
 Choices made during the build that PLAN.md doesn't spell out. Newest first.
 
+## 2026-10-24 — Android app foundations
+
+- **Expo SDK 58 with Expo Router**, created from Expo's default template and trimmed. pnpm's
+  default isolated installs work (Expo supports them since SDK 54); Metro needs no monorepo
+  config. The app keeps Expo's TypeScript 6; the rest of the repo stays on 5.9.
+- **Business rules that lived in website server actions moved to `@fincrew/data`** so the app
+  can't skip them: `writeAttendance` (future days, past days need `attendance.edit_past`, paid
+  leave within balance, clear = delete) and session loading. Each app turns the shared result
+  codes into its own wording.
+- The app talks to Supabase directly with the **publishable key**; RLS is the security
+  boundary, exactly as for the website. The session is stored with AsyncStorage.
+- **Checking the app without Android tools**: the same screens run in a browser via Expo web
+  (`pnpm --filter @fincrew/mobile web`) at phone size. Real builds go through EAS later (owner's
+  Expo account). Android package id `app.fincrew.mobile` is a placeholder until then.
+- Tabs not built yet (Staff, Money) say "Coming next" and point to the website.
+
 ## 2026-10-24 — Shared data package (start of Phase 5)
 
 - **`packages/data`** (`@fincrew/data`) holds the data loading that turns Supabase rows into

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Added — 2026-10-24 (Phase 5 slice A)
+
+- FinCrew Android app (Expo): sign-in, shop switch, Today (mark attendance, Mark all present),
+  More. Shared attendance writing and session loading in `@fincrew/data`.
+
 ### Added — 2026-10-24 (slice 13: website extras)
 
 - Staff detail Attendance tab (calendar, day detail, change a day).
