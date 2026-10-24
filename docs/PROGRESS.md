@@ -1,92 +1,102 @@
 # Progress
 
-_Last updated: 2026-10-24_
+_Last updated: 2026-10-24 (evening)_
 
 ## Start here (handover for a new session)
 
-_Handover written 2026-10-24 before a session compaction. Read this section first, then
-`CLAUDE.md`, then the feature doc for whatever you touch._
+_Handover written 2026-10-24 (evening) before the owner reset the session. Read this section
+first, then `CLAUDE.md`, then the feature doc for whatever you touch._
 
 **Where we are**
 
-- Phases 1–4 done; **Phase 6 Expenses done on the website** (live); website extras done (staff
-  Attendance tab, helpers, opening balance correction, Reports). The website covers every owner
-  flow in PLAN §6.2 except requests and the attendance code (both need Phase 7 data).
-- **Phase 5 FinCrew Android in progress** (`apps/fincrew-mobile`, Expo SDK 58 + Expo Router,
-  `docs/features/fincrew-mobile.md`): sign-in, shop switch, tabs Today · Staff · Money · More.
-  **Today**, **Staff** (list + detail Overview / Attendance / Ledger / Pay, with Give advance and
-  Pay) and **Money** (Expenses with add/edit, Salary run, Advances) are built and were
-  **checked with the owner signed in on live data** (2026-10-24; finalize / pay / give advance
-  not run live — permanent lines). More has the website link + sign out.
-- Shared code: `packages/core` (rules), **`packages/data`** (Supabase rows → core → screen data,
-  used by website and app: attendance month, write attendance, paid-leave check, session,
-  dashboard, expenses + **expense saving**, reports, salary month + **salary run / finalize /
-  pay**, **advances**, leave setup, roles, staff loaders).
-- **Git:** everything up to `9fd9e02` (Staffora slices A + B, staff-read-runs fix) is pushed
-  (2026-10-24); CI green (run 40104302836 applied `20261024000006_staff_read_runs.sql`); Vercel
-  deployed. (Pushing changes to
-  `.github/workflows` needs the `workflow` scope; the owner added it to the GitHub CLI sign-in,
-  which git now uses.) The owner pushes, or tells you to push in that moment. Migrations up to
-  `20261024000002_advance_undo.sql` are live.
+- **Website** (https://fincrew-web.vercel.app, `docs/features/fincrew-web.md`): **complete for
+  every owner flow and live**: dashboard (with requests banner), attendance grid + phone day view,
+  attendance code page (`/code`, `/qr`), requests (`/requests`), staff (detail tabs, helpers,
+  opening balance, Staffora sign-in card: invite / cancel / unlock / new phone / code check-in
+  switch), salary run + payslips, advances, expenses + categories, reports, settings, roles,
+  public invite page `/join/<token>`. **The owner can start using the website now.**
+- **FinCrew Android** (`apps/fincrew-mobile`, `docs/features/fincrew-mobile.md`): Today (+
+  attendance code button, requests banner), Staff (detail with Give advance / Pay), Money
+  (expenses with bill photo, salary run, advances), Attendance code screen, Requests, More. All
+  checked on live in the browser preview, including salary finalize + pay end to end. **Not on a
+  phone yet** (needs EAS builds + the owner's Expo account, which they'll create once the apps
+  are complete).
+- **Staffora** (`apps/staffora-mobile`, `docs/features/staffora.md`): welcome, join from the
+  invite (PIN twice), PIN on every open, Home with check-in by code / QR, checked-in screen,
+  Attendance calendar, Money (ledger, payslips, payslip page), Ask for leave / advance with my
+  requests and cancel, Me (lock, remove). **The owner joined as Test Staff** in the
+  "staffora-mobile-web" preview (their PIN — never type it); Home, Attendance, Money, Payslips,
+  Ask were checked on live. Not tried on live: sending a request, checking in (both leave
+  permanent rows — ask first; check-in also needs Test Staff's "Can check in with the attendance
+  code" switched on), Lock / Remove (they sign the owner out of the preview).
+- **Database / server**: Phase 7 data live (`docs/features/staff-self-service.md`): attendance
+  codes + `check_in`, scans log, requests, invites + bcrypt PINs, `staff-auth` edge function
+  (deployed by CI), staff read their payslip's run. Migrations up to
+  `20261024000006_staff_read_runs.sql` are live.
+- Shared code: `packages/core` (rules incl. `evaluateCheck`, `evaluatePinAttempt`, `staffLogin`
+  settings), **`packages/data`** (used by the website and both apps: attendance month / write,
+  session, staff loaders, expenses + saving, salary month + run / finalize / pay, payslip loaders
+  `loadMyPayslips` / `loadPayslipView`, advances, reports, roles, leave setup, self-service:
+  code, check-ins, requests + `decideRequest`, logins / invites).
+- **Git:** everything up to `9fd9e02` is pushed (CI run 40104302836 green, Vercel deployed);
+  local `main` has docs-only commits after it (this handover), not pushed. The owner pushes, or
+  tells you to push in that moment. Pushing `.github/workflows` changes needs the `workflow`
+  scope — the owner added it to the GitHub CLI sign-in, which git now uses.
 
-- **Phase 7 in progress** (owner's go, 2026-10-24; `docs/features/staff-self-service.md`):
-  database for attendance codes + check-in, requests, invites + PIN sign-in, the `staff-auth`
-  edge function, and the FinCrew screens (website `/code`, `/qr`, `/requests`, staff sign-in
-  card, public `/join/<token>`; app code + requests screens) are **live and checked** (details in
-  the feature doc → Checked).
-- **Staffora app started** (`apps/staffora-mobile`, `docs/features/staffora.md`): welcome, join
-  from the invite (PIN twice), PIN to open, Home with check-in by code / QR, checked-in, Me;
-  slice B: Attendance calendar, Money (ledger, payslips, payslip page), ask for leave / advance
-  with my requests. The owner has joined as Test Staff (a Staffora sign-in now exists for
-  Test Staff; the PIN is theirs). Migration `20261024000006_staff_read_runs.sql` is live; Staffora
-  Payslips checked.
-  Checked up to the PIN step; the rest needs **the owner to finish joining as Test Staff** in the
-  "staffora-mobile-web" preview (an open invite link for Test Staff exists, made 24/10 ~7:30 PM,
-  48 h; or make a new one on Test Staff's page) — then check Home, Enter code (code from `/code`)
-  with Test Staff's self attendance switched on, and PIN / lock.
+**Next work, in order** (agreed with the owner 2026-10-24; they usually say "continue")
 
-**Next work, in order** (owner usually says "continue"; pick the top unfinished one)
+1. **Finish Staffora**: Me → change PIN (small SQL function + `staff-auth` action, tests first),
+   latest-payslip card on Home (design "Home"), share a payslip; live check of sending a request
+   and checking in (ask the owner first — permanent rows).
+2. **FinCrew app gaps**: share payslip on WhatsApp (design "Salary run"), undo a ledger line in
+   the app (`undoLedgerLine` is shared), pay / advance-rule changes in the app (website only now),
+   bill photo upload on a real phone.
+3. **Plan pieces not built yet**: staff documents (`staff_documents` + storage, PLAN §6.1 staff
+   detail "Documents"), add staff from the app (stepper: details → pay → template → shift →
+   invite), website audit log viewer (PLAN §6.2), dashboard "recent activity". Also move the
+   website's staff detail page and payslip page onto the shared loaders when next touched.
+4. **Push notifications** (PLAN §6.4): `push_tokens` table, expo-notifications; Android needs a
+   free Firebase project + the owner's Expo account.
+5. **Polish (Phase 8)**: widgets, Tamil/Hindi, offline attendance marking, StaffBook import,
+   backup/export, real Staffora icons (it uses FinCrew's placeholders).
+6. **Install builds**: EAS for both apps with the owner's Expo account (package ids
+   `app.fincrew.mobile` / `app.staffora.mobile` are placeholders), APK or Play Store.
 
-1. **Staffora, continued** (`docs/features/staffora.md` → Next): check slice A with the owner's
-   sign-in (slices A and B: Home, check-in, Attendance, Money, Ask), then Me → change PIN (small
-   SQL function + `staff-auth` action), latest payslip on Home, push notifications.
-2. **Android app leftovers** (small): payslip share on WhatsApp (design "Salary run"), undo a
-   line from the app's Ledger (`undoLedgerLine` is shared already), advance rules and pay
-   changes in the app (website only now). Bill photo upload from a real phone is unchecked.
-3. Move the website's staff detail page onto the shared loaders (`loadStaffOverview`,
-   `loadLedger`, `loadPay`) when it's next touched.
-4. Push notifications (expo-notifications + `push_tokens`), EAS build (owner's Expo account;
-   Android package id `app.fincrew.mobile` is a placeholder), Phase 8 polish (widgets,
-   translations, offline marking, StaffBook import, backup).
+The owner may ask to move 4 + 6 earlier so staff can use Staffora sooner — offer that.
 
 **Owner's answers (2026-10-24)**
 
-- Finalizing and paying **Test Staff's October salary** on the live shop to test salary end to
-  end: **allowed** (Test Staff can then never be deleted: ledger lines are permanent). Other
-  permanent writes (giving advances, undoing payments) still need their OK each time.
+- Finalizing and paying **Test Staff's October salary** on live: **allowed** (done). Other
+  permanent writes (giving advances, undoing payments, sending requests, check-in scans) still
+  need their OK each time.
 - Real leave templates, pay rules and expense categories: the owner sets them up **later**;
   samples may be used for testing.
 - Leaked-password protection: **not needed** (open source, self-hosted); the advisor warning stays.
-- Expo account for EAS / installing on a phone: **once the apps are fully complete**.
+- Expo account / phone installs: **once the apps are fully complete**.
 - Still open: reviewing the rule defaults (`docs/features/core-rules.md`).
+- Before real use the owner should: set up templates / rules / categories, add real staff, and
+  **mark Test Staff as left** (it can't be deleted any more). Don't send real invite links until
+  Staffora can be installed (links last 48 h).
 
-**Live test data (keep it reversible)**: Test Staff (joined 23/10/2026, ₹22,000 monthly,
-9:30 AM – 8:30 PM, advance limit ₹5,000 / cut ₹1,000, attendance 23/10 half day and 24/10 present
-(marked by the owner), **October salary finalized and paid** (₹1,065.00 for 1.5 days, paid by
-UPI on 24/10 from the app; ledger: salary earned +₹1,065 dated 31/10, salary paid −₹1,065 — so
-Test Staff can no longer be deleted), self attendance off, no sign-in, three decided requests whose notes start "TEST:" — requests can't be deleted); an archived
-"Test category"; the shop's attendance code (made while checking). Everything else tested was
-reverted.
+**Live test data**: Test Staff (person `55e7a159-1a4b-4615-a1a3-bdbbcdc6b304`; joined
+23/10/2026, ₹22,000 monthly, 9:30 AM – 8:30 PM, advance limit ₹5,000 / cut ₹1,000; attendance
+23/10 half day, 24/10 present (marked by the owner); **October salary finalized and paid**
+₹1,065.00 by UPI — ledger +₹1,065 (31/10) / −₹1,065 (24/10), so Test Staff can't be deleted;
+**has a Staffora sign-in** (auth user `staff-<person id>@fincrew.invalid`, phone = the browser
+preview's device id) with the owner's PIN; self attendance off; three decided requests whose
+notes start "TEST:" — requests can't be deleted). An archived "Test category". The shop's
+attendance code exists (made while checking). Everything else tested was reverted.
 
 **Owner rules (also in CLAUDE.md and memory)**: no co-author on commits; the owner pushes (push
 only when asked in that moment); docs in every commit; every rule is a setting (no
 hard-coding); dates DD/MM/YYYY everywhere; all strings via i18n (no English fallbacks in code);
 design in Claude Design first for new screens (`docs/DESIGN.md`); never type the owner's
-password; never write permanent ledger lines or advances on the live shop without their OK.
+password or PIN; never create real sign-ins or write permanent rows on the live shop without
+their OK.
 
 **How to check work**
 
-- `pnpm typecheck` (8 tasks incl. the app), `pnpm test` (core 225, ui 6, i18n 1, db 109 —
+- `pnpm typecheck` (9 tasks incl. both apps), `pnpm test` (core 234, ui 6, i18n 1, db 160 —
   PGlite, no Docker), `pnpm build`, `pnpm ui:tokens --check`,
   `bash scripts/check-migrations.sh origin/main HEAD`.
 - Live DB (CLI logged in): `pnpm exec supabase db query --linked --project-ref
@@ -98,11 +108,16 @@ ufmlqvvfznemghmnvynz --type all` (accepted warnings only: authenticated-callable
   `rls_auto_enable`, leaked-password protection). **Dry-run a new migration** on live before
   asking to push: write `begin; <migration> select 'applied'; rollback;` to a file and run
   `... db query --linked --project-ref ufmlqvvfznemghmnvynz -f <file>`.
-- Website in the browser: preview "fincrew-web" (:3000). App in the browser: preview
-  "fincrew-mobile-web" (:8081, `expo start --web`; the first bundle takes ~1 min — poll with
-  curl until 200). Both need the **owner to sign in** in the pane (sessions persist per origin).
-  In the app, RN `accessibilityLabel` becomes `aria-label` and Pressables are `role=button`,
-  so drive it with JS clicks; pane screenshots can look scaled — measure layout with JS.
+- Previews (`.claude/launch.json`): "fincrew-web" (:3000), "fincrew-mobile-web" (:8081),
+  "staffora-mobile-web" (:8082). Expo's first bundle takes ~1 min — poll with curl until 200, and
+  wait a few seconds more before reading the page (it's empty until the bundle runs). The owner
+  signs in to FinCrew (website + app); in Staffora the owner is joined as Test Staff — **a page
+  reload asks for the PIN again**, so move around with in-app clicks (tab links `a[href=/money]`
+  etc.), never `navigate` while testing Staffora.
+- In the apps, RN `accessibilityLabel` becomes `aria-label` and Pressables are `role=button`;
+  drive them with JS clicks. Pane screenshots can look scaled or stale — read text / measure with
+  JS. The owner sometimes clicks in the pane: use a background tab (`tabs_create`) for your own
+  checks.
 - After a pushed migration: `gh run watch <id>`, then `pnpm db:types` and commit the types.
   Vercel status: `gh api repos/vikashpatel04/Employee-and-Expense-Management-Tool/commits/<sha>/status`.
 
@@ -113,28 +128,35 @@ ufmlqvvfznemghmnvynz --type all` (accepted warnings only: authenticated-callable
   `open(..., newline='')`. Windows sometimes locks `common.json` for a moment (EUNKNOWN): retry.
 - Prettier re-pads Markdown tables: edit table rows with a regex, not exact strings.
 - Next.js: stale server bundle / `.next/types` after moving routes → stop preview, delete
-  `apps/fincrew-web/.next`. Don't delete `.next` while the owner's own dev server runs.
+  `apps/fincrew-web/.next`. Page files may only export the page (move helpers to `src/lib`).
 - React 19 resets `<form action>` forms after the action: use `useFormAction`
-  (`src/lib/use-form-action.ts`).
+  (`src/lib/use-form-action.ts`); for multi-button decisions call the action from a click.
 - Anything exported from a `'use server'` file is a callable endpoint; server components can't
   take plain values (maps, objects) from `'use client'` files — keep those in `src/lib`.
 - HTML `pattern` uses the `v` flag (`dateFieldProps` uses `String.raw`).
 - jsonb reorders keys → `sameJson`. Composite FKs → cross-shop rows fail with `foreign key`.
-- Hidden `sr-only` labels inside `overflow-x-auto` boxes widen phone pages → make the scroll box
-  `relative`.
-- New public SQL functions go in `supabase/tests/functions.test.ts`'s pinned list. Storage in
-  tests: the PGlite harness has a small `storage` stand-in (buckets, objects with `owner_id`,
-  `foldername`).
-- Expo: add native libraries with `npx expo install` (from `apps/fincrew-mobile`); pnpm isolated
-  installs work; the app keeps Expo's TypeScript 6. One React version inside the app.
-- Expo web on Windows: after adding a **new folder** under `src/`, Metro may not see it ("Unable
-  to resolve @/components/…") — stop and start the "fincrew-mobile-web" preview.
-- RN web Pressables: `.click()` from JS works; find them by `aria-label` or text
-  (`[role=button]`, `[role=tab]`, `[role=radio]`). To test expenses on live, the only category
-  ("Test category") is archived — unarchive it for the check and archive it again after.
-- Design canvases: read with the Artifact tool (`project/canvas.json` + the artboard files),
-  re-read `canvas.json` right before publishing; new artboards go in the "FinCrew web" row
-  (y 2528; next free x ≈ 8070) or the Android rows.
+- RLS joins: an embedded table the user can't read drops the row (`!inner`) — e.g. staff and
+  `salary_runs` (fixed by `20261024000006`). Check every table in a select for the weakest user.
+- Before-insert triggers run before RLS checks; triggers that look up other tables need
+  `security definer` to see them (e.g. `private.guard_request`).
+- Append-only tables (requests, ledger, advances, scans, audit) can't be cleaned up after a live
+  test — and disabling their guard is blocked as tampering. Ask before creating such rows.
+- The attendance stamp trigger keeps self check-ins as source `self` through the transaction flag
+  `fincrew.self_check` (set by `private.check_in_at`).
+- New public SQL functions go in `supabase/tests/functions.test.ts`'s pinned list. The PGlite
+  harness has a `storage` stand-in and loads `pgcrypto` into an `extensions` schema like Supabase.
+- `supabase/functions/<name>/handler.ts` is plain TS (tested from `supabase/tests`);
+  `index.ts` is Deno (not typechecked locally). Edge function deploy: CI step with `--use-api`.
+- Creating a staff sign-in on live (accept an invite) counts as creating an account: the owner
+  does it, not you. Loading scripts from a CDN into a page is blocked.
+- Expo: add native libraries with `npx expo install` (from the app folder); pnpm isolated
+  installs work; the apps keep Expo's TypeScript 6. One React version inside each app. After
+  adding a **new folder** under `src/` or a new package, restart that app's preview.
+  react-native-svg passes `accessible` to the web DOM: put labels on a wrapping `View`.
+- Design canvases: read with the Artifact tool (`project/canvas.json` + artboard files); a
+  publish can be refused if the canvas was opened in the browser meanwhile — read the artifact
+  (url only) again, reapply, publish. Free spots: FinCrew light row next x ≈ 7520 (y 0), web
+  row next x ≈ 11910 (y 2528); Staffora light row next x ≈ 5640 (y 0).
 
 **Key links**: FinCrew screens https://claude.ai/artifact/WydRUvQzCNMAoXcNVh7pWC · Staffora
 screens https://claude.ai/artifact/9YMxty5q9jFvuut8ay8dTe · Design system
@@ -150,9 +172,9 @@ ref `ufmlqvvfznemghmnvynz` (never touch `cheque-tracker-dev`).
 | 2   | Core logic (`packages/core`) | **Done**: 225 tests, every rule a setting; `docs/features/core-rules.md`                                                                                                    |
 | 3   | Design                       | **Done** (2026-10-23): design system, key screens (owner reviewed), `packages/ui` tokens                                                                                    |
 | 4   | FinCrew web core             | **Done** (2026-10-24): data layer live; screens slices 1–10 (dashboard, shell, staff + extras, attendance grid + CSV, salary run, payslip print, advances, settings, roles) |
-| 5   | FinCrew Android              | **In progress**: shell, sign-in, Today, Staff, Money (checked live); Phase 7 screens next                                                                                   |
+| 5   | FinCrew Android              | **Built** (Today, Staff, Money, code, requests), checked live in the browser; phone builds wait (EAS)                                                                       |
 | 6   | Expenses                     | **Done** (2026-10-24): website and Android                                                                                                                                  |
-| 7   | Staffora                     | **In progress**: data + edge function + FinCrew screens live (2026-10-24); Staffora app next                                                                                |
+| 7   | Staffora                     | **In progress**: data + FinCrew screens live; Staffora app slices A + B checked; change PIN etc. next                                                                       |
 | 8   | Polish                       | Not started                                                                                                                                                                 |
 
 ## Phase 1 — Foundation
@@ -238,6 +260,10 @@ Tables still to add (with the phase that uses them, each with RLS tests): `staff
 (storage), `push_tokens` (Phase 7/8).
 
 ## Session log
+
+- **2026-10-24** — Owner resetting the session: rewrote **Start here** (state of all three
+  apps, what the owner can use now, next work in the agreed order, live test data, checks,
+  gotchas).
 
 - **2026-10-24** — Owner joined Staffora as Test Staff (PIN set by them). Checked Home,
   Attendance, Money, Ask with live data (details in `docs/features/staffora.md` → Checked). Fixed
