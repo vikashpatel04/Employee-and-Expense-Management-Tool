@@ -260,3 +260,86 @@ export function SectionTitle({ title, count }: { title: string; count?: number }
     </Text>
   );
 }
+
+/** 48 px icon-only button with a spoken label (day / month switchers, back). */
+export function IconButton({
+  label,
+  onPress,
+  icon,
+  disabled,
+}: {
+  label: string;
+  onPress: () => void;
+  icon: ReactNode;
+  disabled?: boolean;
+}) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      disabled={disabled}
+      onPress={onPress}
+      style={{
+        width: 48,
+        height: 48,
+        alignItems: 'center',
+        justifyContent: 'center',
+        opacity: disabled ? 0.38 : 1,
+      }}
+    >
+      {icon}
+    </Pressable>
+  );
+}
+
+/** Design system SegmentedControl: one choice out of a few, as tabs or a filter. */
+export function Segmented<T extends string>({
+  options,
+  value,
+  onChange,
+  label,
+}: {
+  options: { value: T; label: string }[];
+  value: T;
+  onChange: (v: T) => void;
+  label: string;
+}) {
+  const { c } = useTheme();
+  return (
+    <View
+      accessibilityRole="tablist"
+      accessibilityLabel={label}
+      style={{
+        flexDirection: 'row',
+        gap: 4,
+        padding: 4,
+        borderRadius: radius['radius-md'],
+        backgroundColor: c['surface-muted'],
+      }}
+    >
+      {options.map((o) => {
+        const on = o.value === value;
+        return (
+          <Pressable
+            key={o.value}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: on }}
+            onPress={() => onChange(o.value)}
+            style={{
+              flex: 1,
+              minHeight: 40,
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: radius['radius-sm'],
+              backgroundColor: on ? c.surface : 'transparent',
+            }}
+          >
+            <Text variant="label-sm" muted={!on} numberOfLines={1}>
+              {o.label}
+            </Text>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}

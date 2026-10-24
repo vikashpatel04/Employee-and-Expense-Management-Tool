@@ -37,10 +37,29 @@ is a placeholder until the first store build.
   sheet (Present, Half day, Absent, Paid leave, Unpaid leave, Not marked), **Mark all present**.
   Data: `loadAttendanceMonth`; writes: `writeAttendance` (future days refused, past days need
   `attendance.edit_past`, paid leave within the balance) — the same functions the website uses.
-- **More**: who is signed in, the website link, sign out. **Staff** and **Money** say "Coming
-  next" and point to the website.
+- **Staff** (`(tabs)/staff.tsx`): search by name or phone, Active / Left / All, rows with
+  phone or joining/leaving date and today's status; tap → staff detail.
+- **Staff detail** (`staff/[id].tsx`, design "Staff detail"): back, avatar, name, joined,
+  today's status / minutes late / check-in; tabs by permission (Ledger: self or `salary.view`;
+  Pay: self or `staff.pay.view`), components in `src/components/staff/`:
+  - **Overview**: balance (due / owes / settled), advance to recover with cut and limit, Call and
+    WhatsApp, this month's present / late / paid leave / half day and payable days.
+  - **Attendance**: Monday-first month calendar (status colour + icon, late dot, today bold),
+    chosen day's status, minutes late, in/out times, **Change** with the shared status sheet
+    (`writeAttendance`), month counts.
+  - **Ledger**: balance, lines by month newest first with running balance, "Undone" marks.
+  - **Pay**: current pay, overtime, shift and grace, leave template, own rules, allowances,
+    deductions, history (read-only; changes on the website for now).
+- Shared loaders in `packages/data/src/staff.ts`: `loadStaffList`, `loadStaffOverview`,
+  `loadLedger`, `loadPay`. Shared components: `status-sheet.tsx` (StatusPicker sheet used by
+  Today and staff Attendance), `Segmented`, `IconButton` in `ui.tsx`.
+- **More**: who is signed in, the website link, sign out. **Money** says "Coming next" and points
+  to the website.
 
 ## Checked
+
+2026-10-24 (slice B): typecheck, tests and build pass; signed-out visits to `/staff` go to Sign
+in. Staff screens not yet seen with data (owner sign-in needed).
 
 2026-10-24, in the browser at 375 × 812: the app starts, signed-out users land on Sign in, the
 screen matches the design and fits the width. Today could not be checked yet: it needs the
@@ -48,5 +67,5 @@ owner to sign in (never typed for them).
 
 ## Next
 
-Staff (list, detail tabs), Money (expenses, salary, advances), attendance code screen and
+Give advance / pay from staff detail (with Money), Money (expenses, salary, advances), attendance code screen and
 requests (with Phase 7 data), push notifications, widgets (Phase 8), EAS builds.

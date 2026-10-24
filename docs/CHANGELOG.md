@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Added — 2026-10-24 (Phase 5 slice B)
+
+- Android app Staff tab: list with search and filters, staff detail with Overview, Attendance
+  (calendar, change a day), Ledger and Pay.
+
 ### Added — 2026-10-24 (Phase 5 slice A)
 
 - FinCrew Android app (Expo): sign-in, shop switch, Today (mark attendance, Mark all present),

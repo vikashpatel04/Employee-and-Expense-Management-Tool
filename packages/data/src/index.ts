@@ -7,6 +7,7 @@ export * from './client';
 export * from './mappers';
 export * from './paid-leave';
 export * from './session';
+export * from './staff';
 export * from './attendance-month';
 export * from './attendance-write';
 export * from './dashboard';

@@ -2,6 +2,14 @@
 
 Choices made during the build that PLAN.md doesn't spell out. Newest first.
 
+## 2026-10-24 — Android Staff tab
+
+- Staff detail data comes from shared loaders (`loadStaffOverview`, `loadLedger`, `loadPay`);
+  the website's staff page still has its own queries (same tables and columns) — move it onto
+  these loaders when it is next touched.
+- On the phone, Pay is read-only for now; pay changes, allowances and own rules stay on the
+  website until the app has forms for them.
+
 ## 2026-10-24 — Android app foundations
 
 - **Expo SDK 58 with Expo Router**, created from Expo's default template and trimmed. pnpm's

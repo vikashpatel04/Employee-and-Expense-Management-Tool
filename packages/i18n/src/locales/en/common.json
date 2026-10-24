@@ -1236,6 +1236,32 @@
       "title": "Coming next",
       "body": "This part of the app is being built. Use the website meanwhile."
     },
-    "noShop": "This login isn't part of a shop yet. Ask the owner for access."
+    "noShop": "This login isn't part of a shop yet. Ask the owner for access.",
+    "staff": {
+      "title": "Staff",
+      "count_one": "{{count}} person",
+      "count_other": "{{count}} people",
+      "search": "Search by name or phone",
+      "empty": "No staff yet. Add people on the website.",
+      "noMatch": "Nobody matches “{{q}}”.",
+      "joined": "Joined {{date}}",
+      "back": "Staff",
+      "notFound": "This person isn't in this shop.",
+      "monthSoFar": "{{month}} so far",
+      "payable": "{{days}} payable days so far",
+      "noMoney": "You can't see this person's money.",
+      "dayTitle": "Day",
+      "times": "In {{in}} · Out {{out}}",
+      "fromRules": "From the leave template and holidays.",
+      "change": "Change",
+      "changeOnWebsite": "Change pay, allowances and rules on the website for now.",
+      "ownRules_one": "{{count}} rule of their own",
+      "ownRules_other": "{{count}} rules of their own",
+      "shopRules": "Shop's rules",
+      "until": "Until {{date}}",
+      "ended": "Ended",
+      "balanceDue": "Due to them",
+      "balanceOwes": "They owe the shop"
+    }
   }
 }

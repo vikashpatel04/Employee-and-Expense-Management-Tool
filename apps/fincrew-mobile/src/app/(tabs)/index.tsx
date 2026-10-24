@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Check, ChevronLeft, ChevronRight, Eraser } from 'lucide-react-native';
+import { Check, ChevronLeft, ChevronRight } from 'lucide-react-native';
 import {
   addDays,
   businessDateOf,
@@ -13,53 +13,32 @@ import {
 import {
   loadAttendanceMonth,
   writeAttendance,
-  SETTABLE_STATUSES,
-  type AttendanceWriteResult,
   type GridCell,
   type GridRow,
   type SettableStatus,
 } from '@fincrew/data';
 import type { StatusKey } from '@fincrew/ui';
 import { ShopHeader } from '@/components/shop-header';
-import { Sheet } from '@/components/sheet';
+import { attendanceError, StatusSheet } from '@/components/status-sheet';
 import {
   Avatar,
   Button,
   Card,
+  IconButton,
   SectionTitle,
   StatusPill,
-  STATUS_ICONS,
   SummaryChip,
   Text,
 } from '@/components/ui';
 import { t } from '@/lib/i18n';
 import { useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
-import { radius, space, useTheme } from '@/lib/theme';
-import { statusTokens } from '@fincrew/ui';
+import { space, useTheme } from '@/lib/theme';
 
 type Person = { row: GridRow; cell: GridCell };
 type Filter = 'present' | 'absent' | 'late' | 'unmarked' | null;
 
 const todayIST = () => businessDateOf(new Date());
-
-/** Shared write result → the app's wording (same strings as the website). */
-function errorText(r: Exclude<AttendanceWriteResult, { ok: true }>) {
-  switch (r.reason) {
-    case 'no_permission':
-      return t('attendance.readOnly');
-    case 'future':
-      return t('attendance.errors.future');
-    case 'past':
-      return t('attendance.errors.past');
-    case 'leave':
-      return t('attendance.errors.leave', { name: r.name, left: r.left });
-    case 'failed':
-      return t('attendance.errors.failed', { reason: r.message });
-    default:
-      return t('attendance.errors.failed', { reason: 'invalid request' });
-  }
-}
 
 /**
  * Today (design: "Today", PLAN §6.1): pick a day, see who is present, absent, late or not
@@ -120,7 +99,7 @@ export default function Today() {
         setMessage({ ok: true, text: t('home.marked', { count: r.count }) });
       await load();
     } else {
-      setMessage({ ok: false, text: errorText(r) });
+      setMessage({ ok: false, text: attendanceError(r) });
     }
   };
 
@@ -272,83 +251,18 @@ export default function Today() {
         </View>
       )}
 
-      <Sheet
+      <StatusSheet
         open={!!picked}
         onClose={() => setPicked(null)}
-        title={picked?.row.name ?? ''}
-        subtitle={label(date)}
-      >
-        {SETTABLE_STATUSES.map((s) => (
-          <StatusOption
-            key={s}
-            status={s}
-            current={picked?.cell.status === s}
-            disabled={busy}
-            onPress={() => picked && save([{ staffId: picked.row.staffId, date }], s)}
-          />
-        ))}
-        {picked?.cell.marked && (
-          <Pressable
-            accessibilityRole="button"
-            disabled={busy}
-            onPress={() => picked && save([{ staffId: picked.row.staffId, date }], 'clear')}
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: space['space-3'],
-              minHeight: 56,
-              paddingHorizontal: space['space-4'],
-              borderRadius: radius['radius-md'],
-              borderWidth: 1.5,
-              borderStyle: 'dashed',
-              borderColor: c['line-strong'],
-            }}
-          >
-            <Eraser size={20} color={c['status-unmarked']} />
-            <Text variant="label-sm" color={c['status-unmarked']}>
-              {t('mobile.today.sheet.clear')}
-            </Text>
-          </Pressable>
-        )}
-        {message && !message.ok && <Text color={c.danger}>{message.text}</Text>}
-        <Button
-          label={t('mobile.today.sheet.cancel')}
-          variant="secondary"
-          block
-          onPress={() => setPicked(null)}
-        />
-      </Sheet>
+        name={picked?.row.name ?? ''}
+        dateLabel={label(date)}
+        current={picked?.cell.status ?? null}
+        marked={!!picked?.cell.marked}
+        busy={busy}
+        error={message && !message.ok ? message.text : null}
+        onPick={(s) => picked && save([{ staffId: picked.row.staffId, date }], s)}
+      />
     </SafeAreaView>
-  );
-}
-
-function IconButton({
-  label,
-  onPress,
-  icon,
-  disabled,
-}: {
-  label: string;
-  onPress: () => void;
-  icon: React.ReactNode;
-  disabled?: boolean;
-}) {
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      disabled={disabled}
-      onPress={onPress}
-      style={{
-        width: 48,
-        height: 48,
-        alignItems: 'center',
-        justifyContent: 'center',
-        opacity: disabled ? 0.38 : 1,
-      }}
-    >
-      {icon}
-    </Pressable>
   );
 }
 
@@ -404,48 +318,6 @@ function StaffRow({ person, onPress }: { person: Person; onPress?: () => void })
           </Text>
         )}
       </View>
-    </Pressable>
-  );
-}
-
-/** A big tappable status choice in the sheet (design system StatusPicker). */
-function StatusOption({
-  status,
-  current,
-  disabled,
-  onPress,
-}: {
-  status: SettableStatus;
-  current: boolean;
-  disabled: boolean;
-  onPress: () => void;
-}) {
-  const { c } = useTheme();
-  const tok = statusTokens(status);
-  const Icon = STATUS_ICONS[status]!;
-  return (
-    <Pressable
-      accessibilityRole="radio"
-      accessibilityState={{ checked: current, disabled }}
-      disabled={disabled}
-      onPress={onPress}
-      style={{
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: space['space-3'],
-        minHeight: 56,
-        paddingHorizontal: space['space-4'],
-        borderRadius: radius['radius-md'],
-        backgroundColor: c[tok.bg!],
-        borderWidth: current ? 2 : 0,
-        borderColor: c[tok.fg],
-      }}
-    >
-      <Icon size={22} color={c[tok.fg]} strokeWidth={2.6} />
-      <Text variant="label" color={c[tok.fg]} style={{ flex: 1 }}>
-        {t(`status.${status}`)}
-      </Text>
-      {current && <Check size={20} color={c[tok.fg]} />}
     </Pressable>
   );
 }
