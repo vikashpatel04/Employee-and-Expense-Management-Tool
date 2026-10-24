@@ -32,7 +32,7 @@ export default async function CategoriesPage({
     <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
       <section className="flex flex-col gap-3">
         <p className="text-body text-[var(--ink-muted)]">{t('settings.categories.subtitle')}</p>
-        {categories.length === 0 ? (
+        {categories.every((x) => x.archived) && (
           <div className={`${card} flex flex-col gap-3`}>
             <p className="text-body-lg text-[var(--ink-muted)]">{t('settings.categories.empty')}</p>
             <p className="text-body text-[var(--ink-muted)]">
@@ -40,7 +40,8 @@ export default async function CategoriesPage({
             </p>
             <ActionLink run="suggested" label={t('settings.categories.suggested')} primary />
           </div>
-        ) : (
+        )}
+        {categories.length > 0 && (
           <ul className="overflow-hidden rounded-[var(--radius-lg)] bg-[var(--surface)] shadow-[var(--elevation-1)]">
             {categories.map((x) => {
               const Icon = categoryIcon(x.icon);

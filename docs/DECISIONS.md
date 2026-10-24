@@ -22,8 +22,8 @@ Choices made during the build that PLAN.md doesn't spell out. Newest first.
 - **No default categories in the database**: an empty shop offers "Add the usual ones" (nine
   suggestions from i18n), so nothing is assumed and names stay translatable.
 - **Expenses CSV** follows the attendance CSV (BOM, DD/MM/YYYY, `reports.export`).
-- `packages/db` types for the two tables were written by hand in the generator's shape until
-  the migration is live; `pnpm db:types` after the push replaces them.
+- `packages/db` types for the two tables were written by hand until the migration was live;
+  `pnpm db:types` replaced them after the push (2026-10-24).
 
 ## 2026-10-24 — Small screens
 

@@ -21,11 +21,8 @@ GitHub: run `git status -sb`; the owner pushes (never push unless asked).
    Staffora invite (Phase 7), adding non-staff helpers for roles.
 4. ~~Payslip print/PDF, attendance CSV, clear an attendance mark~~ — done (slice 9).
 5. ~~Web dashboard~~ — done (slice 10, designed first in Claude Design: "Web · dashboard").
-6. **Phase 6: Expenses** — built (slice 12, `docs/features/expenses.md`), **waiting for the
-   owner's push** (new migration `20261024000001_expenses.sql`). After the push: watch CI,
-   `pnpm db:types` (replaces the hand-added expense types in `packages/db`), then check in the
-   browser: add categories, add / edit / delete expenses incl. staff charge and pay-back (watch
-   Test Staff's ledger; use a test category), bill photo upload and view, CSV.
+6. ~~Phase 6: Expenses~~ — live (slice 12, `docs/features/expenses.md`; migration applied by
+   CI 2026-10-24). Left for later: expense reports beyond the month view.
 7. **Phase 5: FinCrew Android** (Expo): Today screen, staff, money, attendance code screen,
    push notifications — follow the Android artboards on the FinCrew key screens canvas and
    `themes` from `@fincrew/ui`. Web leftovers (small, any time): staff detail attendance
@@ -88,7 +85,7 @@ https://claude.ai/artifact/8jzomFcfJazHfn6yiUFQQP · Website https://fincrew-web
 | 3   | Design                       | **Done** (2026-10-23): design system, key screens (owner reviewed), `packages/ui` tokens                                                                                    |
 | 4   | FinCrew web core             | **Done** (2026-10-24): data layer live; screens slices 1–10 (dashboard, shell, staff + extras, attendance grid + CSV, salary run, payslip print, advances, settings, roles) |
 | 5   | FinCrew Android              | Not started                                                                                                                                                                 |
-| 6   | Expenses                     | **Built, waiting for push** (2026-10-24): migration, RLS + 17 tests, web screens; check live after the push                                                                 |
+| 6   | Expenses                     | **Done on the web** (2026-10-24): live migration, RLS + 17 tests, screens checked on the live shop; reports and Android later                                               |
 | 7   | Staffora                     | Not started                                                                                                                                                                 |
 | 8   | Polish                       | Not started                                                                                                                                                                 |
 
@@ -170,6 +167,17 @@ Tables still to add (with the phase that uses them, each with RLS tests): `staff
 `attendance_scans`, `invites`, `pin_credentials`, `push_tokens` (Phase 7).
 
 ## Session log
+
+- **2026-10-24** — Owner: "Push it". Pushed `862e1f1` (dashboard, small screens, expenses); CI
+  green incl. migrate; live DB has `expenses`, `expense_categories`, private `bills` bucket with
+  3 policies; advisors unchanged (only the accepted warnings). `pnpm db:types` regenerated.
+  **Checked on the live shop:** added "Test category" (wrench, amber), added a ₹123.45 UPI shop
+  expense with a generated bill photo (stored as a 101 KB JPEG at `<shop>/<expense>-<time>.jpg`),
+  opened the bill via its signed link, CSV row, edited to ₹200 (dashboard tile followed),
+  phone widths, deleted it (bill file removed; 0 expenses, 0 bill files, 0 expense ledger lines
+  left). "Test category" stays **archived** (categories can't be deleted). Staff charge and
+  pay-back were not tried live (they'd put permanent lines on Test Staff's ledger); the DB tests
+  cover them. Fix: "Add the usual ones" also shows when every category is archived.
 
 - **2026-10-24** — **Slice 12: expenses** — migration (categories, expenses, ledger posting
   trigger with reverse-and-repost on change, RLS, private `bills` bucket + Storage policies),

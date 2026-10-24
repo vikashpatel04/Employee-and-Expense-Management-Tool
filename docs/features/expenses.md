@@ -39,10 +39,16 @@ Phase 6 (built before Android at the owner's request, 2026-10-24). Rules: docs/P
   Actions: `expenses/actions.ts`; bill link `expenses/bill/[id]` (one-minute signed URL);
   CSV `expenses/export?month=` (`reports.export`).
 - **Settings → Expense categories** (`expenses.categories`): list with icon/colour, edit,
-  archive / bring back, add (name, icon picker, colour swatches); an empty shop gets **Add the
-  usual ones** (9 suggestions, renameable). Icons/colours: `src/lib/expense-style.ts`.
+  archive / bring back, add (name, icon picker, colour swatches); with no active category it
+  offers **Add the usual ones** (9 suggestions, renameable). Icons/colours: `src/lib/expense-style.ts`.
 - **Dashboard**: "Shop expenses this month" tile with `expenses.view_all`.
 - Staff ledgers show the lines as "Charged to staff" / "Reimbursement".
+
+## Checked
+
+Live shop, 2026-10-24: category add/archive, shop expense with bill photo (upload, view, CSV,
+edit, delete with the file removed), dashboard tile, phone widths. Staff charge / pay-back only
+in the DB tests (live would leave permanent lines on Test Staff's ledger).
 
 ## Not built yet
 

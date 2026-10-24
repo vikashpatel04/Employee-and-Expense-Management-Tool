@@ -878,7 +878,7 @@
     },
     "categories": {
       "subtitle": "Groups for shop expenses, each with an icon and a colour. Archive one to stop using it; old expenses keep it.",
-      "empty": "No categories yet.",
+      "empty": "No categories in use yet.",
       "suggested": "Add the usual ones",
       "suggestedHint": "Tea and snacks, Transport, Electricity, Rent, Packing, Repairs, Stationery, Staff welfare, Other. Rename or archive any of them later.",
       "suggestedNames": {

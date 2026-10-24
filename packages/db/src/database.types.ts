@@ -268,61 +268,6 @@ export type Database = {
           },
         ]
       }
-      fixed_deductions: {
-        Row: {
-          amount_paise: number
-          created_at: string
-          effective_from: string
-          effective_to: string | null
-          id: string
-          name: string
-          shop_id: string
-          staff_id: string
-        }
-        Insert: {
-          amount_paise: number
-          created_at?: string
-          effective_from: string
-          effective_to?: string | null
-          id?: string
-          name: string
-          shop_id: string
-          staff_id: string
-        }
-        Update: {
-          amount_paise?: number
-          created_at?: string
-          effective_from?: string
-          effective_to?: string | null
-          id?: string
-          name?: string
-          shop_id?: string
-          staff_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "fixed_deductions_shop_id_fkey"
-            columns: ["shop_id"]
-            isOneToOne: false
-            referencedRelation: "shops"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fixed_deductions_shop_id_staff_id_fkey"
-            columns: ["shop_id", "staff_id"]
-            isOneToOne: false
-            referencedRelation: "advance_balances"
-            referencedColumns: ["shop_id", "staff_id"]
-          },
-          {
-            foreignKeyName: "fixed_deductions_shop_id_staff_id_fkey"
-            columns: ["shop_id", "staff_id"]
-            isOneToOne: false
-            referencedRelation: "staff"
-            referencedColumns: ["shop_id", "person_id"]
-          },
-        ]
-      }
       expense_categories: {
         Row: {
           archived: boolean
@@ -428,6 +373,13 @@ export type Database = {
             foreignKeyName: "expenses_shop_id_charged_to_staff_id_fkey"
             columns: ["shop_id", "charged_to_staff_id"]
             isOneToOne: false
+            referencedRelation: "advance_balances"
+            referencedColumns: ["shop_id", "staff_id"]
+          },
+          {
+            foreignKeyName: "expenses_shop_id_charged_to_staff_id_fkey"
+            columns: ["shop_id", "charged_to_staff_id"]
+            isOneToOne: false
             referencedRelation: "staff"
             referencedColumns: ["shop_id", "person_id"]
           },
@@ -448,6 +400,68 @@ export type Database = {
           {
             foreignKeyName: "expenses_shop_id_paid_by_staff_id_fkey"
             columns: ["shop_id", "paid_by_staff_id"]
+            isOneToOne: false
+            referencedRelation: "advance_balances"
+            referencedColumns: ["shop_id", "staff_id"]
+          },
+          {
+            foreignKeyName: "expenses_shop_id_paid_by_staff_id_fkey"
+            columns: ["shop_id", "paid_by_staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["shop_id", "person_id"]
+          },
+        ]
+      }
+      fixed_deductions: {
+        Row: {
+          amount_paise: number
+          created_at: string
+          effective_from: string
+          effective_to: string | null
+          id: string
+          name: string
+          shop_id: string
+          staff_id: string
+        }
+        Insert: {
+          amount_paise: number
+          created_at?: string
+          effective_from: string
+          effective_to?: string | null
+          id?: string
+          name: string
+          shop_id: string
+          staff_id: string
+        }
+        Update: {
+          amount_paise?: number
+          created_at?: string
+          effective_from?: string
+          effective_to?: string | null
+          id?: string
+          name?: string
+          shop_id?: string
+          staff_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fixed_deductions_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fixed_deductions_shop_id_staff_id_fkey"
+            columns: ["shop_id", "staff_id"]
+            isOneToOne: false
+            referencedRelation: "advance_balances"
+            referencedColumns: ["shop_id", "staff_id"]
+          },
+          {
+            foreignKeyName: "fixed_deductions_shop_id_staff_id_fkey"
+            columns: ["shop_id", "staff_id"]
             isOneToOne: false
             referencedRelation: "staff"
             referencedColumns: ["shop_id", "person_id"]
