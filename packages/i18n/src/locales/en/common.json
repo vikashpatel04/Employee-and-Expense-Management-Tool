@@ -1661,6 +1661,60 @@
     "next": {
       "title": "Coming next",
       "body": "This part of Staffora is being built."
+    },
+    "money": {
+      "subtitle": "Your pay at {{shop}}",
+      "due": "Due to you",
+      "owe": "You owe the shop",
+      "settled": "All settled",
+      "advance": "Advance to repay",
+      "cut": "{{amount}} will be cut from your next salary.",
+      "cutAtRun": "The shop decides the cut at each salary.",
+      "tabsLabel": "Ledger or payslips",
+      "ledger": "Ledger",
+      "payslips": "Payslips",
+      "noLines": "Nothing on your account yet.",
+      "noPayslips": "No payslips yet. They appear once the shop finalizes salary.",
+      "netPay": "Net pay",
+      "paid": "Paid",
+      "leftDue": "{{amount}} due",
+      "paidSoFar": "Paid so far",
+      "stillDue": "Still to pay",
+      "notFound": "This payslip isn't available."
+    },
+    "ask": {
+      "back": "Back",
+      "leaveTitle": "Ask for leave",
+      "advanceTitle": "Ask for an advance",
+      "from": "From",
+      "to": "To",
+      "days_one": "{{count}} day",
+      "days_other": "{{count}} days",
+      "shopDecides": "The shop decides whether it is paid or unpaid leave.",
+      "howMuch": "How much",
+      "owesNow": "You owe {{amount}} now. The shop decides how much is cut each month.",
+      "cutHint": "The shop decides how much is cut from each salary.",
+      "why": "Why (optional)",
+      "whyLeave": "A wedding, a hospital visit…",
+      "whyAdvance": "School fees, rent…",
+      "send": "Send to the shop",
+      "sending": "Sending…",
+      "sent": "Sent. The shop will see it in FinCrew.",
+      "cancel": "Cancel",
+      "cancelled": "Request cancelled.",
+      "amountBad": "Enter the amount in rupees.",
+      "failed": "Couldn't send: {{reason}}",
+      "mine": "Your requests",
+      "none": "You haven't asked for anything yet.",
+      "itemLeave": "Leave · {{dates}}",
+      "itemAdvance": "Advance · {{amount}}",
+      "asked": "Asked {{date}}",
+      "state": {
+        "pending": "Waiting",
+        "approved": "Approved",
+        "rejected": "Not approved",
+        "cancelled": "Cancelled"
+      }
     }
   }
 }

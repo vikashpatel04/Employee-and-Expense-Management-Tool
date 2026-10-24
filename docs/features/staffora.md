@@ -54,8 +54,21 @@ Scheme `staffora` (invite links hand over with `staffora://join/<token>`); Andro
   explained with the time to try again (`src/lib/check-text.ts`).
 - **Checked in / out** (`checked-in.tsx`): the time large, present + minutes late, day, shop, how,
   and from when check-out works (the shop's minimum gap).
-- **Me**: name and shop, Lock Staffora, Remove from this phone. **Attendance** and **Money** tabs
-  say "Coming next".
+- **Me**: name and shop, Lock Staffora, Remove from this phone.
+- **Attendance** (`(tabs)/attendance.tsx`, design "Attendance"): month switcher, Monday-first
+  calendar (status colour + icon, late dot), the chosen day's status / times / minutes late, the
+  month's counts and payable days, **Ask for leave**. Read-only; `loadAttendanceMonth`.
+- **Money** (`(tabs)/money.tsx`, design "Money · ledger / payslips"): due to me / I owe / settled,
+  advance to repay and the next cut; Ledger (by month, newest first, running balance, undone
+  marks; `loadLedger`) or Payslips (finalized months, net, paid or still due; new shared
+  `loadMyPayslips`); **Ask for an advance**. Tap a payslip → `payslip/[id].tsx` (lines, net, paid
+  so far, still to pay; new shared `loadPayslipView`).
+- **Ask** (`ask.tsx`, design "Ask for leave / advance, my requests"): leave = From / To day
+  steppers (today to a year ahead, at most 62 days), or advance = amount with quick amounts and
+  what I owe now; a note; **Send to the shop** (`askRequest`). Below: my requests with Waiting /
+  Approved / Not approved / Cancelled, the shop's reply, and **Cancel** while waiting
+  (`cancelRequest`). Shared form pieces copied from FinCrew (`components/form.tsx`; the day
+  stepper gains `min` and a spoken label).
 
 ## Checked
 
@@ -69,9 +82,11 @@ Scheme `staffora` (invite links hand over with `staffora://join/<token>`); Andro
   in, Lock / Remove. An open invite link for Test Staff was left for that (48 h). The camera
   needs a real phone or a browser with a camera.
 
+Slice B (Attendance, Money, payslip, Ask) on 2026-10-24: typecheck passes and the app still
+builds and starts; the screens sit behind the sign-in, so they are **not seen with data yet**
+(same owner step as above).
+
 ## Next
 
-Attendance tab (month calendar like FinCrew's staff Attendance), Money (ledger, payslips —
-designs "Money · ledger / payslips"), Requests (ask leave / advance with `askRequest`, see and
-cancel own requests), Me → change PIN (needs a small SQL function + `staff-auth` action),
-biometric unlock (optional), push notifications.
+Me → change PIN (needs a small SQL function + `staff-auth` action), latest payslip card on Home,
+share a payslip, biometric unlock (optional), push notifications.

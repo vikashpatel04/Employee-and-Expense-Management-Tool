@@ -35,7 +35,9 @@ _Handover written 2026-10-24 before a session compaction. Read this section firs
   card, public `/join/<token>`; app code + requests screens) are **live and checked** (details in
   the feature doc → Checked).
 - **Staffora app started** (`apps/staffora-mobile`, `docs/features/staffora.md`): welcome, join
-  from the invite (PIN twice), PIN to open, Home with check-in by code / QR, checked-in, Me.
+  from the invite (PIN twice), PIN to open, Home with check-in by code / QR, checked-in, Me;
+  slice B: Attendance calendar, Money (ledger, payslips, payslip page), ask for leave / advance
+  with my requests.
   Checked up to the PIN step; the rest needs **the owner to finish joining as Test Staff** in the
   "staffora-mobile-web" preview (an open invite link for Test Staff exists, made 24/10 ~7:30 PM,
   48 h; or make a new one on Test Staff's page) — then check Home, Enter code (code from `/code`)
@@ -44,8 +46,8 @@ _Handover written 2026-10-24 before a session compaction. Read this section firs
 **Next work, in order** (owner usually says "continue"; pick the top unfinished one)
 
 1. **Staffora, continued** (`docs/features/staffora.md` → Next): check slice A with the owner's
-   sign-in, then Attendance (calendar), Money (ledger, payslips), Requests (`askRequest` /
-   `cancelRequest`), Me → change PIN (small SQL function + `staff-auth` action).
+   sign-in (slices A and B: Home, check-in, Attendance, Money, Ask), then Me → change PIN (small
+   SQL function + `staff-auth` action), latest payslip on Home, push notifications.
 2. **Android app leftovers** (small): payslip share on WhatsApp (design "Salary run"), undo a
    line from the app's Ledger (`undoLedgerLine` is shared already), advance rules and pay
    changes in the app (website only now). Bill photo upload from a real phone is unchecked.
@@ -233,6 +235,12 @@ Tables still to add (with the phase that uses them, each with RLS tests): `staff
 (storage), `push_tokens` (Phase 7/8).
 
 ## Session log
+
+- **2026-10-24** — **Staffora slice B.** Designs first ("Attendance", "Ask for leave /
+  advance, my requests" on the Staffora canvas). Attendance tab, Money tab (ledger / payslips),
+  payslip page, Ask screen with my requests; shared `loadMyPayslips` / `loadPayslipView` in
+  `@fincrew/data`. Typecheck passes; the app builds; screens not yet seen with data (needs the
+  owner's Staffora sign-in).
 
 - **2026-10-24** — **Staffora slice A.** New app `apps/staffora-mobile` (copied setup, Staffora
   palette, `expo-camera`, `expo-crypto`), designs added first ("Join · first run", "PIN to open"

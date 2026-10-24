@@ -51,7 +51,8 @@ Use the Artifact tool, not a web fetch:
   2026-10-24; then attendance code, requests and the staff sign-in card, x 8070–11110)
 - **Staffora key screens:** https://claude.ai/artifact/9YMxty5q9jFvuut8ay8dTe (Home before/after
   check-in, Scan QR, Enter code incl. wrong code, Checked in, Money ledger/payslips; light + dark;
-  "Join · first run" and "PIN to open" added 2026-10-24)
+  "Join · first run", "PIN to open", "Attendance" and "Ask for leave / advance, my requests"
+  added 2026-10-24)
 - Reviewed by the owner (2026-10-23). Change made from their comment: Attendance code now has
   **Show QR** instead of Copy code, plus a new artboard "Attendance code · QR" (full-screen QR
   view).

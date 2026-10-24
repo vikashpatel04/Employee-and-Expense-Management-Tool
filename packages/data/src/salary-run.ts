@@ -282,3 +282,67 @@ export async function loadPayslipsDue(supabase: Supabase, staffId: string) {
     .filter((s) => s.due > 0)
     .sort((a, b) => a.year * 12 + a.month - (b.year * 12 + b.month));
 }
+
+/**
+ * A person's finalized payslips (latest revision of each month), newest first, with what's been
+ * paid: Staffora's Money → Payslips. RLS shows staff only their own finalized payslips.
+ */
+export async function loadMyPayslips(supabase: Supabase, staffId: string) {
+  const { data: slips } = await supabase
+    .from('payslips')
+    .select('id, run_id, revision, net_pay_paise, salary_runs!inner(year, month)')
+    .eq('staff_id', staffId)
+    .eq('status', 'finalized')
+    .order('revision', { ascending: false });
+  const latest = new Map<string, NonNullable<typeof slips>[number]>();
+  for (const s of slips ?? []) if (!latest.has(s.run_id)) latest.set(s.run_id, s);
+  const list = [...latest.values()];
+  const paid = await paidByPayslip(
+    supabase,
+    list.map((s) => s.id),
+  );
+  return list
+    .map((s) => ({
+      id: s.id,
+      year: s.salary_runs.year,
+      month: s.salary_runs.month,
+      net: Number(s.net_pay_paise),
+      paid: paid.get(s.id) ?? 0,
+    }))
+    .sort((a, b) => b.year * 12 + b.month - (a.year * 12 + a.month));
+}
+
+/** One payslip with everything a payslip page shows (the person's own, or with salary.view). */
+export async function loadPayslipView(supabase: Supabase, payslipId: string) {
+  const { data: slip } = await supabase
+    .from('payslips')
+    .select(
+      '*, salary_runs!inner(year, month), staff!inner(joining_date, leaving_date, people!inner(name)), shops!inner(name)',
+    )
+    .eq('id', payslipId)
+    .maybeSingle();
+  if (!slip) return null;
+  const { year, month } = slip.salary_runs;
+  const paid =
+    slip.status === 'finalized'
+      ? ((await paidByPayslip(supabase, [slip.id])).get(slip.id) ?? 0)
+      : 0;
+  return {
+    id: slip.id,
+    shopName: slip.shops.name,
+    name: slip.staff.people.name,
+    year,
+    month,
+    joiningDate: slip.staff.joining_date,
+    leavingDate: slip.staff.leaving_date,
+    status: slip.status as 'draft' | 'finalized',
+    lines: slip.lines as unknown as PayslipLine[],
+    summary: slip.summary as unknown as DaySummary,
+    gross: Number(slip.gross_paise),
+    deductions: Number(slip.deductions_paise),
+    netBeforeAdvance: Number(slip.net_before_advance_paise),
+    cut: Number(slip.advance_cut_paise),
+    net: Number(slip.net_pay_paise),
+    paid,
+  };
+}

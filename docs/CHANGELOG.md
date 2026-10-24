@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Added — 2026-10-24 (Staffora slice B)
+
+- Staffora: Attendance calendar, Money (balance, advance, ledger, payslips, payslip page), ask for
+  leave or an advance and see / cancel my requests.
+
 ### Added — 2026-10-24 (Staffora slice A)
 
 - Staffora staff app (`apps/staffora-mobile`): welcome, join from the invite link with a PIN set
