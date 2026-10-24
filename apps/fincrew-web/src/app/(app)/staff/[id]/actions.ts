@@ -47,8 +47,17 @@ export async function savePay(staffId: string, _prev: PayState, form: FormData):
     return { error: t('staffDetail.pay.form.errors.hours') };
 
   const supabase = await createClient();
+  // A new version keeps the person's own rules from the version it follows.
+  const { data: before } = await supabase
+    .from('pay_settings')
+    .select('pay_rules_override, late_policy_override')
+    .eq('staff_id', staffId)
+    .lte('effective_from', effectiveFrom)
+    .order('effective_from', { ascending: false })
+    .limit(1);
   const { error } = await supabase.from('pay_settings').upsert(
     {
+      ...before?.[0],
       shop_id: me.shopId,
       staff_id: staffId,
       effective_from: effectiveFrom,

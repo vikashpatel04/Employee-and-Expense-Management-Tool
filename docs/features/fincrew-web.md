@@ -32,6 +32,20 @@ the design's text styles and Lucide icons (24px, 2px stroke, the design system's
   `parseRupees`, times with `parseTimeOfDay`, date with `parseDisplayDate`; saves a dated
   `pay_settings` row (same date replaces it).
 - Dates everywhere are DD/MM/YYYY (`formatDate` = core `formatDisplayDate`; `dateFieldProps`).
+- **Overview extras**: **Details** (`staff.edit`: name, phone, joining date, leaving date; a
+  leaving date marks them left) and **Opening balance** (`staff.pay.edit`: who owes, amount,
+  as-of date, confirmation tick; one ledger line, shown instead of the form once set).
+- **Pay tab extras**: allowances and deductions show until-dates and an "Ended" tag, with **End
+  today** and two-step **Remove** (`staff.pay.edit`); **Add an allowance / fixed deduction**
+  (name, monthly amount, from/until, allowance by days worked or full); **Change leave
+  template** from a date (`staff.edit`); **Rules just for {name}** (`staff.pay.edit`): every pay
+  and late rule with "Shop's rule (current value)" as the first choice; the current pay list
+  shows "Own rules". Actions: `extra-actions.ts`, `rules-actions.ts`.
+
+Checked in the browser on 2026-10-24 on Test Staff, every change reverted afterwards: details
+save (phone, leaving date → listed under Left) and validation, allowance add / end / remove, own
+rules saved on the existing pay version (DB checked) with Salary and Attendance still rendering,
+then cleared; opening balance error path only.
 
 Checked in the browser on 2026-10-23 against the live project: shell, staff list, Add staff
 ("Test Staff"), staff detail tabs, saving pay (₹22,000 monthly, 9:30 AM – 8:30 PM).
@@ -129,6 +143,5 @@ checked at each step (left with no roles).
 
 ## Not built yet
 
-Staff detail: attendance calendar, edit details/leaving date, allowances and deductions editing,
-per-person rule overrides, Staffora invite; adding non-staff people (helpers) for roles; CSV
-export, payslip PDF/print; requests.
+Staff detail: attendance calendar, Staffora invite, correcting an opening balance; adding
+non-staff people (helpers) for roles; CSV export, payslip PDF/print; requests.

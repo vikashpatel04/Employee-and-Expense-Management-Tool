@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+### Added — 2026-10-24 (Phase 4.3 slice 8)
+
+- Staff detail: edit details and leaving date, opening balance, allowances and deductions (add,
+  end, remove), change leave template from a date, rules just for one person.
+
+### Fixed — 2026-10-24
+
+- Changing pay from a date keeps the person's own rules.
+
 ### Added — 2026-10-24 (Phase 4.3 slice 7)
 
 - Settings → Roles: create roles, tick permissions, give them to people, rename, delete.

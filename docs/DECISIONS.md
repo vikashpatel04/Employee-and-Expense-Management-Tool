@@ -2,6 +2,24 @@
 
 Choices made during the build that PLAN.md doesn't spell out. Newest first.
 
+## 2026-10-24 — Staff detail extras
+
+- **Leaving date sets the status**: any leaving date (even a future one) marks the person `left`
+  (the staff list's Left filter); clearing it makes them `active`. Attendance and salary already
+  use the leaving date itself, so pay stops after that day either way.
+- **Opening balance is set once**: the ledger allows one `opening_balance` line per person and is
+  append-only, so the form needs a confirmation tick and disappears once set (the Overview shows
+  the line instead). Correcting one later needs a ledger adjustment screen (not built).
+- **Own rules live on pay settings** (`pay_rules_override` / `late_policy_override`), so they are
+  dated like pay: saving from a date starts a copy of the pay in effect then (or updates the
+  version starting that day) and applies to every later version too. Changing pay from a date
+  copies the own rules of the version it follows, so they're never dropped silently. A choice
+  left on "Shop's rule" is simply not stored and follows Settings.
+- **Allowances and deductions**: "End today" sets the end date (past months keep them);
+  "Remove" (two clicks) deletes one added by mistake. Finalized payslips keep their own lines.
+- Changing someone's leave template from the Pay tab is the same dated assignment as Settings →
+  Leave templates → Move staff (`staff.edit`); archived templates aren't offered.
+
 ## 2026-10-24 — Roles screen
 
 - Permission and area names shown on screen come from i18n (`permissions.*`,

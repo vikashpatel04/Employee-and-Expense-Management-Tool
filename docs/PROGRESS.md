@@ -5,8 +5,9 @@ _Last updated: 2026-10-24_
 ## Start here (handover for a new session)
 
 **Where we are:** Phases 1–3 done; Phase 4 (FinCrew website) in progress — data layer live,
-screens slices 1–7 done and checked in the browser: app shell + shop switcher, staff list/add,
-staff detail (overview, ledger, pay), attendance grid, salary run, advances + undo, settings
+screens slices 1–8 done and checked in the browser: app shell + shop switcher, staff list/add,
+staff detail (overview, ledger, pay, edit details, allowances/deductions, opening balance, own
+rules, leave template), attendance grid, salary run, advances + undo, settings
 (holidays, leave templates + assignment, shop rules, roles & permissions). Local `main` may be ahead of
 GitHub: run `git status -sb`; the owner pushes (never push unless asked).
 
@@ -15,10 +16,10 @@ GitHub: run `git status -sb`; the owner pushes (never push unless asked).
 1. ~~Advances on the web~~ — done (slice 5).
 2. ~~Settings screens~~ — done (slices 6–7: holidays, leave templates + assignment, shop rules,
    roles & permissions).
-3. **Staff detail extras**: edit name/phone, leaving date/status, allowances & deductions,
-   opening balance, per-person rule overrides (`pay_settings.pay_rules_override` /
-   `late_policy_override`), leave template change from the Pay tab.
-4. Payslip print/PDF, attendance CSV, clear a mark; then Phase 5 (Android), 6 (expenses), 7 (Staffora).
+3. ~~Staff detail extras~~ — done (slice 8). Still open there: attendance calendar tab,
+   Staffora invite (Phase 7), adding non-staff helpers for roles.
+4. **Payslip print/PDF, attendance CSV, clear an attendance mark**; then Phase 5 (Android),
+   6 (expenses), 7 (Staffora).
 
 **Waiting on the owner:**
 
@@ -158,6 +159,15 @@ Tables still to add (with the phase that uses them, each with RLS tests): `staff
 `attendance_scans`, `invites`, `pin_credentials`, `push_tokens` (Phase 7).
 
 ## Session log
+
+- **2026-10-24** — **Slice 8: staff detail extras** — Overview: Details (name, phone, joining,
+  leaving date → status left/active) and one-time Opening balance (confirm tick; ledger line).
+  Pay tab: allowances/deductions with End today and two-step Remove, add forms; change leave
+  template from a date; **Rules just for {name}** (per-person `pay_rules_override` /
+  `late_policy_override` from a date). Changing pay now carries own rules into the new version.
+  Checked in the browser on Test Staff and reverted every change (DB confirmed: 1 pay row, no
+  overrides, no allowances, active, 0 ledger lines). Opening balance only tested for its error
+  (a real one is permanent). Next: payslip print/PDF, attendance CSV, clear a mark.
 
 - **2026-10-24** — **Slice 7: roles & permissions** — Settings → Roles: list (permission count,
   who has it), new role (name + permissions by area), role page (permissions, people, rename,

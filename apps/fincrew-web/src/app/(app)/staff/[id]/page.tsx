@@ -5,15 +5,20 @@ import {
   formatINR,
   formatTimeOfDay,
   runningBalances,
+  type LatePolicy,
   type LedgerLine,
   type LedgerType,
+  type PayRules,
 } from '@fincrew/core';
 import { formatDate, todayIST } from '@/lib/format';
 import { t } from '@/lib/i18n';
+import { toShopRules } from '@/lib/mappers';
 import { requireMe } from '@/lib/session';
 import { createClient } from '@/lib/supabase/server';
 import { Avatar, quietButtonClass } from '../../../components';
 import { AdvanceForm, AdvanceSettingsForm, UndoButton } from './advance-forms';
+import { DetailsForm, ItemButtons, ItemForm, OpeningForm, TemplateForm } from './extra-forms';
+import { OverridesForm } from './overrides-form';
 import { PayForm } from './pay-form';
 
 type Tab = 'overview' | 'ledger' | 'pay';
@@ -109,13 +114,23 @@ export default async function StaffDetailPage({
           advanceCut={s.advance_cut_paise}
           canGive={can('advances.give')}
           canEditStaff={can('staff.edit')}
+          canEditPay={can('staff.pay.edit')}
+          details={{
+            name,
+            phone,
+            joiningDate: s.joining_date,
+            leavingDate: s.leaving_date,
+          }}
         />
       )}
       {tab === 'ledger' && <Ledger staffId={id} canUndo={can('salary.undo_payment')} />}
       {tab === 'pay' && (
         <Pay
           staffId={id}
+          shopId={me.shopId}
+          name={name}
           canEdit={can('staff.pay.edit')}
+          canEditStaff={can('staff.edit')}
           joiningDate={s.joining_date}
           saved={sp.saved}
         />
@@ -133,8 +148,18 @@ async function Overview(props: {
   advanceCut: number | null;
   canGive: boolean;
   canEditStaff: boolean;
+  canEditPay: boolean;
+  details: { name: string; phone: string | null; joiningDate: string; leavingDate: string | null };
 }) {
   const supabase = await createClient();
+  const { data: opening } = props.canEditPay
+    ? await supabase
+        .from('ledger_entries')
+        .select('amount_paise, date')
+        .eq('staff_id', props.staffId)
+        .eq('type', 'opening_balance')
+        .maybeSingle()
+    : { data: null };
   const [{ data: bal }, { data: adv }] = props.canMoney
     ? await Promise.all([
         supabase
@@ -257,6 +282,36 @@ async function Overview(props: {
           />
         </section>
       )}
+      {props.canEditStaff && (
+        <section className={card}>
+          <h2 className="text-title-md mb-3">{t('staffDetail.details.title')}</h2>
+          <DetailsForm staffId={props.staffId} details={props.details} />
+        </section>
+      )}
+      {props.canEditPay && (
+        <section className={card}>
+          <h2 className="text-title-md">{t('staffDetail.opening.title')}</h2>
+          {opening ? (
+            <p className="text-body mt-1 text-[var(--ink-muted)]">
+              {t('staffDetail.opening.set', {
+                amount: formatINR(Number(opening.amount_paise)),
+                date: formatDate(opening.date),
+              })}
+            </p>
+          ) : (
+            <>
+              <p className="text-body mt-1 mb-4 text-[var(--ink-muted)]">
+                {t('staffDetail.opening.hint')}
+              </p>
+              <OpeningForm
+                staffId={props.staffId}
+                name={props.name}
+                defaultDate={props.details.joiningDate}
+              />
+            </>
+          )}
+        </section>
+      )}
     </div>
   );
 }
@@ -356,11 +411,27 @@ async function Ledger({ staffId, canUndo }: { staffId: string; canUndo: boolean 
 
 async function Pay(props: {
   staffId: string;
+  shopId: string;
+  name: string;
   canEdit: boolean;
+  canEditStaff: boolean;
   joiningDate: string;
   saved?: string;
 }) {
   const supabase = await createClient();
+  const [{ data: templates }, { data: shop }] = await Promise.all([
+    props.canEditStaff
+      ? supabase
+          .from('leave_templates')
+          .select('id, name')
+          .eq('archived', false)
+          .eq('shop_id', props.shopId)
+          .order('name')
+      : Promise.resolve({ data: null }),
+    props.canEdit
+      ? supabase.from('shops').select('settings').eq('id', props.shopId).single()
+      : Promise.resolve({ data: null }),
+  ]);
   const [{ data: pays }, { data: allowances }, { data: deductions }, { data: tpl }] =
     await Promise.all([
       supabase
@@ -376,10 +447,9 @@ async function Pay(props: {
         .order('effective_from'),
       supabase
         .from('staff_leave_templates')
-        .select('effective_from, leave_templates(name)')
+        .select('effective_from, template_id, leave_templates(name)')
         .eq('staff_id', props.staffId)
-        .order('effective_from', { ascending: false })
-        .limit(1),
+        .order('effective_from', { ascending: false }),
     ]);
   const today = todayIST();
   const current = (pays ?? []).find((p) => p.effective_from <= today) ?? null;
@@ -393,7 +463,11 @@ async function Pay(props: {
     );
   const row =
     'flex items-center justify-between gap-3 border-b border-[var(--line)] px-4 py-3 last:border-0';
-  const template = tpl?.[0];
+  const template = (tpl ?? []).find((a) => a.effective_from <= today) ?? tpl?.[0];
+  const ownRules = current
+    ? Object.keys(current.pay_rules_override ?? {}).length +
+      Object.keys(current.late_policy_override ?? {}).length
+    : 0;
 
   return (
     <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
@@ -464,33 +538,66 @@ async function Pay(props: {
                   {template?.leave_templates?.name ?? t('staffDetail.pay.noTemplate')}
                 </span>
               </li>
+              <li className={row}>
+                <span className="text-label-sm">{t('staffDetail.rules.label')}</span>
+                <span className="text-body text-right">
+                  {ownRules > 0
+                    ? t('staffDetail.rules.own', { count: ownRules })
+                    : t('staffDetail.rules.none')}
+                </span>
+              </li>
             </ul>
           </section>
         )}
 
-        {[
-          { title: t('staffDetail.pay.allowances'), rows: allowances ?? [] },
-          { title: t('staffDetail.pay.deductions'), rows: deductions ?? [] },
-        ].map(
+        {(
+          [
+            { kind: 'allowance', title: t('staffDetail.pay.allowances'), rows: allowances ?? [] },
+            { kind: 'deduction', title: t('staffDetail.pay.deductions'), rows: deductions ?? [] },
+          ] as const
+        ).map(
           (group) =>
             group.rows.length > 0 && (
-              <section key={group.title} className="flex flex-col gap-2">
+              <section key={group.kind} className="flex flex-col gap-2">
                 <h2 className="text-title-md px-1">{group.title}</h2>
                 <ul className="overflow-hidden rounded-[var(--radius-lg)] bg-[var(--surface)] shadow-[var(--elevation-1)]">
-                  {group.rows.map((a) => (
-                    <li key={a.id} className={row}>
-                      <span className="flex flex-col">
-                        <span className="text-label-sm">{a.name}</span>
-                        <span className="text-caption text-[var(--ink-muted)]">
-                          {'prorated' in a && a.prorated
-                            ? t('staffDetail.pay.prorated')
-                            : t('staffDetail.pay.fixed')}{' '}
-                          · {t('staffDetail.pay.since', { date: formatDate(a.effective_from) })}
+                  {group.rows.map((a) => {
+                    const ended = a.effective_to != null && a.effective_to < today;
+                    return (
+                      <li key={a.id} className={row}>
+                        <span className="flex flex-col">
+                          <span className="text-label-sm">
+                            {a.name}
+                            {ended && (
+                              <span className="text-caption ml-2 rounded-full bg-[var(--surface-muted)] px-2 py-0.5 text-[var(--ink-muted)]">
+                                {t('staffDetail.items.ended')}
+                              </span>
+                            )}
+                          </span>
+                          <span className="text-caption text-[var(--ink-muted)]">
+                            {'prorated' in a && a.prorated
+                              ? t('staffDetail.pay.prorated')
+                              : t('staffDetail.pay.fixed')}{' '}
+                            · {t('staffDetail.pay.since', { date: formatDate(a.effective_from) })}
+                            {a.effective_to &&
+                              ` · ${t('staffDetail.items.until', { date: formatDate(a.effective_to) })}`}
+                          </span>
                         </span>
-                      </span>
-                      <span className="text-money-sm">{formatINR(Number(a.amount_paise))}</span>
-                    </li>
-                  ))}
+                        <span className="flex flex-col items-end">
+                          <span className="text-money-sm">{formatINR(Number(a.amount_paise))}</span>
+                          {props.canEdit && (
+                            <ItemButtons
+                              staffId={props.staffId}
+                              kind={group.kind}
+                              id={a.id}
+                              name={a.name}
+                              canEnd={a.effective_to == null || a.effective_to > today}
+                            />
+                          )}
+                        </span>
+                      </li>
+                    );
+                  })}
                 </ul>
               </section>
             ),
@@ -518,46 +625,109 @@ async function Pay(props: {
         )}
       </div>
 
-      {props.canEdit && (
-        <section className={card}>
-          <h2 className="text-title-md">{t('staffDetail.pay.form.title')}</h2>
-          <p className="text-body mt-1 mb-4 text-[var(--ink-muted)]">
-            {t('staffDetail.pay.form.hint')}
-          </p>
-          <PayForm
-            staffId={props.staffId}
-            defaultDate={current ? today : props.joiningDate}
-            current={
-              current && {
-                payType: current.pay_type as 'monthly' | 'daily' | 'hourly',
-                amount: amountOf(current),
-                overtime:
-                  current.overtime_rate_paise == null ? null : Number(current.overtime_rate_paise),
-                shiftStart: current.shift_start,
-                shiftEnd: current.shift_end,
-                grace: current.grace_minutes,
-                dayMinutes: current.day_minutes,
-              }
-            }
-            labels={{
-              effectiveFrom: t('staffDetail.pay.form.effectiveFrom'),
-              payType: t('staffDetail.pay.form.payType'),
-              types: {
-                monthly: t('staffDetail.pay.types.monthly'),
-                daily: t('staffDetail.pay.types.daily'),
-                hourly: t('staffDetail.pay.types.hourly'),
-              },
-              amount: t('staffDetail.pay.form.amount'),
-              overtime: t('staffDetail.pay.form.overtime'),
-              shiftStart: t('staffDetail.pay.form.shiftStart'),
-              shiftEnd: t('staffDetail.pay.form.shiftEnd'),
-              grace: t('staffDetail.pay.form.grace'),
-              hoursPerDay: t('staffDetail.pay.form.hoursPerDay'),
-              save: t('staffDetail.pay.form.save'),
-              saving: t('staffDetail.pay.form.saving'),
-            }}
-          />
-        </section>
+      {(props.canEdit || props.canEditStaff) && (
+        <div className="flex flex-col gap-4">
+          {props.canEdit && (
+            <section className={card}>
+              <h2 className="text-title-md">{t('staffDetail.pay.form.title')}</h2>
+              <p className="text-body mt-1 mb-4 text-[var(--ink-muted)]">
+                {t('staffDetail.pay.form.hint')}
+              </p>
+              <PayForm
+                staffId={props.staffId}
+                defaultDate={current ? today : props.joiningDate}
+                current={
+                  current && {
+                    payType: current.pay_type as 'monthly' | 'daily' | 'hourly',
+                    amount: amountOf(current),
+                    overtime:
+                      current.overtime_rate_paise == null
+                        ? null
+                        : Number(current.overtime_rate_paise),
+                    shiftStart: current.shift_start,
+                    shiftEnd: current.shift_end,
+                    grace: current.grace_minutes,
+                    dayMinutes: current.day_minutes,
+                  }
+                }
+                labels={{
+                  effectiveFrom: t('staffDetail.pay.form.effectiveFrom'),
+                  payType: t('staffDetail.pay.form.payType'),
+                  types: {
+                    monthly: t('staffDetail.pay.types.monthly'),
+                    daily: t('staffDetail.pay.types.daily'),
+                    hourly: t('staffDetail.pay.types.hourly'),
+                  },
+                  amount: t('staffDetail.pay.form.amount'),
+                  overtime: t('staffDetail.pay.form.overtime'),
+                  shiftStart: t('staffDetail.pay.form.shiftStart'),
+                  shiftEnd: t('staffDetail.pay.form.shiftEnd'),
+                  grace: t('staffDetail.pay.form.grace'),
+                  hoursPerDay: t('staffDetail.pay.form.hoursPerDay'),
+                  save: t('staffDetail.pay.form.save'),
+                  saving: t('staffDetail.pay.form.saving'),
+                }}
+              />
+            </section>
+          )}
+          {props.canEditStaff && (
+            <section className={card}>
+              <h2 className="text-title-md">{t('staffDetail.templateForm.title')}</h2>
+              <p className="text-body mt-1 mb-4 text-[var(--ink-muted)]">
+                {t('staffDetail.templateForm.hint')}
+              </p>
+              {(templates ?? []).length === 0 ? (
+                <p className="text-body text-[var(--ink-muted)]">
+                  {t('staffDetail.templateForm.none')}
+                </p>
+              ) : (
+                <TemplateForm
+                  staffId={props.staffId}
+                  templates={templates ?? []}
+                  current={template?.template_id ?? null}
+                  defaultDate={template ? today : props.joiningDate}
+                />
+              )}
+            </section>
+          )}
+          {props.canEdit &&
+            (['allowance', 'deduction'] as const).map((kind) => (
+              <section key={kind} className={card}>
+                <h2 className="text-title-md">
+                  {t(
+                    kind === 'allowance'
+                      ? 'staffDetail.items.addAllowance'
+                      : 'staffDetail.items.addDeduction',
+                  )}
+                </h2>
+                <p className="text-body mt-1 mb-4 text-[var(--ink-muted)]">
+                  {t('staffDetail.items.hint')}
+                </p>
+                <ItemForm staffId={props.staffId} kind={kind} defaultDate={today} />
+              </section>
+            ))}
+          {props.canEdit && (
+            <section className={card}>
+              <h2 className="text-title-md">
+                {t('staffDetail.rules.title', { name: props.name })}
+              </h2>
+              <p className="text-body mt-1 mb-4 text-[var(--ink-muted)]">
+                {t('staffDetail.rules.hint')}
+              </p>
+              {current ? (
+                <OverridesForm
+                  staffId={props.staffId}
+                  shop={toShopRules(shop?.settings)}
+                  pay={(current.pay_rules_override ?? {}) as Partial<PayRules>}
+                  late={(current.late_policy_override ?? {}) as Partial<LatePolicy>}
+                  defaultDate={today}
+                />
+              ) : (
+                <p className="text-body text-[var(--ink-muted)]">{t('staffDetail.rules.noPay')}</p>
+              )}
+            </section>
+          )}
+        </div>
       )}
     </div>
   );

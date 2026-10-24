@@ -172,6 +172,90 @@
           "failed": "Couldn't save: {{reason}}"
         }
       }
+    },
+    "saving": "Saving…",
+    "details": {
+      "title": "Details",
+      "name": "Full name",
+      "phone": "Phone (optional)",
+      "joiningDate": "Joining date",
+      "leavingDate": "Leaving date (optional)",
+      "leavingHint": "The last day they work. Attendance and salary stop after it. Leave empty while they still work here.",
+      "save": "Save details",
+      "saved": "Details saved.",
+      "errors": {
+        "name": "Enter a name.",
+        "leaving": "The leaving date can't be before the joining date."
+      }
+    },
+    "items": {
+      "addAllowance": "Add an allowance",
+      "addDeduction": "Add a fixed deduction",
+      "hint": "Every month from the start date until the end date. Payslips already finalized never change.",
+      "name": "Name",
+      "amount": "Amount per month (₹)",
+      "prorated": "By days worked (otherwise the full amount every month)",
+      "from": "From",
+      "to": "Until (optional)",
+      "save": "Add",
+      "until": "Until {{date}}",
+      "end": "End today",
+      "endLabel": "End {{name}} today",
+      "remove": "Remove",
+      "removeConfirm": "Yes, remove",
+      "removeLabel": "Remove {{name}}",
+      "saved": "Saved.",
+      "ended": "Ended",
+      "errors": {
+        "name": "Enter a name.",
+        "to": "The end date can't be before the start date."
+      }
+    },
+    "templateForm": {
+      "title": "Change leave template",
+      "hint": "From the date you choose. Earlier months keep the template they had.",
+      "template": "Template",
+      "from": "From",
+      "save": "Save template",
+      "saved": "Leave template saved.",
+      "none": "No leave templates yet. Create one in Settings → Leave templates."
+    },
+    "opening": {
+      "title": "Opening balance",
+      "hint": "Money owed before you started using FinCrew. It can be set once and never changed, so check it first.",
+      "direction": "Who owes",
+      "dueTo": "The shop owes {{name}}",
+      "owes": "{{name}} owes the shop",
+      "amount": "Amount (₹)",
+      "date": "As of",
+      "confirm": "I've checked it: it can't be changed later",
+      "save": "Set opening balance",
+      "saved": "Opening balance saved.",
+      "set": "Opening balance {{amount}} on {{date}}. It is in the ledger and can’t be changed.",
+      "errors": {
+        "confirm": "Tick the box to confirm the amount."
+      }
+    },
+    "rules": {
+      "label": "Own rules",
+      "title": "Rules just for {{name}}",
+      "hint": "Anything left on the shop's rule follows Settings. Applies from the date you choose, and to later pay changes.",
+      "from": "From",
+      "shop": "Shop's rule ({{value}})",
+      "yes": "Yes",
+      "no": "No",
+      "never": "Never",
+      "afterMinutes": "After some minutes",
+      "minutes": "Minutes",
+      "days": "Days",
+      "amount": "Amount (₹)",
+      "blankForShop": "Leave empty for the shop's rule ({{value}}).",
+      "save": "Save rules",
+      "saved": "Rules saved.",
+      "noPay": "Set pay first: these rules are kept with the pay settings.",
+      "own_one": "{{count}} rule of their own",
+      "own_other": "{{count}} rules of their own",
+      "none": "Shop's rules"
     }
   },
   "ledgerTypes": {
