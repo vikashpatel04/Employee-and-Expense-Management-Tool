@@ -37,7 +37,9 @@ _Handover written 2026-10-24 before a session compaction. Read this section firs
 - **Staffora app started** (`apps/staffora-mobile`, `docs/features/staffora.md`): welcome, join
   from the invite (PIN twice), PIN to open, Home with check-in by code / QR, checked-in, Me;
   slice B: Attendance calendar, Money (ledger, payslips, payslip page), ask for leave / advance
-  with my requests.
+  with my requests. The owner has joined as Test Staff (a Staffora sign-in now exists for
+  Test Staff; the PIN is theirs). Migration `20261024000006_staff_read_runs.sql` is local only:
+  Payslips in Staffora stay empty until it's pushed.
   Checked up to the PIN step; the rest needs **the owner to finish joining as Test Staff** in the
   "staffora-mobile-web" preview (an open invite link for Test Staff exists, made 24/10 ~7:30 PM,
   48 h; or make a new one on Test Staff's page) — then check Home, Enter code (code from `/code`)
@@ -235,6 +237,11 @@ Tables still to add (with the phase that uses them, each with RLS tests): `staff
 (storage), `push_tokens` (Phase 7/8).
 
 ## Session log
+
+- **2026-10-24** — Owner joined Staffora as Test Staff (PIN set by them). Checked Home,
+  Attendance, Money, Ask with live data (details in `docs/features/staffora.md` → Checked). Fixed
+  Home's text for a day the shop marked; found staff couldn't read their payslip's salary run →
+  migration `20261024000006_staff_read_runs.sql` (test first, dry-run on live OK), needs the push.
 
 - **2026-10-24** — **Staffora slice B.** Designs first ("Attendance", "Ask for leave /
   advance, my requests" on the Staffora canvas). Attendance tab, Money tab (ledger / payslips),

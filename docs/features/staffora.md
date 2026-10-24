@@ -83,8 +83,25 @@ Scheme `staffora` (invite links hand over with `staffora://join/<token>`); Andro
   needs a real phone or a browser with a camera.
 
 Slice B (Attendance, Money, payslip, Ask) on 2026-10-24: typecheck passes and the app still
-builds and starts; the screens sit behind the sign-in, so they are **not seen with data yet**
-(same owner step as above).
+builds and starts.
+
+2026-10-24, later: **the owner joined as Test Staff** in the preview (set the PIN themselves).
+Checked with live data: Home ("Good evening, Test", today Present, October 1.5 days present /
+1.5 payable, the "shop marks your attendance" note since self attendance is off); a page reload
+asks for the PIN again (as designed) and the owner re-entered it; Attendance calendar with 23/10
+Half day; Money settled ₹0.00 with salary +₹1,065.00 (31/10) and paid −₹1,065.00 by UPI (24/10);
+Ask for leave shows the three earlier test requests (Approved / Not approved, replies), From
+can't go before today, To moves the day count. Found and fixed:
+
+- Home said "check in when you reach the shop" on a day the shop had already marked; now "The
+  shop marked you as … today".
+- **Payslips said "No payslips yet"**: staff can read their finalized payslips but not the salary
+  run (its month), so the join dropped them (the website payslip page had the same gap for
+  staff). Migration `20261024000006_staff_read_runs.sql` lets a person read a run they have a
+  finalized payslip in (test in `money.test.ts`); **needs the push** before Payslips and the
+  payslip page show.
+
+Not tried yet: sending a request or checking in (both leave permanent rows), Lock / Remove.
 
 ## Next
 

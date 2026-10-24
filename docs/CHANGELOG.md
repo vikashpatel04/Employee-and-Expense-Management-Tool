@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Fixed — 2026-10-24
+
+- Staff can see the month of their own finalized payslips (Staffora Payslips, website payslip
+  page). Migration `20261024000006_staff_read_runs.sql`.
+- Staffora Home says when the shop already marked the day.
+
 ### Added — 2026-10-24 (Staffora slice B)
 
 - Staffora: Attendance calendar, Money (balance, advance, ledger, payslips, payslip page), ask for

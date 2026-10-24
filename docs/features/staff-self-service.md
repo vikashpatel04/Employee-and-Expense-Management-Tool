@@ -84,6 +84,9 @@ sets a new random password and signs in with it, returning `access_token` / `ref
 JWT verification is off for this function (`supabase/config.toml`): callers aren't signed in
 yet. CI deploys it after the migrations (`supabase functions deploy staff-auth --use-api`).
 
+Later the same day: migration `20261024000006_staff_read_runs.sql` — staff may read a salary run
+they have a finalized payslip in (their payslips' month was missing otherwise).
+
 ## Shared code (`packages/data/src/self-service.ts`)
 
 `loadAttendanceCode`, `regenerateAttendanceCode`, `loadCheckIns` (today's accepted check-ins by

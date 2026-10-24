@@ -217,6 +217,7 @@ describe('salary run and payslip', () => {
 
   it('staff don’t see drafts; the totals must add up', async () => {
     expect(await q(meena, 'select 1 from payslips')).toHaveLength(0);
+    expect(await q(meena, 'select 1 from salary_runs')).toHaveLength(0);
     await rejects(
       q(ravi, `update payslips set net_pay_paise = 1 where id = $1`, [slip1]),
       /check constraint/,
@@ -259,6 +260,13 @@ describe('salary run and payslip', () => {
     );
     expect(b).toEqual({ used: 1, lapsed: 1 });
     expect(await q(meena, 'select 1 from payslips')).toHaveLength(1);
+    // …with its month: the run is readable once they have a finalized payslip in it.
+    expect(
+      await q(
+        meena,
+        'select r.year, r.month from payslips p join salary_runs r on r.id = p.run_id',
+      ),
+    ).toEqual([{ year: 2026, month: 10 }]);
   });
 
   it('a finalized payslip never changes and cannot be finalized twice', async () => {

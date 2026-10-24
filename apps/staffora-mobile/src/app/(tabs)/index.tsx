@@ -85,7 +85,11 @@ export default function Home() {
                 label={statusKey === 'unmarked' ? t(`${h}.notCheckedIn`) : undefined}
               />
             </View>
-            {inAt === undefined ? (
+            {inAt === undefined && cell?.marked ? (
+              <Text variant="body-lg">
+                {t(`${h}.markedByShop`, { status: t(`status.${cell.status}`) })}
+              </Text>
+            ) : inAt === undefined ? (
               <>
                 {day.shift && (
                   <Text variant="body-lg">

@@ -1604,7 +1604,8 @@
       "doneSub": "In {{in}} · Out {{out}}",
       "selfOff": "The shop marks your attendance. Ask them if you should check in yourself.",
       "scan": "Scan QR",
-      "enter": "Enter code"
+      "enter": "Enter code",
+      "markedByShop": "The shop marked you as {{status}} today."
     },
     "code": {
       "back": "Home",
