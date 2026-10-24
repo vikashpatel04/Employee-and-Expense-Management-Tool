@@ -33,16 +33,19 @@ _Handover written 2026-10-24 before a session compaction. Read this section firs
   database for attendance codes + check-in, requests, invites + PIN sign-in, the `staff-auth`
   edge function, and the FinCrew screens (website `/code`, `/qr`, `/requests`, staff sign-in
   card, public `/join/<token>`; app code + requests screens) are **live and checked** (details in
-  the feature doc → Checked). Staffora (the staff app) is next.
+  the feature doc → Checked).
+- **Staffora app started** (`apps/staffora-mobile`, `docs/features/staffora.md`): welcome, join
+  from the invite (PIN twice), PIN to open, Home with check-in by code / QR, checked-in, Me.
+  Checked up to the PIN step; the rest needs **the owner to finish joining as Test Staff** in the
+  "staffora-mobile-web" preview (an open invite link for Test Staff exists, made 24/10 ~7:30 PM,
+  48 h; or make a new one on Test Staff's page) — then check Home, Enter code (code from `/code`)
+  with Test Staff's self attendance switched on, and PIN / lock.
 
 **Next work, in order** (owner usually says "continue"; pick the top unfinished one)
 
-1. **Phase 7, continued**: build the **Staffora app**
-   (`apps/staffora-mobile`, Expo like FinCrew; scheme `staffora` for invite links; designs on the
-   Staffora canvas): first run from the invite (name, PIN twice, phone bound via `staff-auth`
-   accept), PIN screen on open (`staff-auth` login; device id kept on the phone), Home with Scan
-   QR / Enter code (`check_in`, expo-camera), Attendance calendar, Money (ledger, payslips),
-   Requests (`askRequest` / `cancelRequest`), Me (change PIN — needs a small SQL function).
+1. **Staffora, continued** (`docs/features/staffora.md` → Next): check slice A with the owner's
+   sign-in, then Attendance (calendar), Money (ledger, payslips), Requests (`askRequest` /
+   `cancelRequest`), Me → change PIN (small SQL function + `staff-auth` action).
 2. **Android app leftovers** (small): payslip share on WhatsApp (design "Salary run"), undo a
    line from the app's Ledger (`undoLedgerLine` is shared already), advance rules and pay
    changes in the app (website only now). Bill photo upload from a real phone is unchecked.
@@ -230,6 +233,12 @@ Tables still to add (with the phase that uses them, each with RLS tests): `staff
 (storage), `push_tokens` (Phase 7/8).
 
 ## Session log
+
+- **2026-10-24** — **Staffora slice A.** New app `apps/staffora-mobile` (copied setup, Staffora
+  palette, `expo-camera`, `expo-crypto`), designs added first ("Join · first run", "PIN to open"
+  on the Staffora canvas). Welcome, Join (PIN twice), PIN, Home, Enter code, Scan QR, Checked in,
+  Me. Checked in the browser up to the PIN step on live (Join greeted Test Staff through the
+  edge function); the rest needs the owner's sign-in. Typecheck passes (9 tasks).
 
 - **2026-10-24** — Owner answered the open questions (recorded under "Owner's answers"). With
   their OK, salary tested end to end on live in the Android app: Run again (₹355 → ₹1,065 with

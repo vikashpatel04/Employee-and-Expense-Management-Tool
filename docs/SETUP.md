@@ -96,3 +96,11 @@ edge function secrets (PLAN §9).
 3. Real Android builds use EAS (Expo's cloud build) and need your Expo account — to be set up
    when the app is ready to install. The Android package id (`app.fincrew.mobile`) can still
    change until then.
+
+## 7. Staffora app (staff)
+
+`apps/staffora-mobile` works like the FinCrew app (section 6): copy `.env.example` to
+`.env.local` with the same two public values, then run it in a browser with the
+"staffora-mobile-web" preview (port 8082) or `pnpm --filter @fincrew/staffora web`. Signing in
+needs an invite link from the website (staff page → Staffora sign-in → Invite); paste it on the
+Welcome screen when trying it in a browser. Feature doc: `docs/features/staffora.md`.

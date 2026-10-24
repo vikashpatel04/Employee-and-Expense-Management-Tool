@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Added — 2026-10-24 (Staffora slice A)
+
+- Staffora staff app (`apps/staffora-mobile`): welcome, join from the invite link with a PIN set
+  twice, PIN to open, Home with today and this month, check-in / check-out by typing the code or
+  scanning the QR, checked-in screen, Me (lock, remove from this phone).
+
 ### Added — 2026-10-24 (Phase 7 data)
 
 - Attendance codes (daily or manual change, regenerate) and check-in / check-out by code with

@@ -1517,5 +1517,150 @@
     "used": "This link was already used. Ask the shop for a new one if you need to sign in again.",
     "expired": "This link has expired. Ask the shop for a new one.",
     "failed": "Couldn't check the link. Try again in a moment."
+  },
+  "staffora": {
+    "appName": "Staffora",
+    "tabs": {
+      "home": "Home",
+      "attendance": "Attendance",
+      "money": "Money",
+      "me": "Me"
+    },
+    "welcome": {
+      "title": "Staffora",
+      "body": "Your attendance, payslips and money from the shop, on your phone.",
+      "howTo": "Open the invite link the shop sent you (WhatsApp or SMS) on this phone.",
+      "pasteLabel": "Or paste the link here",
+      "pastePlaceholder": "https://…/join/…",
+      "open": "Open the link",
+      "bad": "That doesn't look like an invite link."
+    },
+    "join": {
+      "checking": "Checking the link…",
+      "hello": "Hi {{name}}",
+      "invited": "{{shop}} invited you to Staffora.",
+      "features": {
+        "code": "Check in with the shop's code",
+        "days": "See your days and leave",
+        "money": "See your payslips and money"
+      },
+      "notYou": "Not you? Close this and tell the shop.",
+      "itsMe": "That is me, set my PIN",
+      "back": "Back",
+      "pinTitle": "Choose a 4-digit PIN",
+      "pinSub": "You type it each time you open Staffora. Staffora stays on this phone.",
+      "pinHint": "4 digits you will remember. Not your birth year.",
+      "confirmTitle": "Type the PIN again",
+      "confirmSub": "To make sure.",
+      "mismatch": "The two PINs were different. Choose one again.",
+      "saving": "Setting up Staffora…",
+      "invalid": "This link doesn't work. Ask the shop for a new one.",
+      "used": "This link was already used. Ask the shop for a new one if you need to sign in again.",
+      "expired": "This link has expired. Ask the shop for a new one.",
+      "failed": "Couldn't reach the shop's server. Check the internet and try again.",
+      "badPin": "Use exactly 4 digits."
+    },
+    "pin": {
+      "title": "Enter your PIN",
+      "wrong_one": "Wrong PIN. {{count}} try left before a wait.",
+      "wrong_other": "Wrong PIN. {{count}} tries left before a wait.",
+      "wait": "Too many wrong PINs. Try again at {{time}}.",
+      "locked": "Staffora is locked after too many wrong PINs. Ask the shop to unlock it.",
+      "wrongDevice": "Staffora is tied to another phone. Ask the shop to free it, then sign in again.",
+      "left": "You are no longer on the shop's staff list.",
+      "noLogin": "This phone isn't set up any more. Ask the shop for a new link.",
+      "forgot": "Forgot your PIN? Ask the shop for a new link.",
+      "checking": "Checking…",
+      "failed": "Couldn't reach the shop's server. Check the internet and try again."
+    },
+    "pad": {
+      "clear": "Clear",
+      "delete": "Delete digit",
+      "digits": "{{count}} of {{total}} digits entered"
+    },
+    "home": {
+      "greeting": {
+        "morning": "Good morning, {{name}}",
+        "afternoon": "Good afternoon, {{name}}",
+        "evening": "Good evening, {{name}}"
+      },
+      "today": "Today · {{date}}",
+      "notCheckedIn": "Not checked in",
+      "shiftStarts": "Your shift starts at {{time}}.",
+      "checkInHint": "Check in when you reach the shop.",
+      "inAt": "In {{time}}",
+      "outAt": "Out {{time}}",
+      "notOut": "Not checked out yet",
+      "shift": "Shift {{from}} – {{to}}",
+      "monthSoFar": "{{month}} so far",
+      "present": "Days present",
+      "late": "Late days",
+      "payable": "Payable days",
+      "checkIn": "Check in",
+      "checkInSub": "Use the code at the counter.",
+      "checkOut": "Check out when you leave",
+      "checkOutFrom": "You can check out from {{time}}.",
+      "doneToday": "You're done for today",
+      "doneSub": "In {{in}} · Out {{out}}",
+      "selfOff": "The shop marks your attendance. Ask them if you should check in yourself.",
+      "scan": "Scan QR",
+      "enter": "Enter code"
+    },
+    "code": {
+      "back": "Home",
+      "title": "Enter today's code",
+      "sub": "It is on the shop display, or ask at the counter.",
+      "hint": "6 digits. You are checked in on the last digit.",
+      "scanInstead": "Scan QR instead",
+      "checking": "Checking…"
+    },
+    "scan": {
+      "title": "Scan the QR code",
+      "sub": "Point your camera at the QR code at the counter. You are checked in as soon as it reads.",
+      "any": "Any QR with today's 6-digit code works.",
+      "enterInstead": "Enter the code instead",
+      "cameraOnly": "The camera is only used to read the code.",
+      "permission": "Staffora needs the camera to read the QR code.",
+      "allow": "Allow the camera",
+      "notCode": "That QR isn't an attendance code.",
+      "noCamera": "No camera here. Enter the code instead."
+    },
+    "checked": {
+      "in": "You checked in",
+      "out": "You checked out",
+      "late": "Your shift started at {{time}}, so today shows {{minutes}} min late.",
+      "onTime": "On time. Have a good day.",
+      "bye": "See you tomorrow.",
+      "date": "Date",
+      "shop": "Shop",
+      "how": "How",
+      "howScan": "Scanned the QR",
+      "howTyped": "Typed the code",
+      "checkOutFrom": "Check out",
+      "from": "From {{time}}",
+      "done": "Done"
+    },
+    "errors": {
+      "wrong_code": "That code did not work. Check the code at the counter and try again.",
+      "locked": "Too many wrong codes. Try again at {{time}}.",
+      "cooldown": "You just checked in or out. Try again at {{time}}.",
+      "too_soon": "You can check out from {{time}}.",
+      "already_checked_out": "You already checked out today.",
+      "self_off": "The shop marks your attendance; checking in yourself is off.",
+      "wrong_device": "Staffora is tied to another phone. Ask the shop to free it.",
+      "not_staff": "You are not on this shop's staff list.",
+      "failed": "Couldn't check in: {{reason}}"
+    },
+    "me": {
+      "title": "Me",
+      "lock": "Lock Staffora",
+      "lockHint": "You'll need your PIN to open it again.",
+      "forget": "Remove from this phone",
+      "forgetHint": "Staffora forgets this phone. You'll need a new link from the shop."
+    },
+    "next": {
+      "title": "Coming next",
+      "body": "This part of Staffora is being built."
+    }
   }
 }

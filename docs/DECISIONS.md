@@ -2,6 +2,19 @@
 
 Choices made during the build that PLAN.md doesn't spell out. Newest first.
 
+## 2026-10-24 — Staffora app
+
+- **Its own app** (`apps/staffora-mobile`, `@fincrew/staffora`), set up like FinCrew's. The small
+  UI kit (`ui.tsx`, `sheet.tsx`, theme helper) is **copied** rather than shared: each app keeps
+  its own palette and app-only helpers (CLAUDE.md), and the kit is small. Move it to a shared
+  package if it grows.
+- **PIN on every open** (PLAN §6.3): the app keeps who it belongs to on the phone, but not opened;
+  each open signs in again through `staff-auth` with the PIN, so a lost-and-unlocked phone still
+  needs the PIN. "Lock" signs out locally; "Remove from this phone" forgets the profile.
+- The phone id is a random id kept on the phone (no hardware ids); clearing app data needs the
+  shop to free the phone ("New phone") and a new link.
+- The "check out from" time on the Checked-in screen uses the shop's own minimum gap.
+
 ## 2026-10-24 — Owner's answers
 
 - Leaked-password protection stays off: the project is open source and self-hosted (owner).

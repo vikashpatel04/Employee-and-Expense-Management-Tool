@@ -4,14 +4,42 @@
     {
       "name": "fincrew-web",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "@fincrew/web", "dev"],
+      "runtimeArgs": [
+        "--filter",
+        "@fincrew/web",
+        "dev"
+      ],
       "port": 3000
     },
     {
       "name": "fincrew-mobile-web",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "@fincrew/mobile", "exec", "expo", "start", "--web", "--port", "8081"],
+      "runtimeArgs": [
+        "--filter",
+        "@fincrew/mobile",
+        "exec",
+        "expo",
+        "start",
+        "--web",
+        "--port",
+        "8081"
+      ],
       "port": 8081
+    },
+    {
+      "name": "staffora-mobile-web",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "--filter",
+        "@fincrew/staffora",
+        "exec",
+        "expo",
+        "start",
+        "--web",
+        "--port",
+        "8082"
+      ],
+      "port": 8082
     }
   ]
 }
