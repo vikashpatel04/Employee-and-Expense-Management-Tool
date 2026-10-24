@@ -104,8 +104,11 @@ is a placeholder until the first store build.
   the unmarked-days warning, the payslip lines; Finalize asks first (cancelled — not finalized).
 - **Advances**: total ₹0.00, Give advance → person picker → form with "Owes ₹0.00 · limit
   ₹5,000.00"; empty amount refused. Staff detail shows Give advance (same sheet).
-- **Not checked live** (would write permanent lines or need a phone): finalizing and paying,
-  giving an advance and the over-limit "Give anyway" (covered by the DB tests and the website),
+- **Salary end to end** (later the same day, with the owner's OK): Run again, Finalize, then
+  Pay ₹1,065.00 by UPI from Test Staff's Overview → Settled ₹0.00; Ledger shows salary +₹1,065
+  (31/10) and salary paid −₹1,065 (24/10). Paying before the month end makes the running balance
+  dip below zero between the two dates — correct by date.
+- **Not checked live** (would write permanent lines or need a phone): giving an advance and the over-limit "Give anyway" (covered by the DB tests and the website),
   staff detail Pay, taking/uploading a bill photo (file picker / camera), Android device.
 - Website after the move to shared code: build passes; salary and advances pages render the same.
 

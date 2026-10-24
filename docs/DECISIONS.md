@@ -2,6 +2,13 @@
 
 Choices made during the build that PLAN.md doesn't spell out. Newest first.
 
+## 2026-10-24 — Owner's answers
+
+- Leaked-password protection stays off: the project is open source and self-hosted (owner).
+- Phone installs (EAS, Expo account) wait until the apps are fully complete (owner).
+- Test Staff's October salary may be finalized and paid on the live shop to test salary end to
+  end (owner); other permanent test writes still need asking.
+
 ## 2026-10-24 — Phase 7 data (codes, requests, sign-in)
 
 - **Attendance codes are stored as digits, not hashed** (PLAN §4.5 said hashed). Hashing a

@@ -157,7 +157,7 @@ export default async function SalaryPage({
             ))}
           </div>
 
-          {warnings.length > 0 && (
+          {warnings.length > 0 && overall === 'draft' && (
             <div
               role="note"
               className="flex flex-wrap items-start gap-3 rounded-[var(--radius-md)] bg-[var(--status-late-soft)] px-4 py-3 text-[var(--status-late)]"

@@ -52,20 +52,22 @@ _Handover written 2026-10-24 before a session compaction. Read this section firs
    Android package id `app.fincrew.mobile` is a placeholder), Phase 8 polish (widgets,
    translations, offline marking, StaffBook import, backup).
 
-**Waiting on the owner**
+**Owner's answers (2026-10-24)**
 
-- Whether to **finalize/pay Test Staff's October draft** on the live shop to test salary end to
-  end. Ledger lines are permanent, so Test Staff (person `55e7a159-1a4b-4615-a1a3-bdbbcdc6b304`)
-  could never be deleted afterwards. Never do it without their OK.
-- Their real setup: leave templates (Settings → Leave templates), save Settings → Pay &
-  attendance rules once, expense categories ("Add the usual ones").
-- Review rule defaults (`docs/features/core-rules.md`); leaked-password protection in Supabase
-  Auth; an Expo account for EAS when the app is ready to install.
+- Finalizing and paying **Test Staff's October salary** on the live shop to test salary end to
+  end: **allowed** (Test Staff can then never be deleted: ledger lines are permanent). Other
+  permanent writes (giving advances, undoing payments) still need their OK each time.
+- Real leave templates, pay rules and expense categories: the owner sets them up **later**;
+  samples may be used for testing.
+- Leaked-password protection: **not needed** (open source, self-hosted); the advisor warning stays.
+- Expo account for EAS / installing on a phone: **once the apps are fully complete**.
+- Still open: reviewing the rule defaults (`docs/features/core-rules.md`).
 
 **Live test data (keep it reversible)**: Test Staff (joined 23/10/2026, ₹22,000 monthly,
 9:30 AM – 8:30 PM, advance limit ₹5,000 / cut ₹1,000, attendance 23/10 half day and 24/10 present
-(marked by the owner), October draft payslip ₹355, no ledger lines, self attendance off, no
-sign-in, three decided requests whose notes start "TEST:" — requests can't be deleted); an archived
+(marked by the owner), **October salary finalized and paid** (₹1,065.00 for 1.5 days, paid by
+UPI on 24/10 from the app; ledger: salary earned +₹1,065 dated 31/10, salary paid −₹1,065 — so
+Test Staff can no longer be deleted), self attendance off, no sign-in, three decided requests whose notes start "TEST:" — requests can't be deleted); an archived
 "Test category"; the shop's attendance code (made while checking). Everything else tested was
 reverted.
 
@@ -222,12 +224,18 @@ Open items (low priority, fold into the next migration that touches these tables
 
 - GitHub Actions warn that `actions/checkout@v4`, `setup-node@v4`, `pnpm/action-setup@v4`,
   `supabase/setup-cli@v1` run on deprecated Node 20; bump when newer majors are available.
-- Leaked-password protection in Supabase Auth: owner's call (may need a paid plan).
+- Leaked-password protection in Supabase Auth: not needed (owner, 2026-10-24).
 
 Tables still to add (with the phase that uses them, each with RLS tests): `staff_documents`
 (storage), `push_tokens` (Phase 7/8).
 
 ## Session log
+
+- **2026-10-24** — Owner answered the open questions (recorded under "Owner's answers"). With
+  their OK, salary tested end to end on live in the Android app: Run again (₹355 → ₹1,065 with
+  today's present), Finalize (asks first), Pay from Test Staff's page (UPI) → balance settled;
+  ledger, payslip page, website salary (Paid), dashboard and reports agree. Website salary page
+  now hides "Check before finalizing" once the month is finalized (the app already did).
 
 - **2026-10-24** — Pushed Phase 7 (owner added the GitHub `workflow` scope so the CI file change
   could go up). CI run 40098230155: 3 migrations applied, `staff-auth` deployed. `pnpm db:types`
