@@ -64,7 +64,7 @@ first, then `CLAUDE.md`, then the feature doc for whatever you touch._
 4. **Push notifications** (PLAN §6.4): `push_tokens` table, expo-notifications; Android needs a
    free Firebase project + the owner's Expo account.
 5. **Polish (Phase 8)**: widgets, Tamil/Hindi, offline attendance marking, StaffBook import,
-   backup/export, real Staffora icons (it uses FinCrew's placeholders).
+   backup/export. (App icons are done: FinCrew "Rupee ring", Staffora "Staff badge".)
 6. **Install builds**: EAS for both apps with the owner's Expo account (package ids
    `app.fincrew.mobile` / `app.staffora.mobile` are placeholders), APK or Play Store.
 
@@ -270,6 +270,12 @@ Tables still to add (with the phase that uses them, each with RLS tests): `staff
 (storage), `push_tokens` (Phase 7/8).
 
 ## Session log
+
+- **2026-10-25** — App icons from the design system, the owner's choice: FinCrew "B · Rupee
+  ring", Staffora "B · Staff badge". Sources in `packages/ui/design/app-icons/`, PNGs made by
+  `pnpm ui:icons` (sharp, root dev dependency): Expo icons, Android adaptive + monochrome,
+  splash (mark now 160 wide), favicons; the website gets its first favicon (`icon.svg`,
+  `apple-icon.png`). Checked as a contact sheet; website builds with both icon routes.
 
 - **2026-10-25** — **Staffora sign-in by phone number** (owner: "no staff is going to self
   on-board"). Core `phoneKey` + `allowBiometrics` (tests first); migration

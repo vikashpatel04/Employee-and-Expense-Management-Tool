@@ -40,6 +40,11 @@ Use the Artifact tool, not a web fetch:
 - **Reference pages:** all statuses, English/Tamil/Hindi sample, app icons.
 - **Assets:** app icon concepts (FinCrew "Ledger F" lead, "Rupee ring"; Staffora "Checked-in"
   lead, "Staff badge"), nine status icon SVGs.
+- **App icons in use** (owner's choice, 2026-10-25): FinCrew **B · Rupee ring**, Staffora
+  **B · Staff badge**. The SVGs are copied to `packages/ui/design/app-icons/`; `pnpm ui:icons`
+  (`scripts/app-icons.mjs`, sharp) makes every PNG from them: each Expo app's icon, Android
+  adaptive background / foreground (mark inside the safe zone) / monochrome, splash mark and
+  favicon, and the website's `src/app/icon.svg` + `apple-icon.png`. Change the SVGs, rerun.
 
 ## Key screens (Design artifacts, 2026-10-23)
 

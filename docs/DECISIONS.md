@@ -466,6 +466,10 @@ Owner's instruction: every value is customisable by the admin, and staff may hav
   accept, PIN sign-in).
 - **Payslip share text lives in `packages/data`** (`payslipShareText`, takes the app's `t`), so
   Staffora and FinCrew send the same words.
+- **App icons are generated, not hand-exported**: the chosen design-system SVGs live in
+  `packages/ui/design/app-icons/` and `pnpm ui:icons` makes every size, so a new icon is one SVG
+  change. Android adaptive marks are scaled to 80% so they stay inside the safe zone; the
+  monochrome (themed) icon turns the ground colour inside the mark into holes.
 - **Website server region is Mumbai (`bom1`)**, set in `apps/fincrew-web/vercel.json`, because
   the Supabase project is in `ap-south-1`. Server pages make several database trips per click;
   Vercel's default (`iad1`, Washington) made each one cross the world. A new database region

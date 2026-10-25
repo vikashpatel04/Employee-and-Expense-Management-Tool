@@ -16,7 +16,8 @@ pnpm --filter @fincrew/staffora web     # in a browser at phone size (http://loc
 Needs `apps/staffora-mobile/.env.local` (same two public values as the FinCrew app; copy
 `.env.example`). Preview config `.claude/launch.json` → "staffora-mobile-web" (port 8082).
 Scheme `staffora`; Android package id
-`app.staffora.mobile` (placeholder); icons are still FinCrew's placeholders.
+`app.staffora.mobile` (placeholder). App icon: design system "B · Staff badge" (`pnpm ui:icons`,
+`docs/DESIGN.md`).
 
 ## How signing in works
 

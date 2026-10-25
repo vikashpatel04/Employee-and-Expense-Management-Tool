@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added — 2026-10-25 (app icons)
+
+- Real app icons: FinCrew "Rupee ring" (app and website favicon), Staffora "Staff badge".
+
 ### Changed — 2026-10-25 (Staffora sign-in)
 
 - Staff sign in to Staffora with the **phone number** saved in FinCrew and a PIN they choose
