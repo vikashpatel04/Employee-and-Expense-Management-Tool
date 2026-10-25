@@ -57,7 +57,7 @@ first, then `CLAUDE.md`, then the feature doc for whatever you touch._
    (with their OK — permanent rows) sending a request and checking in.
 2. **FinCrew app gaps**: built on 2026-10-25 — payslip on WhatsApp (pay sheet tick, Send
    payslip, Share payslips), pay part of a payslip, undo a ledger line, change pay from a date,
-   advance rules. Not pushed. Left: check them in the app preview with the owner signed in
+   advance rules. Pushed and live (1edc131). Left: check them in the app preview with the owner signed in
    (paying / undoing on live writes permanent lines — ask first; opening the sheets and
    cancelling is fine), bill photo upload on a real phone. Still website-only: allowances,
    deductions, leave template, own rules.
