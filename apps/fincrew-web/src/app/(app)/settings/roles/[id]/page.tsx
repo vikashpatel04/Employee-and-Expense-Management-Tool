@@ -8,6 +8,7 @@ import { requireMe } from '@/lib/session';
 import { SETTINGS_SECTIONS } from '@/lib/settings-access';
 import { createClient } from '@/lib/supabase/server';
 import { DeleteRoleButton, PeopleForm, PermissionsForm, RenameRoleForm } from '../role-forms';
+import { UrlToast } from '@/components/app/url-toast';
 
 const card = 'rounded-lg border bg-card p-4 shadow-xs';
 
@@ -59,14 +60,7 @@ export default async function RolePage({
         </div>
       </div>
       <p className="text-muted-foreground -mt-2 text-xs">{t('settings.roles.detail.deleteHint')}</p>
-      {saved && (
-        <p
-          role="status"
-          className="text-body w-fit rounded-[var(--radius-md)] bg-[var(--status-present-soft)] px-4 py-3 text-[var(--status-present)]"
-        >
-          {t('settings.roles.detail.saved')}
-        </p>
-      )}
+      {saved && <UrlToast message={t('settings.roles.detail.saved')} params={['saved']} />}
 
       <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <section className={card}>

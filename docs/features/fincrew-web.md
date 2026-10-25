@@ -163,7 +163,23 @@ See `docs/features/expenses.md` (page, add/edit panel, categories, bills, CSV, d
   month so far), tap rows to select then the same Set to / Not marked toolbar; Day | Month
   switch.
 
-## Attendance grid — `(app)/attendance`
+## Attendance — `(app)/attendance`
+
+**Day view** (the default since 2026-10-25, owner: "like PagarBook"; design "Web · mark
+attendance (day)" on the FinCrew canvas; `attendance/day-roster.tsx`): `?view=day&date=YYYY-MM-DD`
+(no future days). Date bar (‹ › and "Back to today"), chips that count and filter (Present,
+Absent, Half day, On leave, Off today, Not marked), search, **Mark N present** for everyone not
+marked, then one row per person: name, weekly offs and Days · Late · Absent so far, check-in
+and minutes late, and one-tap **P / A / HD / PL / UL**. A tap saves at once (the button fills
+in before the server answers and goes back if it fails); the toast says who and what, with
+**Undo** (their earlier mark, or no mark if the rules had filled the day). "⋯" → Remove the
+mark. Same permissions as the grid (today with `attendance.mark`, earlier days with
+`attendance.edit_past`) and the same `setAttendance` / `clearAttendance` actions.
+
+**Month view** (`?view=month&month=YYYY-MM`): the grid below. Links from other pages to a month
+(salary warnings) open it.
+
+### Month grid
 
 - Names (left) and Days / Late / Absent (right) are pinned; only the days scroll.
 

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { KeyRound, RefreshCw, Unlock } from 'lucide-react';
 import { buttonClass, quietButtonClass } from '../../../components';
 import { selfAttendanceAction, signInChange, type SignInState } from './signin-actions';
+import { toast } from 'sonner';
 
 export type SignInLabels = {
   state: 'noPhone' | 'waiting' | 'signedIn';
@@ -50,11 +51,11 @@ export function SignInCard({
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
-  const [result, setResult] = useState<SignInState>({});
   const run = (fn: () => Promise<SignInState>) =>
     start(async () => {
       const r = await fn();
-      setResult(r);
+      if (r.done) toast.success(r.done);
+      if (r.error) toast.error(r.error);
       router.refresh();
     });
   const quiet = `${quietButtonClass} inline-flex items-center gap-2`;
@@ -140,16 +141,6 @@ export function SignInCard({
             </button>
           )}
         </div>
-      )}
-      {result.error && (
-        <p role="alert" className="text-body text-[var(--danger)]">
-          {result.error}
-        </p>
-      )}
-      {result.done && (
-        <p role="status" className="text-body text-[var(--status-present)]">
-          {result.done}
-        </p>
       )}
     </section>
   );

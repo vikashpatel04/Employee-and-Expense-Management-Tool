@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Check } from 'lucide-react';
 import { buttonClass, inputClass, quietButtonClass } from '../../components';
 import { decideAction, type DecideState } from './actions';
+import { toast } from 'sonner';
 
 export type DecideLabels = {
   markAs: string;
@@ -48,7 +49,10 @@ export function DecideForm({
         confirmOverLimit: decision === 'approve' && !!state.needsConfirm,
       });
       setState(r);
-      if (r.done) router.refresh();
+      if (r.done) {
+        toast.success(r.done);
+        router.refresh();
+      }
     });
 
   const select = `${inputClass} text-body`;
@@ -85,11 +89,6 @@ export function DecideForm({
       {state.error && (
         <p role="alert" className="text-body text-[var(--danger)]">
           {state.error}
-        </p>
-      )}
-      {state.done && (
-        <p role="status" className="text-body text-[var(--status-present)]">
-          {state.done}
         </p>
       )}
       {!state.done && (

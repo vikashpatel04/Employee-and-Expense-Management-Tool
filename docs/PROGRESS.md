@@ -277,6 +277,15 @@ Tables still to add (with the phase that uses them, each with RLS tests): `staff
 
 ## Session log
 
+- **2026-10-25** — **Attendance day roster + toasts** (owner: "like PagarBook", "no info in
+  confirmation in site, it should be toaster"). Design "Web · mark attendance (day)" added to the
+  FinCrew canvas (v32). `attendance/day-roster.tsx` (one-tap marks, Undo toast, chips filter,
+  search, Mark N present), page `?view=day|month`; month links use `view=month`. Toasts:
+  `UrlToast`, FormMessage / Message show errors only, requests / code card / sign-in card /
+  grid / Mark today use sonner. Typecheck 9/9, build OK. Seen with the owner signed in: the
+  day roster with real staff (names, P marked, "Everyone is marked"); server output of both
+  views checked. Not tried: a tap on live data (writes attendance + audit rows — ask first).
+
 - **2026-10-25** — **Website page grid** (owner: "weird cards alignment… proper grid or bento").
   `src/components/app/layout.tsx` (`StatGrid`, `StatCard`, `Bento`, `Panel`, `PanelList`,
   `PanelEmpty`); dashboard, expenses, advances, reports, salary, staff page (Overview, Ledger,

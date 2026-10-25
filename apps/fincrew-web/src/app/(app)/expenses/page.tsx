@@ -12,6 +12,7 @@ import { FormDialog } from '@/components/app/form-dialog';
 import { Bento, Panel, StatCard, StatGrid } from '@/components/app/layout';
 import { PageHeader, quietButtonClass } from '../../components';
 import { ExpenseForm, ExpensePanel, type FormExpense } from './expense-form';
+import { UrlToast } from '@/components/app/url-toast';
 
 const MONTH = new Intl.DateTimeFormat('en-IN', { month: 'long', year: 'numeric', timeZone: 'UTC' });
 const ym = (y: number, m: number) => `${y}-${String(m).padStart(2, '0')}`;
@@ -159,14 +160,7 @@ export default async function ExpensesPage({
         )}
       </div>
 
-      {sp.saved && (
-        <p
-          role="status"
-          className="text-body w-fit rounded-[var(--radius-md)] bg-[var(--status-present-soft)] px-4 py-3 text-[var(--status-present)]"
-        >
-          {t('expenses.form.saved')}
-        </p>
-      )}
+      {sp.saved && <UrlToast message={t('expenses.form.saved')} params={['saved']} />}
 
       {activeCats.length === 0 && (
         <p className={`${card} text-body-lg text-[var(--ink-muted)]`}>

@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Changed — 2026-10-25 (marking attendance)
+
+- Attendance opens on **Day**: everyone on one list with P / A / HD / PL / UL buttons; one tap
+  marks and saves, and the message has Undo. Chips show and filter the day's counts; "Mark N
+  present" fills everyone not marked. Month shows the grid as before.
+- Saved / added / done messages now appear as toasts everywhere on the website, not as text in
+  the page.
+
 ### Changed — 2026-10-25 (website page grid)
 
 - Every page lines up on one grid: a row of figures of equal width, then sections side by side

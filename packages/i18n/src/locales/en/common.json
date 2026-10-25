@@ -470,7 +470,34 @@
     "dayTotals": "Days {{days}} · Late {{late}} · Absent {{absent}}",
     "minutesLate": "{{minutes}} min late",
     "dayFootnote": "Days, Late and Absent are for {{month}} so far.",
-    "dayEmpty": "Nobody works here on this day."
+    "dayEmpty": "Nobody works here on this day.",
+    "short": {
+      "present": "P",
+      "absent": "A",
+      "half_day": "HD",
+      "paid_leave": "PL",
+      "unpaid_leave": "UL"
+    },
+    "roster": {
+      "in": "In {{time}}",
+      "leave": "On leave",
+      "off": "Off today",
+      "checkIn": "Check-in",
+      "mark": "Mark",
+      "search": "Search staff",
+      "marked": "{{name}}: {{status}}",
+      "cleared": "{{name}}: mark removed",
+      "undo": "Undo",
+      "more": "More for {{name}}",
+      "clearMark": "Remove the mark",
+      "noMatch": "Nobody matches “{{q}}”.",
+      "hint": "One tap marks and saves. Weekly offs and holidays fill in by themselves; tap a button to mark someone who worked on one.",
+      "locked": "You can't change this day.",
+      "backToToday": "Back to today",
+      "markedAll": "Marked present: {{count}}",
+      "markAll": "Mark {{count}} present",
+      "allMarked": "Everyone is marked"
+    }
   },
   "salary": {
     "title": "Salary",

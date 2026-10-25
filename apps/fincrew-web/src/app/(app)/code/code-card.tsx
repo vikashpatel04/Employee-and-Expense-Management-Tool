@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Copy, Printer, RefreshCw } from 'lucide-react';
 import { buttonClass, quietButtonClass } from '../../components';
 import { newCodeAction } from './actions';
+import { toast } from 'sonner';
 
 type Labels = {
   copy: string;
@@ -21,7 +22,6 @@ export function CodeActions({ code, labels: l }: { code: string; labels: Labels 
   const [copied, setCopied] = useState(false);
   const [asking, setAsking] = useState(false);
   const [pending, start] = useTransition();
-  const [message, setMessage] = useState<{ error?: string; done?: string }>({});
   const quiet = `${quietButtonClass} inline-flex items-center gap-2`;
 
   return (
@@ -56,7 +56,9 @@ export function CodeActions({ code, labels: l }: { code: string; labels: Labels 
               className={`${buttonClass} w-auto`}
               onClick={() =>
                 start(async () => {
-                  setMessage(await newCodeAction());
+                  const r = await newCodeAction();
+                  if (r.done) toast.success(r.done);
+                  if (r.error) toast.error(r.error);
                   setAsking(false);
                   setCopied(false);
                   router.refresh();
@@ -67,16 +69,6 @@ export function CodeActions({ code, labels: l }: { code: string; labels: Labels 
             </button>
           </div>
         </div>
-      )}
-      {message.error && (
-        <p role="alert" className="text-body text-[var(--danger)]">
-          {message.error}
-        </p>
-      )}
-      {message.done && (
-        <p role="status" className="text-body text-[var(--status-present)]">
-          {message.done}
-        </p>
       )}
     </div>
   );

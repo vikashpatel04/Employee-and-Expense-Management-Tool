@@ -177,7 +177,7 @@ export default async function SalaryPage({
                 </ul>
               </div>
               <Link
-                href={`/attendance?month=${ym(year, month)}`}
+                href={`/attendance?view=month&month=${ym(year, month)}`}
                 className="text-label-sm underline"
               >
                 {t('salary.warnings.openAttendance')}

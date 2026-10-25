@@ -77,15 +77,11 @@ export function RemoveHolidayButton({ id, name }: { id: string; name: string }) 
   );
 }
 
-/** Error or success line under a settings form. */
+/** A form's error line. Successes show as a toast (`useDialogDone`), not in the page. */
 export function FormMessage({ state }: { state: { error?: string; done?: string } }) {
   return state.error ? (
     <p role="alert" className="text-body text-[var(--danger)]">
       {state.error}
-    </p>
-  ) : state.done ? (
-    <p role="status" className="text-body text-[var(--status-present)]">
-      {state.done}
     </p>
   ) : null;
 }

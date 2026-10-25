@@ -12,6 +12,7 @@ import { SETTINGS_SECTIONS } from '@/lib/settings-access';
 import { createClient } from '@/lib/supabase/server';
 import { Avatar } from '../../../../components';
 import { ArchiveButton, AssignForm, LeaveVersionForm, RenameForm } from '../leave-forms';
+import { UrlToast } from '@/components/app/url-toast';
 
 const card = 'rounded-lg border bg-card p-4 shadow-xs';
 const row =
@@ -104,14 +105,7 @@ export default async function LeaveTemplatePage({
           </FormDialog>
         </div>
       </div>
-      {saved && (
-        <p
-          role="status"
-          className="text-body w-fit rounded-[var(--radius-md)] bg-[var(--status-present-soft)] px-4 py-3 text-[var(--status-present)]"
-        >
-          {t('settings.leave.detail.saved')}
-        </p>
-      )}
+      {saved && <UrlToast message={t('settings.leave.detail.saved')} params={['saved']} />}
 
       <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <div className="flex flex-col gap-4">

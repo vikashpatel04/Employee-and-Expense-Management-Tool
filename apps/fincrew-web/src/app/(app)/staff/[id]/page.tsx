@@ -40,6 +40,7 @@ import { DetailsForm, ItemButtons, ItemForm, OpeningForm, TemplateForm } from '.
 import { OverridesForm } from './overrides-form';
 import { PayForm } from './pay-form';
 import { SignInSection } from './signin-section';
+import { UrlToast } from '@/components/app/url-toast';
 
 type Tab = 'overview' | 'attendance' | 'ledger' | 'pay';
 
@@ -720,12 +721,10 @@ async function Pay(props: {
         </div>
       )}
       {props.saved && (
-        <p
-          role="status"
-          className="text-body rounded-md bg-[var(--status-present-soft)] px-4 py-3 text-[var(--status-present)]"
-        >
-          {t('staffDetail.pay.form.saved', { date: formatDate(props.saved) })}
-        </p>
+        <UrlToast
+          message={t('staffDetail.pay.form.saved', { date: formatDate(props.saved) })}
+          params={['saved', 'at']}
+        />
       )}
       <Bento>
         <Panel span={6} title={t('staffDetail.pay.current')} flush>

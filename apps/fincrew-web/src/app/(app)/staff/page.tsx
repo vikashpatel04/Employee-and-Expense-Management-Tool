@@ -10,6 +10,7 @@ import { requireMe } from '@/lib/session';
 import { createClient } from '@/lib/supabase/server';
 import { Avatar, inputClass, PageHeader, quietButtonClass } from '../../components';
 import { AddStaffForm } from './new/add-staff-form';
+import { UrlToast } from '@/components/app/url-toast';
 
 type Filter = 'active' | 'left' | 'all';
 
@@ -85,12 +86,7 @@ export default async function StaffPage({
       />
 
       {params.added && (
-        <p
-          role="status"
-          className="text-body rounded-[var(--radius-md)] bg-[var(--status-present-soft)] px-4 py-3 text-[var(--status-present)]"
-        >
-          {t('staff.added', { name: params.added })}
-        </p>
+        <UrlToast message={t('staff.added', { name: params.added })} params={['added']} />
       )}
 
       <Form action="/staff" className="flex flex-wrap items-center gap-2" role="search">

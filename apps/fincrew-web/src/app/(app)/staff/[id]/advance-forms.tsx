@@ -20,14 +20,11 @@ type AdvanceLabels = {
   saving: string;
 };
 
+/** Error line; successes are toasts (`useDialogDone`). */
 const Message = ({ state }: { state: AdvanceState }) =>
   state.error ? (
     <p role="alert" className="text-body text-[var(--danger)]">
       {state.error}
-    </p>
-  ) : state.done ? (
-    <p role="status" className="text-body text-[var(--status-present)]">
-      {state.done}
     </p>
   ) : null;
 

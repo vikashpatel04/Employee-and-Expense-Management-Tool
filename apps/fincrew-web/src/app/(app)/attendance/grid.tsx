@@ -21,6 +21,7 @@ import type { GridRow } from '@fincrew/data';
 import { t } from '@/lib/i18n';
 import { Avatar } from '../../components';
 import { clearAttendance, setAttendance } from './actions';
+import { toast } from 'sonner';
 
 const ICON: Record<string, LucideIcon> = {
   present: Check,
@@ -104,7 +105,6 @@ export function AttendanceGrid({
     if (next.view) setView(next.view);
     if (next.date) setDayDate(next.date);
   };
-  const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const [pending, start] = useTransition();
 
   const editable = (status: string, date: string) =>
@@ -134,14 +134,12 @@ export function AttendanceGrid({
     status: (typeof SETTABLE)[number] | 'clear',
   ) =>
     start(async () => {
-      setMessage(null);
       const res =
         status === 'clear' ? await clearAttendance(cells) : await setAttendance(cells, status);
       if (res.ok) {
         setSelected(new Set());
-        setMessage({
-          ok: true,
-          text: fill(
+        toast.success(
+          fill(
             status === 'clear'
               ? res.count === 1
                 ? labels.clearedOne
@@ -151,10 +149,10 @@ export function AttendanceGrid({
                 : labels.savedOther,
             { count: res.count },
           ),
-        });
+        );
         router.refresh();
       } else {
-        setMessage({ ok: false, text: res.error });
+        toast.error(res.error);
       }
     });
 
@@ -256,19 +254,6 @@ export function AttendanceGrid({
         </div>
       ) : (
         <p className="text-body text-[var(--ink-muted)]">{labels.readOnly}</p>
-      )}
-
-      {message && (
-        <p
-          role={message.ok ? 'status' : 'alert'}
-          className={`text-body rounded-[var(--radius-md)] px-4 py-3 ${
-            message.ok
-              ? 'bg-[var(--status-present-soft)] text-[var(--status-present)]'
-              : 'bg-[var(--status-absent-soft)] text-[var(--status-absent)]'
-          }`}
-        >
-          {message.text}
-        </p>
       )}
 
       <div
