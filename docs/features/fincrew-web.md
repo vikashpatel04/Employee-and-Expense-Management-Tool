@@ -32,6 +32,11 @@ Checked in the browser on 2026-10-24 against the live shop (1 staff, ₹355 draf
   Attendance, Salary, Advances and Settings (any settings permission) are in; Expenses, Requests
   and Reports join as they ship.
 - Pages outside the shell: `/login`, `/setup` (first run), `/shops/new`.
+- **Speed** (2026-10-25): `vercel.json` runs the server in Mumbai (`bom1`), next to the
+  database (`ap-south-1`); it ran in Washington (`iad1`) and every database trip crossed the
+  world, so each click took 3–5 s. `(app)/loading.tsx` shows a placeholder in the main area the
+  moment a link is clicked (links prefetch it). `requireMe` / `myMemberships` are cached per
+  request (React `cache`), so the layout and the page share one sign-in lookup.
 
 ## Staff — `(app)/staff`
 

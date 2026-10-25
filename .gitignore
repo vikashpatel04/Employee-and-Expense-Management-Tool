@@ -13,3 +13,17 @@ supabase/.branches/
 .DS_Store
 *.tsbuildinfo
 next-env.d.ts
+
+# Expo / native builds (each app also has its own .gitignore)
+.expo/
+expo-env.d.ts
+*.apk
+*.aab
+
+# Editors, OS and local tool settings
+.idea/
+.vscode/
+*.swp
+Thumbs.db
+desktop.ini
+.claude/settings.local.json

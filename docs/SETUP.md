@@ -79,6 +79,8 @@ pnpm db:types                 # after every new migration
 1. Import the GitHub repo. **Root directory:** `apps/fincrew-web` (Vercel detects pnpm + Turborepo).
    Skip the suggested **Supabase integration**: it may create a new project, injects the
    service-role key, and uses different variable names.
+   The function region comes from `apps/fincrew-web/vercel.json` (`bom1`, Mumbai): keep it next
+   to the Supabase project's region (`ap-south-1`), or every page is slow.
 2. Environment variables: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
 3. Redeploy so the variables take effect.
 4. In Supabase **Authentication → URL Configuration**, set Site URL to the Vercel URL; keep

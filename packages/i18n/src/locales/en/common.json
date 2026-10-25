@@ -1,5 +1,6 @@
 {
   "appName": "FinCrew",
+  "loading": "Loading…",
   "auth": {
     "signInTitle": "Sign in to FinCrew",
     "signInSubtitle": "Owner and team access",

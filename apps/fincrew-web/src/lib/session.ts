@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { loadMe, loadMemberships, type Me, type Membership } from '@fincrew/data';
@@ -8,21 +9,24 @@ export const SHOP_COOKIE = 'fincrew_shop';
 
 export type { Me, Membership } from '@fincrew/data';
 
-/** Every shop the signed-in login has a record in. */
-export async function myMemberships(): Promise<Membership[]> {
+/**
+ * Every shop the signed-in login has a record in. Cached for the request: the layout and the
+ * page both ask, and each database trip costs time.
+ */
+export const myMemberships = cache(async (): Promise<Membership[]> => {
   const supabase = await createClient();
   const { data: claims } = await supabase.auth.getClaims();
   if (!claims?.claims) redirect('/login');
 
   return loadMemberships(supabase, claims.claims.sub);
-}
+});
 
 /**
  * The signed-in person in their current shop, or a redirect:
  *   not signed in → /login, nobody has set up a shop yet → /setup.
- * Returns null when signed in but not part of any shop.
+ * Returns null when signed in but not part of any shop. Cached for the request.
  */
-export async function requireMe(): Promise<Me | null> {
+export const requireMe = cache(async (): Promise<Me | null> => {
   const memberships = await myMemberships();
   const supabase = await createClient();
 
@@ -33,7 +37,7 @@ export async function requireMe(): Promise<Me | null> {
   }
 
   return loadMe(supabase, memberships, (await cookies()).get(SHOP_COOKIE)?.value);
-}
+});
 
 export async function rememberShop(shopId: string) {
   (await cookies()).set(SHOP_COOKIE, shopId, {

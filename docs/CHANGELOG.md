@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Fixed — 2026-10-25
+
+- Website clicks took 3–5 s: the server now runs in Mumbai next to the database (`vercel.json`
+  region `bom1`), a loading placeholder shows at once, and the sign-in lookup runs once per page.
+- More files kept out of git (Expo folders, app builds, editor and OS files).
+
 ### Fixed — 2026-10-24
 
 - Staff can see the month of their own finalized payslips (Staffora Payslips, website payslip

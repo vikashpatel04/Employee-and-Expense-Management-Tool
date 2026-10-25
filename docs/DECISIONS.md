@@ -447,5 +447,9 @@ Owner's instruction: every value is customisable by the admin, and staff may hav
   `transpilePackages`, Expo/Metro will too.
 - **Next.js 16 `proxy.ts`** (formerly middleware) refreshes the Supabase session and redirects
   signed-out users. Server code uses `auth.getClaims()` (verifies the JWT), never `getSession()`.
+- **Website server region is Mumbai (`bom1`)**, set in `apps/fincrew-web/vercel.json`, because
+  the Supabase project is in `ap-south-1`. Server pages make several database trips per click;
+  Vercel's default (`iad1`, Washington) made each one cross the world. A new database region
+  means changing this too.
 - **Keep-awake** calls a harmless `ping()` RPC every 3 days from GitHub Actions.
 - **Placeholder look**: a neutral theme with CSS variables until the design phase (Phase 3).

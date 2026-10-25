@@ -124,6 +124,8 @@ ufmlqvvfznemghmnvynz --type all` (accepted warnings only: authenticated-callable
 
 **Gotchas seen so far**
 
+- Website speed: the Vercel function region must match Supabase's (`bom1` ↔ `ap-south-1`,
+  `apps/fincrew-web/vercel.json`). `curl -sI <page>` → `x-vercel-id: bom1::<function region>::…`.
 - Long Bash heredocs often fail to parse in this tool: write scripts/JSON edits with the Write
   tool into the scratchpad and run them. Python on Windows writes CRLF unless
   `open(..., newline='')`. Windows sometimes locks `common.json` for a moment (EUNKNOWN): retry.
@@ -261,6 +263,13 @@ Tables still to add (with the phase that uses them, each with RLS tests): `staff
 (storage), `push_tokens` (Phase 7/8).
 
 ## Session log
+
+- **2026-10-25** — Owner found the live website slow (3–5 s per click). Cause: Vercel ran the
+  server in Washington (`iad1`, seen in `x-vercel-id`) while Supabase is in Mumbai, and each
+  page makes several database trips. Fix: `apps/fincrew-web/vercel.json` region `bom1`,
+  `(app)/loading.tsx`, `requireMe` cached per request. Takes effect after the push (Vercel
+  redeploys); check `x-vercel-id` shows `bom1::bom1::` on a dynamic page. Also more
+  `.gitignore` rules.
 
 - **2026-10-24** — Owner continuing tonight on another PC: added `docs/NEW-MACHINE.md` (setup,
   env files, what doesn't carry over, switching back) and an **Owner rules** section in
