@@ -4,6 +4,7 @@ import { useState, useTransition, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { DEFAULT_SANDWICH_RULE, formatDisplayDate, type LeaveTemplateVersion } from '@fincrew/core';
 import { t } from '@/lib/i18n';
+import { useDialogDone } from '@/components/app/form-dialog';
 import { useFormAction } from '@/lib/use-form-action';
 import { buttonClass, dateFieldProps, inputClass, quietButtonClass } from '../../../components';
 import { FormMessage } from '../holidays/holiday-forms';
@@ -61,6 +62,7 @@ export function LeaveVersionForm({
     templateId ? saveVersion.bind(null, templateId) : createTemplate,
     {},
   );
+  useDialogDone(state);
   const [carry, setCarry] = useState(v.carryOver.mode);
   const [accrual, setAccrual] = useState(v.accrual.mode);
   const [sandwich, setSandwich] = useState(v.sandwich.enabled);
@@ -267,7 +269,7 @@ export function LeaveVersionForm({
       </Group>
 
       <FormMessage state={state} />
-      <button type="submit" disabled={pending} className={buttonClass}>
+      <button type="submit" disabled={pending} aria-busy={pending} className={buttonClass}>
         {pending ? t('settings.saving') : templateId ? t(`${f}.save`) : t('settings.leave.create')}
       </button>
     </form>
@@ -279,6 +281,7 @@ export function RenameForm({ templateId, name }: { templateId: string; name: str
     renameTemplate.bind(null, templateId),
     {},
   );
+  useDialogDone(state);
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-2">
       <div className="flex items-end gap-2">
@@ -286,7 +289,7 @@ export function RenameForm({ templateId, name }: { templateId: string; name: str
           {t('settings.leave.name')}
           <input name="name" required maxLength={60} defaultValue={name} className={inputClass} />
         </label>
-        <button type="submit" disabled={pending} className={quietButtonClass}>
+        <button type="submit" disabled={pending} aria-busy={pending} className={quietButtonClass}>
           {pending ? t('settings.saving') : t('settings.leave.detail.rename')}
         </button>
       </div>
@@ -304,6 +307,7 @@ export function ArchiveButton({ templateId, archived }: { templateId: string; ar
       <button
         type="button"
         disabled={pending}
+        aria-busy={pending}
         onClick={() =>
           start(async () => {
             const r = await setArchived(templateId, !archived);
@@ -338,6 +342,7 @@ export function AssignForm({
     assignStaff.bind(null, templateId),
     {},
   );
+  useDialogDone(state);
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-3">
       <ul className="flex max-h-80 flex-col overflow-y-auto rounded-[var(--radius-md)] border border-[var(--line)]">
@@ -368,7 +373,7 @@ export function AssignForm({
         />
       </label>
       <FormMessage state={state} />
-      <button type="submit" disabled={pending} className={buttonClass}>
+      <button type="submit" disabled={pending} aria-busy={pending} className={buttonClass}>
         {pending ? t('settings.saving') : t('settings.leave.detail.assignSave')}
       </button>
     </form>

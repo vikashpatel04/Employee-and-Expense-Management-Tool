@@ -1,8 +1,15 @@
 @import 'tailwindcss';
+@import 'tw-animate-css';
+@import './shadcn-tailwind.css';
 
 /*
  * Design tokens (colours light/dark, spacing, radius, sizes, text styles) come from
  * @fincrew/ui/tokens.css, imported in layout.tsx. Only app-level wiring lives here.
+ *
+ * shadcn/ui components (src/components/ui) use Tailwind colour names (bg-primary, bg-accent,
+ * border-input…). They are mapped straight onto the FinCrew tokens below, so light and dark mode
+ * follow the design system with no second palette. No shadcn raw variables (--primary,
+ * --accent…) are defined: our token `--accent` is the FinCrew teal and must stay that.
  */
 
 /* next/font self-hosts Anek Latin; put it first in the design system's stacks. */
@@ -12,8 +19,149 @@
   --font-num: var(--font-anek-latin), system-ui, sans-serif;
 }
 
-body {
-  background: var(--canvas);
-  color: var(--ink);
-  font-family: var(--font-sans);
+@theme inline {
+  --color-background: var(--canvas);
+  --color-foreground: var(--ink);
+  --color-card: var(--surface);
+  --color-card-foreground: var(--ink);
+  --color-popover: var(--surface);
+  --color-popover-foreground: var(--ink);
+  --color-primary: var(--accent);
+  --color-primary-foreground: var(--on-accent);
+  --color-secondary: var(--surface-muted);
+  --color-secondary-foreground: var(--ink);
+  --color-muted: var(--surface-muted);
+  --color-muted-foreground: var(--ink-muted);
+  /* shadcn "accent" = hover / selected background, not the brand colour */
+  --color-accent: var(--accent-soft);
+  --color-accent-foreground: var(--accent-ink);
+  --color-destructive: var(--danger);
+  --color-border: var(--line);
+  --color-input: var(--line-strong);
+  --color-ring: var(--focus);
+  --color-sidebar: var(--surface);
+  --color-sidebar-foreground: var(--ink);
+  --color-sidebar-primary: var(--accent);
+  --color-sidebar-primary-foreground: var(--on-accent);
+  --color-sidebar-accent: var(--accent-soft);
+  --color-sidebar-accent-foreground: var(--accent-ink);
+  --color-sidebar-border: var(--line);
+  --color-sidebar-ring: var(--focus);
+  --color-chart-1: var(--accent);
+  --color-chart-2: var(--status-paid-leave);
+  --color-chart-3: var(--status-late);
+  --color-chart-4: var(--status-holiday);
+  --color-chart-5: var(--status-present);
+  /* Web is denser than the phone apps: smaller corners than the phone tokens. */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 14px;
+  --radius-2xl: 18px;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html,
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-sans);
+  }
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
+@keyframes nav-progress {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(300%);
+  }
+}
+
+/*
+ * Web scale. The design tokens are sized for the phone apps (48 px controls, 20 px corners,
+ * 28 px titles). The website is used at a desk and should be dense, so the same names get web
+ * sizes here (loaded after @fincrew/ui/tokens.css, so these win on the website only).
+ */
+:root {
+  --tap-min: 36px;
+  --tap-primary: 40px;
+  --row-min: 52px;
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 14px;
+  --avatar: 32px;
+}
+
+.text-title-xl {
+  font-size: 22px;
+  line-height: 28px;
+}
+.text-title-lg {
+  font-size: 18px;
+  line-height: 24px;
+}
+.text-title-md {
+  font-size: 15px;
+  line-height: 22px;
+}
+.text-body-lg {
+  font-size: 15px;
+  line-height: 22px;
+}
+.text-body {
+  font-size: 14px;
+  line-height: 20px;
+}
+.text-label {
+  font-size: 14px;
+  line-height: 20px;
+}
+.text-label-sm {
+  font-size: 13px;
+  line-height: 18px;
+}
+.text-caption {
+  font-size: 12px;
+  line-height: 16px;
+}
+.text-micro {
+  font-size: 11px;
+  line-height: 14px;
+}
+.text-money-hero {
+  font-size: 28px;
+  line-height: 34px;
+}
+.text-money-lg {
+  font-size: 20px;
+  line-height: 26px;
+}
+.text-money-md {
+  font-size: 16px;
+  line-height: 22px;
+}
+.text-money-sm {
+  font-size: 14px;
+  line-height: 20px;
+}
+
+/* A busy button (aria-busy, set while its save runs) shows a spinner before its label. */
+:is(button, a)[aria-busy='true']::before {
+  content: '';
+  flex: none;
+  width: 1em;
+  height: 1em;
+  border-radius: 9999px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  animation: spin 0.7s linear infinite;
 }

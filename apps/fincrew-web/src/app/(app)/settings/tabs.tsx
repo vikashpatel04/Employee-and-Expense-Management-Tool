@@ -1,9 +1,9 @@
 'use client';
 
-import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { TabLinks } from '@/components/app/tab-links';
 
-/** Section tabs, same look as the staff detail tabs. */
+/** Section tabs (same tabs as the staff page; the one being opened shows a spinner). */
 export function SettingsTabs({
   label,
   items,
@@ -13,27 +13,10 @@ export function SettingsTabs({
 }) {
   const pathname = usePathname();
   return (
-    <nav
-      aria-label={label}
-      className="flex w-fit max-w-full flex-wrap gap-1 rounded-[var(--radius-md)] bg-[var(--surface-muted)] p-1"
-    >
-      {items.map((item) => {
-        const current = pathname.startsWith(item.href);
-        return (
-          <Link
-            key={item.href}
-            href={item.href}
-            aria-current={current ? 'page' : undefined}
-            className={`text-label-sm flex min-h-10 items-center rounded-[var(--radius-sm)] px-4 ${
-              current
-                ? 'bg-[var(--surface)] shadow-[var(--elevation-1)]'
-                : 'text-[var(--ink-muted)]'
-            }`}
-          >
-            {item.label}
-          </Link>
-        );
-      })}
-    </nav>
+    <TabLinks
+      label={label}
+      className="flex-wrap"
+      items={items.map((i) => ({ ...i, current: pathname.startsWith(i.href) }))}
+    />
   );
 }

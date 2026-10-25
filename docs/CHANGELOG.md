@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+### Changed — 2026-10-25 (website look and feel)
+
+- The website now uses shadcn/ui with the FinCrew colours, at a denser desk size.
+- The sidebar stays put; only the page beside it scrolls. On a phone it slides in from the menu.
+- Every click shows it's working: a bar at the top, the page fades while the next one loads,
+  spinners on the section, tab or button you pressed, placeholders while sections and tabs load,
+  and a message (toast) when something is saved.
+- Adding and changing things opens a dialog over the page instead of forms stacked in it (staff,
+  pay, advances, opening balance, expenses, categories, holidays, leave templates, roles,
+  helpers). Finalizing salary asks first; paying asks how it was paid.
+
 ### Added — 2026-10-25 (FinCrew app)
 
 - Salary run in the app: pay part of a payslip (type a smaller amount; the rest stays due), send

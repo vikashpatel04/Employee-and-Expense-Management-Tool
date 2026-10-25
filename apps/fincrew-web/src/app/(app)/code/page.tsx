@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { PendingLink as Link } from '@/components/app/pending-link';
 import { redirect } from 'next/navigation';
 import { Clock, Maximize2 } from 'lucide-react';
 import { formatTimeOfDay, minutesOfDayIST } from '@fincrew/core';
@@ -12,7 +12,7 @@ import { Avatar, PageHeader, quietButtonClass } from '../../components';
 import { CodeActions, PrintButton } from './code-card';
 
 const time = (iso: string) => formatTimeOfDay(minutesOfDayIST(new Date(iso)));
-const card = 'rounded-[var(--radius-lg)] bg-[var(--surface)] shadow-[var(--elevation-1)]';
+const card = 'rounded-lg border bg-card shadow-xs';
 
 /** "in 13 h 45 min" for the next code change. */
 function untilText(iso: string) {

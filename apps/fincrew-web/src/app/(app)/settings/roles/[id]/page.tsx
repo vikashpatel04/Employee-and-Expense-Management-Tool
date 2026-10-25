@@ -1,15 +1,15 @@
-import Link from 'next/link';
+import { PendingLink as Link } from '@/components/app/pending-link';
 import { notFound, redirect } from 'next/navigation';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, Pencil } from 'lucide-react';
+import { FormDialog } from '@/components/app/form-dialog';
 import { loadRoles, permissionGroups } from '@fincrew/data';
 import { t } from '@/lib/i18n';
 import { requireMe } from '@/lib/session';
 import { SETTINGS_SECTIONS } from '@/lib/settings-access';
 import { createClient } from '@/lib/supabase/server';
-import { quietButtonClass } from '../../../../components';
 import { DeleteRoleButton, PeopleForm, PermissionsForm, RenameRoleForm } from '../role-forms';
 
-const card = 'rounded-[var(--radius-lg)] bg-[var(--surface)] p-5 shadow-[var(--elevation-1)]';
+const card = 'rounded-lg border bg-card p-4 shadow-xs';
 
 /** One role: what it may do, who has it, rename, delete. */
 export default async function RolePage({
@@ -36,12 +36,29 @@ export default async function RolePage({
     <>
       <Link
         href="/settings/roles"
-        className={`${quietButtonClass} inline-flex w-fit items-center gap-1 border-0 px-2`}
+        className="text-muted-foreground hover:text-foreground inline-flex w-fit items-center gap-1 text-sm"
       >
-        <ChevronLeft size={20} aria-hidden="true" />
+        <ChevronLeft className="size-4" aria-hidden="true" />
         {t('settings.roles.detail.back')}
       </Link>
-      <h2 className="text-title-lg">{role.name}</h2>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-lg font-semibold">{role.name}</h2>
+        <div className="flex flex-wrap items-center gap-2">
+          <FormDialog
+            title={t('settings.roles.detail.rename')}
+            trigger={
+              <>
+                <Pencil aria-hidden="true" />
+                {t('settings.roles.detail.rename')}
+              </>
+            }
+          >
+            <RenameRoleForm roleId={id} name={role.name} />
+          </FormDialog>
+          <DeleteRoleButton roleId={id} />
+        </div>
+      </div>
+      <p className="text-muted-foreground -mt-2 text-xs">{t('settings.roles.detail.deleteHint')}</p>
       {saved && (
         <p
           role="status"
@@ -83,16 +100,6 @@ export default async function RolePage({
                 }))}
               />
             )}
-          </section>
-
-          <section className={`${card} flex flex-col gap-4`}>
-            <RenameRoleForm roleId={id} name={role.name} />
-            <div className="flex flex-col gap-1">
-              <DeleteRoleButton roleId={id} />
-              <p className="text-caption text-[var(--ink-muted)]">
-                {t('settings.roles.detail.deleteHint')}
-              </p>
-            </div>
           </section>
         </div>
       </div>

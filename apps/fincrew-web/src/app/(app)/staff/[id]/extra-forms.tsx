@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { formatDisplayDate, paiseToInput } from '@fincrew/core';
 import { t } from '@/lib/i18n';
+import { useDialogDone } from '@/components/app/form-dialog';
 import { useFormAction } from '@/lib/use-form-action';
 import { buttonClass, dateFieldProps, inputClass, quietButtonClass } from '../../../components';
 import { FormMessage } from '../../settings/holidays/holiday-forms';
@@ -54,6 +55,7 @@ export function DetailsForm({
   details: { name: string; phone: string | null; joiningDate: string; leavingDate: string | null };
 }) {
   const [state, onSubmit, pending] = useFormAction<ExtraState>(saveDetails.bind(null, staffId), {});
+  useDialogDone(state);
   const d = 'staffDetail.details';
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-3">
@@ -89,7 +91,7 @@ export function DetailsForm({
       </div>
       <p className="text-caption text-[var(--ink-muted)]">{t(`${d}.leavingHint`)}</p>
       <FormMessage state={state} />
-      <button type="submit" disabled={pending} className={buttonClass}>
+      <button type="submit" disabled={pending} aria-busy={pending} className={buttonClass}>
         {pending ? t('staffDetail.saving') : t(`${d}.save`)}
       </button>
     </form>
@@ -110,6 +112,7 @@ export function ItemForm({
     addItem.bind(null, staffId, kind),
     {},
   );
+  useDialogDone(state);
   const i = 'staffDetail.items';
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-3">
@@ -137,7 +140,7 @@ export function ItemForm({
         </label>
       )}
       <FormMessage state={state} />
-      <button type="submit" disabled={pending} className={buttonClass}>
+      <button type="submit" disabled={pending} aria-busy={pending} className={buttonClass}>
         {pending ? t('staffDetail.saving') : t(`${i}.save`)}
       </button>
     </form>
@@ -177,6 +180,7 @@ export function ItemButtons({
           <button
             type="button"
             disabled={pending}
+            aria-busy={pending}
             aria-label={t('staffDetail.items.endLabel', { name })}
             onClick={() => run(() => endItem(staffId, kind, id))}
             className={`${link} text-[var(--accent-ink)]`}
@@ -187,6 +191,7 @@ export function ItemButtons({
         <button
           type="button"
           disabled={pending}
+          aria-busy={pending}
           aria-label={asking ? undefined : t('staffDetail.items.removeLabel', { name })}
           onClick={() => (asking ? run(() => removeItem(staffId, kind, id)) : setAsking(true))}
           className={`${link} ${asking ? 'text-[var(--danger)]' : 'text-[var(--accent-ink)]'}`}
@@ -219,6 +224,7 @@ export function TemplateForm({
     saveTemplate.bind(null, staffId),
     {},
   );
+  useDialogDone(state);
   const f = 'staffDetail.templateForm';
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-3">
@@ -236,7 +242,7 @@ export function TemplateForm({
         <DateField name="from" label={t(`${f}.from`)} value={defaultDate} />
       </div>
       <FormMessage state={state} />
-      <button type="submit" disabled={pending} className={buttonClass}>
+      <button type="submit" disabled={pending} aria-busy={pending} className={buttonClass}>
         {pending ? t('staffDetail.saving') : t(`${f}.save`)}
       </button>
     </form>
@@ -261,6 +267,7 @@ export function OpeningForm({
     (correcting ? correctOpening : saveOpening).bind(null, staffId),
     {},
   );
+  useDialogDone(state);
   const o = 'staffDetail.opening';
   const segment =
     'text-label-sm flex min-h-10 flex-1 cursor-pointer items-center justify-center rounded-[var(--radius-sm)] px-3 text-center has-[:checked]:bg-[var(--surface)] has-[:checked]:shadow-[var(--elevation-1)] has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-[var(--focus)]';
@@ -301,7 +308,7 @@ export function OpeningForm({
         {correcting ? t(`${o}.confirmCorrection`) : t(`${o}.confirm`)}
       </label>
       <FormMessage state={state} />
-      <button type="submit" disabled={pending} className={quietButtonClass}>
+      <button type="submit" disabled={pending} aria-busy={pending} className={quietButtonClass}>
         {pending ? t('staffDetail.saving') : correcting ? t(`${o}.correctSave`) : t(`${o}.save`)}
       </button>
     </form>

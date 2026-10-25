@@ -97,6 +97,7 @@ export function DecideForm({
           <button
             type="button"
             disabled={pending}
+            aria-busy={pending}
             className={`${quietButtonClass} flex-1`}
             onClick={() => decide('reject')}
           >
@@ -105,6 +106,7 @@ export function DecideForm({
           <button
             type="button"
             disabled={pending}
+            aria-busy={pending}
             className={`${buttonClass} inline-flex flex-[1.4] items-center justify-center gap-2`}
             onClick={() => decide('approve')}
           >

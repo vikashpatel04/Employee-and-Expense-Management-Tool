@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { PendingLink as Link } from '@/components/app/pending-link';
 import { notFound, redirect } from 'next/navigation';
 import { ChevronLeft } from 'lucide-react';
 import {
@@ -97,7 +97,7 @@ export default async function PayslipPage({ params }: { params: Promise<{ id: st
         <PrintButton label={t('payslip.print')} />
       </div>
 
-      <article className="flex flex-col gap-6 rounded-[var(--radius-lg)] bg-[var(--surface)] p-6 shadow-[var(--elevation-1)] print:rounded-none print:p-0 print:shadow-none">
+      <article className="flex flex-col gap-6 rounded-lg border bg-card p-6 shadow-xs print:rounded-none print:p-0 print:shadow-none">
         <header className="flex flex-wrap items-start justify-between gap-4 border-b border-[var(--line-strong)] pb-4">
           <div className="flex flex-col gap-0.5">
             <span className="text-label-sm text-[var(--ink-muted)]">{slip.shops.name}</span>

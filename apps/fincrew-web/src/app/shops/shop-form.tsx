@@ -31,7 +31,7 @@ export function ShopForm({ labels, ownerName }: { labels: Labels; ownerName?: st
           {state.error}
         </p>
       )}
-      <button type="submit" disabled={pending} className={buttonClass}>
+      <button type="submit" disabled={pending} aria-busy={pending} className={buttonClass}>
         {pending ? labels.creating : labels.create}
       </button>
     </form>

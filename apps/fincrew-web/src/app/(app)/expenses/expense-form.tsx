@@ -1,7 +1,8 @@
 'use client';
 
-import Link from 'next/link';
+import { PendingLink as Link } from '@/components/app/pending-link';
 import { startTransition, useActionState, useEffect, useState, useTransition } from 'react';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useRouter } from 'next/navigation';
 import { Camera, Check, X } from 'lucide-react';
 import {
@@ -94,10 +95,10 @@ export function ExpenseForm({
   today: string;
   monthName: string;
   smallLimit: number | null;
-  closeHref: string;
+  /** Unused since the form moved into a dialog / sheet (Escape is theirs); kept for callers. */
+  closeHref?: string;
   canDelete: boolean;
 }) {
-  const router = useRouter();
   const [state, dispatch, pending] = useActionState<ExpenseState, FormData>(
     saveExpense.bind(null, expense?.id ?? null),
     {},
@@ -115,13 +116,6 @@ export function ExpenseForm({
   const [billName, setBillName] = useState<string | null>(null);
   const [deleting, startDelete] = useTransition();
   const [asking, setAsking] = useState(false);
-
-  // Escape closes the panel.
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && router.push(closeHref);
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [router, closeHref]);
 
   const paise = parseRupees(amount);
   const autoCharged =
@@ -345,6 +339,7 @@ export function ExpenseForm({
       <button
         type="submit"
         disabled={pending}
+        aria-busy={pending}
         className={`${buttonClass} inline-flex items-center justify-center gap-2`}
       >
         <Check size={20} aria-hidden="true" />
@@ -356,6 +351,7 @@ export function ExpenseForm({
           <button
             type="button"
             disabled={deleting}
+            aria-busy={deleting}
             onClick={() =>
               asking
                 ? startDelete(async () => {
@@ -374,7 +370,10 @@ export function ExpenseForm({
   );
 }
 
-/** The side panel around the form (full screen on a phone); the backdrop closes it. */
+/**
+ * Editing an expense (`?edit=<id>`): the form in a shadcn side sheet over the list. Closing it
+ * (×, Escape, the dimmed page) goes back to the month without the `edit` parameter.
+ */
 export function ExpensePanel({
   title,
   closeHref,
@@ -384,34 +383,15 @@ export function ExpensePanel({
   closeHref: string;
   children: React.ReactNode;
 }) {
+  const router = useRouter();
   return (
-    <div className="fixed inset-0 z-40">
-      <Link
-        href={closeHref}
-        aria-hidden="true"
-        tabIndex={-1}
-        className="absolute inset-0 bg-[rgb(12_16_19/0.32)]"
-      />
-      <aside
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="expense-panel-title"
-        className="absolute inset-y-0 right-0 flex w-full max-w-[460px] flex-col gap-5 overflow-y-auto bg-[var(--canvas)] p-6 shadow-[var(--elevation-3)]"
-      >
-        <div className="flex items-center justify-between gap-3">
-          <h2 id="expense-panel-title" className="text-title-lg">
-            {title}
-          </h2>
-          <Link
-            href={closeHref}
-            className={`${quietButtonClass} inline-flex items-center gap-1 border-0 px-2`}
-          >
-            <X size={20} aria-hidden="true" />
-            {t(`${f}.close`)}
-          </Link>
-        </div>
-        {children}
-      </aside>
-    </div>
+    <Sheet open onOpenChange={(open) => !open && router.push(closeHref, { scroll: false })}>
+      <SheetContent className="w-full gap-0 overflow-y-auto sm:max-w-[460px]">
+        <SheetHeader>
+          <SheetTitle>{title}</SheetTitle>
+        </SheetHeader>
+        <div className="px-4 pb-6">{children}</div>
+      </SheetContent>
+    </Sheet>
   );
 }

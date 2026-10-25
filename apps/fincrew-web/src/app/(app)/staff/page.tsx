@@ -1,11 +1,15 @@
-import Link from 'next/link';
+import { PendingLink as Link } from '@/components/app/pending-link';
 import { redirect } from 'next/navigation';
+import Form from 'next/form';
 import { Plus, Search } from 'lucide-react';
-import { formatDate } from '@/lib/format';
+import { FormDialog } from '@/components/app/form-dialog';
+import { FormSubmit } from '@/components/app/form-submit';
+import { formatDate, todayIST } from '@/lib/format';
 import { t } from '@/lib/i18n';
 import { requireMe } from '@/lib/session';
 import { createClient } from '@/lib/supabase/server';
-import { Avatar, buttonClass, inputClass, PageHeader, quietButtonClass } from '../../components';
+import { Avatar, inputClass, PageHeader, quietButtonClass } from '../../components';
+import { AddStaffForm } from './new/add-staff-form';
 
 type Filter = 'active' | 'left' | 'all';
 
@@ -53,13 +57,29 @@ export default async function StaffPage({
         subtitle={t('staff.subtitle', { shop: me.shopName, count: all.length })}
         actions={
           canAdd && (
-            <Link
-              href="/staff/new"
-              className={`${buttonClass} inline-flex w-auto items-center gap-2`}
+            <FormDialog
+              title={t('staff.newTitle')}
+              description={t('staff.newSubtitle')}
+              variant="default"
+              trigger={
+                <>
+                  <Plus aria-hidden="true" />
+                  {t('staff.add')}
+                </>
+              }
             >
-              <Plus size={20} aria-hidden="true" />
-              {t('staff.add')}
-            </Link>
+              <AddStaffForm
+                today={todayIST()}
+                labels={{
+                  name: t('staff.fields.name'),
+                  phone: t('staff.fields.phone'),
+                  joiningDate: t('staff.fields.joiningDate'),
+                  save: t('staff.save'),
+                  saving: t('staff.saving'),
+                  cancel: t('staff.cancel'),
+                }}
+              />
+            </FormDialog>
           )
         }
       />
@@ -73,7 +93,7 @@ export default async function StaffPage({
         </p>
       )}
 
-      <form className="flex flex-wrap items-end gap-3" role="search">
+      <Form action="/staff" className="flex flex-wrap items-end gap-3" role="search">
         <label className="text-label-sm flex min-w-0 flex-[1_1_280px] flex-col">
           {t('staff.search')}
           <input name="q" defaultValue={q} type="search" className={inputClass} />
@@ -98,14 +118,14 @@ export default async function StaffPage({
             ))}
           </div>
         </fieldset>
-        <button className={`${quietButtonClass} inline-flex items-center gap-2`}>
-          <Search size={18} aria-hidden="true" />
+        <FormSubmit className={quietButtonClass}>
+          <Search aria-hidden="true" />
           {t('staff.searchButton')}
-        </button>
-      </form>
+        </FormSubmit>
+      </Form>
 
       {all.length === 0 && filter === 'active' && !q ? (
-        <div className="flex flex-col items-start gap-2 rounded-[var(--radius-lg)] bg-[var(--surface)] p-6 shadow-[var(--elevation-1)]">
+        <div className="flex flex-col items-start gap-2 rounded-lg border bg-card p-6 shadow-xs">
           <h2 className="text-title-md">{t('staff.empty.title')}</h2>
           <p className="text-body-lg max-w-prose text-[var(--ink-muted)]">
             {t('staff.empty.body')}
@@ -114,7 +134,7 @@ export default async function StaffPage({
       ) : rows.length === 0 ? (
         <p className="text-body-lg text-[var(--ink-muted)]">{t('staff.noMatch', { q })}</p>
       ) : (
-        <div className="overflow-x-auto rounded-[var(--radius-lg)] bg-[var(--surface)] shadow-[var(--elevation-1)]">
+        <div className="overflow-x-auto rounded-lg border bg-card shadow-xs">
           <table className="w-full min-w-[560px] border-collapse">
             <thead>
               <tr className="text-caption text-left text-[var(--ink-muted)]">

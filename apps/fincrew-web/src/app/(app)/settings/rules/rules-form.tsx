@@ -3,14 +3,14 @@
 import { useState, type ReactNode } from 'react';
 import { minutesToInput, paiseToInput, type ShopRules } from '@fincrew/core';
 import { t } from '@/lib/i18n';
+import { useDialogDone } from '@/components/app/form-dialog';
 import { useFormAction } from '@/lib/use-form-action';
 import { buttonClass, inputClass } from '../../../components';
 import { FormMessage } from '../holidays/holiday-forms';
 import { saveRules, type RulesState } from './actions';
 
 const r = 'settings.rules';
-const card =
-  'flex flex-col gap-4 rounded-[var(--radius-lg)] bg-[var(--surface)] p-5 shadow-[var(--elevation-1)]';
+const card = 'flex flex-col gap-4 rounded-lg border bg-card p-5 shadow-xs';
 const checkbox = 'h-5 w-5 shrink-0 accent-[var(--accent)]';
 
 function Choice({
@@ -104,6 +104,7 @@ const keys = (prefix: string, values: readonly string[]) =>
 /** Every shop rule on one form, prefilled with the shop's current values (or the defaults). */
 export function RulesForm({ rules }: { rules: ShopRules }) {
   const [state, onSubmit, pending] = useFormAction<RulesState>(saveRules, {});
+  useDialogDone(state);
   const [dayRate, setDayRate] = useState(rules.pay.dayRateBasis.mode);
   const [chargeMode, setChargeMode] = useState(rules.late.charge.mode);
   const [rotation, setRotation] = useState(rules.attendanceCode.rotation.mode);
@@ -303,7 +304,7 @@ export function RulesForm({ rules }: { rules: ShopRules }) {
 
         <div className="flex flex-col gap-3">
           <FormMessage state={state} />
-          <button type="submit" disabled={pending} className={buttonClass}>
+          <button type="submit" disabled={pending} aria-busy={pending} className={buttonClass}>
             {pending ? t('settings.saving') : t(`${r}.save`)}
           </button>
         </div>

@@ -136,7 +136,10 @@
     "expenses": "Expenses",
     "reports": "Reports",
     "code": "Attendance code",
-    "requests": "Requests"
+    "requests": "Requests",
+    "toggleMenu": "Show or hide the menu",
+    "menuDescription": "The sections you can open",
+    "yourShops": "Your shops"
   },
   "staff": {
     "title": "Staff",
@@ -202,7 +205,8 @@
       "cut": "Cut {{amount}} each month",
       "noCut": "Cut decided at each salary run",
       "limit": "Limit {{amount}}",
-      "noLimit": "No limit"
+      "noLimit": "No limit",
+      "edit": "Advance rules"
     },
     "actions": {
       "call": "Call",
@@ -280,7 +284,8 @@
       "errors": {
         "name": "Enter a name.",
         "leaving": "The leaving date can't be before the joining date."
-      }
+      },
+      "edit": "Edit details"
     },
     "items": {
       "addAllowance": "Add an allowance",
@@ -383,7 +388,9 @@
     "reversal": "Undone"
   },
   "common": {
-    "invalidDate": "Enter the date as DD/MM/YYYY, for example 23/10/2026."
+    "invalidDate": "Enter the date as DD/MM/YYYY, for example 23/10/2026.",
+    "close": "Close",
+    "cancel": "Cancel"
   },
   "weekdays": {
     "short": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
@@ -562,6 +569,14 @@
     "errors": {
       "noPermission": "You can see salary but not run or pay it.",
       "failed": "Couldn't finish: {{reason}}"
+    },
+    "confirm": {
+      "finalizeTitle": "Finalize {{month}} salary?",
+      "finalizeOneTitle": "Finalize {{name}}'s payslip?",
+      "finalizeBody": "Each payslip is posted to the staff ledger and staff can see it. This can't be undone; running again later adds only the differences.",
+      "payAllTitle": "Pay everyone still due for {{month}}",
+      "payTitle": "Pay {{name}} for {{month}}",
+      "payBody": "Adds a salary payment dated today for what is still due. If it was a mistake, undo it from the staff Ledger."
     }
   },
   "advances": {

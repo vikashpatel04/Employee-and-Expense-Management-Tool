@@ -1,6 +1,7 @@
-import Link from 'next/link';
+import { PendingLink as Link } from '@/components/app/pending-link';
 import { redirect } from 'next/navigation';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, Plus } from 'lucide-react';
+import { FormDialog } from '@/components/app/form-dialog';
 import { effectiveOn, monthOf, monthStart } from '@fincrew/core';
 import { loadLeaveSetup } from '@fincrew/data';
 import { formatDate, todayIST } from '@/lib/format';
@@ -11,7 +12,7 @@ import { SETTINGS_SECTIONS } from '@/lib/settings-access';
 import { createClient } from '@/lib/supabase/server';
 import { LeaveVersionForm } from './leave-forms';
 
-const card = 'rounded-[var(--radius-lg)] bg-[var(--surface)] p-5 shadow-[var(--elevation-1)]';
+const card = 'rounded-lg border bg-card p-4 shadow-xs';
 
 /** Leave templates: what each one gives today and how many people are on it (PLAN §4.2). */
 export default async function LeaveTemplatesPage() {
@@ -25,15 +26,31 @@ export default async function LeaveTemplatesPage() {
   const sorted = [...templates].sort((a, b) => Number(a.archived) - Number(b.archived));
 
   return (
-    <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+    <div className="flex max-w-3xl flex-col gap-3">
       <section className="flex flex-col gap-3">
-        <p className="text-body text-[var(--ink-muted)]">{t('settings.leave.subtitle')}</p>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-muted-foreground text-sm">{t('settings.leave.subtitle')}</p>
+          <FormDialog
+            title={t('settings.leave.new')}
+            description={t('settings.leave.newHint')}
+            variant="default"
+            wide
+            trigger={
+              <>
+                <Plus aria-hidden="true" />
+                {t('settings.leave.new')}
+              </>
+            }
+          >
+            <LeaveVersionForm defaultDate={monthStart(year, month)} />
+          </FormDialog>
+        </div>
         {sorted.length === 0 ? (
           <p className={`${card} text-body-lg text-[var(--ink-muted)]`}>
             {t('settings.leave.empty')}
           </p>
         ) : (
-          <ul className="overflow-hidden rounded-[var(--radius-lg)] bg-[var(--surface)] shadow-[var(--elevation-1)]">
+          <ul className="bg-card overflow-hidden rounded-lg border shadow-xs">
             {sorted.map((tpl) => {
               const versions = versionsByTemplate.get(tpl.id) ?? [];
               const current = effectiveOn(versions, today) ?? versions.at(-1);
@@ -75,11 +92,6 @@ export default async function LeaveTemplatesPage() {
             })}
           </ul>
         )}
-      </section>
-      <section className={card}>
-        <h2 className="text-title-md">{t('settings.leave.new')}</h2>
-        <p className="text-body mt-1 mb-4 text-[var(--ink-muted)]">{t('settings.leave.newHint')}</p>
-        <LeaveVersionForm defaultDate={monthStart(year, month)} />
       </section>
     </div>
   );

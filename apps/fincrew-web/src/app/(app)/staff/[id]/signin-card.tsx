@@ -62,7 +62,7 @@ export function SignInCard({
   return (
     <section
       aria-labelledby="signin-h"
-      className="flex flex-col gap-3 rounded-[var(--radius-lg)] bg-[var(--surface)] p-5 shadow-[var(--elevation-1)]"
+      className="flex flex-col gap-3 rounded-lg border bg-card p-5 shadow-xs"
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 id="signin-h" className="text-title-md">
@@ -90,6 +90,7 @@ export function SignInCard({
             className="h-5 w-5 accent-[var(--accent)]"
             defaultChecked={selfAttendance}
             disabled={pending}
+            aria-busy={pending}
             onChange={(e) => {
               const on = e.currentTarget.checked;
               run(() => selfAttendanceAction(staffId, on));
@@ -105,6 +106,7 @@ export function SignInCard({
             <button
               type="button"
               disabled={pending}
+              aria-busy={pending}
               className={`${buttonClass} inline-flex w-auto items-center gap-2`}
               onClick={() => run(() => signInChange(staffId, 'unlock'))}
             >
@@ -115,6 +117,7 @@ export function SignInCard({
           <button
             type="button"
             disabled={pending}
+            aria-busy={pending}
             title={l.newPhoneHint}
             className={quiet}
             onClick={() => run(() => signInChange(staffId, 'phone'))}
@@ -126,6 +129,7 @@ export function SignInCard({
             <button
               type="button"
               disabled={pending}
+              aria-busy={pending}
               className={quiet}
               onClick={() => {
                 if (window.confirm(l.resetConfirm)) run(() => signInChange(staffId, 'reset'));

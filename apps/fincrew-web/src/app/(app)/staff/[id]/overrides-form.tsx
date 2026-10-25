@@ -10,6 +10,7 @@ import {
   type ShopRules,
 } from '@fincrew/core';
 import { t } from '@/lib/i18n';
+import { useDialogDone } from '@/components/app/form-dialog';
 import { useFormAction } from '@/lib/use-form-action';
 import { buttonClass, dateFieldProps, inputClass } from '../../../components';
 import { FormMessage } from '../../settings/holidays/holiday-forms';
@@ -89,6 +90,7 @@ export function OverridesForm({
     saveOverrides.bind(null, staffId),
     {},
   );
+  useDialogDone(state);
   const bool = (v: boolean | undefined) => (v === undefined ? '' : v ? 'yes' : 'no');
   const [v, setV] = useState<Record<string, string>>({
     dayRate: pay.dayRateBasis?.mode ?? '',
@@ -245,7 +247,7 @@ export function OverridesForm({
       )}
 
       <FormMessage state={state} />
-      <button type="submit" disabled={pending} className={buttonClass}>
+      <button type="submit" disabled={pending} aria-busy={pending} className={buttonClass}>
         {pending ? t('staffDetail.saving') : t(`${o}.save`)}
       </button>
     </form>

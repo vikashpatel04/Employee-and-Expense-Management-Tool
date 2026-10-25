@@ -37,5 +37,6 @@ export async function savePay(staffId: string, _prev: PayState, form: FormData):
         return { error: t(`staffDetail.pay.form.errors.${r.reason}`) };
     }
   }
-  redirect(`/staff/${staffId}?tab=pay&saved=${r.effectiveFrom}`);
+  // `at` changes every save, so the dialog sees the address change and closes.
+  redirect(`/staff/${staffId}?tab=pay&saved=${r.effectiveFrom}&at=${Date.now().toString(36)}`);
 }

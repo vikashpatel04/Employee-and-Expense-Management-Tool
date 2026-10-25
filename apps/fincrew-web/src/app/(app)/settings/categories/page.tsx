@@ -1,4 +1,6 @@
 import { redirect } from 'next/navigation';
+import { Pencil, Plus } from 'lucide-react';
+import { FormDialog } from '@/components/app/form-dialog';
 import { categoryColour, categoryIcon } from '@/lib/expense-style';
 import { t } from '@/lib/i18n';
 import { requireMe } from '@/lib/session';
@@ -6,17 +8,12 @@ import { SETTINGS_SECTIONS } from '@/lib/settings-access';
 import { createClient } from '@/lib/supabase/server';
 import { ActionLink, CategoryForm } from './category-forms';
 
-const card = 'rounded-[var(--radius-lg)] bg-[var(--surface)] p-5 shadow-[var(--elevation-1)]';
+const card = 'rounded-lg border bg-card p-4 shadow-xs';
 
 /** Expense categories: icon, colour, archive (no delete: old expenses keep theirs). */
-export default async function CategoriesPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ edit?: string }>;
-}) {
+export default async function CategoriesPage() {
   const me = (await requireMe())!;
   if (!me.permissions.includes(SETTINGS_SECTIONS.categories)) redirect('/settings');
-  const { edit } = await searchParams;
 
   const supabase = await createClient();
   const { data } = await supabase
@@ -26,12 +23,25 @@ export default async function CategoriesPage({
     .order('archived')
     .order('name');
   const categories = data ?? [];
-  const editing = categories.find((x) => x.id === edit);
 
   return (
-    <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+    <div className="flex max-w-3xl flex-col gap-3">
       <section className="flex flex-col gap-3">
-        <p className="text-body text-[var(--ink-muted)]">{t('settings.categories.subtitle')}</p>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-muted-foreground text-sm">{t('settings.categories.subtitle')}</p>
+          <FormDialog
+            title={t('settings.categories.add')}
+            variant="default"
+            trigger={
+              <>
+                <Plus aria-hidden="true" />
+                {t('settings.categories.add')}
+              </>
+            }
+          >
+            <CategoryForm />
+          </FormDialog>
+        </div>
         {categories.every((x) => x.archived) && (
           <div className={`${card} flex flex-col gap-3`}>
             <p className="text-body-lg text-[var(--ink-muted)]">{t('settings.categories.empty')}</p>
@@ -42,7 +52,7 @@ export default async function CategoriesPage({
           </div>
         )}
         {categories.length > 0 && (
-          <ul className="overflow-hidden rounded-[var(--radius-lg)] bg-[var(--surface)] shadow-[var(--elevation-1)]">
+          <ul className="bg-card overflow-hidden rounded-lg border shadow-xs">
             {categories.map((x) => {
               const Icon = categoryIcon(x.icon);
               const col = categoryColour(x.colour);
@@ -67,12 +77,19 @@ export default async function CategoriesPage({
                       </span>
                     )}
                   </span>
-                  <a
-                    href={`/settings/categories?edit=${x.id}`}
-                    className="text-caption min-h-8 px-2 text-[var(--accent-ink)] underline"
+                  <FormDialog
+                    title={x.name}
+                    variant="ghost"
+                    size="sm"
+                    trigger={
+                      <>
+                        <Pencil aria-hidden="true" />
+                        {t('expenses.edit')}
+                      </>
+                    }
                   >
-                    {t('expenses.edit')}
-                  </a>
+                    <CategoryForm category={x} />
+                  </FormDialog>
                   <ActionLink
                     run={{ archive: x.id, archived: !x.archived }}
                     label={
@@ -86,12 +103,6 @@ export default async function CategoriesPage({
             })}
           </ul>
         )}
-      </section>
-      <section className={card}>
-        <h2 className="text-title-md mb-4">
-          {editing ? editing.name : t('settings.categories.add')}
-        </h2>
-        <CategoryForm key={editing?.id ?? 'new'} category={editing} />
       </section>
     </div>
   );

@@ -1,7 +1,8 @@
 'use client';
 
-import Link from 'next/link';
+import { PendingLink as Link } from '@/components/app/pending-link';
 import { formatDisplayDate } from '@fincrew/core';
+import { useDialogClose, useDialogDone } from '@/components/app/form-dialog';
 import { useFormAction } from '@/lib/use-form-action';
 import { buttonClass, dateFieldProps, inputClass, quietButtonClass } from '../../../components';
 import { addStaff, type AddStaffState } from '../actions';
@@ -17,9 +18,11 @@ type Labels = {
 
 export function AddStaffForm({ labels, today }: { labels: Labels; today: string }) {
   const [state, onSubmit, pending] = useFormAction<AddStaffState>(addStaff, {});
+  useDialogDone(state);
+  const close = useDialogClose();
 
   return (
-    <form onSubmit={onSubmit} className="flex max-w-md flex-col gap-4">
+    <form onSubmit={onSubmit} className="flex flex-col gap-4">
       <label className="text-label-sm block">
         {labels.name}
         <input
@@ -59,12 +62,23 @@ export function AddStaffForm({ labels, today }: { labels: Labels; today: string 
         </p>
       )}
       <div className="flex flex-wrap gap-3">
-        <button type="submit" disabled={pending} className={`${buttonClass} w-auto flex-1`}>
+        <button
+          type="submit"
+          disabled={pending}
+          aria-busy={pending}
+          className={`${buttonClass} w-auto flex-1`}
+        >
           {pending ? labels.saving : labels.save}
         </button>
-        <Link href="/staff" className={`${quietButtonClass} inline-flex items-center`}>
-          {labels.cancel}
-        </Link>
+        {close ? (
+          <button type="button" onClick={close} className={quietButtonClass}>
+            {labels.cancel}
+          </button>
+        ) : (
+          <Link href="/staff" className={quietButtonClass}>
+            {labels.cancel}
+          </Link>
+        )}
       </div>
     </form>
   );

@@ -23,11 +23,50 @@ Design: "Web · dashboard" (FinCrew key screens canvas). Data: `packages/data/sr
 Checked in the browser on 2026-10-24 against the live shop (1 staff, ₹355 draft), at 1280 and
 375 px; Mark today present then cleared again from the grid.
 
+## Look and feel (owner's rework, 2026-10-25)
+
+The owner found the website hard to use (the whole page scrolled with the sidebar, pages too
+roomy, forms stacked as cards inside pages, no sign of loading). Reworked:
+
+- **shadcn/ui on our tokens.** Components in `src/components/ui` (radix base, added with
+  `pnpm dlx shadcn@4.22.1 add <name>` from `apps/fincrew-web`; config `components.json`).
+  `globals.css` maps shadcn's colour names straight onto the FinCrew tokens (`bg-primary` =
+  `--accent` teal, `bg-accent` = `--accent-soft`, `border-input` = `--line-strong`, …), light
+  and dark, without defining shadcn's own variables (our `--accent` must stay the teal).
+  `src/app/shadcn-tailwind.css` is shadcn's small CSS file copied in, so the CLI isn't a
+  dependency. Strings inside the components go through i18n (`common.close`, `nav.*`, `loading`).
+- **Web scale.** `globals.css` gives the token names web sizes (36 px controls, 10 px corners,
+  22 px page titles, 14 px body); the phone apps keep the design-system sizes.
+- **Shell** (`(app)/layout.tsx`, `(app)/app-sidebar.tsx`): shadcn Sidebar, fixed; a 48 px top
+  bar with the menu button and the shop; **only the content area scrolls**. Shop switcher is a
+  dropdown at the top of the sidebar. On a phone the sidebar slides in from the menu button.
+- **Loading everywhere** (`src/components/app`):
+  - `PendingLink` (every `Link` in the app is it): a thin bar runs across the top while the next
+    page or tab loads, the content fades slightly (`NavDim`), and sidebar items and tabs show a
+    spinner on themselves (`useLinkStatus`).
+  - `(app)/loading.tsx` → `PageSkeleton` for a new section; tabs (`TabLinks`) sit above a
+    `<Suspense key={tab}>` with `PanelSkeleton`, so a tab answers at once.
+  - Buttons: anything with `aria-busy` shows a spinner before its label (`globals.css`); every
+    form button sets it while saving (`useFormAction`'s `pending`), `FormSubmit` does it for
+    plain `<form action>` / `next/form` searches.
+  - Results show as **toasts** (sonner, top centre).
+- **Tasks open in dialogs** (`FormDialog`, `useDialogDone`): the page shows a button, the form
+  opens over it, and closes itself with a toast when the action returns `done`, or when the save
+  redirects (redirects carry a changing value, e.g. `saved=<time>` / `at=<time>`, so a second
+  identical save still closes it). Converted: Add staff (staff list; `/staff/new` still works),
+  staff page header (Call, WhatsApp, Edit details, Give advance), Advance rules and Opening
+  balance (Overview cards), Pay tab toolbar (Change pay from a date, Add an allowance, Add a
+  fixed deduction, Change leave template, Own rules), Add expense (instant; editing opens a
+  shadcn side sheet at `?edit=<id>`), Settings: Add category / Edit per row, Add holiday, New
+  leave template, Rename / Assign / Change rules on a template, New role, Add helper, Rename
+  role. Salary: Finalize asks first (AlertDialog), Pay opens a dialog with how it was paid.
+- Left inline on purpose: request decisions (a queue is quicker inline), Settings → rules (the
+  page is the form), a role's permissions and people (the page is for them), the attendance grid.
+
 ## App shell — `apps/fincrew-web/src/app/(app)/layout.tsx`
 
-- Sidebar (design: "Web · attendance grid"): FinCrew, the **shop switcher** card (current shop,
-  "N shops"; opens the list to switch, plus "Add a shop" for owners), the sections, sign out.
-  On a phone the sidebar stacks above the content.
+- Sidebar (see "Look and feel"): FinCrew, the **shop switcher** (current shop, "N shops";
+  a dropdown to switch, plus "Add a shop" for owners), the sections, sign out.
 - **Sections appear only when built and permitted**: Dashboard always; Staff with `staff.view`.
   Attendance, Salary, Advances and Settings (any settings permission) are in; Expenses, Requests
   and Reports join as they ship.
@@ -99,8 +138,8 @@ See `docs/features/expenses.md` (page, add/edit panel, categories, bills, CSV, d
 
 ## Small screens
 
-- Below `md` the sidebar is a 56 px top bar (FinCrew, shop name, Menu) — `(app)/nav-shell.tsx`;
-  the menu holds the shop switcher, sections and sign out, and closes after navigating.
+- Below `md` the sidebar slides in from the top bar's menu button (shadcn Sidebar's phone
+  sheet) and closes after choosing a section.
 - Attendance on a phone: **Day view** (design "Web · attendance on a phone (day view)"):
   previous/next day within the month up to today, chips (present incl. half days, absent,
   late, not marked), one row per person (status, minutes late, Days · Late · Absent for the

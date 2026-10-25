@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { formatDisplayDate, minutesToInput, paiseToInput } from '@fincrew/core';
+import { useDialogDone } from '@/components/app/form-dialog';
 import { useFormAction } from '@/lib/use-form-action';
 import { buttonClass, dateFieldProps, inputClass } from '../../../components';
 import { savePay, type PayState } from './actions';
@@ -45,6 +46,7 @@ export function PayForm({
   labels: Labels;
 }) {
   const [state, onSubmit, pending] = useFormAction<PayState>(savePay.bind(null, staffId), {});
+  useDialogDone(state);
   const [payType, setPayType] = useState<PayType>(current?.payType ?? 'monthly');
 
   return (
@@ -160,7 +162,7 @@ export function PayForm({
           {state.error}
         </p>
       )}
-      <button type="submit" disabled={pending} className={buttonClass}>
+      <button type="submit" disabled={pending} aria-busy={pending} className={buttonClass}>
         {pending ? labels.saving : labels.save}
       </button>
     </form>

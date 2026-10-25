@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { CATEGORY_COLOURS, CATEGORY_ICONS } from '@/lib/expense-style';
 import { t } from '@/lib/i18n';
+import { useDialogDone } from '@/components/app/form-dialog';
 import { useFormAction } from '@/lib/use-form-action';
 import { buttonClass, inputClass, quietButtonClass } from '../../../components';
 import { FormMessage } from '../holidays/holiday-forms';
@@ -23,6 +24,7 @@ export function CategoryForm({
     saveCategory.bind(null, category?.id ?? null),
     {},
   );
+  useDialogDone(state);
   const [colour, setColour] = useState(category?.colour ?? 'teal');
   const tone = CATEGORY_COLOURS[colour] ?? CATEGORY_COLOURS.slate!;
   return (
@@ -83,6 +85,7 @@ export function CategoryForm({
       <button
         type="submit"
         disabled={pending}
+        aria-busy={pending}
         className={category ? `${quietButtonClass} w-fit` : buttonClass}
       >
         {pending ? t('settings.saving') : category ? t(`${c}.save`) : t(`${c}.create`)}
@@ -109,6 +112,7 @@ export function ActionLink({
       <button
         type="button"
         disabled={pending}
+        aria-busy={pending}
         onClick={() =>
           start(async () => {
             const r =

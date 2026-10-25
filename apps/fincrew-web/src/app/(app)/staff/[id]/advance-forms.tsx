@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { formatDisplayDate, paiseToInput } from '@fincrew/core';
+import { useDialogDone } from '@/components/app/form-dialog';
 import { useFormAction } from '@/lib/use-form-action';
 import { buttonClass, dateFieldProps, inputClass } from '../../../components';
 import { recordAdvance, saveAdvanceSettings, undoLine, type AdvanceState } from './advance-actions';
@@ -44,6 +45,7 @@ export function AdvanceForm({
     recordAdvance.bind(null, staffId),
     {},
   );
+  useDialogDone(state);
   const [kind, setKind] = useState<'given' | 'repaid'>('given');
 
   return (
@@ -115,7 +117,7 @@ export function AdvanceForm({
         </label>
       )}
       <Message state={state} />
-      <button type="submit" disabled={pending} className={buttonClass}>
+      <button type="submit" disabled={pending} aria-busy={pending} className={buttonClass}>
         {pending ? labels.saving : labels.save}
       </button>
     </form>
@@ -138,6 +140,7 @@ export function AdvanceSettingsForm({
     saveAdvanceSettings.bind(null, staffId),
     {},
   );
+  useDialogDone(state);
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-3">
       <label className="text-label-sm block">
@@ -162,6 +165,7 @@ export function AdvanceSettingsForm({
       <button
         type="submit"
         disabled={pending}
+        aria-busy={pending}
         className="text-label-sm min-h-12 rounded-[var(--radius-md)] border border-[var(--line-strong)] px-4 disabled:opacity-[var(--opacity-disabled)]"
       >
         {pending ? labels.saving : labels.save}
@@ -188,6 +192,7 @@ export function UndoButton({
       <button
         type="button"
         disabled={pending}
+        aria-busy={pending}
         onClick={() =>
           start(async () => {
             const r = await undoLine(staffId, lineId);

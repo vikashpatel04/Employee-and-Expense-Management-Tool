@@ -56,6 +56,7 @@ export function DayChange({
               key={s}
               type="button"
               disabled={pending}
+              aria-busy={pending}
               onClick={() => run(s)}
               className="text-caption inline-flex min-h-10 items-center gap-1 rounded-[var(--radius-pill)] px-3 disabled:opacity-[var(--opacity-disabled)]"
               style={{
@@ -71,6 +72,7 @@ export function DayChange({
         <button
           type="button"
           disabled={pending}
+          aria-busy={pending}
           onClick={() => run('clear')}
           className="text-caption inline-flex min-h-10 items-center gap-1 rounded-[var(--radius-pill)] px-3 text-[var(--status-unmarked)] outline-[1.5px] outline-[var(--line-strong)] outline-dashed disabled:opacity-[var(--opacity-disabled)]"
         >

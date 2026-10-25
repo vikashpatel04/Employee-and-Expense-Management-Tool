@@ -186,6 +186,7 @@ export function AttendanceGrid({
                     key={s}
                     type="button"
                     disabled={pending}
+                    aria-busy={pending}
                     onClick={() =>
                       save(
                         [...selected].map((k) => {
@@ -209,6 +210,7 @@ export function AttendanceGrid({
               <button
                 type="button"
                 disabled={pending}
+                aria-busy={pending}
                 onClick={() =>
                   save(
                     [...selected].map((k) => {
@@ -243,6 +245,7 @@ export function AttendanceGrid({
           <button
             type="button"
             disabled={pending || todayUnmarked.length === 0}
+            aria-busy={pending}
             onClick={() => save(todayUnmarked, 'present')}
             title={todayUnmarked.length === 0 ? labels.markTodayNone : undefined}
             className="text-label-sm inline-flex min-h-12 items-center gap-2 rounded-[var(--radius-md)] bg-[var(--accent)] px-4 text-[var(--on-accent)] disabled:opacity-[var(--opacity-disabled)]"
@@ -531,7 +534,7 @@ function DayView({
       {people.length === 0 ? (
         <p className="text-body text-[var(--ink-muted)]">{t('attendance.dayEmpty')}</p>
       ) : (
-        <ul className="overflow-hidden rounded-[var(--radius-lg)] bg-[var(--surface)] shadow-[var(--elevation-1)]">
+        <ul className="overflow-hidden rounded-lg border bg-card shadow-xs">
           {people.map(({ row: r, cell: c }) => {
             const key = `${r.staffId}|${date}`;
             const isSel = selected.has(key);

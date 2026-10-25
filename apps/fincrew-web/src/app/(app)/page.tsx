@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { PendingLink as Link } from '@/components/app/pending-link';
 import type { ReactNode } from 'react';
 import {
   ArrowUpRight,
@@ -41,8 +41,7 @@ import { Avatar, PageHeader, quietButtonClass } from '../components';
 import { MarkTodayButton } from './mark-today-button';
 
 const MONTH = new Intl.DateTimeFormat('en-IN', { month: 'long', year: 'numeric', timeZone: 'UTC' });
-const card =
-  'flex flex-col gap-4 rounded-[var(--radius-lg)] bg-[var(--surface)] p-5 shadow-[var(--elevation-1)]';
+const card = 'flex flex-col gap-4 rounded-lg border bg-card p-5 shadow-xs';
 const STEPS = ['worked', 'finalized', 'paid'] as const;
 const REACHED: Record<SalaryState, number> = { not_run: 0, draft: 1, finalized: 2, paid: 3 };
 

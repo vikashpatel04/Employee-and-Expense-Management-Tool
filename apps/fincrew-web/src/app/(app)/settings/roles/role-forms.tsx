@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import type { PermissionKey } from '@fincrew/core';
 import { t } from '@/lib/i18n';
+import { useDialogDone } from '@/components/app/form-dialog';
 import { useFormAction } from '@/lib/use-form-action';
 import { buttonClass, inputClass, quietButtonClass } from '../../../components';
 import { FormMessage } from '../holidays/holiday-forms';
@@ -49,6 +50,7 @@ function PermissionChecklist({ groups, checked }: { groups: Groups; checked: rea
 
 export function NewRoleForm({ groups }: { groups: Groups }) {
   const [state, onSubmit, pending] = useFormAction<RoleState>(createRole, {});
+  useDialogDone(state);
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4">
       <label className="text-label-sm block">
@@ -57,7 +59,7 @@ export function NewRoleForm({ groups }: { groups: Groups }) {
       </label>
       <PermissionChecklist groups={groups} checked={[]} />
       <FormMessage state={state} />
-      <button type="submit" disabled={pending} className={buttonClass}>
+      <button type="submit" disabled={pending} aria-busy={pending} className={buttonClass}>
         {pending ? t('settings.saving') : t('settings.roles.create')}
       </button>
     </form>
@@ -77,11 +79,12 @@ export function PermissionsForm({
     savePermissions.bind(null, roleId),
     {},
   );
+  useDialogDone(state);
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4">
       <PermissionChecklist groups={groups} checked={checked} />
       <FormMessage state={state} />
-      <button type="submit" disabled={pending} className={buttonClass}>
+      <button type="submit" disabled={pending} aria-busy={pending} className={buttonClass}>
         {pending ? t('settings.saving') : t('settings.roles.detail.savePermissions')}
       </button>
     </form>
@@ -96,6 +99,7 @@ export function PeopleForm({
   people: { id: string; name: string; hasLogin: boolean; isStaff: boolean; checked: boolean }[];
 }) {
   const [state, onSubmit, pending] = useFormAction<RoleState>(savePeople.bind(null, roleId), {});
+  useDialogDone(state);
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-3">
       <ul className="flex max-h-96 flex-col overflow-y-auto rounded-[var(--radius-md)] border border-[var(--line)]">
@@ -129,7 +133,7 @@ export function PeopleForm({
         ))}
       </ul>
       <FormMessage state={state} />
-      <button type="submit" disabled={pending} className={buttonClass}>
+      <button type="submit" disabled={pending} aria-busy={pending} className={buttonClass}>
         {pending ? t('settings.saving') : t('settings.roles.detail.savePeople')}
       </button>
     </form>
@@ -138,6 +142,7 @@ export function PeopleForm({
 
 export function RenameRoleForm({ roleId, name }: { roleId: string; name: string }) {
   const [state, onSubmit, pending] = useFormAction<RoleState>(renameRole.bind(null, roleId), {});
+  useDialogDone(state);
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-2">
       <div className="flex items-end gap-2">
@@ -145,7 +150,7 @@ export function RenameRoleForm({ roleId, name }: { roleId: string; name: string 
           {t('settings.roles.name')}
           <input name="name" required maxLength={60} defaultValue={name} className={inputClass} />
         </label>
-        <button type="submit" disabled={pending} className={quietButtonClass}>
+        <button type="submit" disabled={pending} aria-busy={pending} className={quietButtonClass}>
           {pending ? t('settings.saving') : t('settings.roles.detail.rename')}
         </button>
       </div>
@@ -164,6 +169,7 @@ export function DeleteRoleButton({ roleId }: { roleId: string }) {
       <button
         type="button"
         disabled={pending}
+        aria-busy={pending}
         onClick={() =>
           asking
             ? start(async () => {
@@ -188,6 +194,7 @@ export function DeleteRoleButton({ roleId }: { roleId: string }) {
 /** Add a helper (name and phone). */
 export function HelperForm() {
   const [state, onSubmit, pending] = useFormAction<RoleState>(addHelper, {});
+  useDialogDone(state);
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-3">
       <div className="grid gap-3 sm:grid-cols-2">
@@ -201,7 +208,12 @@ export function HelperForm() {
         </label>
       </div>
       <FormMessage state={state} />
-      <button type="submit" disabled={pending} className={`${quietButtonClass} w-fit`}>
+      <button
+        type="submit"
+        disabled={pending}
+        aria-busy={pending}
+        className={`${quietButtonClass} w-fit`}
+      >
         {pending ? t('settings.saving') : t('settings.roles.helpers.add')}
       </button>
     </form>
@@ -219,6 +231,7 @@ export function RemoveHelperButton({ personId, name }: { personId: string; name:
       <button
         type="button"
         disabled={pending}
+        aria-busy={pending}
         aria-label={asking ? undefined : t('settings.roles.helpers.removeLabel', { name })}
         onClick={() =>
           asking

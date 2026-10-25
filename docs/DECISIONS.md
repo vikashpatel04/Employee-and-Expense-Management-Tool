@@ -466,6 +466,22 @@ Owner's instruction: every value is customisable by the admin, and staff may hav
   accept, PIN sign-in).
 - **Payslip share text lives in `packages/data`** (`payslipShareText`, takes the app's `t`), so
   Staffora and FinCrew send the same words.
+- **Website on shadcn/ui, themed by our tokens** (owner, 2026-10-25: "use shadcn everywhere with
+  our theme"). shadcn's colour names are mapped onto the FinCrew tokens in `globals.css`
+  instead of a second palette, so dark mode and brand colours stay in one place; shadcn's own
+  variables are not defined because its `--accent` would clash with our teal `--accent`.
+- **The website has its own, denser scale.** The design tokens are sized for phones (48 px
+  taps, 20 px corners); on the website the same token names get desk sizes in `globals.css`.
+  The phone apps are unchanged.
+- **Tasks open in dialogs; pages show lists and numbers** (owner: "a task should be in modal").
+  `FormDialog` closes on the action's `done` or on a redirect; redirects that close a dialog
+  carry a changing value so saving the same thing twice still closes it.
+- **Every click shows it's working** (owner: "no loading … I see nothing happening"): a top bar
+  and a faded content area while a link loads, spinners on the sidebar item / tab being opened,
+  skeletons for new sections and tabs (`<Suspense key={tab}>`), spinners on busy buttons via
+  `aria-busy`, toasts for results.
+- **shadcn's CSS helper is copied, not installed**: the `shadcn` package (a CLI with many
+  dependencies) was only needed for one small CSS file, now `src/app/shadcn-tailwind.css`.
 - **Paying part of a payslip is in the app's pay sheet** (design "Salary run · pay one" has the
   amount field). `paySalary` takes an optional `amount` for one payslip; the database trigger
   already refuses paying more than net pay, so several part payments add up safely. "Pay all

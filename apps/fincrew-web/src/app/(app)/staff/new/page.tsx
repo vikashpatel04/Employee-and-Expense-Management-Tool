@@ -12,7 +12,7 @@ export default async function NewStaffPage() {
   return (
     <>
       <PageHeader title={t('staff.newTitle')} subtitle={t('staff.newSubtitle')} />
-      <div className="rounded-[var(--radius-lg)] bg-[var(--surface)] p-6 shadow-[var(--elevation-1)]">
+      <div className="rounded-lg border bg-card p-6 shadow-xs">
         <AddStaffForm
           today={todayIST()}
           labels={{

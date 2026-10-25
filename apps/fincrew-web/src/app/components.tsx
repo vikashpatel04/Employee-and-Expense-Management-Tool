@@ -25,12 +25,12 @@ export function PageHeader({
   actions?: ReactNode;
 }) {
   return (
-    <div className="flex flex-wrap items-end justify-between gap-4">
-      <div className="flex flex-col gap-0.5">
-        <h1 className="text-title-xl">{title}</h1>
-        {subtitle && <p className="text-body text-[var(--ink-muted)]">{subtitle}</p>}
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex min-w-0 flex-col">
+        <h1 className="text-xl font-semibold tracking-tight">{title}</h1>
+        {subtitle && <p className="text-muted-foreground text-sm">{subtitle}</p>}
       </div>
-      {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
+      {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
     </div>
   );
 }
@@ -50,7 +50,7 @@ export function AuthCard({
 }) {
   return (
     <main className="flex min-h-dvh items-center justify-center px-4">
-      <div className="w-full max-w-sm rounded-[var(--radius-lg)] bg-[var(--surface)] p-6 shadow-[var(--elevation-1)]">
+      <div className="w-full max-w-sm rounded-lg border bg-card p-6 shadow-xs">
         <h1 className="text-title-lg">{title}</h1>
         {subtitle && <p className="text-body mt-1 text-[var(--ink-muted)]">{subtitle}</p>}
         <div className="mt-6">{children}</div>
@@ -59,11 +59,13 @@ export function AuthCard({
   );
 }
 
+// Form classes in the shadcn/ui look (src/components/ui) on FinCrew tokens, for the forms that
+// still use plain elements; new screens use the components.
 export const inputClass =
-  'text-body-lg mt-1 block w-full min-h-[var(--tap-min)] rounded-[var(--radius-sm)] border border-[var(--line-strong)] bg-[var(--surface)] px-3 outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus)]';
+  'mt-1 flex min-h-9 w-full min-w-0 rounded-md border border-input bg-card px-3 py-1.5 text-sm shadow-xs transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50 aria-invalid:border-destructive';
 
 export const buttonClass =
-  'text-label w-full min-h-[var(--tap-primary)] rounded-[var(--radius-md)] bg-[var(--accent)] px-4 text-[var(--on-accent)] active:bg-[var(--accent-strong)] disabled:opacity-[var(--opacity-disabled)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus)]';
+  'inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-md bg-primary px-3 text-sm font-medium whitespace-nowrap text-primary-foreground transition-colors outline-none hover:bg-primary/90 focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 [&_svg]:size-4 [&_svg]:shrink-0';
 
 /**
  * Props for a date field. Dates are typed as DD/MM/YYYY everywhere (a browser date picker would
@@ -80,4 +82,4 @@ export const dateFieldProps = {
 
 /** Secondary, outlined button (sign out, switch shop). */
 export const quietButtonClass =
-  'text-label-sm min-h-[var(--tap-min)] rounded-[var(--radius-md)] border border-[var(--line-strong)] px-4 active:bg-[var(--surface-pressed)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus)]';
+  'inline-flex h-9 items-center justify-center gap-1.5 rounded-md border border-border bg-card px-3 text-sm font-medium whitespace-nowrap shadow-xs transition-colors outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 [&_svg]:size-4 [&_svg]:shrink-0';

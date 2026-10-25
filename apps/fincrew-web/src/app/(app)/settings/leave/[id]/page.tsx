@@ -1,6 +1,7 @@
-import Link from 'next/link';
+import { PendingLink as Link } from '@/components/app/pending-link';
 import { notFound, redirect } from 'next/navigation';
-import { ChevronLeft } from 'lucide-react';
+import { CalendarClock, ChevronLeft, Pencil, Users } from 'lucide-react';
+import { FormDialog } from '@/components/app/form-dialog';
 import { effectiveOn } from '@fincrew/core';
 import { loadLeaveSetup } from '@fincrew/data';
 import { formatDate, todayIST } from '@/lib/format';
@@ -9,10 +10,10 @@ import { describeVersion } from '@/lib/leave-text';
 import { requireMe } from '@/lib/session';
 import { SETTINGS_SECTIONS } from '@/lib/settings-access';
 import { createClient } from '@/lib/supabase/server';
-import { Avatar, quietButtonClass } from '../../../../components';
+import { Avatar } from '../../../../components';
 import { ArchiveButton, AssignForm, LeaveVersionForm, RenameForm } from '../leave-forms';
 
-const card = 'rounded-[var(--radius-lg)] bg-[var(--surface)] p-5 shadow-[var(--elevation-1)]';
+const card = 'rounded-lg border bg-card p-4 shadow-xs';
 const row =
   'flex items-center justify-between gap-3 border-b border-[var(--line)] px-4 py-3 last:border-0';
 
@@ -43,19 +44,66 @@ export default async function LeaveTemplatePage({
     <>
       <Link
         href="/settings/leave"
-        className={`${quietButtonClass} inline-flex w-fit items-center gap-1 border-0 px-2`}
+        className="text-muted-foreground hover:text-foreground inline-flex w-fit items-center gap-1 text-sm"
       >
-        <ChevronLeft size={20} aria-hidden="true" />
+        <ChevronLeft className="size-4" aria-hidden="true" />
         {t('settings.leave.detail.back')}
       </Link>
-      <h2 className="text-title-lg flex flex-wrap items-center gap-2">
-        {tpl.name}
-        {tpl.archived && (
-          <span className="text-caption rounded-full bg-[var(--surface-muted)] px-2 py-0.5 text-[var(--ink-muted)]">
-            {t('settings.leave.archived')}
-          </span>
-        )}
-      </h2>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="flex flex-wrap items-center gap-2 text-lg font-semibold">
+          {tpl.name}
+          {tpl.archived && (
+            <span className="text-caption rounded-full bg-[var(--surface-muted)] px-2 py-0.5 text-[var(--ink-muted)]">
+              {t('settings.leave.archived')}
+            </span>
+          )}
+        </h2>
+        <div className="flex flex-wrap items-center gap-2">
+          <FormDialog
+            title={t('settings.leave.detail.rename')}
+            trigger={
+              <>
+                <Pencil aria-hidden="true" />
+                {t('settings.leave.detail.rename')}
+              </>
+            }
+          >
+            <RenameForm templateId={id} name={tpl.name} />
+          </FormDialog>
+          {me.permissions.includes('staff.edit') && !tpl.archived && staff.length > 0 && (
+            <FormDialog
+              title={t('settings.leave.detail.assign')}
+              description={t('settings.leave.detail.assignHint')}
+              trigger={
+                <>
+                  <Users aria-hidden="true" />
+                  {t('settings.leave.detail.assign')}
+                </>
+              }
+            >
+              <AssignForm
+                templateId={id}
+                defaultDate={today}
+                staff={staff.map((s) => ({ id: s.id, name: s.name, current: s.templateName }))}
+              />
+            </FormDialog>
+          )}
+          <FormDialog
+            title={t('settings.leave.detail.change')}
+            description={t('settings.leave.detail.changeHint')}
+            variant="default"
+            wide
+            trigger={
+              <>
+                <CalendarClock aria-hidden="true" />
+                {t('settings.leave.detail.change')}
+              </>
+            }
+          >
+            <LeaveVersionForm templateId={id} initial={current ?? latest} defaultDate={today} />
+          </FormDialog>
+        </div>
+      </div>
       {saved && (
         <p
           role="status"
@@ -74,7 +122,7 @@ export default async function LeaveTemplatePage({
                 {t('settings.leave.noVersion')}
               </p>
             ) : (
-              <ul className="overflow-hidden rounded-[var(--radius-lg)] bg-[var(--surface)] shadow-[var(--elevation-1)]">
+              <ul className="bg-card overflow-hidden rounded-lg border shadow-xs">
                 {versions.map((v) => (
                   <li key={v.effectiveFrom} className={row}>
                     <span className="flex min-w-0 flex-col gap-0.5">
@@ -108,7 +156,7 @@ export default async function LeaveTemplatePage({
                 {t('settings.leave.detail.noStaff')}
               </p>
             ) : (
-              <ul className="overflow-hidden rounded-[var(--radius-lg)] bg-[var(--surface)] shadow-[var(--elevation-1)]">
+              <ul className="bg-card overflow-hidden rounded-lg border shadow-xs">
                 {onThis.map((s) => (
                   <li key={s.id} className={row}>
                     <span className="flex items-center gap-3">
@@ -127,36 +175,12 @@ export default async function LeaveTemplatePage({
           </section>
 
           <section className={`${card} flex flex-col gap-4`}>
-            <RenameForm templateId={id} name={tpl.name} />
             <div className="flex flex-col gap-1">
               <ArchiveButton templateId={id} archived={tpl.archived} />
               <p className="text-caption text-[var(--ink-muted)]">
                 {t('settings.leave.detail.archiveHint')}
               </p>
             </div>
-          </section>
-        </div>
-
-        <div className="flex flex-col gap-4">
-          {me.permissions.includes('staff.edit') && !tpl.archived && staff.length > 0 && (
-            <section className={card}>
-              <h3 className="text-title-md">{t('settings.leave.detail.assign')}</h3>
-              <p className="text-body mt-1 mb-4 text-[var(--ink-muted)]">
-                {t('settings.leave.detail.assignHint')}
-              </p>
-              <AssignForm
-                templateId={id}
-                defaultDate={today}
-                staff={staff.map((s) => ({ id: s.id, name: s.name, current: s.templateName }))}
-              />
-            </section>
-          )}
-          <section className={card}>
-            <h3 className="text-title-md">{t('settings.leave.detail.change')}</h3>
-            <p className="text-body mt-1 mb-4 text-[var(--ink-muted)]">
-              {t('settings.leave.detail.changeHint')}
-            </p>
-            <LeaveVersionForm templateId={id} initial={current ?? latest} defaultDate={today} />
           </section>
         </div>
       </div>

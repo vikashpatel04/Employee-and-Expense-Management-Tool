@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { PendingLink as Link } from '@/components/app/pending-link';
 import { redirect } from 'next/navigation';
 import { formatINR } from '@fincrew/core';
 import { loadAdvanceBalances } from '@fincrew/data';
@@ -21,14 +21,14 @@ export default async function AdvancesPage() {
         title={t('advances.title')}
         subtitle={t('advances.subtitle', { shop: me.shopName })}
       />
-      <section className="flex w-fit flex-col gap-1 rounded-[var(--radius-lg)] bg-[var(--surface)] p-4 shadow-[var(--elevation-1)]">
+      <section className="flex w-fit flex-col gap-1 rounded-lg border bg-card p-4 shadow-xs">
         <span className="text-caption text-[var(--ink-muted)]">{t('advances.total')}</span>
         <span className="text-money-lg text-[var(--money-advance)]">{formatINR(total)}</span>
       </section>
       {rows.length === 0 ? (
         <p className="text-body-lg text-[var(--ink-muted)]">{t('advances.empty')}</p>
       ) : (
-        <div className="overflow-x-auto rounded-[var(--radius-lg)] bg-[var(--surface)] shadow-[var(--elevation-1)]">
+        <div className="overflow-x-auto rounded-lg border bg-card shadow-xs">
           <table className="w-full min-w-[520px] border-collapse tabular-nums">
             <thead>
               <tr className="text-caption text-left text-[var(--ink-muted)]">

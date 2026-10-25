@@ -1,21 +1,20 @@
 import type { ReactNode } from 'react';
-import { LogOut } from 'lucide-react';
 import { countPendingRequests } from '@fincrew/data';
 import { t } from '@/lib/i18n';
 import { requireMe } from '@/lib/session';
 import { settingsSections } from '@/lib/settings-access';
 import { createClient } from '@/lib/supabase/server';
+import { NavDim } from '@/components/app/pending-link';
+import { Separator } from '@/components/ui/separator';
+import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AuthCard, buttonClass } from '../components';
 import { signOut } from '../login/actions';
-import { NavLinks, type NavItem } from './nav';
-import { NavShell } from './nav-shell';
-import { ShopSwitcher } from './shop-switcher';
+import { AppSidebar, type NavItem } from './app-sidebar';
 
 /**
- * Signed-in shell (design: "Web · attendance grid"): sidebar with the shop switcher and the
- * sections this person may open, main area beside it; on a phone the sidebar folds into a top
- * bar with a Menu button (`nav-shell.tsx`).
- * Sections appear here as they are built.
+ * Signed-in shell: a fixed sidebar (`app-sidebar.tsx`, shadcn Sidebar) with the shop switcher
+ * and the sections this person may open; beside it a slim top bar and the page, which is the only
+ * part that scrolls. On a phone the sidebar slides in from the menu button.
  */
 export default async function AppLayout({ children }: { children: ReactNode }) {
   const me = await requireMe();
@@ -56,29 +55,28 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="flex min-h-dvh flex-wrap items-stretch">
-      <NavShell
-        label={t('nav.main')}
-        brand={t('appName')}
+    <SidebarProvider className="h-svh overflow-hidden">
+      <AppSidebar
+        items={items}
+        shopId={me.shopId}
         shopName={me.shopName}
-        menuLabel={t('nav.menu')}
-        closeLabel={t('nav.closeMenu')}
-      >
-        <span className="text-title-md hidden px-3 pb-3 text-[var(--accent-ink)] md:block">
-          {t('appName')}
-        </span>
-        <ShopSwitcher me={me} />
-        <NavLinks items={items} label={t('nav.main')} />
-        <form action={signOut} className="mt-auto pt-4">
-          <button className="text-label-sm flex min-h-11 w-full items-center gap-3 rounded-[var(--radius-md)] px-3 text-[var(--ink-muted)] hover:bg-[var(--surface-muted)]">
-            <LogOut size={20} aria-hidden="true" />
-            {t('auth.signOut')}
-          </button>
-        </form>
-      </NavShell>
-      <main className="flex min-w-0 flex-[999_1_560px] flex-col gap-5 px-4 py-6 sm:px-8">
-        {children}
-      </main>
-    </div>
+        shops={me.memberships.map((m) => ({ shopId: m.shopId, shopName: m.shopName }))}
+        canAddShop={me.memberships.some((m) => m.isOwner)}
+      />
+      <SidebarInset className="min-h-0 overflow-hidden">
+        <header className="bg-background/95 flex h-12 shrink-0 items-center gap-2 border-b px-3 md:px-4">
+          <SidebarTrigger />
+          <Separator orientation="vertical" className="h-5" />
+          <span className="text-muted-foreground truncate text-sm font-medium">{me.shopName}</span>
+        </header>
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          <NavDim>
+            <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-4 p-4 md:p-6">
+              {children}
+            </div>
+          </NavDim>
+        </div>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }

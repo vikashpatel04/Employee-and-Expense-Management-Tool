@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { PendingLink as Link } from '@/components/app/pending-link';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { formatTimeOfDay, monthDates, monthOf, weekday } from '@fincrew/core';
 import { loadAttendanceMonth } from '@fincrew/data';
@@ -97,7 +97,7 @@ export async function AttendanceTab({
 
   return (
     <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
-      <section className="flex flex-col gap-3 rounded-[var(--radius-lg)] bg-[var(--surface)] p-4 shadow-[var(--elevation-1)]">
+      <section className="flex flex-col gap-3 rounded-lg border bg-card p-4 shadow-xs">
         <div className="flex items-center justify-between gap-2">
           <Link
             href={`?tab=attendance&month=${ym(prev.year, prev.month)}`}
@@ -184,7 +184,7 @@ export async function AttendanceTab({
       </section>
 
       <div className="flex flex-col gap-4">
-        <section className="flex flex-col gap-2 rounded-[var(--radius-lg)] bg-[var(--surface)] p-4 shadow-[var(--elevation-1)]">
+        <section className="flex flex-col gap-2 rounded-lg border bg-card p-4 shadow-xs">
           <h3 className="text-title-md">
             {short[weekday(day)]} {formatDate(day)}
           </h3>
@@ -212,7 +212,7 @@ export async function AttendanceTab({
           {canChange && <DayChange staffId={staffId} date={day} current={cell.status} />}
         </section>
 
-        <section className="flex flex-col gap-2 rounded-[var(--radius-lg)] bg-[var(--surface)] p-4 shadow-[var(--elevation-1)]">
+        <section className="flex flex-col gap-2 rounded-lg border bg-card p-4 shadow-xs">
           <h3 className="text-label-sm">
             {t('staffDetail.attendance.payable', {
               days: row.payableDays,

@@ -89,8 +89,13 @@ expenses, Staffora requests. Fill the design-system gaps listed above as screens
 ## How the website uses it
 
 - `apps/fincrew-web` imports `@fincrew/ui/tokens.css` (colours light/dark, sizes, `.text-*`
-  styles) and loads Anek Latin with `next/font`. Components use token variables only
-  (`bg-[var(--surface)]`, `text-[var(--ink-muted)]`, …). Icons: Lucide (24px, 2px stroke).
+  styles) and loads Anek Latin with `next/font`. Icons: Lucide.
+- **Since 2026-10-25 the website uses shadcn/ui** (owner's request) themed by the tokens:
+  `apps/fincrew-web/src/app/globals.css` maps shadcn's colour names onto the token variables
+  and gives the tokens denser **web sizes** (36 px controls, 10 px corners, smaller titles).
+  New website UI uses `src/components/ui` (shadcn) and `src/components/app` (FormDialog,
+  PendingLink, TabLinks, skeletons); tasks open in dialogs, not as cards in the page. See
+  `docs/features/fincrew-web.md` → "Look and feel".
 - Web screens follow the canvases' "Web ·" artboards; Android screens will follow the phone
   artboards (Phase 5) using `themes` from `@fincrew/ui`.
 - Owner rule overrides the design voice: **dates are DD/MM/YYYY** everywhere.

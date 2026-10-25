@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { PendingLink as Link } from '@/components/app/pending-link';
 import { redirect } from 'next/navigation';
 import { formatINR, formatTimeOfDay, minutesOfDayIST, weekday } from '@fincrew/core';
 import {
@@ -16,7 +16,7 @@ import { createClient } from '@/lib/supabase/server';
 import { Avatar, PageHeader } from '../../components';
 import { DecideForm, type DecideLabels } from './decide-form';
 
-const card = 'rounded-[var(--radius-lg)] bg-[var(--surface)] p-5 shadow-[var(--elevation-1)]';
+const card = 'rounded-lg border bg-card p-5 shadow-xs';
 const time = (iso: string) => formatTimeOfDay(minutesOfDayIST(new Date(iso)));
 
 /** "Mon 26/10/2026 – Tue 27/10/2026 · 2 days" or "₹2,000.00". */

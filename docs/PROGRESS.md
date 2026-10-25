@@ -277,6 +277,18 @@ Tables still to add (with the phase that uses them, each with RLS tests): `staff
 
 ## Session log
 
+- **2026-10-25** — **Website rework** (owner: whole page scrolled with the sidebar, too roomy,
+  forms as cards in pages, no loading, "use shadcn everywhere with our theme"). shadcn/ui
+  (radix, `src/components/ui`) mapped onto the tokens; web scale in `globals.css`; fixed shadcn
+  Sidebar shell; `src/components/app`: `PendingLink` (top bar, `NavDim`, link spinners),
+  `TabLinks` + keyed Suspense skeletons, `FormDialog` / `useDialogDone`, `FormSubmit`,
+  skeletons; `aria-busy` button spinners; sonner toasts. Forms moved into dialogs on staff list,
+  staff page (header + Overview + Pay), expenses, settings (categories, holidays, leave, roles);
+  salary Finalize / Pay confirm in dialogs. Typecheck 9/9, website build OK, tests unchanged.
+  Checked in the browser: sign-in page, and on a temporary local page (deleted) the shell (only
+  the content scrolls), Add staff dialog (opens, Cancel closes), the phone menu. **Not seen
+  with real data** — every signed-in page needs the owner's sign-in.
+
 - **2026-10-25** — Pushed the Staffora work (CI run 40165654747: both migrations, new
   `staff-auth` live; types regenerated). **FinCrew app gaps**: `packages/data` `pay-write.ts`
   (`savePay`, `saveAdvanceSettings`, now also behind the website's actions), `paySalary`

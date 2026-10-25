@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { PendingLink as Link } from '@/components/app/pending-link';
 import { redirect } from 'next/navigation';
 import { Camera, ChevronLeft, ChevronRight, Download, Plus } from 'lucide-react';
 import { formatINR, monthOf, weekday } from '@fincrew/core';
@@ -8,6 +8,7 @@ import { formatDate, todayIST } from '@/lib/format';
 import { t } from '@/lib/i18n';
 import { requireMe } from '@/lib/session';
 import { createClient } from '@/lib/supabase/server';
+import { FormDialog } from '@/components/app/form-dialog';
 import { PageHeader, quietButtonClass } from '../../components';
 import { ExpenseForm, ExpensePanel, type FormExpense } from './expense-form';
 
@@ -17,7 +18,7 @@ const shift = (y: number, m: number, by: number) => {
   const d = new Date(Date.UTC(y, m - 1 + by, 1));
   return { year: d.getUTCFullYear(), month: d.getUTCMonth() + 1 };
 };
-const card = 'rounded-[var(--radius-lg)] bg-[var(--surface)] p-5 shadow-[var(--elevation-1)]';
+const card = 'rounded-lg border bg-card p-5 shadow-xs';
 
 /** Expenses for a month (design: "Web · expenses"): totals, by category, list, add/edit panel. */
 export default async function ExpensesPage({
@@ -112,13 +113,26 @@ export default async function ExpensesPage({
               </a>
             )}
             {can('expenses.add') && activeCats.length > 0 && (
-              <Link
-                href={`${here}&add=1`}
-                className="text-label-sm inline-flex min-h-12 items-center gap-2 rounded-[var(--radius-md)] bg-[var(--accent)] px-4 text-[var(--on-accent)]"
+              <FormDialog
+                title={t('expenses.form.addTitle')}
+                variant="default"
+                trigger={
+                  <>
+                    <Plus aria-hidden="true" />
+                    {t('expenses.add')}
+                  </>
+                }
               >
-                <Plus size={20} aria-hidden="true" />
-                {t('expenses.add')}
-              </Link>
+                <ExpenseForm
+                  expense={null}
+                  categories={activeCats.map((c) => ({ id: c.id, name: c.name, icon: c.icon }))}
+                  staff={staff.filter((s) => s.active).map((s) => ({ id: s.id, name: s.name }))}
+                  today={today}
+                  monthName={monthName}
+                  smallLimit={toShopRules(shop?.settings).smallExpenseLimit ?? null}
+                  canDelete={false}
+                />
+              </FormDialog>
             )}
           </>
         }
@@ -186,10 +200,7 @@ export default async function ExpensesPage({
             ],
           ] as const
         ).map(([k, v, n, colour, metaKey]) => (
-          <section
-            key={k}
-            className="flex flex-col gap-1 rounded-[var(--radius-lg)] bg-[var(--surface)] p-4 shadow-[var(--elevation-1)]"
-          >
+          <section key={k} className="flex flex-col gap-1 rounded-lg border bg-card p-4 shadow-xs">
             <span className="text-caption font-semibold" style={colour ? { color: colour } : {}}>
               {t(`expenses.tiles.${k}`)}
             </span>

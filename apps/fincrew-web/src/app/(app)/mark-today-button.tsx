@@ -16,6 +16,7 @@ export function MarkTodayButton({ cells }: { cells: { staffId: string; date: str
       <button
         type="button"
         disabled={pending || cells.length === 0}
+        aria-busy={pending}
         onClick={() =>
           start(async () => {
             const r = await setAttendance(cells, 'present');

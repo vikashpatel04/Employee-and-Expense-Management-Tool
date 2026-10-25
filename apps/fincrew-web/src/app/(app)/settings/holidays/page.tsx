@@ -1,6 +1,7 @@
-import Link from 'next/link';
+import { PendingLink as Link } from '@/components/app/pending-link';
 import { redirect } from 'next/navigation';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { FormDialog } from '@/components/app/form-dialog';
 import { monthOf, weekday } from '@fincrew/core';
 import { formatDate, todayIST } from '@/lib/format';
 import { t } from '@/lib/i18n';
@@ -10,7 +11,7 @@ import { createClient } from '@/lib/supabase/server';
 import { quietButtonClass } from '../../../components';
 import { HolidayForm, RemoveHolidayButton } from './holiday-forms';
 
-const card = 'rounded-[var(--radius-lg)] bg-[var(--surface)] p-5 shadow-[var(--elevation-1)]';
+const card = 'rounded-lg border bg-card p-4 shadow-xs';
 
 /** Shop holidays by year: everyone gets them, each paid or not (PLAN §4.3). */
 export default async function HolidaysPage({
@@ -39,9 +40,24 @@ export default async function HolidaysPage({
   const yearLink = `${quietButtonClass} inline-flex items-center justify-center px-2`;
 
   return (
-    <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+    <div className="flex max-w-3xl flex-col gap-3">
       <section className="flex flex-col gap-3">
-        <p className="text-body text-[var(--ink-muted)]">{t('settings.holidays.subtitle')}</p>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-muted-foreground text-sm">{t('settings.holidays.subtitle')}</p>
+          <FormDialog
+            title={t('settings.holidays.add')}
+            description={t('settings.holidays.addHint')}
+            variant="default"
+            trigger={
+              <>
+                <Plus aria-hidden="true" />
+                {t('settings.holidays.add')}
+              </>
+            }
+          >
+            <HolidayForm defaultDate={year === monthOf(today).year ? today : `${year}-01-01`} />
+          </FormDialog>
+        </div>
         <div className="flex items-center gap-2">
           <Link
             href={`/settings/holidays?year=${year - 1}`}
@@ -71,7 +87,7 @@ export default async function HolidaysPage({
             {t('settings.holidays.empty', { year })}
           </p>
         ) : (
-          <ul className="overflow-hidden rounded-[var(--radius-lg)] bg-[var(--surface)] shadow-[var(--elevation-1)]">
+          <ul className="bg-card overflow-hidden rounded-lg border shadow-xs">
             {holidays.map((h) => (
               <li
                 key={h.id}
@@ -99,13 +115,6 @@ export default async function HolidaysPage({
             ))}
           </ul>
         )}
-      </section>
-      <section className={card}>
-        <h2 className="text-title-md">{t('settings.holidays.add')}</h2>
-        <p className="text-body mt-1 mb-4 text-[var(--ink-muted)]">
-          {t('settings.holidays.addHint')}
-        </p>
-        <HolidayForm defaultDate={year === monthOf(today).year ? today : `${year}-01-01`} />
       </section>
     </div>
   );

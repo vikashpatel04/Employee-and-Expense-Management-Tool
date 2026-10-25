@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { PendingLink as Link } from '@/components/app/pending-link';
 import { redirect } from 'next/navigation';
 import { Download } from 'lucide-react';
 import { formatINR } from '@fincrew/core';
@@ -14,8 +14,7 @@ const RANGES = [3, 6, 12] as const;
 const LONG = new Intl.DateTimeFormat('en-IN', { month: 'long', year: 'numeric', timeZone: 'UTC' });
 const SHORT = new Intl.DateTimeFormat('en-IN', { month: 'short', timeZone: 'UTC' });
 const at = (y: number, m: number) => new Date(Date.UTC(y, m - 1, 1));
-const card =
-  'flex flex-col gap-3 rounded-[var(--radius-lg)] bg-[var(--surface)] p-5 shadow-[var(--elevation-1)]';
+const card = 'flex flex-col gap-3 rounded-lg border bg-card p-5 shadow-xs';
 const money = (v: number | null) => (v == null ? '—' : v === 0 ? '—' : formatINR(v));
 
 /** Reports (design: "Web · reports"): money month by month and expenses by category. */
@@ -325,7 +324,7 @@ function Tile({
   tone?: string;
 }) {
   return (
-    <section className="flex flex-col gap-1 rounded-[var(--radius-lg)] bg-[var(--surface)] p-4 shadow-[var(--elevation-1)]">
+    <section className="flex flex-col gap-1 rounded-lg border bg-card p-4 shadow-xs">
       <span className="text-caption font-semibold" style={tone ? { color: tone } : {}}>
         {label}
       </span>

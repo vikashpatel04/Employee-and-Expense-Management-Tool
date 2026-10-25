@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { formatDisplayDate } from '@fincrew/core';
 import { t } from '@/lib/i18n';
+import { useDialogDone } from '@/components/app/form-dialog';
 import { useFormAction } from '@/lib/use-form-action';
 import { buttonClass, dateFieldProps, inputClass } from '../../../components';
 import { removeHoliday, saveHoliday, type HolidayState } from './actions';
@@ -11,6 +12,7 @@ import { removeHoliday, saveHoliday, type HolidayState } from './actions';
 /** Add (or replace) a holiday. */
 export function HolidayForm({ defaultDate }: { defaultDate: string }) {
   const [state, onSubmit, pending] = useFormAction<HolidayState>(saveHoliday, {});
+  useDialogDone(state);
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-3">
       <label className="text-label-sm block">
@@ -37,7 +39,7 @@ export function HolidayForm({ defaultDate }: { defaultDate: string }) {
         {t('settings.holidays.fields.paid')}
       </label>
       <FormMessage state={state} />
-      <button type="submit" disabled={pending} className={buttonClass}>
+      <button type="submit" disabled={pending} aria-busy={pending} className={buttonClass}>
         {pending ? t('settings.saving') : t('settings.holidays.save')}
       </button>
     </form>
@@ -53,6 +55,7 @@ export function RemoveHolidayButton({ id, name }: { id: string; name: string }) 
       <button
         type="button"
         disabled={pending}
+        aria-busy={pending}
         aria-label={t('settings.holidays.removeLabel', { name })}
         onClick={() =>
           start(async () => {

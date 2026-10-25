@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { PendingLink as Link } from '@/components/app/pending-link';
 import { redirect } from 'next/navigation';
 import { AlertTriangle, ChevronDown, ChevronLeft, ChevronRight, FileText } from 'lucide-react';
 import { formatINR, monthOf, type PayslipLine } from '@fincrew/core';
@@ -76,6 +76,10 @@ export default async function SalaryPage({
                   label={t('salary.finalize')}
                   working={t('salary.working')}
                   variant="primary"
+                  confirm={{
+                    title: t('salary.confirm.finalizeTitle', { month: mName }),
+                    body: t('salary.confirm.finalizeBody'),
+                  }}
                 />
               )}
               {run && overall === 'finalized' && (
@@ -85,6 +89,8 @@ export default async function SalaryPage({
                   modeLabel={t('salary.payMode')}
                   modes={modes}
                   working={t('salary.working')}
+                  title={t('salary.confirm.payAllTitle', { month: mName })}
+                  body={t('salary.confirm.payBody')}
                 />
               )}
             </>
@@ -126,7 +132,7 @@ export default async function SalaryPage({
       </div>
 
       {people.length === 0 ? (
-        <div className="rounded-[var(--radius-lg)] bg-[var(--surface)] p-6 shadow-[var(--elevation-1)]">
+        <div className="rounded-lg border bg-card p-6 shadow-xs">
           <h2 className="text-title-md">{t('salary.empty.title', { month: mName })}</h2>
           <p className="text-body-lg mt-1 max-w-prose text-[var(--ink-muted)]">
             {canRun ? t('salary.empty.body') : t('salary.empty.noPermission')}
@@ -145,7 +151,7 @@ export default async function SalaryPage({
             ).map(([k, v, neg]) => (
               <section
                 key={k}
-                className="flex flex-col gap-1 rounded-[var(--radius-lg)] bg-[var(--surface)] p-4 shadow-[var(--elevation-1)]"
+                className="flex flex-col gap-1 rounded-lg border bg-card p-4 shadow-xs"
               >
                 <span className="text-caption text-[var(--ink-muted)]">
                   {t(`salary.totals.${k}`)}
@@ -180,7 +186,7 @@ export default async function SalaryPage({
             </div>
           )}
 
-          <div className="overflow-x-auto rounded-[var(--radius-lg)] bg-[var(--surface)] shadow-[var(--elevation-1)]">
+          <div className="overflow-x-auto rounded-lg border bg-card shadow-xs">
             <div
               role="table"
               aria-label={t('salary.title')}
@@ -380,6 +386,9 @@ export default async function SalaryPage({
                           modeLabel={t('salary.payMode')}
                           modes={modes}
                           working={t('salary.working')}
+                          title={t('salary.confirm.payTitle', { name: p.name, month: mName })}
+                          body={t('salary.confirm.payBody')}
+                          variant="secondary"
                         />
                       )}
                       {canRun && run && p.state === 'draft' && (
@@ -387,6 +396,10 @@ export default async function SalaryPage({
                           action={finalizeSalary.bind(null, run.id, p.id)}
                           label={t('salary.finalizeOne')}
                           working={t('salary.working')}
+                          confirm={{
+                            title: t('salary.confirm.finalizeOneTitle', { name: p.name }),
+                            body: t('salary.confirm.finalizeBody'),
+                          }}
                         />
                       )}
                     </div>

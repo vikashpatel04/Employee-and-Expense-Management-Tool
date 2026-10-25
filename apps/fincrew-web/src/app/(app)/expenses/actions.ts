@@ -81,7 +81,8 @@ export async function saveExpense(
   });
   if (!r.ok) return { error: message(r) };
   refresh();
-  redirect(`/expenses?month=${r.date.slice(0, 7)}&saved=1`);
+  // A new value each save, so the dialog sees the address change and closes.
+  redirect(`/expenses?month=${r.date.slice(0, 7)}&saved=${Date.now().toString(36)}`);
 }
 
 /** Delete an expense; the database undoes any staff ledger lines it posted. */

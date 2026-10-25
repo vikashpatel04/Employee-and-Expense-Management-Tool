@@ -1,6 +1,19 @@
-import Link from 'next/link';
+import { PendingLink as Link } from '@/components/app/pending-link';
+import { Suspense } from 'react';
 import { notFound, redirect } from 'next/navigation';
-import { ArrowUpRight, ChevronLeft, Hourglass, MessageCircle, Phone } from 'lucide-react';
+import {
+  ArrowUpRight,
+  CalendarClock,
+  ChevronLeft,
+  FileText,
+  Hourglass,
+  MessageCircle,
+  Minus,
+  Pencil,
+  Phone,
+  Plus,
+  SlidersHorizontal,
+} from 'lucide-react';
 import {
   formatINR,
   formatTimeOfDay,
@@ -15,7 +28,11 @@ import { formatDate, todayIST } from '@/lib/format';
 import { t } from '@/lib/i18n';
 import { requireMe } from '@/lib/session';
 import { createClient } from '@/lib/supabase/server';
-import { Avatar, quietButtonClass } from '../../../components';
+import { FormDialog } from '@/components/app/form-dialog';
+import { PanelSkeleton } from '@/components/app/skeletons';
+import { TabLinks } from '@/components/app/tab-links';
+import { Button } from '@/components/ui/button';
+import { Avatar } from '../../../components';
 import { AttendanceTab } from './attendance-tab';
 import { AdvanceForm, AdvanceSettingsForm, UndoButton } from './advance-forms';
 import { DetailsForm, ItemButtons, ItemForm, OpeningForm, TemplateForm } from './extra-forms';
@@ -25,7 +42,26 @@ import { SignInSection } from './signin-section';
 
 type Tab = 'overview' | 'attendance' | 'ledger' | 'pay';
 
-const card = 'rounded-[var(--radius-lg)] bg-[var(--surface)] p-5 shadow-[var(--elevation-1)]';
+const card = 'rounded-lg border bg-card p-4 shadow-xs';
+
+/** Labels for the give-advance form (header button and staff page). */
+function advanceLabels() {
+  return {
+    kind: {
+      label: t('advances.kind.label'),
+      given: t('advances.kind.given'),
+      repaid: t('advances.kind.repaid'),
+    },
+    amount: t('advances.fields.amount'),
+    date: t('advances.fields.date'),
+    mode: t('advances.fields.mode'),
+    modes: t('salary.modes', { returnObjects: true }) as unknown as Record<string, string>,
+    note: t('advances.fields.note'),
+    confirm: t('advances.fields.confirm'),
+    save: t('advances.save'),
+    saving: t('advances.saving'),
+  };
+}
 const MONTH = new Intl.DateTimeFormat('en-IN', { month: 'long', year: 'numeric', timeZone: 'UTC' });
 
 export default async function StaffDetailPage({
@@ -64,101 +100,146 @@ export default async function StaffDetailPage({
   if (!s) notFound();
   const name = s.people.name;
   const phone = s.people.phone;
+  const digits = (phone ?? '').replace(/\D/g, '');
+  const wa = digits.length === 10 ? `91${digits}` : digits;
 
   return (
     <>
-      <Link
-        href="/staff"
-        className={`${quietButtonClass} inline-flex w-fit items-center gap-1 border-0 px-2`}
-      >
-        <ChevronLeft size={20} aria-hidden="true" />
-        {t('staffDetail.back')}
-      </Link>
-
-      <header className="flex flex-wrap items-center gap-4">
-        <Avatar name={name} size={56} />
-        <div className="flex min-w-0 flex-col gap-1">
-          <h1 className="text-title-lg">{name}</h1>
-          <p className="text-body text-[var(--ink-muted)]">
-            {t('staffDetail.joined', { date: formatDate(s.joining_date) })}
-            {s.leaving_date && ` · ${t('staffDetail.left', { date: formatDate(s.leaving_date) })}`}
-            {phone && ` · ${phone}`}
-          </p>
+      <div className="flex flex-col gap-3">
+        <Link
+          href="/staff"
+          className="text-muted-foreground hover:text-foreground inline-flex w-fit items-center gap-1 text-sm"
+        >
+          <ChevronLeft className="size-4" aria-hidden="true" />
+          {t('staffDetail.back')}
+        </Link>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <Avatar name={name} size={44} />
+            <div className="flex min-w-0 flex-col">
+              <h1 className="truncate text-xl font-semibold tracking-tight">{name}</h1>
+              <p className="text-muted-foreground text-sm">
+                {t('staffDetail.joined', { date: formatDate(s.joining_date) })}
+                {s.leaving_date &&
+                  ` · ${t('staffDetail.left', { date: formatDate(s.leaving_date) })}`}
+                {phone && ` · ${phone}`}
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            {phone && (
+              <>
+                <Button asChild variant="outline">
+                  <a href={`tel:${digits}`}>
+                    <Phone aria-hidden="true" />
+                    {t('staffDetail.actions.call')}
+                  </a>
+                </Button>
+                <Button asChild variant="outline">
+                  <a href={`https://wa.me/${wa}`} target="_blank" rel="noreferrer">
+                    <MessageCircle aria-hidden="true" />
+                    {t('staffDetail.actions.whatsapp')}
+                  </a>
+                </Button>
+              </>
+            )}
+            {can('staff.edit') && (
+              <FormDialog
+                title={t('staffDetail.details.title')}
+                trigger={
+                  <>
+                    <Pencil aria-hidden="true" />
+                    {t('staffDetail.details.edit')}
+                  </>
+                }
+              >
+                <DetailsForm
+                  staffId={id}
+                  details={{
+                    name,
+                    phone,
+                    joiningDate: s.joining_date,
+                    leavingDate: s.leaving_date,
+                  }}
+                />
+              </FormDialog>
+            )}
+            {can('advances.give') && s.status === 'active' && (
+              <FormDialog
+                title={t('advances.give')}
+                description={name}
+                variant="default"
+                trigger={
+                  <>
+                    <ArrowUpRight aria-hidden="true" />
+                    {t('advances.give')}
+                  </>
+                }
+              >
+                <AdvanceForm staffId={id} today={todayIST()} labels={advanceLabels()} />
+              </FormDialog>
+            )}
+          </div>
         </div>
-      </header>
+      </div>
 
-      <nav
-        aria-label={t('staffDetail.tabs.label')}
-        className="flex w-fit gap-1 rounded-[var(--radius-md)] bg-[var(--surface-muted)] p-1"
-      >
-        {tabs.map((x) => (
-          <Link
-            key={x}
-            href={`/staff/${id}?tab=${x}`}
-            aria-current={x === tab ? 'page' : undefined}
-            className={`text-label-sm flex min-h-10 items-center rounded-[var(--radius-sm)] px-4 ${
-              x === tab
-                ? 'bg-[var(--surface)] shadow-[var(--elevation-1)]'
-                : 'text-[var(--ink-muted)]'
-            }`}
-          >
-            {t(`staffDetail.tabs.${x}`)}
-          </Link>
-        ))}
-      </nav>
+      <TabLinks
+        label={t('staffDetail.tabs.label')}
+        items={tabs.map((x) => ({
+          href: `/staff/${id}?tab=${x}`,
+          label: t(`staffDetail.tabs.${x}`),
+          current: x === tab,
+        }))}
+      />
 
-      {tab === 'overview' && (
-        <Overview
-          staffId={id}
-          name={name}
-          phone={phone}
-          canMoney={canLedger}
-          advanceLimit={s.advance_limit_paise}
-          advanceCut={s.advance_cut_paise}
-          canGive={can('advances.give')}
-          canEditStaff={can('staff.edit')}
-          canEditPay={can('staff.pay.edit')}
-          canRun={can('salary.run')}
-          details={{
-            name,
-            phone,
-            joiningDate: s.joining_date,
-            leavingDate: s.leaving_date,
-          }}
-        />
-      )}
-      {tab === 'overview' && can('staff.edit') && (
-        <SignInSection
-          shopId={me.shopId}
-          staffId={id}
-          name={name}
-          phone={phone}
-          active={s.status === 'active'}
-          selfAttendance={s.self_attendance}
-        />
-      )}
-      {tab === 'attendance' && (
-        <AttendanceTab
-          staffId={id}
-          shopId={me.shopId}
-          month={sp.month}
-          day={sp.day}
-          canMark={can('attendance.mark')}
-          canEditPast={can('attendance.edit_past')}
-        />
-      )}
-      {tab === 'ledger' && <Ledger staffId={id} canUndo={can('salary.undo_payment')} />}
-      {tab === 'pay' && (
-        <Pay
-          staffId={id}
-          shopId={me.shopId}
-          name={name}
-          canEdit={can('staff.pay.edit')}
-          canEditStaff={can('staff.edit')}
-          joiningDate={s.joining_date}
-          saved={sp.saved}
-        />
-      )}
+      <Suspense key={tab} fallback={<PanelSkeleton />}>
+        {tab === 'overview' && (
+          <Overview
+            staffId={id}
+            name={name}
+            phone={phone}
+            canMoney={canLedger}
+            advanceLimit={s.advance_limit_paise}
+            advanceCut={s.advance_cut_paise}
+            canEditStaff={can('staff.edit')}
+            canEditPay={can('staff.pay.edit')}
+            canRun={can('salary.run')}
+            joiningDate={s.joining_date}
+          />
+        )}
+        {tab === 'overview' && can('staff.edit') && (
+          <SignInSection
+            shopId={me.shopId}
+            staffId={id}
+            name={name}
+            phone={phone}
+            active={s.status === 'active'}
+            selfAttendance={s.self_attendance}
+          />
+        )}
+        {tab === 'attendance' && (
+          <AttendanceTab
+            staffId={id}
+            shopId={me.shopId}
+            month={sp.month}
+            day={sp.day}
+            canMark={can('attendance.mark')}
+            canEditPast={can('attendance.edit_past')}
+          />
+        )}
+        {tab === 'ledger' && <Ledger staffId={id} canUndo={can('salary.undo_payment')} />}
+        {tab === 'pay' && (
+          <Pay
+            staffId={id}
+            shopId={me.shopId}
+            name={name}
+            canEdit={can('staff.pay.edit')}
+            canEditStaff={can('staff.edit')}
+            joiningDate={s.joining_date}
+            saved={sp.saved}
+          />
+        )}
+      </Suspense>
     </>
   );
 }
@@ -170,11 +251,10 @@ async function Overview(props: {
   canMoney: boolean;
   advanceLimit: number | null;
   advanceCut: number | null;
-  canGive: boolean;
   canEditStaff: boolean;
   canEditPay: boolean;
   canRun: boolean;
-  details: { name: string; phone: string | null; joiningDate: string; leavingDate: string | null };
+  joiningDate: string;
 }) {
   const supabase = await createClient();
   const { data: opening } = props.canEditPay
@@ -214,23 +294,21 @@ async function Overview(props: {
     : [{ data: null }, { data: null }];
   const balance = Number(bal?.balance_paise ?? 0);
   const outstanding = Number(adv?.outstanding_paise ?? 0);
-  const digits = (props.phone ?? '').replace(/\D/g, '');
-  const wa = digits.length === 10 ? `91${digits}` : digits;
 
   return (
-    <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+    <div className="grid items-start gap-4 lg:grid-cols-2">
       {props.canMoney && (
-        <section className={`${card} flex flex-col gap-2`}>
+        <section className={`${card} flex flex-col gap-1`}>
           <span
-            className={`text-label-sm inline-flex items-center gap-1.5 ${
+            className={`inline-flex items-center gap-1.5 text-sm font-medium ${
               balance > 0
                 ? 'text-[var(--money-owed)]'
                 : balance < 0
                   ? 'text-[var(--money-advance)]'
-                  : 'text-[var(--ink-muted)]'
+                  : 'text-muted-foreground'
             }`}
           >
-            <Hourglass size={20} aria-hidden="true" />
+            <Hourglass className="size-4" aria-hidden="true" />
             {balance > 0
               ? t('staffDetail.balance.due', { name: props.name })
               : balance < 0
@@ -240,134 +318,109 @@ async function Overview(props: {
           <span className="text-money-hero">{formatINR(Math.abs(balance))}</span>
           <div className="my-2 h-px bg-[var(--line)]" />
           <div className="flex items-center justify-between gap-3">
-            <span className="text-label-sm inline-flex items-center gap-1.5 text-[var(--money-advance)]">
-              <ArrowUpRight size={20} aria-hidden="true" />
+            <span className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--money-advance)]">
+              <ArrowUpRight className="size-4" aria-hidden="true" />
               {t('staffDetail.advance.title')}
             </span>
             <span className="text-money-md">{formatINR(outstanding)}</span>
           </div>
-          <span className="text-caption text-[var(--ink-muted)]">
-            {props.advanceCut != null
-              ? t('staffDetail.advance.cut', { amount: formatINR(Number(props.advanceCut)) })
-              : t('staffDetail.advance.noCut')}
-            {' · '}
-            {props.advanceLimit != null
-              ? t('staffDetail.advance.limit', { amount: formatINR(Number(props.advanceLimit)) })
-              : t('staffDetail.advance.noLimit')}
-          </span>
-        </section>
-      )}
-      {props.phone && (
-        <section className="grid content-start gap-2 sm:grid-cols-2">
-          <a
-            href={`tel:${digits}`}
-            className={`${quietButtonClass} inline-flex items-center justify-center gap-2`}
-          >
-            <Phone size={20} aria-hidden="true" />
-            {t('staffDetail.actions.call')}
-          </a>
-          <a
-            href={`https://wa.me/${wa}`}
-            target="_blank"
-            rel="noreferrer"
-            className={`${quietButtonClass} inline-flex items-center justify-center gap-2`}
-          >
-            <MessageCircle size={20} aria-hidden="true" />
-            {t('staffDetail.actions.whatsapp')}
-          </a>
-        </section>
-      )}
-      {props.canGive && (
-        <section className={card}>
-          <h2 className="text-title-md mb-3">{t('advances.give')}</h2>
-          <AdvanceForm
-            staffId={props.staffId}
-            today={todayIST()}
-            labels={{
-              kind: {
-                label: t('advances.kind.label'),
-                given: t('advances.kind.given'),
-                repaid: t('advances.kind.repaid'),
-              },
-              amount: t('advances.fields.amount'),
-              date: t('advances.fields.date'),
-              mode: t('advances.fields.mode'),
-              modes: t('salary.modes', { returnObjects: true }) as unknown as Record<
-                string,
-                string
-              >,
-              note: t('advances.fields.note'),
-              confirm: t('advances.fields.confirm'),
-              save: t('advances.save'),
-              saving: t('advances.saving'),
-            }}
-          />
-        </section>
-      )}
-      {props.canEditStaff && (
-        <section className={card}>
-          <h2 className="text-title-md mb-3">{t('advances.settings.title')}</h2>
-          <AdvanceSettingsForm
-            staffId={props.staffId}
-            limit={props.advanceLimit == null ? null : Number(props.advanceLimit)}
-            cut={props.advanceCut == null ? null : Number(props.advanceCut)}
-            labels={{
-              limit: t('advances.settings.limit'),
-              cut: t('advances.settings.cut'),
-              save: t('advances.settings.save'),
-              saving: t('advances.saving'),
-            }}
-          />
-        </section>
-      )}
-      {props.canEditStaff && (
-        <section className={card}>
-          <h2 className="text-title-md mb-3">{t('staffDetail.details.title')}</h2>
-          <DetailsForm staffId={props.staffId} details={props.details} />
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className="text-muted-foreground text-xs">
+              {props.advanceCut != null
+                ? t('staffDetail.advance.cut', { amount: formatINR(Number(props.advanceCut)) })
+                : t('staffDetail.advance.noCut')}
+              {' · '}
+              {props.advanceLimit != null
+                ? t('staffDetail.advance.limit', { amount: formatINR(Number(props.advanceLimit)) })
+                : t('staffDetail.advance.noLimit')}
+            </span>
+            {props.canEditStaff && (
+              <FormDialog
+                title={t('advances.settings.title')}
+                description={props.name}
+                variant="ghost"
+                size="sm"
+                trigger={
+                  <>
+                    <SlidersHorizontal aria-hidden="true" />
+                    {t('staffDetail.advance.edit')}
+                  </>
+                }
+              >
+                <AdvanceSettingsForm
+                  staffId={props.staffId}
+                  limit={props.advanceLimit == null ? null : Number(props.advanceLimit)}
+                  cut={props.advanceCut == null ? null : Number(props.advanceCut)}
+                  labels={{
+                    limit: t('advances.settings.limit'),
+                    cut: t('advances.settings.cut'),
+                    save: t('advances.settings.save'),
+                    saving: t('advances.saving'),
+                  }}
+                />
+              </FormDialog>
+            )}
+          </div>
         </section>
       )}
       {props.canEditPay && (
-        <section className={card}>
-          <h2 className="text-title-md">{t('staffDetail.opening.title')}</h2>
-          {opening ? (
-            <>
-              <p className="text-body mt-1 text-[var(--ink-muted)]">
-                {t(openingNow < 0 ? 'staffDetail.opening.setOwes' : 'staffDetail.opening.setDue', {
-                  name: props.name,
-                  amount: formatINR(Math.abs(openingNow)),
-                  date: formatDate(opening.date),
-                })}
-                {(fixes ?? []).length > 0 && ` ${t('staffDetail.opening.wasCorrected')}`}
-              </p>
-              {props.canRun && (
-                <details className="group mt-3">
-                  <summary className="text-label-sm min-h-11 cursor-pointer list-none text-[var(--accent-ink)] underline [&::-webkit-details-marker]:hidden">
-                    {t('staffDetail.opening.correct')}
-                  </summary>
-                  <p className="text-body mt-1 mb-3 text-[var(--ink-muted)]">
-                    {t('staffDetail.opening.correctHint')}
-                  </p>
+        <section className={`${card} flex flex-col gap-2`}>
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="text-sm font-semibold">{t('staffDetail.opening.title')}</h2>
+            {opening ? (
+              props.canRun && (
+                <FormDialog
+                  title={t('staffDetail.opening.correct')}
+                  description={t('staffDetail.opening.correctHint')}
+                  variant="ghost"
+                  size="sm"
+                  trigger={
+                    <>
+                      <Pencil aria-hidden="true" />
+                      {t('staffDetail.opening.correct')}
+                    </>
+                  }
+                >
                   <OpeningForm
                     staffId={props.staffId}
                     name={props.name}
                     defaultDate={opening.date}
                     current={openingNow}
                   />
-                </details>
-              )}
-            </>
-          ) : (
-            <>
-              <p className="text-body mt-1 mb-4 text-[var(--ink-muted)]">
-                {t('staffDetail.opening.hint')}
-              </p>
-              <OpeningForm
-                staffId={props.staffId}
-                name={props.name}
-                defaultDate={props.details.joiningDate}
-              />
-            </>
-          )}
+                </FormDialog>
+              )
+            ) : (
+              <FormDialog
+                title={t('staffDetail.opening.title')}
+                description={t('staffDetail.opening.hint')}
+                size="sm"
+                trigger={
+                  <>
+                    <Plus aria-hidden="true" />
+                    {t('staffDetail.opening.save')}
+                  </>
+                }
+              >
+                <OpeningForm
+                  staffId={props.staffId}
+                  name={props.name}
+                  defaultDate={props.joiningDate}
+                />
+              </FormDialog>
+            )}
+          </div>
+          <p className="text-muted-foreground text-sm">
+            {opening
+              ? `${t(
+                  openingNow < 0 ? 'staffDetail.opening.setOwes' : 'staffDetail.opening.setDue',
+                  {
+                    name: props.name,
+                    amount: formatINR(Math.abs(openingNow)),
+                    date: formatDate(opening.date),
+                  },
+                )}${(fixes ?? []).length > 0 ? ` ${t('staffDetail.opening.wasCorrected')}` : ''}`
+              : t('staffDetail.opening.hint')}
+          </p>
         </section>
       )}
     </div>
@@ -419,7 +472,7 @@ async function Ledger({ staffId, canUndo }: { staffId: string; canUndo: boolean 
       {[...byMonth.entries()].map(([month, rows]) => (
         <section key={month} className="flex flex-col gap-2">
           <h2 className="text-title-md px-1">{MONTH.format(new Date(`${month}-01T00:00:00Z`))}</h2>
-          <ul className="overflow-hidden rounded-[var(--radius-lg)] bg-[var(--surface)] shadow-[var(--elevation-1)]">
+          <ul className="overflow-hidden rounded-lg border bg-card shadow-xs">
             {rows.map((l) => (
               <li
                 key={l.id}
@@ -527,187 +580,37 @@ async function Pay(props: {
       Object.keys(current.late_policy_override ?? {}).length
     : 0;
 
+  const payCurrent = current && {
+    payType: current.pay_type as 'monthly' | 'daily' | 'hourly',
+    amount: amountOf(current),
+    overtime: current.overtime_rate_paise == null ? null : Number(current.overtime_rate_paise),
+    shiftStart: current.shift_start,
+    shiftEnd: current.shift_end,
+    grace: current.grace_minutes,
+    dayMinutes: current.day_minutes,
+  };
+
   return (
-    <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-      <div className="flex flex-col gap-4">
-        {props.saved && (
-          <p
-            role="status"
-            className="text-body rounded-[var(--radius-md)] bg-[var(--status-present-soft)] px-4 py-3 text-[var(--status-present)]"
-          >
-            {t('staffDetail.pay.form.saved', { date: formatDate(props.saved) })}
-          </p>
-        )}
-        {!current ? (
-          <p className={`${card} text-body-lg text-[var(--ink-muted)]`}>
-            {t('staffDetail.pay.none')}
-          </p>
-        ) : (
-          <section className="flex flex-col gap-2">
-            <h2 className="text-title-md px-1">{t('staffDetail.pay.current')}</h2>
-            <ul className="overflow-hidden rounded-[var(--radius-lg)] bg-[var(--surface)] shadow-[var(--elevation-1)]">
-              <li className={row}>
-                <span className="flex flex-col">
-                  <span className="text-label-sm">
-                    {t(`staffDetail.pay.amount.${current.pay_type}`)}
-                  </span>
-                  <span className="text-caption text-[var(--ink-muted)]">
-                    {t(`staffDetail.pay.types.${current.pay_type}`)} ·{' '}
-                    {t('staffDetail.pay.since', { date: formatDate(current.effective_from) })}
-                  </span>
-                </span>
-                <span className="text-money-sm">{formatINR(amountOf(current))}</span>
-              </li>
-              {current.overtime_rate_paise != null && (
-                <li className={row}>
-                  <span className="text-label-sm">{t('staffDetail.pay.overtime')}</span>
-                  <span className="text-money-sm">
-                    {formatINR(Number(current.overtime_rate_paise))}
-                  </span>
-                </li>
-              )}
-              <li className={row}>
-                <span className="flex flex-col">
-                  <span className="text-label-sm">{t('staffDetail.pay.shift')}</span>
-                  {current.shift_start != null && (
-                    <span className="text-caption text-[var(--ink-muted)]">
-                      {t('staffDetail.pay.grace', { minutes: current.grace_minutes })}
-                    </span>
-                  )}
-                </span>
-                <span className="text-body">
-                  {current.shift_start != null && current.shift_end != null
-                    ? `${formatTimeOfDay(current.shift_start)} – ${formatTimeOfDay(current.shift_end)}`
-                    : t('staffDetail.pay.noShift')}
-                </span>
-              </li>
-              <li className={row}>
-                <span className="flex flex-col">
-                  <span className="text-label-sm">{t('staffDetail.pay.template')}</span>
-                  {template && (
-                    <span className="text-caption text-[var(--ink-muted)]">
-                      {t('staffDetail.pay.templateSince', {
-                        date: formatDate(template.effective_from),
-                      })}
-                    </span>
-                  )}
-                </span>
-                <span className="text-body text-right">
-                  {template?.leave_templates?.name ?? t('staffDetail.pay.noTemplate')}
-                </span>
-              </li>
-              <li className={row}>
-                <span className="text-label-sm">{t('staffDetail.rules.label')}</span>
-                <span className="text-body text-right">
-                  {ownRules > 0
-                    ? t('staffDetail.rules.own', { count: ownRules })
-                    : t('staffDetail.rules.none')}
-                </span>
-              </li>
-            </ul>
-          </section>
-        )}
-
-        {(
-          [
-            { kind: 'allowance', title: t('staffDetail.pay.allowances'), rows: allowances ?? [] },
-            { kind: 'deduction', title: t('staffDetail.pay.deductions'), rows: deductions ?? [] },
-          ] as const
-        ).map(
-          (group) =>
-            group.rows.length > 0 && (
-              <section key={group.kind} className="flex flex-col gap-2">
-                <h2 className="text-title-md px-1">{group.title}</h2>
-                <ul className="overflow-hidden rounded-[var(--radius-lg)] bg-[var(--surface)] shadow-[var(--elevation-1)]">
-                  {group.rows.map((a) => {
-                    const ended = a.effective_to != null && a.effective_to < today;
-                    return (
-                      <li key={a.id} className={row}>
-                        <span className="flex flex-col">
-                          <span className="text-label-sm">
-                            {a.name}
-                            {ended && (
-                              <span className="text-caption ml-2 rounded-full bg-[var(--surface-muted)] px-2 py-0.5 text-[var(--ink-muted)]">
-                                {t('staffDetail.items.ended')}
-                              </span>
-                            )}
-                          </span>
-                          <span className="text-caption text-[var(--ink-muted)]">
-                            {'prorated' in a && a.prorated
-                              ? t('staffDetail.pay.prorated')
-                              : t('staffDetail.pay.fixed')}{' '}
-                            · {t('staffDetail.pay.since', { date: formatDate(a.effective_from) })}
-                            {a.effective_to &&
-                              ` · ${t('staffDetail.items.until', { date: formatDate(a.effective_to) })}`}
-                          </span>
-                        </span>
-                        <span className="flex flex-col items-end">
-                          <span className="text-money-sm">{formatINR(Number(a.amount_paise))}</span>
-                          {props.canEdit && (
-                            <ItemButtons
-                              staffId={props.staffId}
-                              kind={group.kind}
-                              id={a.id}
-                              name={a.name}
-                              canEnd={a.effective_to == null || a.effective_to > today}
-                            />
-                          )}
-                        </span>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </section>
-            ),
-        )}
-
-        {(pays ?? []).length > 0 && (
-          <section className="flex flex-col gap-2">
-            <h2 className="text-title-md px-1">{t('staffDetail.pay.history')}</h2>
-            <ul className="overflow-hidden rounded-[var(--radius-lg)] bg-[var(--surface)] shadow-[var(--elevation-1)]">
-              {(pays ?? []).map((p) => (
-                <li key={p.id} className={row}>
-                  <span className="flex flex-col">
-                    <span className="text-label-sm">
-                      {t('staffDetail.pay.since', { date: formatDate(p.effective_from) })}
-                    </span>
-                    <span className="text-caption text-[var(--ink-muted)]">
-                      {t(`staffDetail.pay.types.${p.pay_type}`)}
-                    </span>
-                  </span>
-                  <span className="text-money-sm">{formatINR(amountOf(p))}</span>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
-      </div>
-
+    <div className="flex flex-col gap-4">
       {(props.canEdit || props.canEditStaff) && (
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-wrap gap-2">
           {props.canEdit && (
-            <section className={card}>
-              <h2 className="text-title-md">{t('staffDetail.pay.form.title')}</h2>
-              <p className="text-body mt-1 mb-4 text-[var(--ink-muted)]">
-                {t('staffDetail.pay.form.hint')}
-              </p>
+            <FormDialog
+              title={t('staffDetail.pay.form.title')}
+              description={t('staffDetail.pay.form.hint')}
+              variant="default"
+              wide
+              trigger={
+                <>
+                  <CalendarClock aria-hidden="true" />
+                  {t('staffDetail.pay.change')}
+                </>
+              }
+            >
               <PayForm
                 staffId={props.staffId}
                 defaultDate={current ? today : props.joiningDate}
-                current={
-                  current && {
-                    payType: current.pay_type as 'monthly' | 'daily' | 'hourly',
-                    amount: amountOf(current),
-                    overtime:
-                      current.overtime_rate_paise == null
-                        ? null
-                        : Number(current.overtime_rate_paise),
-                    shiftStart: current.shift_start,
-                    shiftEnd: current.shift_end,
-                    grace: current.grace_minutes,
-                    dayMinutes: current.day_minutes,
-                  }
-                }
+                current={payCurrent}
                 labels={{
                   effectiveFrom: t('staffDetail.pay.form.effectiveFrom'),
                   payType: t('staffDetail.pay.form.payType'),
@@ -726,16 +629,49 @@ async function Pay(props: {
                   saving: t('staffDetail.pay.form.saving'),
                 }}
               />
-            </section>
+            </FormDialog>
           )}
+          {props.canEdit &&
+            (['allowance', 'deduction'] as const).map((kind) => (
+              <FormDialog
+                key={kind}
+                title={t(
+                  kind === 'allowance'
+                    ? 'staffDetail.items.addAllowance'
+                    : 'staffDetail.items.addDeduction',
+                )}
+                description={t('staffDetail.items.hint')}
+                trigger={
+                  <>
+                    {kind === 'allowance' ? (
+                      <Plus aria-hidden="true" />
+                    ) : (
+                      <Minus aria-hidden="true" />
+                    )}
+                    {t(
+                      kind === 'allowance'
+                        ? 'staffDetail.items.addAllowance'
+                        : 'staffDetail.items.addDeduction',
+                    )}
+                  </>
+                }
+              >
+                <ItemForm staffId={props.staffId} kind={kind} defaultDate={today} />
+              </FormDialog>
+            ))}
           {props.canEditStaff && (
-            <section className={card}>
-              <h2 className="text-title-md">{t('staffDetail.templateForm.title')}</h2>
-              <p className="text-body mt-1 mb-4 text-[var(--ink-muted)]">
-                {t('staffDetail.templateForm.hint')}
-              </p>
+            <FormDialog
+              title={t('staffDetail.templateForm.title')}
+              description={t('staffDetail.templateForm.hint')}
+              trigger={
+                <>
+                  <FileText aria-hidden="true" />
+                  {t('staffDetail.templateForm.title')}
+                </>
+              }
+            >
               {(templates ?? []).length === 0 ? (
-                <p className="text-body text-[var(--ink-muted)]">
+                <p className="text-muted-foreground text-sm">
                   {t('staffDetail.templateForm.none')}
                 </p>
               ) : (
@@ -746,32 +682,20 @@ async function Pay(props: {
                   defaultDate={template ? today : props.joiningDate}
                 />
               )}
-            </section>
+            </FormDialog>
           )}
-          {props.canEdit &&
-            (['allowance', 'deduction'] as const).map((kind) => (
-              <section key={kind} className={card}>
-                <h2 className="text-title-md">
-                  {t(
-                    kind === 'allowance'
-                      ? 'staffDetail.items.addAllowance'
-                      : 'staffDetail.items.addDeduction',
-                  )}
-                </h2>
-                <p className="text-body mt-1 mb-4 text-[var(--ink-muted)]">
-                  {t('staffDetail.items.hint')}
-                </p>
-                <ItemForm staffId={props.staffId} kind={kind} defaultDate={today} />
-              </section>
-            ))}
           {props.canEdit && (
-            <section className={card}>
-              <h2 className="text-title-md">
-                {t('staffDetail.rules.title', { name: props.name })}
-              </h2>
-              <p className="text-body mt-1 mb-4 text-[var(--ink-muted)]">
-                {t('staffDetail.rules.hint')}
-              </p>
+            <FormDialog
+              title={t('staffDetail.rules.title', { name: props.name })}
+              description={t('staffDetail.rules.hint')}
+              wide
+              trigger={
+                <>
+                  <SlidersHorizontal aria-hidden="true" />
+                  {t('staffDetail.rules.label')}
+                </>
+              }
+            >
               {current ? (
                 <OverridesForm
                   staffId={props.staffId}
@@ -781,12 +705,170 @@ async function Pay(props: {
                   defaultDate={today}
                 />
               ) : (
-                <p className="text-body text-[var(--ink-muted)]">{t('staffDetail.rules.noPay')}</p>
+                <p className="text-muted-foreground text-sm">{t('staffDetail.rules.noPay')}</p>
               )}
-            </section>
+            </FormDialog>
           )}
         </div>
       )}
+      <div className="grid items-start gap-4 lg:grid-cols-2">
+        <div className="flex flex-col gap-4">
+          {props.saved && (
+            <p
+              role="status"
+              className="text-body rounded-[var(--radius-md)] bg-[var(--status-present-soft)] px-4 py-3 text-[var(--status-present)]"
+            >
+              {t('staffDetail.pay.form.saved', { date: formatDate(props.saved) })}
+            </p>
+          )}
+          {!current ? (
+            <p className={`${card} text-body-lg text-[var(--ink-muted)]`}>
+              {t('staffDetail.pay.none')}
+            </p>
+          ) : (
+            <section className="flex flex-col gap-2">
+              <h2 className="text-title-md px-1">{t('staffDetail.pay.current')}</h2>
+              <ul className="overflow-hidden rounded-lg border bg-card shadow-xs">
+                <li className={row}>
+                  <span className="flex flex-col">
+                    <span className="text-label-sm">
+                      {t(`staffDetail.pay.amount.${current.pay_type}`)}
+                    </span>
+                    <span className="text-caption text-[var(--ink-muted)]">
+                      {t(`staffDetail.pay.types.${current.pay_type}`)} ·{' '}
+                      {t('staffDetail.pay.since', { date: formatDate(current.effective_from) })}
+                    </span>
+                  </span>
+                  <span className="text-money-sm">{formatINR(amountOf(current))}</span>
+                </li>
+                {current.overtime_rate_paise != null && (
+                  <li className={row}>
+                    <span className="text-label-sm">{t('staffDetail.pay.overtime')}</span>
+                    <span className="text-money-sm">
+                      {formatINR(Number(current.overtime_rate_paise))}
+                    </span>
+                  </li>
+                )}
+                <li className={row}>
+                  <span className="flex flex-col">
+                    <span className="text-label-sm">{t('staffDetail.pay.shift')}</span>
+                    {current.shift_start != null && (
+                      <span className="text-caption text-[var(--ink-muted)]">
+                        {t('staffDetail.pay.grace', { minutes: current.grace_minutes })}
+                      </span>
+                    )}
+                  </span>
+                  <span className="text-body">
+                    {current.shift_start != null && current.shift_end != null
+                      ? `${formatTimeOfDay(current.shift_start)} – ${formatTimeOfDay(current.shift_end)}`
+                      : t('staffDetail.pay.noShift')}
+                  </span>
+                </li>
+                <li className={row}>
+                  <span className="flex flex-col">
+                    <span className="text-label-sm">{t('staffDetail.pay.template')}</span>
+                    {template && (
+                      <span className="text-caption text-[var(--ink-muted)]">
+                        {t('staffDetail.pay.templateSince', {
+                          date: formatDate(template.effective_from),
+                        })}
+                      </span>
+                    )}
+                  </span>
+                  <span className="text-body text-right">
+                    {template?.leave_templates?.name ?? t('staffDetail.pay.noTemplate')}
+                  </span>
+                </li>
+                <li className={row}>
+                  <span className="text-label-sm">{t('staffDetail.rules.label')}</span>
+                  <span className="text-body text-right">
+                    {ownRules > 0
+                      ? t('staffDetail.rules.own', { count: ownRules })
+                      : t('staffDetail.rules.none')}
+                  </span>
+                </li>
+              </ul>
+            </section>
+          )}
+
+          {(
+            [
+              { kind: 'allowance', title: t('staffDetail.pay.allowances'), rows: allowances ?? [] },
+              { kind: 'deduction', title: t('staffDetail.pay.deductions'), rows: deductions ?? [] },
+            ] as const
+          ).map(
+            (group) =>
+              group.rows.length > 0 && (
+                <section key={group.kind} className="flex flex-col gap-2">
+                  <h2 className="text-title-md px-1">{group.title}</h2>
+                  <ul className="overflow-hidden rounded-lg border bg-card shadow-xs">
+                    {group.rows.map((a) => {
+                      const ended = a.effective_to != null && a.effective_to < today;
+                      return (
+                        <li key={a.id} className={row}>
+                          <span className="flex flex-col">
+                            <span className="text-label-sm">
+                              {a.name}
+                              {ended && (
+                                <span className="text-caption ml-2 rounded-full bg-[var(--surface-muted)] px-2 py-0.5 text-[var(--ink-muted)]">
+                                  {t('staffDetail.items.ended')}
+                                </span>
+                              )}
+                            </span>
+                            <span className="text-caption text-[var(--ink-muted)]">
+                              {'prorated' in a && a.prorated
+                                ? t('staffDetail.pay.prorated')
+                                : t('staffDetail.pay.fixed')}{' '}
+                              · {t('staffDetail.pay.since', { date: formatDate(a.effective_from) })}
+                              {a.effective_to &&
+                                ` · ${t('staffDetail.items.until', { date: formatDate(a.effective_to) })}`}
+                            </span>
+                          </span>
+                          <span className="flex flex-col items-end">
+                            <span className="text-money-sm">
+                              {formatINR(Number(a.amount_paise))}
+                            </span>
+                            {props.canEdit && (
+                              <ItemButtons
+                                staffId={props.staffId}
+                                kind={group.kind}
+                                id={a.id}
+                                name={a.name}
+                                canEnd={a.effective_to == null || a.effective_to > today}
+                              />
+                            )}
+                          </span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </section>
+              ),
+          )}
+        </div>
+        <div className="flex flex-col gap-4">
+          {(pays ?? []).length > 0 && (
+            <section className="flex flex-col gap-2">
+              <h2 className="text-title-md px-1">{t('staffDetail.pay.history')}</h2>
+              <ul className="overflow-hidden rounded-lg border bg-card shadow-xs">
+                {(pays ?? []).map((p) => (
+                  <li key={p.id} className={row}>
+                    <span className="flex flex-col">
+                      <span className="text-label-sm">
+                        {t('staffDetail.pay.since', { date: formatDate(p.effective_from) })}
+                      </span>
+                      <span className="text-caption text-[var(--ink-muted)]">
+                        {t(`staffDetail.pay.types.${p.pay_type}`)}
+                      </span>
+                    </span>
+                    <span className="text-money-sm">{formatINR(amountOf(p))}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

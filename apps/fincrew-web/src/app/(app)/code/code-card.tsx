@@ -52,6 +52,7 @@ export function CodeActions({ code, labels: l }: { code: string; labels: Labels 
             <button
               type="button"
               disabled={pending}
+              aria-busy={pending}
               className={`${buttonClass} w-auto`}
               onClick={() =>
                 start(async () => {

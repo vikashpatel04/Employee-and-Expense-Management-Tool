@@ -1,6 +1,7 @@
-import Link from 'next/link';
+import { PendingLink as Link } from '@/components/app/pending-link';
 import { redirect } from 'next/navigation';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, Plus, UserPlus } from 'lucide-react';
+import { FormDialog } from '@/components/app/form-dialog';
 import { loadRoles, permissionGroups } from '@fincrew/data';
 import { t } from '@/lib/i18n';
 import { requireMe } from '@/lib/session';
@@ -8,7 +9,7 @@ import { SETTINGS_SECTIONS } from '@/lib/settings-access';
 import { createClient } from '@/lib/supabase/server';
 import { HelperForm, NewRoleForm, RemoveHelperButton } from './role-forms';
 
-const card = 'rounded-[var(--radius-lg)] bg-[var(--surface)] p-5 shadow-[var(--elevation-1)]';
+const card = 'rounded-lg border bg-card p-4 shadow-xs';
 
 /** Custom roles: sets of permissions given to people who help run the shop (PLAN §3). */
 export default async function RolesPage() {
@@ -24,7 +25,23 @@ export default async function RolesPage() {
   return (
     <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
       <section className="flex flex-col gap-3">
-        <p className="text-body text-[var(--ink-muted)]">{t('settings.roles.subtitle')}</p>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-muted-foreground text-sm">{t('settings.roles.subtitle')}</p>
+          <FormDialog
+            title={t('settings.roles.new')}
+            description={t('settings.roles.newHint')}
+            variant="default"
+            wide
+            trigger={
+              <>
+                <Plus aria-hidden="true" />
+                {t('settings.roles.new')}
+              </>
+            }
+          >
+            <NewRoleForm groups={permissionGroups()} />
+          </FormDialog>
+        </div>
         {owner && (
           <p className="text-body text-[var(--ink-muted)]">
             {t('settings.roles.owner', { name: owner.name })}
@@ -35,7 +52,7 @@ export default async function RolesPage() {
             {t('settings.roles.empty')}
           </p>
         ) : (
-          <ul className="overflow-hidden rounded-[var(--radius-lg)] bg-[var(--surface)] shadow-[var(--elevation-1)]">
+          <ul className="bg-card overflow-hidden rounded-lg border shadow-xs">
             {roles.map((r) => {
               const holders = r.people.map((id) => names.get(id)).filter(Boolean);
               return (
@@ -68,20 +85,28 @@ export default async function RolesPage() {
         )}
       </section>
       <div className="flex flex-col gap-4">
-        <section className={card}>
-          <h2 className="text-title-md">{t('settings.roles.new')}</h2>
-          <p className="text-body mt-1 mb-4 text-[var(--ink-muted)]">
-            {t('settings.roles.newHint')}
-          </p>
-          <NewRoleForm groups={permissionGroups()} />
-        </section>
         {me.permissions.includes('staff.edit') && (
           <section className={`${card} flex flex-col gap-3`}>
-            <div>
-              <h2 className="text-title-md">{t('settings.roles.helpers.title')}</h2>
-              <p className="text-body mt-1 text-[var(--ink-muted)]">
-                {t('settings.roles.helpers.hint')}
-              </p>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h2 className="text-sm font-semibold">{t('settings.roles.helpers.title')}</h2>
+                <p className="text-muted-foreground mt-0.5 text-sm">
+                  {t('settings.roles.helpers.hint')}
+                </p>
+              </div>
+              <FormDialog
+                title={t('settings.roles.helpers.title')}
+                description={t('settings.roles.helpers.hint')}
+                size="sm"
+                trigger={
+                  <>
+                    <UserPlus aria-hidden="true" />
+                    {t('settings.roles.helpers.add')}
+                  </>
+                }
+              >
+                <HelperForm />
+              </FormDialog>
             </div>
             {helpers.length > 0 && (
               <ul className="rounded-[var(--radius-md)] border border-[var(--line)]">
@@ -108,7 +133,6 @@ export default async function RolesPage() {
                 ))}
               </ul>
             )}
-            <HelperForm />
           </section>
         )}
       </div>
