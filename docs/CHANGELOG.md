@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Added — 2026-10-25 (Staffora)
+
+- Staffora: change your PIN (Me → Change PIN; the current PIN is checked like a sign-in).
+  Migration `20261025000001_change_pin.sql`.
+- Staffora Home shows the newest payslip (net, paid, due) with Open payslip.
+- Share a payslip from Staffora as text (WhatsApp, SMS, …).
+
 ### Fixed — 2026-10-25
 
 - Website clicks took 3–5 s: the server now runs in Mumbai next to the database (`vercel.json`

@@ -23,6 +23,7 @@ describe('exposed (public schema) functions', () => {
     expect(r.rows.map((x) => x.name)).toEqual([
       'add_staff',
       'attendance_code',
+      'change_pin',
       'check_in',
       'create_invite',
       'create_shop',

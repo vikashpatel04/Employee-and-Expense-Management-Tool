@@ -67,6 +67,12 @@ Status: **live** (pushed 2026-10-24, CI run 40098230155 applied the 3 migrations
   starts a 15-minute wait; the 10th locks until someone with `staff.edit` unlocks; a right PIN
   clears the count; wrong phone or left staff are refused before the PIN is checked. Settings →
   Pay & attendance rules → Staff sign-in. A test compares SQL and core attempt by attempt.
+- **Change PIN** (migration `20261025000001_change_pin.sql`): `change_pin(person, current, new,
+device)`, called by the signed-in staff member (authenticated, own person only, `is_self`).
+  The new PIN must be 4 digits (`bad_pin`, not counted); the current one is checked by
+  `pin_login_at`, so wrong ones count towards the same wait / lock and another phone or a
+  person who left is refused; then `same_pin` if unchanged, else the new bcrypt hash →
+  `{ ok: true }`. No edge function needed: the staff member already has a session.
 
 ### Edge function `staff-auth`
 

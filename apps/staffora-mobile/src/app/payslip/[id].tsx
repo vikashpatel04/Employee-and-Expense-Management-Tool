@@ -1,39 +1,40 @@
 import { useEffect, useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import { ScrollView, Share, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
-import { ChevronLeft } from 'lucide-react-native';
+import { ChevronLeft, Share2 } from 'lucide-react-native';
+import { formatDisplayDate, formatINR } from '@fincrew/core';
 import {
-  formatDisplayDate,
-  formatINR,
-  maxDate,
-  minDate,
-  monthEnd,
-  monthStart,
-} from '@fincrew/core';
-import { loadPayslipView } from '@fincrew/data';
-import { Card, IconButton, Text } from '@/components/ui';
+  loadPayslipView,
+  PAYSLIP_MINUS_LINES as MINUS,
+  payslipPeriod,
+  payslipShareText,
+  type PayslipView,
+} from '@fincrew/data';
+import { Button, Card, IconButton, Text } from '@/components/ui';
 import { t } from '@/lib/i18n';
 import { supabase } from '@/lib/supabase';
 import { space, useTheme } from '@/lib/theme';
 
-type PayslipData = NonNullable<Awaited<ReturnType<typeof loadPayslipView>>>;
-const MINUS = ['deduction', 'late_deduction', 'advance_cut'];
-
 /**
  * One payslip (from Money → Payslips): the month, the days, each line, net pay, paid so far and
  * what's still due — the same numbers as the website's payslip page (`loadPayslipView`).
+ * Share sends it as text (`payslipShareText`) through the phone's share sheet (WhatsApp, …).
  */
 export default function Payslip() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { c } = useTheme();
-  const [slip, setSlip] = useState<PayslipData | null | undefined>(undefined);
+  const [slip, setSlip] = useState<PayslipView | null | undefined>(undefined);
 
   useEffect(() => {
     void loadPayslipView(supabase, id).then(setSlip);
   }, [id]);
 
   const months = t('months.long', { returnObjects: true }) as unknown as string[];
+  const monthName = slip ? `${months[slip.month - 1]} ${slip.year}` : '';
+  const share = () => {
+    if (slip) void Share.share({ message: payslipShareText(slip, t, monthName) }).catch(() => {});
+  };
   const back = () => (router.canGoBack() ? router.back() : router.replace('/money'));
   const row = (
     label: string,
@@ -85,13 +86,9 @@ export default function Payslip() {
           <View style={{ gap: 2 }}>
             <Text muted>{slip.shopName}</Text>
             <Text variant="title-xl">{t('payslip.title')}</Text>
-            <Text variant="title-md">{`${months[slip.month - 1]} ${slip.year}`}</Text>
+            <Text variant="title-md">{monthName}</Text>
             <Text variant="caption" muted>
-              {`${formatDisplayDate(maxDate(monthStart(slip.year, slip.month), slip.joiningDate))} – ${formatDisplayDate(
-                slip.leavingDate
-                  ? minDate(monthEnd(slip.year, slip.month), slip.leavingDate)
-                  : monthEnd(slip.year, slip.month),
-              )} · ${t('salary.days.payable', { payable: slip.summary.payableDays, employed: slip.summary.employedDays })}`}
+              {`${formatDisplayDate(payslipPeriod(slip).from)} – ${formatDisplayDate(payslipPeriod(slip).to)} · ${t('salary.days.payable', { payable: slip.summary.payableDays, employed: slip.summary.employedDays })}`}
             </Text>
           </View>
           <Card>
@@ -112,6 +109,13 @@ export default function Payslip() {
               color: slip.net - slip.paid > 0 ? c['money-owed'] : undefined,
             })}
           </Card>
+          <Button
+            label={t('staffora.money.share')}
+            variant="secondary"
+            icon={Share2}
+            block
+            onPress={share}
+          />
         </ScrollView>
       )}
     </SafeAreaView>

@@ -1606,7 +1606,13 @@
       "selfOff": "The shop marks your attendance. Ask them if you should check in yourself.",
       "scan": "Scan QR",
       "enter": "Enter code",
-      "markedByShop": "The shop marked you as {{status}} today."
+      "markedByShop": "The shop marked you as {{status}} today.",
+      "payslipTitle": "{{month}} payslip",
+      "payslipReady": "Ready {{date}}",
+      "netPay": "Net pay",
+      "paid": "Paid",
+      "due": "Due",
+      "openPayslip": "Open payslip"
     },
     "code": {
       "back": "Home",
@@ -1658,7 +1664,10 @@
       "lock": "Lock Staffora",
       "lockHint": "You'll need your PIN to open it again.",
       "forget": "Remove from this phone",
-      "forgetHint": "Staffora forgets this phone. You'll need a new link from the shop."
+      "forgetHint": "Staffora forgets this phone. You'll need a new link from the shop.",
+      "changePin": "Change PIN",
+      "changePinHint": "Choose a new 4-digit PIN for opening Staffora.",
+      "pinChanged": "PIN changed. Use the new PIN next time you open Staffora."
     },
     "next": {
       "title": "Coming next",
@@ -1682,7 +1691,8 @@
       "leftDue": "{{amount}} due",
       "paidSoFar": "Paid so far",
       "stillDue": "Still to pay",
-      "notFound": "This payslip isn't available."
+      "notFound": "This payslip isn't available.",
+      "share": "Share payslip"
     },
     "ask": {
       "back": "Back",
@@ -1717,6 +1727,19 @@
         "rejected": "Not approved",
         "cancelled": "Cancelled"
       }
+    },
+    "changePin": {
+      "back": "Back",
+      "currentTitle": "Your current PIN",
+      "currentSub": "Type the PIN you use now.",
+      "newTitle": "Choose a new PIN",
+      "newSub": "4 digits you will remember. Not your birth year.",
+      "confirmTitle": "Type the new PIN again",
+      "confirmSub": "To make sure.",
+      "mismatch": "The two PINs were different. Choose the new one again.",
+      "samePin": "The new PIN is the same as the current one. Choose a different one.",
+      "badPin": "Use exactly 4 digits.",
+      "saving": "Changing your PIN…"
     }
   }
 }

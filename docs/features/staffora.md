@@ -54,7 +54,13 @@ Scheme `staffora` (invite links hand over with `staffora://join/<token>`); Andro
   explained with the time to try again (`src/lib/check-text.ts`).
 - **Checked in / out** (`checked-in.tsx`): the time large, present + minutes late, day, shop, how,
   and from when check-out works (the shop's minimum gap).
-- **Me**: name and shop, Lock Staffora, Remove from this phone.
+- **Me**: name and shop, **Change PIN**, Lock Staffora, Remove from this phone; a "PIN
+  changed" note after changing it (`?changed=1`).
+- **Change PIN** (`change-pin.tsx`, 2026-10-25): the same pad and steps as choosing the PIN in
+  "Join · first run" (no new artboard): current PIN, new PIN, new PIN again (mismatch caught on
+  the phone), then `change_pin` through `useAuth().changePin`. Refusals use the PIN screen's
+  messages (`src/lib/pin-text.ts`, shared with `pin.tsx`); `same_pin` / `bad_pin` go back to
+  the new-PIN step.
 - **Attendance** (`(tabs)/attendance.tsx`, design "Attendance"): month switcher, Monday-first
   calendar (status colour + icon, late dot), the chosen day's status / times / minutes late, the
   month's counts and payable days, **Ask for leave**. Read-only; `loadAttendanceMonth`.
@@ -63,6 +69,13 @@ Scheme `staffora` (invite links hand over with `staffora://join/<token>`); Andro
   marks; `loadLedger`) or Payslips (finalized months, net, paid or still due; new shared
   `loadMyPayslips`); **Ask for an advance**. Tap a payslip → `payslip/[id].tsx` (lines, net, paid
   so far, still to pay; new shared `loadPayslipView`).
+- **Home payslip card** (2026-10-25, design "Home"): the newest finalized payslip — "<month>
+  payslip", ready date (when finalized, DD/MM/YYYY), net pay, paid / due, **Open payslip**.
+  `loadMyDay` loads it with the shared `loadMyPayslips` (now with `finalizedAt`).
+- **Share payslip** (2026-10-25): button on the payslip page; the phone's share sheet
+  (WhatsApp, SMS, …) with plain text from the shared `payslipShareText` (`packages/data/src/
+payslip-text.ts`: shop, name, month, period, payable days, each line, net, paid, still to
+  pay). FinCrew can use the same text for its WhatsApp share.
 - **Ask** (`ask.tsx`, design "Ask for leave / advance, my requests"): leave = From / To day
   steppers (today to a year ahead, at most 62 days), or advance = amount with quick amounts and
   what I owe now; a note; **Send to the shop** (`askRequest`). Below: my requests with Waiting /
@@ -106,5 +119,7 @@ Not tried yet: sending a request or checking in (both leave permanent rows), Loc
 
 ## Next
 
-Me → change PIN (needs a small SQL function + `staff-auth` action), latest payslip card on Home,
-share a payslip, biometric unlock (optional), push notifications.
+Biometric unlock (optional), push notifications. Live checks still to do with the owner:
+change PIN, the Home payslip card and Share on the owner's Test Staff sign-in (the preview lost
+it on 2026-10-25: re-join needs New phone + a new invite, the owner types the PIN), sending a
+request and checking in (permanent rows — ask first).

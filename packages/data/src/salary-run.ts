@@ -290,7 +290,7 @@ export async function loadPayslipsDue(supabase: Supabase, staffId: string) {
 export async function loadMyPayslips(supabase: Supabase, staffId: string) {
   const { data: slips } = await supabase
     .from('payslips')
-    .select('id, run_id, revision, net_pay_paise, salary_runs!inner(year, month)')
+    .select('id, run_id, revision, net_pay_paise, finalized_at, salary_runs!inner(year, month)')
     .eq('staff_id', staffId)
     .eq('status', 'finalized')
     .order('revision', { ascending: false });
@@ -308,6 +308,8 @@ export async function loadMyPayslips(supabase: Supabase, staffId: string) {
       month: s.salary_runs.month,
       net: Number(s.net_pay_paise),
       paid: paid.get(s.id) ?? 0,
+      /** When the shop finalized it (a timestamp), or null for older rows. */
+      finalizedAt: s.finalized_at,
     }))
     .sort((a, b) => b.year * 12 + b.month - (a.year * 12 + a.month));
 }

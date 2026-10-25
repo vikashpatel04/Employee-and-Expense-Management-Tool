@@ -1638,6 +1638,10 @@ export type Database = {
         Returns: string
       }
       attendance_code: { Args: { p_shop: string }; Returns: Json }
+      change_pin: {
+        Args: { p_current: string; p_device: string; p_new: string; p_person: string }
+        Returns: Json
+      }
       check_in: {
         Args: {
           p_code: string

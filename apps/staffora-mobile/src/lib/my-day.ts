@@ -1,6 +1,7 @@
 import { businessDateOf, monthOf, type BusinessDate } from '@fincrew/core';
 import {
   loadAttendanceMonth,
+  loadMyPayslips,
   loadPay,
   toShopRules,
   type GridCell,
@@ -18,20 +19,23 @@ export type MyDay = {
   selfAttendance: boolean;
   /** The shop's minimum time between check-in and check-out (its attendance code settings). */
   minGapMinutes: number;
+  /** The newest finalized payslip, for the card on Home. */
+  payslip: Awaited<ReturnType<typeof loadMyPayslips>>[number] | null;
 };
 
 /**
  * Today and this month for the signed-in staff member, worked out by the same shared code as
- * FinCrew (`loadAttendanceMonth`, `loadPay`); RLS returns only their own rows.
+ * FinCrew (`loadAttendanceMonth`, `loadPay`, `loadMyPayslips`); RLS returns only their own rows.
  */
 export async function loadMyDay(shopId: string, personId: string): Promise<MyDay> {
   const today = businessDateOf(new Date());
   const { year, month } = monthOf(today);
-  const [monthData, pay, { data: me }, { data: shop }] = await Promise.all([
+  const [monthData, pay, { data: me }, { data: shop }, slips] = await Promise.all([
     loadAttendanceMonth(supabase, shopId, year, month, today),
     loadPay(supabase, personId, today),
     supabase.from('staff').select('self_attendance').eq('person_id', personId).maybeSingle(),
     supabase.from('shops').select('settings').eq('id', shopId).maybeSingle(),
+    loadMyPayslips(supabase, personId),
   ]);
   const row = monthData.rows.find((r) => r.staffId === personId) ?? null;
   const cur = pay.current;
@@ -45,6 +49,7 @@ export async function loadMyDay(shopId: string, personId: string): Promise<MyDay
         : null,
     selfAttendance: !!me?.self_attendance,
     minGapMinutes: toShopRules(shop?.settings).attendanceCode.minGapMinutes,
+    payslip: slips[0] ?? null,
   };
 }
 

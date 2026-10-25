@@ -2,8 +2,24 @@ import { useCallback, useState } from 'react';
 import { RefreshControl, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useFocusEffect } from 'expo-router';
-import { Check, Clock, KeyRound, QrCode, Umbrella } from 'lucide-react-native';
-import { formatTimeOfDay, minutesOfDayIST, weekday, formatDisplayDate } from '@fincrew/core';
+import {
+  Check,
+  ChevronRight,
+  CircleCheck,
+  Clock,
+  Hourglass,
+  KeyRound,
+  QrCode,
+  Umbrella,
+} from 'lucide-react-native';
+import {
+  businessDateOf,
+  formatDisplayDate,
+  formatINR,
+  formatTimeOfDay,
+  minutesOfDayIST,
+  weekday,
+} from '@fincrew/core';
 import type { StatusKey } from '@fincrew/ui';
 import { Button, Card, StatusPill, Text } from '@/components/ui';
 import { useAuth } from '@/lib/auth';
@@ -13,8 +29,8 @@ import { radius, space, useTheme } from '@/lib/theme';
 
 /**
  * Home (design: "Home · before check-in / checked in", PLAN §6.3): greeting, today's status and
- * times, this month at a glance, and the check-in card with Scan QR / Enter code when the shop
- * lets this person check in themselves.
+ * times, this month at a glance, the newest payslip (net, paid, due → the payslip), and the
+ * check-in card with Scan QR / Enter code when the shop lets this person check in themselves.
  */
 export default function Home() {
   const { profile } = useAuth();
@@ -42,6 +58,7 @@ export default function Home() {
   const days = t('weekdays.short', { returnObjects: true }) as unknown as string[];
   const months = t('months.long', { returnObjects: true }) as unknown as string[];
   const cell = day?.cell;
+  const slip = day?.payslip;
   const inAt = cell?.checkIn;
   const outAt = cell?.checkOut;
   const count = (s: string) => day?.row?.cells.filter((x) => x.status === s).length ?? 0;
@@ -175,6 +192,74 @@ export default function Home() {
                   </Text>
                 </View>
               ))}
+            </View>
+          </Card>
+        )}
+
+        {slip && (
+          <Card style={{ padding: space['space-4'], gap: 4 }}>
+            <View
+              style={{
+                flexDirection: 'row',
+                flexWrap: 'wrap',
+                alignItems: 'baseline',
+                justifyContent: 'space-between',
+                gap: 8,
+              }}
+            >
+              <Text variant="title-md">
+                {t(`${h}.payslipTitle`, { month: `${months[slip.month - 1]} ${slip.year}` })}
+              </Text>
+              {slip.finalizedAt && (
+                <Text variant="caption" muted>
+                  {t(`${h}.payslipReady`, {
+                    date: formatDisplayDate(businessDateOf(new Date(slip.finalizedAt))),
+                  })}
+                </Text>
+              )}
+            </View>
+            <Text variant="caption" muted style={{ marginTop: 4 }}>
+              {t(`${h}.netPay`)}
+            </Text>
+            <Text variant="money-lg">{formatINR(slip.net)}</Text>
+            <View
+              style={{
+                flexDirection: 'row',
+                flexWrap: 'wrap',
+                alignItems: 'center',
+                columnGap: space['space-4'],
+                rowGap: 4,
+                marginTop: 4,
+              }}
+            >
+              {slip.paid > 0 && (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <CircleCheck size={16} color={c['money-paid']} />
+                  <Text variant="caption" color={c['money-paid']}>
+                    {t(`${h}.paid`)}
+                  </Text>
+                  <Text variant="money-sm">{formatINR(slip.paid)}</Text>
+                </View>
+              )}
+              {slip.net - slip.paid > 0 && (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Hourglass size={16} color={c['money-owed']} />
+                  <Text variant="caption" color={c['money-owed']}>
+                    {t(`${h}.due`)}
+                  </Text>
+                  <Text variant="money-sm">{formatINR(slip.net - slip.paid)}</Text>
+                </View>
+              )}
+            </View>
+            <View
+              style={{ marginHorizontal: -space['space-2'], marginTop: 4, alignSelf: 'flex-start' }}
+            >
+              <Button
+                label={t(`${h}.openPayslip`)}
+                variant="quiet"
+                icon={ChevronRight}
+                onPress={() => router.push({ pathname: '/payslip/[id]', params: { id: slip.id } })}
+              />
             </View>
           </Card>
         )}

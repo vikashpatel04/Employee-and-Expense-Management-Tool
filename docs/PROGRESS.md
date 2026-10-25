@@ -24,7 +24,8 @@ first, then `CLAUDE.md`, then the feature doc for whatever you touch._
 - **Staffora** (`apps/staffora-mobile`, `docs/features/staffora.md`): welcome, join from the
   invite (PIN twice), PIN on every open, Home with check-in by code / QR, checked-in screen,
   Attendance calendar, Money (ledger, payslips, payslip page), Ask for leave / advance with my
-  requests and cancel, Me (lock, remove). **The owner joined as Test Staff** in the
+  requests and cancel, Me (change PIN, lock, remove), Home payslip card, share a payslip.
+  **The owner joined as Test Staff** in the
   "staffora-mobile-web" preview (their PIN — never type it); Home, Attendance, Money, Payslips,
   Ask were checked on live. Not tried on live: sending a request, checking in (both leave
   permanent rows — ask first; check-in also needs Test Staff's "Can check in with the attendance
@@ -32,7 +33,8 @@ first, then `CLAUDE.md`, then the feature doc for whatever you touch._
 - **Database / server**: Phase 7 data live (`docs/features/staff-self-service.md`): attendance
   codes + `check_in`, scans log, requests, invites + bcrypt PINs, `staff-auth` edge function
   (deployed by CI), staff read their payslip's run. Migrations up to
-  `20261024000006_staff_read_runs.sql` are live.
+  `20261024000006_staff_read_runs.sql` are live; `20261025000001_change_pin.sql` waits for
+  the push.
 - Shared code: `packages/core` (rules incl. `evaluateCheck`, `evaluatePinAttempt`, `staffLogin`
   settings), **`packages/data`** (used by the website and both apps: attendance month / write,
   session, staff loaders, expenses + saving, salary month + run / finalize / pay, payslip loaders
@@ -46,9 +48,10 @@ first, then `CLAUDE.md`, then the feature doc for whatever you touch._
 
 **Next work, in order** (agreed with the owner 2026-10-24; they usually say "continue")
 
-1. **Finish Staffora**: Me → change PIN (small SQL function + `staff-auth` action, tests first),
-   latest-payslip card on Home (design "Home"), share a payslip; live check of sending a request
-   and checking in (ask the owner first — permanent rows).
+1. **Finish Staffora**: built on 2026-10-25 — change PIN, Home payslip card, share a payslip
+   (needs the push for `20261025000001_change_pin.sql`). Left: live checks with the owner —
+   re-join Test Staff in the preview (New phone + invite; the owner types the PIN), then change
+   PIN, Home card, Share, and (with their OK — permanent rows) sending a request and checking in.
 2. **FinCrew app gaps**: share payslip on WhatsApp (design "Salary run"), undo a ledger line in
    the app (`undoLedgerLine` is shared), pay / advance-rule changes in the app (website only now),
    bill photo upload on a real phone.
@@ -97,7 +100,7 @@ their OK.
 
 **How to check work**
 
-- `pnpm typecheck` (9 tasks incl. both apps), `pnpm test` (core 234, ui 6, i18n 1, db 160 —
+- `pnpm typecheck` (9 tasks incl. both apps), `pnpm test` (core 234, ui 6, i18n 1, db 165 —
   PGlite, no Docker), `pnpm build`, `pnpm ui:tokens --check`,
   `bash scripts/check-migrations.sh origin/main HEAD`.
 - Live DB (CLI logged in): `pnpm exec supabase db query --linked --project-ref
@@ -105,7 +108,8 @@ ufmlqvvfznemghmnvynz "<sql>"`; advisors: `... db advisors --linked --project-ref
 ufmlqvvfznemghmnvynz --type all` (accepted warnings only: authenticated-callable
   `create_shop`/`finalize_payslip`/`my_permissions`/`shop_exists` and the Phase 7 owner-side
   functions `attendance_code`/`regenerate_attendance_code`/`check_in`/`create_invite`/
-  `revoke_invite`/`staff_logins`/`unlock_login`/`reset_staff_phone`, Supabase's
+  `revoke_invite`/`staff_logins`/`unlock_login`/`reset_staff_phone`, Staffora's `change_pin`,
+  Supabase's
   `rls_auto_enable`, leaked-password protection). **Dry-run a new migration** on live before
   asking to push: write `begin; <migration> select 'applied'; rollback;` to a file and run
   `... db query --linked --project-ref ufmlqvvfznemghmnvynz -f <file>`.
@@ -263,6 +267,13 @@ Tables still to add (with the phase that uses them, each with RLS tests): `staff
 (storage), `push_tokens` (Phase 7/8).
 
 ## Session log
+
+- **2026-10-25** — **Finish Staffora (built).** Change PIN: `change_pin` SQL function (tests
+  first: 5 in `staff-login.test.ts`, dry-run on live OK) + Me → Change PIN screen (same pad as
+  Join). Home payslip card (design "Home") via `loadMyPayslips` (+ `finalizedAt`). Share payslip
+  (`payslipShareText` in `packages/data`, RN share sheet). The preview lost the owner's Staffora
+  sign-in (it showed Welcome), so these weren't checked with live data yet. Typecheck 9/9,
+  tests core 234 / ui 6 / i18n 1 / db 165.
 
 - **2026-10-25** — Owner found the live website slow (3–5 s per click). Cause: Vercel ran the
   server in Washington (`iad1`, seen in `x-vercel-id`) while Supabase is in Mumbai, and each

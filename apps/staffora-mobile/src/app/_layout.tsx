@@ -58,6 +58,7 @@ function Gate({ fontsLoaded }: { fontsLoaded: boolean }) {
           <Stack.Screen name="checked-in" />
           <Stack.Screen name="ask" />
           <Stack.Screen name="payslip/[id]" />
+          <Stack.Screen name="change-pin" />
         </Stack.Protected>
         <Stack.Screen name="join/[token]" />
       </Stack>

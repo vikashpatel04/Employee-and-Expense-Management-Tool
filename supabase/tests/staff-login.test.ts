@@ -273,6 +273,49 @@ describe('PIN sign-in', () => {
   });
 });
 
+describe('change PIN (migration 20261025000001)', () => {
+  const PHONE2 = 'new-phone-00001'; // Meena's phone after the reset above
+  const change = (user: string | null, current: string, next: string, device = PHONE2) =>
+    one<R>(user, 'select public.change_pin($1, $2, $3, $4) as r', [meenaP, current, next, device]);
+  const login = (pin: string) =>
+    server<R>('select public.pin_login($1, $2, $3) as r', [meenaP, pin, PHONE2]);
+
+  it('the new PIN must be 4 digits (nothing counted)', async () => {
+    expect(await change(meenaUser, '4321', '12a4')).toEqual({ ok: false, reason: 'bad_pin' });
+    expect(await change(meenaUser, '4321', '12345')).toEqual({ ok: false, reason: 'bad_pin' });
+  });
+
+  it('a wrong current PIN counts like a wrong sign-in', async () => {
+    expect(await change(meenaUser, '0000', '5678')).toEqual({
+      ok: false,
+      reason: 'wrong_pin',
+      triesLeft: 4,
+    });
+    expect(await change(meenaUser, '4321', '5678', 'stolen-phone-0001')).toEqual({
+      ok: false,
+      reason: 'wrong_device',
+    });
+  });
+
+  it('the new PIN must differ from the current one', async () => {
+    expect(await change(meenaUser, '4321', '4321')).toEqual({ ok: false, reason: 'same_pin' });
+  });
+
+  it('the right current PIN sets the new one; the old one stops working', async () => {
+    expect(await change(meenaUser, '4321', '5678')).toEqual({ ok: true });
+    expect(await login('5678')).toMatchObject({ ok: true });
+    expect(await login('4321')).toMatchObject({ ok: false, reason: 'wrong_pin' });
+    expect(await change(meenaUser, '5678', '4321')).toEqual({ ok: true });
+    expect(await login('4321')).toMatchObject({ ok: true });
+  });
+
+  it('only for your own sign-in', async () => {
+    await rejects(change(kiran, '4321', '5678'), /Not allowed/);
+    await rejects(change(asha, '4321', '5678'), /Not allowed/);
+    await rejects(change(null, '4321', '5678'), /permission denied/);
+  });
+});
+
 describe('the database follows the core rules (evaluatePinAttempt)', () => {
   it('gives the same result as core for a run of attempts', async () => {
     const t = (await one<{ token: string }>(asha, 'select public.create_invite($1) as r', [arunP]))

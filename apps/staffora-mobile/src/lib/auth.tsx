@@ -19,6 +19,10 @@ export type AuthReply =
       triesLeft?: number;
     };
 
+/** `change_pin` (migration 20261025000001): ok, or why not (bad_pin, same_pin, sign-in reasons). */
+export type ChangePinReply =
+  { ok: true } | { ok: false; reason: string; retryAt?: string; triesLeft?: number };
+
 /** This phone's id: made once, kept on the phone; the server ties the sign-in to it. */
 export async function deviceId(): Promise<string> {
   const saved = await AsyncStorage.getItem(DEVICE_KEY);
@@ -58,6 +62,8 @@ type AuthState = {
   ) => Promise<AuthReply>;
   /** Open Staffora with the PIN. */
   unlock: (pin: string) => Promise<AuthReply>;
+  /** Set a new PIN, giving the current one (checked like a sign-in). */
+  changePin: (current: string, next: string) => Promise<ChangePinReply>;
   /** Close until the PIN is typed again. */
   lock: () => Promise<void>;
   /** Forget this phone's sign-in entirely (a new invite is needed). */
@@ -121,6 +127,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [profile, start],
   );
 
+  const changePin = useCallback<AuthState['changePin']>(
+    async (current, next) => {
+      if (!profile) return { ok: false, reason: 'no_login' };
+      const { data, error } = await supabase.rpc('change_pin', {
+        p_person: profile.personId,
+        p_current: current,
+        p_new: next,
+        p_device: await deviceId(),
+      });
+      if (error || !data) return { ok: false, reason: 'network' };
+      return data as ChangePinReply;
+    },
+    [profile],
+  );
+
   const lock = useCallback(async () => {
     await supabase.auth.signOut({ scope: 'local' });
     setUnlocked(false);
@@ -134,7 +155,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <Ctx.Provider value={{ ready, profile, unlocked, join, unlock, lock, forget }}>
+    <Ctx.Provider value={{ ready, profile, unlocked, join, unlock, changePin, lock, forget }}>
       {children}
     </Ctx.Provider>
   );

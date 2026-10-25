@@ -1,15 +1,20 @@
 import { View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Lock, LogOut } from 'lucide-react-native';
+import { router, useLocalSearchParams } from 'expo-router';
+import { KeyRound, Lock, LogOut } from 'lucide-react-native';
 import { Avatar, Button, Card, Text } from '@/components/ui';
 import { useAuth } from '@/lib/auth';
 import { t } from '@/lib/i18n';
-import { space, useTheme } from '@/lib/theme';
+import { radius, space, useTheme } from '@/lib/theme';
 
-/** Me (PLAN §6.3): who you are, lock Staffora (PIN to open again), or remove it from this phone. */
+/**
+ * Me (PLAN §6.3): who you are, change the PIN, lock Staffora (PIN to open again), or remove it
+ * from this phone. `?changed=1` (back from Change PIN) shows that the PIN changed.
+ */
 export default function Me() {
   const { profile, lock, forget } = useAuth();
   const { c } = useTheme();
+  const { changed } = useLocalSearchParams<{ changed?: string }>();
   const m = 'staffora.me';
   return (
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: c.canvas }}>
@@ -29,6 +34,30 @@ export default function Me() {
             <Text muted>{profile?.shopName ?? ''}</Text>
           </View>
         </Card>
+        {changed === '1' && (
+          <View
+            accessibilityRole="alert"
+            style={{
+              padding: space['space-3'],
+              borderRadius: radius['radius-md'],
+              backgroundColor: c['status-present-soft'],
+            }}
+          >
+            <Text>{t(`${m}.pinChanged`)}</Text>
+          </View>
+        )}
+        <View style={{ gap: space['space-1'] }}>
+          <Button
+            label={t(`${m}.changePin`)}
+            variant="secondary"
+            icon={KeyRound}
+            block
+            onPress={() => router.push('/change-pin')}
+          />
+          <Text variant="caption" muted>
+            {t(`${m}.changePinHint`)}
+          </Text>
+        </View>
         <View style={{ gap: space['space-1'] }}>
           <Button
             label={t(`${m}.lock`)}

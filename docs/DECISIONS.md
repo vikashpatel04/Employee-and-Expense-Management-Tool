@@ -447,6 +447,13 @@ Owner's instruction: every value is customisable by the admin, and staff may hav
   `transpilePackages`, Expo/Metro will too.
 - **Next.js 16 `proxy.ts`** (formerly middleware) refreshes the Supabase session and redirects
   signed-out users. Server code uses `auth.getClaims()` (verifies the JWT), never `getSession()`.
+- **Change PIN is a plain RPC, not a `staff-auth` action.** The staff member already has a
+  Supabase session, so `public.change_pin` (authenticated, own person only) does it in the
+  database and reuses `pin_login_at` for the current PIN, so wrong PINs share the sign-in's
+  wait / lock. The edge function stays for the steps that need the service role (invite,
+  accept, PIN sign-in).
+- **Payslip share text lives in `packages/data`** (`payslipShareText`, takes the app's `t`), so
+  Staffora and FinCrew send the same words.
 - **Website server region is Mumbai (`bom1`)**, set in `apps/fincrew-web/vercel.json`, because
   the Supabase project is in `ap-south-1`. Server pages make several database trips per click;
   Vercel's default (`iad1`, Washington) made each one cross the world. A new database region
