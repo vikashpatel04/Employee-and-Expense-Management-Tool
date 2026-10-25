@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+### Added — 2026-10-25 (FinCrew app)
+
+- Salary run in the app: pay part of a payslip (type a smaller amount; the rest stays due), send
+  the payslip on WhatsApp when paying, **Send payslip** per person and **Share payslips** for the
+  whole month.
+- Staff page in the app: **Undo** a salary payment or advance in the Ledger (asks first), **Change
+  pay from a date** and **Advance rules** (limit, monthly cut) in the Pay tab.
+- The website and the app now save pay and advance rules through the same shared code.
+
 ### Added — 2026-10-25 (app icons)
 
 - Real app icons: FinCrew "Rupee ring" (app and website favicon), Staffora "Staff badge".

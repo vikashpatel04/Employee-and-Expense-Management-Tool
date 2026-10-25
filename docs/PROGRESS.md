@@ -39,7 +39,8 @@ first, then `CLAUDE.md`, then the feature doc for whatever you touch._
   settings), **`packages/data`** (used by the website and both apps: attendance month / write,
   session, staff loaders, expenses + saving, salary month + run / finalize / pay, payslip loaders
   `loadMyPayslips` / `loadPayslipView`, advances, reports, roles, leave setup, self-service:
-  code, check-ins, requests + `decideRequest`, logins / reset PIN, payslip share text).
+  code, check-ins, requests + `decideRequest`, logins / reset PIN, payslip share text, pay and
+  advance-rule saving `savePay` / `saveAdvanceSettings`, part payments in `paySalary`).
 - **Git:** everything up to `ffe45f1` is pushed (CI run 40165654747 green, Vercel deployed).
   Working from another
   PC: `docs/NEW-MACHINE.md`. The owner pushes, or
@@ -54,9 +55,12 @@ first, then `CLAUDE.md`, then the feature doc for whatever you touch._
    Test Staff's phone number in FinCrew, New phone + Reset PIN on their sign-in card, the owner
    types the number + a new PIN in the Staffora preview; then change PIN, Home card, Share, and
    (with their OK — permanent rows) sending a request and checking in.
-2. **FinCrew app gaps**: share payslip on WhatsApp (design "Salary run"), undo a ledger line in
-   the app (`undoLedgerLine` is shared), pay / advance-rule changes in the app (website only now),
-   bill photo upload on a real phone.
+2. **FinCrew app gaps**: built on 2026-10-25 — payslip on WhatsApp (pay sheet tick, Send
+   payslip, Share payslips), pay part of a payslip, undo a ledger line, change pay from a date,
+   advance rules. Not pushed. Left: check them in the app preview with the owner signed in
+   (paying / undoing on live writes permanent lines — ask first; opening the sheets and
+   cancelling is fine), bill photo upload on a real phone. Still website-only: allowances,
+   deductions, leave template, own rules.
 3. **Plan pieces not built yet**: staff documents (`staff_documents` + storage, PLAN §6.1 staff
    detail "Documents"), add staff from the app (stepper: details → pay → template → shift →
    invite), website audit log viewer (PLAN §6.2), dashboard "recent activity". Also move the
@@ -272,6 +276,16 @@ Tables still to add (with the phase that uses them, each with RLS tests): `staff
 (storage), `push_tokens` (Phase 7/8).
 
 ## Session log
+
+- **2026-10-25** — Pushed the Staffora work (CI run 40165654747: both migrations, new
+  `staff-auth` live; types regenerated). **FinCrew app gaps**: `packages/data` `pay-write.ts`
+  (`savePay`, `saveAdvanceSettings`, now also behind the website's actions), `paySalary`
+  `amount` (part payment), `loadSalaryRun` phone, `loadPay` `dayMinutes`. App: Ledger Undo
+  with a confirm sheet; salary run pay sheet with amount + "Send the payslip on WhatsApp",
+  Send payslip per person, Share payslips sheet (`src/lib/share-payslip.ts`, `wa.me` or the
+  share sheet); Pay tab Change pay from a date (`pay-change.tsx`) and Advance rules sheet;
+  Checkbox moved to `form.tsx`. Typecheck 9/9, tests core 236 / db 166, website build OK. Not
+  yet seen in the preview (needs the owner's FinCrew sign-in).
 
 - **2026-10-25** — App icons from the design system, the owner's choice: FinCrew "B · Rupee
   ring", Staffora "B · Staff badge". Sources in `packages/ui/design/app-icons/`, PNGs made by

@@ -466,6 +466,17 @@ Owner's instruction: every value is customisable by the admin, and staff may hav
   accept, PIN sign-in).
 - **Payslip share text lives in `packages/data`** (`payslipShareText`, takes the app's `t`), so
   Staffora and FinCrew send the same words.
+- **Paying part of a payslip is in the app's pay sheet** (design "Salary run · pay one" has the
+  amount field). `paySalary` takes an optional `amount` for one payslip; the database trigger
+  already refuses paying more than net pay, so several part payments add up safely. "Pay all
+  due" always pays what's left in full. The website still pays in full only.
+- **WhatsApp payslips open `wa.me/91<number>?text=…`** with the person's saved phone number
+  (core `phoneKey`, so any way it was typed works), straight into their chat with the text
+  filled in; the owner taps send. No phone number → the phone's share sheet. Several payslips
+  can't go in one step, so "Share payslips" is a list with a Send button per person.
+- **Pay and advance-rule saving moved into `packages/data`** (`savePay`,
+  `saveAdvanceSettings`, taking the fields as typed like `recordAdvance`), so the website and the
+  app check them the same way; the website actions only map the reasons to messages.
 - **App icons are generated, not hand-exported**: the chosen design-system SVGs live in
   `packages/ui/design/app-icons/` and `pnpm ui:icons` makes every size, so a new icon is one SVG
   change. Android adaptive marks are scaled to 80% so they stay inside the safe zone; the

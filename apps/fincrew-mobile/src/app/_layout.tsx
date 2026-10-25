@@ -45,6 +45,7 @@ function Gate({ fontsLoaded }: { fontsLoaded: boolean }) {
           <Stack.Screen name="staff/[id]" />
           <Stack.Screen name="expense" />
           <Stack.Screen name="salary/[month]" />
+          <Stack.Screen name="pay-change" />
           <Stack.Screen name="code" />
           <Stack.Screen name="requests" />
         </Stack.Protected>

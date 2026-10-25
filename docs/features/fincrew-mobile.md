@@ -51,8 +51,17 @@ is a placeholder until the first store build.
     chosen day's status, minutes late, in/out times, **Change** with the shared status sheet
     (`writeAttendance`), month counts.
   - **Ledger**: balance, lines by month newest first with running balance, "Undone" marks.
-  - **Pay**: current pay, overtime, shift and grace, leave template, own rules, allowances,
-    deductions, history (read-only; changes on the website for now).
+    **Undo** (`salary.undo_payment`) on a salary payment or an advance: a sheet asks first
+    ("Adds a line of +₹… dated today that cancels it"), then `undoLedgerLine` adds the exact
+    reversal, once (2026-10-25).
+  - **Pay**: current pay, overtime, shift and grace, leave template, own rules, **advance rules**
+    (limit, monthly cut), allowances, deductions, history. **Change pay from a date**
+    (`staff.pay.edit`) opens `src/app/pay-change.tsx`: from-date (DD/MM/YYYY, later dates
+    allowed), pay type, amount, overtime, shift (24-hour "09:30"), grace, hours a day for hourly
+    pay, prefilled with today's pay; saves with the shared `savePay`. **Advance rules for this
+    person** (`staff.edit`) opens a sheet with limit and cut (blank = none / decide at each run;
+    shared `saveAdvanceSettings`). Reloads when you come back. Allowances, deductions, leave
+    template and own rules still change on the website (2026-10-25).
 - Shared loaders in `packages/data/src/staff.ts`: `loadStaffList`, `loadStaffOverview`,
   `loadLedger`, `loadPay`. Shared components: `status-sheet.tsx` (StatusPicker sheet used by
   Today and staff Attendance), `Segmented`, `IconButton` in `ui.tsx`.
@@ -75,16 +84,24 @@ is a placeholder until the first store build.
   - **Salary run** (`src/app/salary/[month].tsx`, design "Salary run"): month switcher, state
     pill, net (or still to pay), gross / deductions / advance cuts, "Check before finalizing"
     warnings, people (days, advance cut or first warning, net, Paid / Due); tap a person for the
-    payslip lines and **Pay ₹…** for them. Bottom: Work out salary / Run again, Finalize salary,
-    Pay all due. Finalize and pay ask first in a sheet (permanent ledger lines; pay asks the
-    mode). Uses `loadSalaryRun`, `runSalary`, `finalizeSalary`, `paySalary`.
+    payslip lines, **Send payslip** and **Pay ₹…** for them. Bottom: Work out salary / Finalize
+    salary while it's a draft; once finalized **Share payslips** + **Pay all due**, and Run
+    again as a quiet button. Finalize and pay ask first in a sheet (permanent ledger lines). The
+    pay sheet for one person (design "Salary run · pay one") has the **amount** (prefilled with
+    what's due; less pays part, the rest stays due — `paySalary` `amount`, the database refuses
+    more than net pay), the mode, and **Send the payslip on WhatsApp** (on by default). **Share
+    payslips** lists every finalized person with Send payslip. Sending (`src/lib/share-payslip.ts`)
+    loads the payslip fresh and opens `wa.me/91<number>?text=…` with `payslipShareText` (the
+    same text Staffora shares); without a saved phone number it opens the phone's share sheet.
+    Uses `loadSalaryRun` (now with each person's phone), `runSalary`, `finalizeSalary`,
+    `paySalary`, `loadPayslipView`. (2026-10-25)
   - **Advances** (`advances.tsx`): total to recover, who owes (cut each month or decided at the
     run, limit); tap a person or **Give advance** (pick a person) → advance sheet.
   - **Advance sheet** (`src/components/advance-sheet.tsx`): Give advance / Paid back, amount, day,
     mode, note; past the limit the database refuses and the sheet asks **Give anyway**
     (`recordAdvance`, `confirmOverLimit`).
 - Form pieces (`src/components/form.tsx`): Field, AmountField, DayStepper, MonthStepper, Notice,
-  FormMessage, BottomBar. Money helpers (`src/lib/money.ts`): month names from i18n, category
+  FormMessage, BottomBar, Checkbox. Money helpers (`src/lib/money.ts`): month names from i18n, category
   icons/colours (same keys as the website).
 - **Attendance code** (`src/app/code.tsx`) and **Requests** (`src/app/requests.tsx`), opened
   from Today's "Attendance code" button and "N requests waiting" banner: see
@@ -134,6 +151,5 @@ owner to sign in (never typed for them).
 
 ## Next
 
-Payslip share on WhatsApp, pay a part of a payslip, undo a line from the app's Ledger, advance
-rules and pay changes in the app; attendance code screen and requests (with Phase 7 data), push
-notifications, widgets (Phase 8), EAS builds.
+Allowances, deductions, leave template and own rules from the app (website only), bill photo on
+a real phone, push notifications, widgets (Phase 8), EAS builds.

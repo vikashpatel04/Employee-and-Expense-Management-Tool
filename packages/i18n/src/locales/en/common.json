@@ -1264,7 +1264,7 @@
       "times": "In {{in}} · Out {{out}}",
       "fromRules": "From the leave template and holidays.",
       "change": "Change",
-      "changeOnWebsite": "Change pay, allowances and rules on the website for now.",
+      "changeOnWebsite": "Change allowances, deductions, leave template and rules on the website for now.",
       "ownRules_one": "{{count}} rule of their own",
       "ownRules_other": "{{count}} rules of their own",
       "shopRules": "Shop's rules",
@@ -1273,7 +1273,17 @@
       "balanceDue": "Due to them",
       "balanceOwes": "They owe the shop",
       "pay": "Pay {{amount}}",
-      "paid": "Paid {{amount}}."
+      "paid": "Paid {{amount}}.",
+      "undoTitle": "Undo this line?",
+      "undoBody": "Adds a line of {{amount}} dated today that cancels it. The original stays on the ledger, and a line can be undone only once.",
+      "undoConfirm": "Undo line",
+      "dateHint": "DD/MM/YYYY. A later date is fine (a raise from next month).",
+      "shiftHint": "24-hour time, like 09:30 and 20:30. Leave both empty for no shift.",
+      "advanceRules": "Advance rules",
+      "advanceLimit": "Advance limit",
+      "advanceCut": "Cut from each salary",
+      "noLimit": "No limit",
+      "cutAtRun": "Decided at each run"
     },
     "money": {
       "none": "You don't have access to money in this shop.",
@@ -1330,7 +1340,17 @@
           "missing_check_out_other": "{{count}} days without check-out",
           "negative_net_pay": "Deductions are more than earnings",
           "paid_leave_over_balance": "More paid leave than the balance"
-        }
+        },
+        "amount": "Amount",
+        "amountHint": "Pay all of it, or type less to pay part now; the rest stays due.",
+        "amountTooMuch": "Pay more than ₹0 and no more than {{amount}}.",
+        "sendWhatsApp": "Send the payslip on WhatsApp",
+        "sendWhatsAppNoPhone": "Send the payslip (no phone number saved: pick the app)",
+        "share": "Share payslips",
+        "shareSub": "{{month}} · opens WhatsApp with each person's payslip",
+        "sendOne": "Send payslip",
+        "noPhone": "No phone number · share another way",
+        "shareFailed": "Couldn't open the payslip."
       },
       "advances": {
         "total_one": "Advances outstanding · {{count}} person",

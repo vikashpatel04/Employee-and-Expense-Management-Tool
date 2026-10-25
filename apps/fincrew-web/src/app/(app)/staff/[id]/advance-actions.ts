@@ -1,8 +1,11 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { parseRupees } from '@fincrew/core';
-import { recordAdvance as recordShared, undoLedgerLine } from '@fincrew/data';
+import {
+  recordAdvance as recordShared,
+  saveAdvanceSettings as saveSettingsShared,
+  undoLedgerLine,
+} from '@fincrew/data';
 import { todayIST } from '@/lib/format';
 import { t } from '@/lib/i18n';
 import { requireMe } from '@/lib/session';
@@ -51,34 +54,29 @@ export async function recordAdvance(
   return { done: t(r.kind === 'given' ? 'advances.done.given' : 'advances.done.repaid') };
 }
 
-/** Per-person advance limit and monthly cut (blank = none / decide at each salary run). */
+/** Per-person advance limit and monthly cut (shared `saveAdvanceSettings`). */
 export async function saveAdvanceSettings(
   staffId: string,
   _prev: AdvanceState,
   form: FormData,
 ): Promise<AdvanceState> {
   const me = await requireMe();
-  if (!me || !me.permissions.includes('staff.edit'))
-    return { error: t('advances.errors.noPermission') };
-  const read = (k: string) => {
-    const v = String(form.get(k) ?? '').trim();
-    return v === '' ? null : parseRupees(v);
-  };
-  const limit = read('limit');
-  const cut = read('cut');
-  if (
-    (String(form.get('limit') ?? '').trim() && limit === null) ||
-    (String(form.get('cut') ?? '').trim() && cut === null)
-  ) {
-    return { error: t('staffDetail.pay.form.errors.amount') };
-  }
-  const supabase = await createClient();
-  const { error, count } = await supabase
-    .from('staff')
-    .update({ advance_limit_paise: limit, advance_cut_paise: cut }, { count: 'exact' })
-    .eq('person_id', staffId);
-  if (error || count === 0)
-    return { error: t('advances.errors.failed', { reason: error?.message ?? '—' }) };
+  if (!me) return { error: t('advances.errors.noPermission') };
+  const r = await saveSettingsShared(await createClient(), {
+    ...me,
+    staffId,
+    limit: String(form.get('limit') ?? ''),
+    cut: String(form.get('cut') ?? ''),
+  });
+  if (!r.ok)
+    return {
+      error:
+        r.reason === 'no_permission'
+          ? t('advances.errors.noPermission')
+          : r.reason === 'amount'
+            ? t('staffDetail.pay.form.errors.amount')
+            : t('advances.errors.failed', { reason: r.message }),
+    };
   revalidatePath(`/staff/${staffId}`);
   return { done: t('advances.done.settings') };
 }

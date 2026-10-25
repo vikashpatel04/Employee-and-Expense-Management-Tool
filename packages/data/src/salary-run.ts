@@ -18,6 +18,7 @@ export type SalaryPerson = {
   id: string;
   staffId: string;
   name: string;
+  phone: string | null;
   revision: number;
   lines: PayslipLine[];
   summary: DaySummary;
@@ -54,7 +55,7 @@ export async function loadSalaryRun(
   const { data: slips } = run
     ? await supabase
         .from('payslips')
-        .select('*, staff!inner(people!inner(name))')
+        .select('*, staff!inner(people!inner(name, phone))')
         .eq('run_id', run.id)
         .order('revision', { ascending: false })
     : { data: [] };
@@ -79,6 +80,7 @@ export async function loadSalaryRun(
       id: r.id,
       staffId: r.staff_id,
       name: r.staff.people.name,
+      phone: r.staff.people.phone,
       revision: r.revision,
       lines,
       summary: r.summary as unknown as DaySummary,
@@ -209,15 +211,25 @@ export async function finalizeSalary(
 
 /**
  * Pay what's left of finalized payslips (one, or all in the run when `payslipId` is null; needs
- * salary.run): one salary payment line per person, dated today.
+ * salary.run): one salary payment line per person, dated today. `amount` (paise, one payslip
+ * only) pays part of it: more than 0 and no more than what's left.
  */
 export async function paySalary(
   supabase: Supabase,
-  input: Ctx & { runId: string; payslipId: string | null; mode: string; today: BusinessDate },
+  input: Ctx & {
+    runId: string;
+    payslipId: string | null;
+    mode: string;
+    today: BusinessDate;
+    amount?: number | null;
+  },
 ): Promise<SalaryWriteResult> {
   if (!input.permissions.includes('salary.run')) return noPermission;
   const mode = PAYMENT_MODES.find((m) => m === input.mode);
   if (!mode) return failed(input.mode);
+  const part = input.amount ?? null;
+  if (part !== null && (!input.payslipId || !Number.isInteger(part) || part <= 0))
+    return failed('amount');
 
   let query = supabase
     .from('payslips')
@@ -238,12 +250,13 @@ export async function paySalary(
   for (const s of latest.values()) {
     const left = Number(s.net_pay_paise) - (paid.get(s.id) ?? 0);
     if (left <= 0) continue;
+    if (part !== null && part > left) return failed('amount');
     const { error } = await supabase.from('ledger_entries').insert({
       shop_id: input.shopId,
       staff_id: s.staff_id,
       date: input.today,
       type: 'salary_payment',
-      amount_paise: -left,
+      amount_paise: -(part ?? left),
       payment_mode: mode,
       ref_table: 'payslips',
       ref_id: s.id,

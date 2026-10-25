@@ -53,7 +53,8 @@ Checked in the browser on 2026-10-24 against the live shop (1 staff, ₹355 draf
   cut and limit; Call and WhatsApp), **Ledger** (`salary.view` or self: lines by month, newest
   first, with running balance from core `runningBalances`), **Pay** (`staff.pay.view` or self:
   current pay, overtime, shift and grace, leave template, allowances, deductions, history).
-- **Change pay from a date** (`staff.pay.edit`): prefilled with current pay; amount parsed with
+- **Change pay from a date** (`staff.pay.edit`): prefilled with current pay; saved by the shared
+  `savePay` (`packages/data/src/pay-write.ts`, also used by the Android app): amount parsed with
   `parseRupees`, times with `parseTimeOfDay`, date with `parseDisplayDate`; saves a dated
   `pay_settings` row (same date replaces it).
 - Dates everywhere are DD/MM/YYYY (`formatDate` = core `formatDisplayDate`; `dateFieldProps`).
@@ -148,7 +149,8 @@ Staffora sign-in card (phone number + PIN; the `/join` page was removed 2026-10-
   is created only if lines or the advance cut changed (key-order-safe compare, jsonb reorders).
 - **Finalize** (`finalizeSalary`, all drafts or one): `finalize_payslip` posts the ledger lines
   and the leave month. **Pay** (`paySalary`, one or everyone, with mode): a `salary_payment` for
-  what's left of net pay (payments minus their reversals; `paidByPayslip`).
+  what's left of net pay (payments minus their reversals; `paidByPayslip`). The website always
+  pays in full; `paySalary` also takes an `amount` for one payslip (the app's part payment).
 - Since 2026-10-24 the steps and the page's data live in `packages/data/src/salary-run.ts`
   (`loadSalaryRun`, `runSalary`, `finalizeSalary`, `paySalary`), shared with the Android app;
   `salary/actions.ts` only checks the session, adds the messages and refreshes the page.
@@ -162,7 +164,8 @@ the live shop: ledger lines are permanent, so a finalized Test Staff could never
 - Staff detail **Overview** (`advances.give`): **Give advance / Record repaid** (amount, date
   DD/MM/YYYY, mode, note) → `advances` row; the database posts the ledger line. Past the person's
   limit the database refuses (hint `over_limit`) and the form shows "Give it anyway" to confirm.
-  **Advance rules** (`staff.edit`): limit and default monthly cut (blank = none / decide at run).
+  **Advance rules** (`staff.edit`): limit and default monthly cut (blank = none / decide at run;
+  shared `saveAdvanceSettings`).
 - **Undo** (`salary.undo_payment`) on salary payments and advances in the Ledger tab: exact
   reversal, once; reversed lines show "Undone".
 - **/advances** (`salary.view` or `advances.give`): people with an advance to recover, monthly

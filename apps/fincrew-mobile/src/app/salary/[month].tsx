@@ -9,9 +9,18 @@ import {
   CircleCheck,
   Hourglass,
   IndianRupee,
+  MessageCircle,
   RefreshCw,
 } from 'lucide-react-native';
-import { businessDateOf, formatINR, monthOf, type PayslipLine } from '@fincrew/core';
+import {
+  businessDateOf,
+  formatINR,
+  monthOf,
+  paiseToInput,
+  parseRupees,
+  phoneKey,
+  type PayslipLine,
+} from '@fincrew/core';
 import {
   finalizeSalary,
   loadSalaryRun,
@@ -20,13 +29,21 @@ import {
   type SalaryPerson,
   type SalaryWriteResult,
 } from '@fincrew/data';
-import { BottomBar, FormMessage, MonthStepper, Notice } from '@/components/form';
+import {
+  AmountField,
+  BottomBar,
+  Checkbox,
+  FormMessage,
+  MonthStepper,
+  Notice,
+} from '@/components/form';
 import { useStatePill } from '@/components/money/salary';
 import { Sheet } from '@/components/sheet';
 import { Avatar, Button, Card, IconButton, SectionTitle, Segmented, Text } from '@/components/ui';
 import { t } from '@/lib/i18n';
 import { monthLabel, parseYm, ym } from '@/lib/money';
 import { useSession } from '@/lib/session';
+import { sharePayslip } from '@/lib/share-payslip';
 import { supabase } from '@/lib/supabase';
 import { radius, space, useTheme } from '@/lib/theme';
 
@@ -39,7 +56,9 @@ const MINUS = ['deduction', 'late_deduction', 'advance_cut'];
  * Salary run (design: "Salary run · draft review / finalized, pay one"): work out a month with
  * the shared rules, check each payslip, finalize, then pay everyone or one person. Every step
  * goes through `@fincrew/data` (runSalary / finalizeSalary / paySalary), like the website;
- * finalizing and paying write permanent ledger lines, so each asks first.
+ * finalizing and paying write permanent ledger lines, so each asks first. Paying one person can
+ * be part of what's due, and can send them the payslip on WhatsApp; "Share payslips" sends each
+ * finalized payslip (`sharePayslip`, same text as Staffora).
  */
 export default function SalaryRun() {
   const params = useLocalSearchParams<{ month?: string }>();
@@ -59,6 +78,11 @@ export default function SalaryRun() {
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const [confirm, setConfirm] = useState<Confirm | null>(null);
   const [mode, setMode] = useState<string>('cash');
+  const [amount, setAmount] = useState('');
+  const [sendWa, setSendWa] = useState(true);
+  const [sheetError, setSheetError] = useState<string | null>(null);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [sharing, setSharing] = useState<string | null>(null);
 
   const canRun = can('salary.run');
   const mName = monthLabel(year, month);
@@ -88,6 +112,7 @@ export default function SalaryRun() {
     if (r.ok) {
       setMessage({ ok: true, text: done(r) });
       await load();
+      return true;
     } else {
       setMessage({
         ok: false,
@@ -96,6 +121,7 @@ export default function SalaryRun() {
             ? t('salary.errors.noPermission')
             : t('salary.errors.failed', { reason: r.message }),
       });
+      return false;
     }
   };
 
@@ -112,10 +138,23 @@ export default function SalaryRun() {
       () => finalizeSalary(supabase, { ...me, runId: run.runId! }),
       (r) => t('salary.done.finalized', { count: r.count }),
     );
-  const pay = (person: SalaryPerson | null) =>
-    me &&
-    run?.runId &&
-    act(
+  const askPay = (person: SalaryPerson | null) => {
+    setAmount(person ? paiseToInput(due(person)) : '');
+    setSendWa(true);
+    setSheetError(null);
+    setConfirm({ kind: 'pay', person });
+  };
+  const pay = async (person: SalaryPerson | null) => {
+    if (!me || !run?.runId) return;
+    let part: number | null = null;
+    if (person) {
+      const left = due(person);
+      const typed = parseRupees(amount);
+      if (typed === null || typed <= 0 || typed > left)
+        return setSheetError(t(`${s}.amountTooMuch`, { amount: formatINR(left) }));
+      if (typed < left) part = typed;
+    }
+    const ok = await act(
       () =>
         paySalary(supabase, {
           ...me,
@@ -123,14 +162,24 @@ export default function SalaryRun() {
           payslipId: person?.id ?? null,
           mode,
           today,
+          amount: part,
         }),
       (r) => t('salary.done.paid', { count: r.count }),
     );
+    if (ok && person && sendWa) await send(person);
+  };
+  const send = async (person: SalaryPerson) => {
+    setSharing(person.id);
+    const ok = await sharePayslip(person.id, person.phone);
+    setSharing(null);
+    if (!ok) setMessage({ ok: false, text: t(`${s}.shareFailed`) });
+  };
 
   const people = run?.people ?? [];
   const sum = (f: (p: SalaryPerson) => number) => people.reduce((a, p) => a + f(p), 0);
   const due = (p: SalaryPerson) => Math.max(0, p.net - p.paidAmount);
   const dueCount = people.filter((p) => due(p) > 0 && p.state !== 'draft').length;
+  const final = people.filter((p) => p.state !== 'draft');
   const overall = run?.overall ?? 'none';
   const warnings = people.flatMap((p) =>
     p.warnings.map((w) => t(`salary.warnings.${w.code}`, { name: p.name, count: w.count ?? 0 })),
@@ -364,15 +413,34 @@ export default function SalaryRun() {
                             <Text variant="label-sm">{t('salary.lines.net')}</Text>
                             <Text variant="money-md">{formatINR(p.net)}</Text>
                           </View>
-                          {canRun && p.state === 'finalized' && left > 0 && (
-                            <View style={{ marginTop: space['space-2'] }}>
-                              <Button
-                                label={t(`${s}.payOne`, { amount: formatINR(left) })}
-                                icon={IndianRupee}
-                                variant="secondary"
-                                block
-                                onPress={() => setConfirm({ kind: 'pay', person: p })}
-                              />
+                          {p.state !== 'draft' && (
+                            <View
+                              style={{
+                                flexDirection: 'row',
+                                gap: space['space-2'],
+                                marginTop: space['space-2'],
+                              }}
+                            >
+                              <View style={{ flex: 1 }}>
+                                <Button
+                                  label={t(`${s}.sendOne`)}
+                                  icon={MessageCircle}
+                                  variant="secondary"
+                                  busy={sharing === p.id}
+                                  block
+                                  onPress={() => void send(p)}
+                                />
+                              </View>
+                              {canRun && p.state === 'finalized' && left > 0 && (
+                                <View style={{ flex: 1.2 }}>
+                                  <Button
+                                    label={t(`${s}.payOne`, { amount: formatINR(left) })}
+                                    icon={IndianRupee}
+                                    block
+                                    onPress={() => askPay(p)}
+                                  />
+                                </View>
+                              )}
                             </View>
                           )}
                         </View>
@@ -391,7 +459,7 @@ export default function SalaryRun() {
         )}
       </ScrollView>
 
-      {run && (canRun || message) && (
+      {run && (canRun || message || final.length > 0) && (
         <BottomBar>
           {message && <FormMessage ok={message.ok} text={message.text} />}
           {canRun && overall === 'draft' && (
@@ -399,7 +467,31 @@ export default function SalaryRun() {
               {t(`${s}.finalizeHint`)}
             </Text>
           )}
-          {canRun && (
+          {final.length > 0 && overall !== 'draft' && (
+            <View style={{ flexDirection: 'row', gap: space['space-2'] }}>
+              <View style={{ flex: 1 }}>
+                <Button
+                  label={t(`${s}.share`)}
+                  icon={MessageCircle}
+                  variant="secondary"
+                  block
+                  onPress={() => setShareOpen(true)}
+                />
+              </View>
+              {canRun && dueCount > 0 && (
+                <View style={{ flex: 1.4 }}>
+                  <Button
+                    label={t(`${s}.payAll`)}
+                    icon={IndianRupee}
+                    block
+                    disabled={busy}
+                    onPress={() => askPay(null)}
+                  />
+                </View>
+              )}
+            </View>
+          )}
+          {canRun && overall !== 'finalized' && overall !== 'paid' && (
             <View style={{ flexDirection: 'row', gap: space['space-2'] }}>
               {people.length > 0 && (
                 <View style={{ flex: 1 }}>
@@ -413,38 +505,36 @@ export default function SalaryRun() {
                   />
                 </View>
               )}
-              {(overall === 'none' ||
-                overall === 'draft' ||
-                (overall === 'finalized' && dueCount > 0)) && (
-                <View style={{ flex: 1.4 }}>
-                  {overall === 'none' ? (
-                    <Button
-                      label={busy ? t('salary.working') : t('salary.run')}
-                      icon={Check}
-                      busy={busy}
-                      block
-                      onPress={work}
-                    />
-                  ) : overall === 'draft' ? (
-                    <Button
-                      label={t('salary.finalize')}
-                      icon={Check}
-                      block
-                      disabled={busy}
-                      onPress={() => setConfirm({ kind: 'finalize' })}
-                    />
-                  ) : (
-                    <Button
-                      label={t(`${s}.payAll`)}
-                      icon={IndianRupee}
-                      block
-                      disabled={busy}
-                      onPress={() => setConfirm({ kind: 'pay', person: null })}
-                    />
-                  )}
-                </View>
-              )}
+              <View style={{ flex: 1.4 }}>
+                {overall === 'none' ? (
+                  <Button
+                    label={busy ? t('salary.working') : t('salary.run')}
+                    icon={Check}
+                    busy={busy}
+                    block
+                    onPress={work}
+                  />
+                ) : (
+                  <Button
+                    label={t('salary.finalize')}
+                    icon={Check}
+                    block
+                    disabled={busy}
+                    onPress={() => setConfirm({ kind: 'finalize' })}
+                  />
+                )}
+              </View>
             </View>
+          )}
+          {canRun && (overall === 'finalized' || overall === 'paid') && (
+            <Button
+              label={t('salary.runAgain')}
+              icon={RefreshCw}
+              variant="quiet"
+              busy={busy && !confirm}
+              block
+              onPress={work}
+            />
           )}
         </BottomBar>
       )}
@@ -472,8 +562,19 @@ export default function SalaryRun() {
               })
         }
       >
+        {confirm?.kind === 'pay' && confirm.person && (
+          <AmountField
+            label={t(`${s}.amount`)}
+            value={amount}
+            onChange={(v) => {
+              setAmount(v);
+              setSheetError(null);
+            }}
+            hint={t(`${s}.amountHint`)}
+          />
+        )}
         {confirm?.kind === 'pay' && (
-          <View style={{ gap: space['space-2'] }}>
+          <View style={{ gap: space['space-2'], marginTop: space['space-2'] }}>
             <Text variant="label-sm">{t('salary.payMode')}</Text>
             <Segmented
               label={t('salary.payMode')}
@@ -483,6 +584,18 @@ export default function SalaryRun() {
             />
           </View>
         )}
+        {confirm?.kind === 'pay' && confirm.person && (
+          <Checkbox
+            label={
+              phoneKey(confirm.person.phone)
+                ? t(`${s}.sendWhatsApp`)
+                : t(`${s}.sendWhatsAppNoPhone`)
+            }
+            value={sendWa}
+            onChange={setSendWa}
+          />
+        )}
+        {sheetError && <FormMessage ok={false} text={sheetError} />}
         <View style={{ flexDirection: 'row', gap: space['space-2'], marginTop: space['space-4'] }}>
           <View style={{ flex: 1 }}>
             <Button
@@ -512,6 +625,47 @@ export default function SalaryRun() {
             )}
           </View>
         </View>
+      </Sheet>
+
+      <Sheet
+        open={shareOpen}
+        onClose={() => setShareOpen(false)}
+        title={t(`${s}.share`)}
+        subtitle={t(`${s}.shareSub`, { month: mName })}
+      >
+        {final.map((p) => (
+          <View
+            key={p.id}
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: space['space-3'],
+              minHeight: 64,
+              paddingVertical: space['space-2'],
+              borderBottomWidth: 1,
+              borderBottomColor: c.line,
+            }}
+          >
+            <Avatar name={p.name} size={36} />
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Text variant="label" numberOfLines={1}>
+                {p.name}
+              </Text>
+              <Text variant="caption" muted numberOfLines={1}>
+                {phoneKey(p.phone)
+                  ? `${formatINR(p.net)} · ${p.phone}`
+                  : `${formatINR(p.net)} · ${t(`${s}.noPhone`)}`}
+              </Text>
+            </View>
+            <Button
+              label={t(`${s}.sendOne`)}
+              icon={MessageCircle}
+              variant="secondary"
+              busy={sharing === p.id}
+              onPress={() => void send(p)}
+            />
+          </View>
+        ))}
       </Sheet>
     </SafeAreaView>
   );

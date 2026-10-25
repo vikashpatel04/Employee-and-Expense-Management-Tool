@@ -134,7 +134,15 @@ export default function StaffDetail() {
               <AttendanceSection staffId={info.id} name={info.name} onChanged={load} />
             )}
             {tab === 'ledger' && <LedgerSection staffId={info.id} />}
-            {tab === 'pay' && <PaySection staffId={info.id} />}
+            {tab === 'pay' && (
+              <PaySection
+                staffId={info.id}
+                name={info.name}
+                advanceLimit={info.advanceLimit}
+                advanceCut={info.advanceCut}
+                onChanged={() => void load()}
+              />
+            )}
           </>
         )}
       </ScrollView>

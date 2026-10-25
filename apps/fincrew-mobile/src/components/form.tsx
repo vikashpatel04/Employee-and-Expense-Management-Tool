@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Pressable, TextInput, View, type KeyboardTypeOptions } from 'react-native';
-import { AlertTriangle, ChevronLeft, ChevronRight } from 'lucide-react-native';
+import { AlertTriangle, Check, ChevronLeft, ChevronRight } from 'lucide-react-native';
 import { addDays, formatDisplayDate, formatINR, weekday } from '@fincrew/core';
 import { t } from '@/lib/i18n';
 import { monthLabel, shiftMonth, ym } from '@/lib/money';
@@ -275,5 +275,42 @@ export function BottomBar({ children }: { children: ReactNode }) {
     >
       {children}
     </View>
+  );
+}
+
+/** A tick box with its label (48 px row). */
+export function Checkbox({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: boolean;
+  onChange: (v: boolean) => void;
+}) {
+  const { c } = useTheme();
+  return (
+    <Pressable
+      accessibilityRole="checkbox"
+      accessibilityState={{ checked: value }}
+      onPress={() => onChange(!value)}
+      style={{ flexDirection: 'row', alignItems: 'center', gap: space['space-3'], minHeight: 48 }}
+    >
+      <View
+        style={{
+          width: 24,
+          height: 24,
+          borderRadius: 6,
+          borderWidth: 2,
+          borderColor: value ? c.accent : c['line-strong'],
+          backgroundColor: value ? c.accent : 'transparent',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        {value && <Check size={16} color={c['on-accent']} strokeWidth={3} />}
+      </View>
+      <Text style={{ flex: 1 }}>{label}</Text>
+    </Pressable>
   );
 }

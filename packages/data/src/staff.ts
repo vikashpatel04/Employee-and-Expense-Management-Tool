@@ -170,6 +170,7 @@ export async function loadPay(supabase: Supabase, staffId: string, today: Busine
       shiftStart: current.shift_start,
       shiftEnd: current.shift_end,
       grace: current.grace_minutes,
+      dayMinutes: current.day_minutes,
       ownRules:
         Object.keys(current.pay_rules_override ?? {}).length +
         Object.keys(current.late_policy_override ?? {}).length,

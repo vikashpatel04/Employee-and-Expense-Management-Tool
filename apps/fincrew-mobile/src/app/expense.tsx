@@ -22,7 +22,14 @@ import {
   type ExpenseWriteResult,
   type PaidByKind,
 } from '@fincrew/data';
-import { AmountField, BottomBar, DayStepper, Field, FormMessage } from '@/components/form';
+import {
+  AmountField,
+  BottomBar,
+  Checkbox,
+  DayStepper,
+  Field,
+  FormMessage,
+} from '@/components/form';
 import { Sheet } from '@/components/sheet';
 import { Button, Card, IconButton, Segmented, Text } from '@/components/ui';
 import { pickBillPhoto, type BillPhoto } from '@/lib/bill-photo';
@@ -570,41 +577,5 @@ function PersonButton({
         <Text muted={!name}>{name ?? t(`${f}.chooseStaff`)}</Text>
       </Pressable>
     </View>
-  );
-}
-
-function Checkbox({
-  label,
-  value,
-  onChange,
-}: {
-  label: string;
-  value: boolean;
-  onChange: (v: boolean) => void;
-}) {
-  const { c } = useTheme();
-  return (
-    <Pressable
-      accessibilityRole="checkbox"
-      accessibilityState={{ checked: value }}
-      onPress={() => onChange(!value)}
-      style={{ flexDirection: 'row', alignItems: 'center', gap: space['space-3'], minHeight: 48 }}
-    >
-      <View
-        style={{
-          width: 24,
-          height: 24,
-          borderRadius: 6,
-          borderWidth: 2,
-          borderColor: value ? c.accent : c['line-strong'],
-          backgroundColor: value ? c.accent : 'transparent',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        {value && <Check size={16} color={c['on-accent']} strokeWidth={3} />}
-      </View>
-      <Text style={{ flex: 1 }}>{label}</Text>
-    </Pressable>
   );
 }
