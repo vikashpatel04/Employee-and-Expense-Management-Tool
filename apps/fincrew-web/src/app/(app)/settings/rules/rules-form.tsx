@@ -10,7 +10,7 @@ import { FormMessage } from '../holidays/holiday-forms';
 import { saveRules, type RulesState } from './actions';
 
 const r = 'settings.rules';
-const card = 'flex flex-col gap-4 rounded-lg border bg-card p-5 shadow-xs';
+const card = 'flex flex-col gap-4 rounded-lg border bg-card p-4 shadow-xs';
 const checkbox = 'h-5 w-5 shrink-0 accent-[var(--accent)]';
 
 function Choice({
@@ -89,9 +89,18 @@ function Check({ name, label, checked }: { name: string; label: string; checked:
   );
 }
 
-function Section({ title, children }: { title: string; children: ReactNode }) {
+function Section({
+  title,
+  grow = false,
+  children,
+}: {
+  title: string;
+  /** Fill the rest of its column (the last card in a stacked column). */
+  grow?: boolean;
+  children: ReactNode;
+}) {
   return (
-    <section className={card}>
+    <section className={`${card} ${grow ? 'flex-1' : ''}`}>
       <h2 className="text-title-md">{title}</h2>
       {children}
     </section>
@@ -111,53 +120,140 @@ export function RulesForm({ rules }: { rules: ShopRules }) {
   const { pay, late, attendanceCode: code, staffLogin: login } = rules;
 
   return (
-    <form
-      onSubmit={onSubmit}
-      className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]"
-    >
-      <div className="flex flex-col gap-4">
-        <Section title={t(`${r}.pay.title`)}>
-          <Choice
-            name="dayRate"
-            label={t(`${r}.pay.dayRate`)}
-            options={keys(`${r}.pay.dayRateModes`, ['calendar_days', 'fixed_days'])}
-            value={dayRate}
-            onChange={(v) => setDayRate(v as typeof dayRate)}
-            hint={t(`${r}.pay.dayRateHint`)}
+    <form onSubmit={onSubmit} className="grid items-stretch gap-4 lg:grid-cols-2">
+      {/* Rows of equal height: Pay | Coming late, then Attendance code | Expenses + Staff sign-in. */}
+      <Section title={t(`${r}.pay.title`)}>
+        <Choice
+          name="dayRate"
+          label={t(`${r}.pay.dayRate`)}
+          options={keys(`${r}.pay.dayRateModes`, ['calendar_days', 'fixed_days'])}
+          value={dayRate}
+          onChange={(v) => setDayRate(v as typeof dayRate)}
+          hint={t(`${r}.pay.dayRateHint`)}
+        />
+        {dayRate === 'fixed_days' && (
+          <NumberField
+            name="fixedDays"
+            label={t(`${r}.pay.fixedDays`)}
+            value={pay.dayRateBasis.mode === 'fixed_days' ? pay.dayRateBasis.days : 30}
           />
-          {dayRate === 'fixed_days' && (
-            <NumberField
-              name="fixedDays"
-              label={t(`${r}.pay.fixedDays`)}
-              value={pay.dayRateBasis.mode === 'fixed_days' ? pay.dayRateBasis.days : 30}
+        )}
+        <Choice
+          name="offDayWork"
+          label={t(`${r}.pay.offDayWork`)}
+          options={keys(`${r}.pay.offDayWorkModes`, ['extra', 'replace', 'none'])}
+          value={pay.offDayWork}
+        />
+        <Choice
+          name="unmarkedDay"
+          label={t(`${r}.pay.unmarkedDay`)}
+          options={keys(`${r}.pay.unmarkedModes`, ['unpaid', 'paid'])}
+          value={pay.unmarkedDay}
+        />
+        <Choice
+          name="holidayOnWeeklyOff"
+          label={t(`${r}.pay.holidayOnWeeklyOff`)}
+          options={keys(`${r}.pay.holidayModes`, ['holiday', 'weekly_off'])}
+          value={pay.holidayOnWeeklyOff}
+        />
+        <Choice
+          name="markOnOffDay"
+          label={t(`${r}.pay.markOnOffDay`)}
+          options={keys(`${r}.pay.markModes`, ['ignore', 'apply'])}
+          value={pay.markOnOffDay}
+        />
+      </Section>
+      <Section title={t(`${r}.late.title`)}>
+        <Choice
+          name="lateMode"
+          label={t(`${r}.late.mode`)}
+          options={keys(`${r}.late.modes`, ['notice_only', 'deduct'])}
+          value={late.mode}
+        />
+        <NumberField
+          name="freeLateDays"
+          label={t(`${r}.late.freeLateDays`)}
+          value={late.freeLateDays}
+        />
+        <NumberField
+          name="halfDay"
+          label={t(`${r}.late.halfDay`)}
+          value={late.halfDayThresholdMinutes ?? ''}
+          hint={t(`${r}.late.halfDayHint`)}
+          required={false}
+        />
+        <Check
+          name="halfDayUsesFreeDay"
+          label={t(`${r}.late.halfDayUsesFreeDay`)}
+          checked={late.halfDayUsesFreeDay}
+        />
+        <Check
+          name="earlyLeaving"
+          label={t(`${r}.late.earlyLeaving`)}
+          checked={late.earlyLeaving}
+        />
+        <Choice
+          name="countsFrom"
+          label={t(`${r}.late.countsFrom`)}
+          options={keys(`${r}.late.countsFromModes`, ['shift_start', 'grace_end'])}
+          value={late.lateCountsFrom}
+        />
+        <Choice
+          name="chargeMode"
+          label={t(`${r}.late.charge`)}
+          options={keys(`${r}.late.chargeModes`, ['per_minute', 'per_late_day'])}
+          value={chargeMode}
+          onChange={(v) => setChargeMode(v as typeof chargeMode)}
+        />
+        {chargeMode === 'per_late_day' && (
+          <NumberField
+            name="chargeAmount"
+            label={t(`${r}.late.chargeAmount`)}
+            value={late.charge.mode === 'per_late_day' ? paiseToInput(late.charge.amount) : ''}
+            decimal
+          />
+        )}
+      </Section>
+      <Section title={t(`${r}.code.title`)}>
+        <Choice
+          name="rotation"
+          label={t(`${r}.code.rotation`)}
+          options={keys(`${r}.code.rotationModes`, ['daily', 'manual'])}
+          value={rotation}
+          onChange={(v) => setRotation(v as typeof rotation)}
+        />
+        {rotation === 'daily' && (
+          <label className="text-label-sm block">
+            {t(`${r}.code.rotateAt`)}
+            <input
+              type="time"
+              name="rotateAt"
+              required
+              defaultValue={minutesToInput(
+                code.rotation.mode === 'daily' ? code.rotation.atMinutes : 0,
+              )}
+              className={inputClass}
             />
-          )}
-          <Choice
-            name="offDayWork"
-            label={t(`${r}.pay.offDayWork`)}
-            options={keys(`${r}.pay.offDayWorkModes`, ['extra', 'replace', 'none'])}
-            value={pay.offDayWork}
+          </label>
+        )}
+        <NumberField name="minGap" label={t(`${r}.code.minGap`)} value={code.minGapMinutes} />
+        <NumberField name="cooldown" label={t(`${r}.code.cooldown`)} value={code.cooldownMinutes} />
+        <Check
+          name="checkOutRequired"
+          label={t(`${r}.code.checkOutRequired`)}
+          checked={code.checkOutRequired}
+        />
+        <div className="grid gap-3 sm:grid-cols-3">
+          <NumberField name="maxWrong" label={t(`${r}.code.maxWrong`)} value={code.maxWrongCodes} />
+          <NumberField
+            name="wrongWindow"
+            label={t(`${r}.code.wrongWindow`)}
+            value={code.wrongCodeWindowMinutes}
           />
-          <Choice
-            name="unmarkedDay"
-            label={t(`${r}.pay.unmarkedDay`)}
-            options={keys(`${r}.pay.unmarkedModes`, ['unpaid', 'paid'])}
-            value={pay.unmarkedDay}
-          />
-          <Choice
-            name="holidayOnWeeklyOff"
-            label={t(`${r}.pay.holidayOnWeeklyOff`)}
-            options={keys(`${r}.pay.holidayModes`, ['holiday', 'weekly_off'])}
-            value={pay.holidayOnWeeklyOff}
-          />
-          <Choice
-            name="markOnOffDay"
-            label={t(`${r}.pay.markOnOffDay`)}
-            options={keys(`${r}.pay.markModes`, ['ignore', 'apply'])}
-            value={pay.markOnOffDay}
-          />
-        </Section>
-
+          <NumberField name="lockout" label={t(`${r}.code.lockout`)} value={code.lockoutMinutes} />
+        </div>
+      </Section>
+      <div className="flex flex-col gap-4">
         <Section title={t(`${r}.expenses.title`)}>
           <NumberField
             name="smallLimit"
@@ -170,114 +266,7 @@ export function RulesForm({ rules }: { rules: ShopRules }) {
             decimal
           />
         </Section>
-      </div>
-
-      <div className="flex flex-col gap-4">
-        <Section title={t(`${r}.late.title`)}>
-          <Choice
-            name="lateMode"
-            label={t(`${r}.late.mode`)}
-            options={keys(`${r}.late.modes`, ['notice_only', 'deduct'])}
-            value={late.mode}
-          />
-          <NumberField
-            name="freeLateDays"
-            label={t(`${r}.late.freeLateDays`)}
-            value={late.freeLateDays}
-          />
-          <NumberField
-            name="halfDay"
-            label={t(`${r}.late.halfDay`)}
-            value={late.halfDayThresholdMinutes ?? ''}
-            hint={t(`${r}.late.halfDayHint`)}
-            required={false}
-          />
-          <Check
-            name="halfDayUsesFreeDay"
-            label={t(`${r}.late.halfDayUsesFreeDay`)}
-            checked={late.halfDayUsesFreeDay}
-          />
-          <Check
-            name="earlyLeaving"
-            label={t(`${r}.late.earlyLeaving`)}
-            checked={late.earlyLeaving}
-          />
-          <Choice
-            name="countsFrom"
-            label={t(`${r}.late.countsFrom`)}
-            options={keys(`${r}.late.countsFromModes`, ['shift_start', 'grace_end'])}
-            value={late.lateCountsFrom}
-          />
-          <Choice
-            name="chargeMode"
-            label={t(`${r}.late.charge`)}
-            options={keys(`${r}.late.chargeModes`, ['per_minute', 'per_late_day'])}
-            value={chargeMode}
-            onChange={(v) => setChargeMode(v as typeof chargeMode)}
-          />
-          {chargeMode === 'per_late_day' && (
-            <NumberField
-              name="chargeAmount"
-              label={t(`${r}.late.chargeAmount`)}
-              value={late.charge.mode === 'per_late_day' ? paiseToInput(late.charge.amount) : ''}
-              decimal
-            />
-          )}
-        </Section>
-
-        <Section title={t(`${r}.code.title`)}>
-          <Choice
-            name="rotation"
-            label={t(`${r}.code.rotation`)}
-            options={keys(`${r}.code.rotationModes`, ['daily', 'manual'])}
-            value={rotation}
-            onChange={(v) => setRotation(v as typeof rotation)}
-          />
-          {rotation === 'daily' && (
-            <label className="text-label-sm block">
-              {t(`${r}.code.rotateAt`)}
-              <input
-                type="time"
-                name="rotateAt"
-                required
-                defaultValue={minutesToInput(
-                  code.rotation.mode === 'daily' ? code.rotation.atMinutes : 0,
-                )}
-                className={inputClass}
-              />
-            </label>
-          )}
-          <NumberField name="minGap" label={t(`${r}.code.minGap`)} value={code.minGapMinutes} />
-          <NumberField
-            name="cooldown"
-            label={t(`${r}.code.cooldown`)}
-            value={code.cooldownMinutes}
-          />
-          <Check
-            name="checkOutRequired"
-            label={t(`${r}.code.checkOutRequired`)}
-            checked={code.checkOutRequired}
-          />
-          <div className="grid gap-3 sm:grid-cols-3">
-            <NumberField
-              name="maxWrong"
-              label={t(`${r}.code.maxWrong`)}
-              value={code.maxWrongCodes}
-            />
-            <NumberField
-              name="wrongWindow"
-              label={t(`${r}.code.wrongWindow`)}
-              value={code.wrongCodeWindowMinutes}
-            />
-            <NumberField
-              name="lockout"
-              label={t(`${r}.code.lockout`)}
-              value={code.lockoutMinutes}
-            />
-          </div>
-        </Section>
-
-        <Section title={t(`${r}.login.title`)}>
+        <Section title={t(`${r}.login.title`)} grow>
           <div className="grid gap-3 sm:grid-cols-3">
             <NumberField
               name="pinsBeforeWait"
@@ -301,13 +290,18 @@ export function RulesForm({ rules }: { rules: ShopRules }) {
             checked={login.allowBiometrics}
           />
         </Section>
+      </div>
 
-        <div className="flex flex-col gap-3">
-          <FormMessage state={state} />
-          <button type="submit" disabled={pending} aria-busy={pending} className={buttonClass}>
-            {pending ? t('settings.saving') : t(`${r}.save`)}
-          </button>
-        </div>
+      <div className="flex flex-wrap items-center justify-end gap-3 lg:col-span-2">
+        <FormMessage state={state} />
+        <button
+          type="submit"
+          disabled={pending}
+          aria-busy={pending}
+          className={`${buttonClass} w-auto`}
+        >
+          {pending ? t('settings.saving') : t(`${r}.save`)}
+        </button>
       </div>
     </form>
   );

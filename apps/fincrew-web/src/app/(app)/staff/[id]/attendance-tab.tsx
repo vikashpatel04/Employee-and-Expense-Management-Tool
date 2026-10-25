@@ -96,7 +96,7 @@ export async function AttendanceTab({
   const lead = COLUMN(weekday(dates[0]!));
 
   return (
-    <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+    <div className="grid items-stretch gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
       <section className="flex flex-col gap-3 rounded-lg border bg-card p-4 shadow-xs">
         <div className="flex items-center justify-between gap-2">
           <Link
@@ -212,7 +212,7 @@ export async function AttendanceTab({
           {canChange && <DayChange staffId={staffId} date={day} current={cell.status} />}
         </section>
 
-        <section className="flex flex-col gap-2 rounded-lg border bg-card p-4 shadow-xs">
+        <section className="flex flex-1 flex-col gap-2 rounded-lg border bg-card p-4 shadow-xs">
           <h3 className="text-label-sm">
             {t('staffDetail.attendance.payable', {
               days: row.payableDays,

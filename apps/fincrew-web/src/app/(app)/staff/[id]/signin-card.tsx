@@ -62,10 +62,10 @@ export function SignInCard({
   return (
     <section
       aria-labelledby="signin-h"
-      className="flex flex-col gap-3 rounded-lg border bg-card p-5 shadow-xs"
+      className="bg-card flex flex-col gap-3 rounded-lg border p-4 shadow-xs"
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 id="signin-h" className="text-title-md">
+        <h2 id="signin-h" className="text-sm font-semibold">
           {l.title}
         </h2>
         <span
@@ -74,7 +74,7 @@ export function SignInCard({
           {l.pill}
         </span>
       </div>
-      <p className="text-body text-[var(--ink-muted)]">{l.body}</p>
+      <p className="text-muted-foreground text-sm">{l.body}</p>
       {l.phone && (
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-[var(--radius-md)] bg-[var(--surface-muted)] p-3">
           <span className="text-caption text-[var(--ink-muted)]">{l.userId}</span>

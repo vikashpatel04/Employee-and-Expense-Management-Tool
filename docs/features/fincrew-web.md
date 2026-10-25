@@ -70,7 +70,13 @@ roomy, forms stacked as cards inside pages, no sign of loading). Reworked:
   card full width; Ledger months (8) beside the balance (4, sticky); Pay in four panels, two
   rows (current pay | history, allowances | deductions — empty ones say "None yet"). Requests and
   the attendance code page: cards stretch to equal heights. Settings: categories and leave
-  templates as card grids, holidays full width.
+  templates as card grids, holidays full width, roles intro above both columns, rules in rows
+  of equal height (Pay | Coming late, Attendance code | Expenses + Staff sign-in) with Save at
+  the end. Staff list: one toolbar row (search with icon, Active / Left / All, Search).
+  Staff page Attendance tab: the right column stretches to the calendar; Ledger months are
+  panels level with the balance card.
+  Checked 2026-10-25 with the owner's sign-in by measuring every card at 1366 px (rows equal
+  height and level) and on screen at the pane's size.
 - Left inline on purpose: request decisions (a queue is quicker inline), Settings → rules (the
   page is the form), a role's permissions and people (the page is for them), the attendance grid.
 

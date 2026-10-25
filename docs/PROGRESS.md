@@ -282,8 +282,10 @@ Tables still to add (with the phase that uses them, each with RLS tests): `staff
   `PanelEmpty`); dashboard, expenses, advances, reports, salary, staff page (Overview, Ledger,
   Pay), requests / code (equal heights), settings (categories and leave as card grids, holidays
   full width) moved onto it. Typecheck 9/9, build OK. Checked the grid's geometry on a temporary
-  local page (equal stat widths, panels in a row equal height); real pages still need the
-  owner's sign-in to be seen.
+  local page (equal stat widths, panels in a row equal height). Then with the owner signed in
+  in the preview: measured every page at 1366 px and fixed what didn't line up (staff toolbar,
+  sign-in card style, staff Attendance and Ledger tabs, settings roles and rules); opened Give
+  advance and closed it (nothing saved).
 
 - **2026-10-25** — **Website rework** (owner: whole page scrolled with the sidebar, too roomy,
   forms as cards in pages, no loading, "use shadcn everywhere with our theme"). shadcn/ui

@@ -93,18 +93,28 @@ export default async function StaffPage({
         </p>
       )}
 
-      <Form action="/staff" className="flex flex-wrap items-end gap-3" role="search">
-        <label className="text-label-sm flex min-w-0 flex-[1_1_280px] flex-col">
-          {t('staff.search')}
-          <input name="q" defaultValue={q} type="search" className={inputClass} />
+      <Form action="/staff" className="flex flex-wrap items-center gap-2" role="search">
+        <label className="relative min-w-0 flex-[1_1_260px]">
+          <span className="sr-only">{t('staff.search')}</span>
+          <Search
+            className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2"
+            aria-hidden="true"
+          />
+          <input
+            name="q"
+            defaultValue={q}
+            type="search"
+            placeholder={t('staff.search')}
+            className={`${inputClass} mt-0 pl-9`}
+          />
         </label>
-        <fieldset className="flex flex-col">
-          <legend className="text-label-sm">{t('staff.filter.label')}</legend>
-          <div className="mt-1 flex gap-1 rounded-[var(--radius-md)] bg-[var(--surface-muted)] p-1">
+        <fieldset className="contents">
+          <legend className="sr-only">{t('staff.filter.label')}</legend>
+          <div className="bg-muted flex h-9 items-center gap-1 rounded-lg p-1">
             {filters.map((f) => (
               <label
                 key={f}
-                className="text-label-sm flex min-h-10 cursor-pointer items-center rounded-[var(--radius-sm)] px-3 has-[:checked]:bg-[var(--surface)] has-[:checked]:shadow-[var(--elevation-1)] has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-[var(--focus)]"
+                className="text-muted-foreground has-[:checked]:bg-card has-[:checked]:text-foreground flex h-7 cursor-pointer items-center rounded-md px-3 text-sm font-medium has-[:checked]:shadow-sm has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-[var(--focus)]"
               >
                 <input
                   type="radio"

@@ -470,7 +470,7 @@ async function Ledger({ staffId, canUndo }: { staffId: string; canUndo: boolean 
     <Bento>
       <div className="lg:col-span-4 lg:order-2">
         <StatCard
-          className="lg:sticky lg:top-0"
+          className="h-auto lg:sticky lg:top-0"
           label={t('staffDetail.ledger.balance')}
           paise={balance}
           meta={t('staffDetail.ledger.lines', { count: lines.length })}
@@ -478,11 +478,8 @@ async function Ledger({ staffId, canUndo }: { staffId: string; canUndo: boolean 
       </div>
       <div className="flex flex-col gap-4 lg:order-1 lg:col-span-8">
         {[...byMonth.entries()].map(([month, rows]) => (
-          <section key={month} className="flex flex-col gap-2">
-            <h2 className="text-title-md px-1">
-              {MONTH.format(new Date(`${month}-01T00:00:00Z`))}
-            </h2>
-            <ul className="overflow-hidden rounded-lg border bg-card shadow-xs">
+          <Panel key={month} title={MONTH.format(new Date(`${month}-01T00:00:00Z`))} flush>
+            <ul>
               {rows.map((l) => (
                 <li
                   key={l.id}
@@ -524,7 +521,7 @@ async function Ledger({ staffId, canUndo }: { staffId: string; canUndo: boolean 
                 </li>
               ))}
             </ul>
-          </section>
+          </Panel>
         ))}
       </div>
     </Bento>
