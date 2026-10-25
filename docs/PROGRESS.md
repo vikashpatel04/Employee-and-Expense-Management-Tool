@@ -32,16 +32,16 @@ first, then `CLAUDE.md`, then the feature doc for whatever you touch._
   first), Lock / Remove, fingerprint (needs a real phone).
 - **Database / server**: Phase 7 data live (`docs/features/staff-self-service.md`): attendance
   codes + `check_in`, scans log, requests, bcrypt PINs, `staff-auth` edge function (deployed
-  by CI), staff read their payslip's run. Migrations up to `20261024000006_staff_read_runs.sql`
-  are live; `20261025000001_change_pin.sql` and `20261025000002_phone_login.sql` (phone sign-in,
-  drops invites) + the new `staff-auth` wait for the push (dry-run both on live first).
+  by CI), staff read their payslip's run, phone + PIN sign-in, change PIN. All migrations up to
+  `20261025000002_phone_login.sql` and the new `staff-auth` (lookup / setup / login) are live
+  (CI run 40165654747, 2026-10-25).
 - Shared code: `packages/core` (rules incl. `evaluateCheck`, `evaluatePinAttempt`, `staffLogin`
   settings), **`packages/data`** (used by the website and both apps: attendance month / write,
   session, staff loaders, expenses + saving, salary month + run / finalize / pay, payslip loaders
   `loadMyPayslips` / `loadPayslipView`, advances, reports, roles, leave setup, self-service:
   code, check-ins, requests + `decideRequest`, logins / reset PIN, payslip share text).
-- **Git:** everything up to `9fd9e02` is pushed (CI run 40104302836 green, Vercel deployed);
-  local `main` has docs-only commits after it (this handover), not pushed. Working from another
+- **Git:** everything up to `ffe45f1` is pushed (CI run 40165654747 green, Vercel deployed).
+  Working from another
   PC: `docs/NEW-MACHINE.md`. The owner pushes, or
   tells you to push in that moment. Pushing `.github/workflows` changes needs the `workflow`
   scope — the owner added it to the GitHub CLI sign-in, which git now uses.
@@ -49,8 +49,8 @@ first, then `CLAUDE.md`, then the feature doc for whatever you touch._
 **Next work, in order** (agreed with the owner 2026-10-24; they usually say "continue")
 
 1. **Finish Staffora**: built on 2026-10-25 — phone + PIN sign-in (replaces invite links),
-   fingerprint opening, change PIN, Home payslip card, share a payslip; not pushed yet. Left:
-   push (the owner asked to wait and push it together), then live checks with the owner: add
+   fingerprint opening, change PIN, Home payslip card, share a payslip; pushed and live
+   2026-10-25. Left: live checks with the owner: add
    Test Staff's phone number in FinCrew, New phone + Reset PIN on their sign-in card, the owner
    types the number + a new PIN in the Staffora preview; then change PIN, Home card, Share, and
    (with their OK — permanent rows) sending a request and checking in.
@@ -247,6 +247,8 @@ setup against the live project, and sign-in on the Vercel deployment (2026-10-23
 | `20261024000004_requests.sql`         | 2026-10-24 | CI migrate job, run 40098230155 |
 | `20261024000005_staff_login.sql`      | 2026-10-24 | CI migrate job, run 40098230155 |
 | `20261024000006_staff_read_runs.sql`  | 2026-10-24 | CI migrate job, run 40104302836 |
+| `20261025000001_change_pin.sql`       | 2026-10-25 | CI migrate job, run 40165654747 |
+| `20261025000002_phone_login.sql`      | 2026-10-25 | CI migrate job, run 40165654747 |
 
 Migrations are applied by the CI **migrate** job on every push to `main`, so **everything in
 `supabase/migrations/` on `main` counts as applied** and must never change (CI enforces this).
