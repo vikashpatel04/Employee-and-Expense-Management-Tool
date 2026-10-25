@@ -9,6 +9,7 @@ import { t } from '@/lib/i18n';
 import { requireMe } from '@/lib/session';
 import { createClient } from '@/lib/supabase/server';
 import { FormDialog } from '@/components/app/form-dialog';
+import { Bento, Panel, StatCard, StatGrid } from '@/components/app/layout';
 import { PageHeader, quietButtonClass } from '../../components';
 import { ExpenseForm, ExpensePanel, type FormExpense } from './expense-form';
 
@@ -179,7 +180,7 @@ export default async function ExpensesPage({
         </p>
       )}
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <StatGrid>
         {(
           [
             ['shop', totals.total, counts.shop, '', ''],
@@ -200,35 +201,36 @@ export default async function ExpensesPage({
             ],
           ] as const
         ).map(([k, v, n, colour, metaKey]) => (
-          <section key={k} className="flex flex-col gap-1 rounded-lg border bg-card p-4 shadow-xs">
-            <span className="text-caption font-semibold" style={colour ? { color: colour } : {}}>
-              {t(`expenses.tiles.${k}`)}
-            </span>
-            <span className="text-money-lg">{formatINR(v)}</span>
-            <span className="text-caption text-[var(--ink-muted)]">
-              {t('expenses.tiles.count', { count: n })}
-              {metaKey ? ` · ${t(`expenses.tiles.${metaKey}`)}` : ''}
-            </span>
-          </section>
+          <StatCard
+            key={k}
+            label={t(`expenses.tiles.${k}`)}
+            tone={colour || undefined}
+            paise={v}
+            meta={`${t('expenses.tiles.count', { count: n })}${metaKey ? ` · ${t(`expenses.tiles.${metaKey}`)}` : ''}`}
+          />
         ))}
-      </div>
+      </StatGrid>
 
       {!can('expenses.view_all') && (
         <p className="text-caption text-[var(--ink-muted)]">{t('expenses.ownOnly')}</p>
       )}
 
-      <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
-        <section aria-labelledby="cat-h" className={`${card} flex flex-col gap-3`}>
-          <div className="flex items-center justify-between gap-3">
-            <h2 id="cat-h" className="text-title-md">
-              {t('expenses.byCategory')}
-            </h2>
-            {can('expenses.categories') && (
-              <Link href="/settings/categories" className="text-label-sm text-[var(--accent-ink)]">
+      <Bento>
+        <Panel
+          span={4}
+          title={t('expenses.byCategory')}
+          className="lg:sticky lg:top-0 lg:self-start"
+          actions={
+            can('expenses.categories') && (
+              <Link
+                href="/settings/categories"
+                className="text-xs font-medium text-[var(--accent-ink)]"
+              >
                 {t('expenses.editCategories')}
               </Link>
-            )}
-          </div>
+            )
+          }
+        >
           {ranked.length === 0 ? (
             <p className="text-body text-[var(--ink-muted)]">
               {t('expenses.empty', { month: monthName })}
@@ -262,12 +264,9 @@ export default async function ExpensesPage({
               })}
             </ul>
           )}
-        </section>
+        </Panel>
 
-        <section aria-labelledby="list-h" className={`${card} flex flex-col gap-2`}>
-          <h2 id="list-h" className="text-title-md mb-1">
-            {t('expenses.list')}
-          </h2>
+        <Panel span={8} title={t('expenses.list')}>
           {expenses.length === 0 ? (
             <p className="text-body text-[var(--ink-muted)]">
               {t('expenses.empty', { month: monthName })}
@@ -351,8 +350,8 @@ export default async function ExpensesPage({
               </div>
             ))
           )}
-        </section>
-      </div>
+        </Panel>
+      </Bento>
 
       {(adding || formExpense) && (
         <ExpensePanel

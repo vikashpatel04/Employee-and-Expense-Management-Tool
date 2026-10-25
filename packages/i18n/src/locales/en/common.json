@@ -215,7 +215,9 @@
     "ledger": {
       "balance": "Balance",
       "empty": "No ledger lines yet. Salary, payments and advances will show here.",
-      "runningBalance": "Balance {{amount}}"
+      "runningBalance": "Balance {{amount}}",
+      "lines_one": "{{count}} line",
+      "lines_other": "{{count}} lines"
     },
     "pay": {
       "noAccess": "You can't see pay for this person.",
@@ -308,7 +310,8 @@
       "errors": {
         "name": "Enter a name.",
         "to": "The end date can't be before the start date."
-      }
+      },
+      "none": "None yet"
     },
     "templateForm": {
       "title": "Change leave template",
@@ -624,7 +627,11 @@
       "noPermission": "You don't have permission for this.",
       "overLimit": "This advance crosses the person's limit. Tick “Give it anyway” to confirm.",
       "failed": "Couldn't save: {{reason}}"
-    }
+    },
+    "people_one": "{{count}} person owes",
+    "people_other": "{{count}} people owe",
+    "cutMeta": "Cut each month at the salary run",
+    "owing": "Who owes"
   },
   "months": {
     "long": [

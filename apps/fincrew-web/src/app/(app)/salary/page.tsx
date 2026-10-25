@@ -9,6 +9,7 @@ import { requireMe } from '@/lib/session';
 import { createClient } from '@/lib/supabase/server';
 import { PageHeader, quietButtonClass } from '../../components';
 import { finalizeSalary, paySalary, runSalary } from './actions';
+import { StatCard, StatGrid } from '@/components/app/layout';
 import { ActionButton, PayControl } from './controls';
 
 const MONTH = new Intl.DateTimeFormat('en-IN', { month: 'long', year: 'numeric', timeZone: 'UTC' });
@@ -140,7 +141,7 @@ export default async function SalaryPage({
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <StatGrid>
             {(
               [
                 ['net', total('net'), false],
@@ -149,19 +150,17 @@ export default async function SalaryPage({
                 ['advance', total('cut'), true],
               ] as const
             ).map(([k, v, neg]) => (
-              <section
+              <StatCard
                 key={k}
-                className="flex flex-col gap-1 rounded-lg border bg-card p-4 shadow-xs"
-              >
-                <span className="text-caption text-[var(--ink-muted)]">
-                  {t(`salary.totals.${k}`)}
-                </span>
-                <span className={`text-money-lg ${neg ? 'text-[var(--money-deduction)]' : ''}`}>
-                  {money(v, neg)}
-                </span>
-              </section>
+                label={t(`salary.totals.${k}`)}
+                value={
+                  <span className={neg ? 'text-[var(--money-deduction)]' : undefined}>
+                    {money(v, neg)}
+                  </span>
+                }
+              />
             ))}
-          </div>
+          </StatGrid>
 
           {warnings.length > 0 && overall === 'draft' && (
             <div

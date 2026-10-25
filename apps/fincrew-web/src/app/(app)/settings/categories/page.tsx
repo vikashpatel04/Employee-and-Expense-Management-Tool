@@ -25,7 +25,7 @@ export default async function CategoriesPage() {
   const categories = data ?? [];
 
   return (
-    <div className="flex max-w-3xl flex-col gap-3">
+    <div className="flex flex-col gap-3">
       <section className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="text-muted-foreground text-sm">{t('settings.categories.subtitle')}</p>
@@ -52,14 +52,14 @@ export default async function CategoriesPage() {
           </div>
         )}
         {categories.length > 0 && (
-          <ul className="bg-card overflow-hidden rounded-lg border shadow-xs">
+          <ul className="grid gap-3 [grid-template-columns:repeat(auto-fill,minmax(min(100%,17rem),1fr))]">
             {categories.map((x) => {
               const Icon = categoryIcon(x.icon);
               const col = categoryColour(x.colour);
               return (
                 <li
                   key={x.id}
-                  className="flex min-h-14 items-center gap-3 border-b border-[var(--line)] px-4 py-2 last:border-0"
+                  className="bg-card flex min-h-14 items-center gap-2 rounded-lg border py-2 pr-2 pl-3 shadow-xs"
                 >
                   <span
                     className="grid h-9 w-9 shrink-0 place-items-center rounded-full"

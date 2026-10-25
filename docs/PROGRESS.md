@@ -277,6 +277,14 @@ Tables still to add (with the phase that uses them, each with RLS tests): `staff
 
 ## Session log
 
+- **2026-10-25** — **Website page grid** (owner: "weird cards alignment… proper grid or bento").
+  `src/components/app/layout.tsx` (`StatGrid`, `StatCard`, `Bento`, `Panel`, `PanelList`,
+  `PanelEmpty`); dashboard, expenses, advances, reports, salary, staff page (Overview, Ledger,
+  Pay), requests / code (equal heights), settings (categories and leave as card grids, holidays
+  full width) moved onto it. Typecheck 9/9, build OK. Checked the grid's geometry on a temporary
+  local page (equal stat widths, panels in a row equal height); real pages still need the
+  owner's sign-in to be seen.
+
 - **2026-10-25** — **Website rework** (owner: whole page scrolled with the sidebar, too roomy,
   forms as cards in pages, no loading, "use shadcn everywhere with our theme"). shadcn/ui
   (radix, `src/components/ui`) mapped onto the tokens; web scale in `globals.css`; fixed shadcn

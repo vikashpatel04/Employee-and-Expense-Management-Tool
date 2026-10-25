@@ -109,7 +109,7 @@ export default async function RequestsPage({
       {items.length === 0 ? (
         <p className="text-body-lg text-[var(--ink-muted)]">{t(`requests.empty.${show}`)}</p>
       ) : (
-        <div className="grid items-start gap-4 [grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr))]">
+        <div className="grid items-stretch gap-4 [grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr))]">
           {items.map((r) => {
             const ctx = context.get(r.id) as RequestContext | undefined;
             return (

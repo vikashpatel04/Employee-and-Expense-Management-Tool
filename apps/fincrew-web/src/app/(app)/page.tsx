@@ -37,11 +37,11 @@ import { formatDate, todayIST } from '@/lib/format';
 import { t } from '@/lib/i18n';
 import { requireMe } from '@/lib/session';
 import { createClient } from '@/lib/supabase/server';
-import { Avatar, PageHeader, quietButtonClass } from '../components';
+import { Bento, Panel, StatCard, StatGrid } from '@/components/app/layout';
+import { Avatar, buttonClass, PageHeader, quietButtonClass } from '../components';
 import { MarkTodayButton } from './mark-today-button';
 
 const MONTH = new Intl.DateTimeFormat('en-IN', { month: 'long', year: 'numeric', timeZone: 'UTC' });
-const card = 'flex flex-col gap-4 rounded-lg border bg-card p-5 shadow-xs';
 const STEPS = ['worked', 'finalized', 'paid'] as const;
 const REACHED: Record<SalaryState, number> = { not_run: 0, draft: 1, finalized: 2, paid: 3 };
 
@@ -110,7 +110,7 @@ export default async function DashboardPage() {
       {waiting > 0 && (
         <Link
           href="/requests"
-          className="flex min-h-16 items-center gap-3 rounded-[var(--radius-md)] bg-[var(--surface)] px-4 py-3 shadow-[var(--elevation-1)] hover:bg-[var(--surface-muted)]"
+          className="bg-card hover:bg-muted/60 flex items-center gap-3 rounded-lg border px-4 py-3 shadow-xs transition-colors"
         >
           <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[var(--accent-soft)] text-[var(--accent-ink)]">
             <Inbox size={20} aria-hidden="true" />
@@ -127,20 +127,66 @@ export default async function DashboardPage() {
         <p className="text-body-lg max-w-prose text-[var(--ink-muted)]">{t('home.nothing')}</p>
       )}
 
-      <div className="grid items-start gap-4 lg:grid-cols-2">
+      {(money || spent) && (
+        <StatGrid>
+          {spent && (
+            <StatCard
+              href="/expenses"
+              icon={Receipt}
+              label={t('home.money.expenses')}
+              tone="var(--ink)"
+              paise={spent.totals.total}
+              meta={t('home.money.expensesMeta', { count: spent.counts.shop })}
+            />
+          )}
+          {money && showMoney && (
+            <StatCard
+              href="/staff"
+              icon={Hourglass}
+              label={t('home.money.due')}
+              tone="var(--money-owed)"
+              paise={money.due}
+              meta={
+                money.dueCount > 0
+                  ? t('home.money.dueMeta', { count: money.dueCount })
+                  : t('home.money.none')
+              }
+            />
+          )}
+          {money && (
+            <StatCard
+              href="/advances"
+              icon={ArrowUpRight}
+              label={t('home.money.advances')}
+              tone="var(--money-advance)"
+              paise={money.advances}
+              meta={
+                money.advanceCount === 0
+                  ? t('home.money.none')
+                  : money.monthlyCut > 0
+                    ? t('home.money.advMeta', {
+                        count: money.advanceCount,
+                        cut: formatINR(money.monthlyCut),
+                      })
+                    : t('home.money.advMetaNoCut', { count: money.advanceCount })
+              }
+            />
+          )}
+        </StatGrid>
+      )}
+
+      <Bento>
         {todayData && (
-          <section aria-labelledby="today-h" className={card}>
-            <div className="flex items-center justify-between gap-3">
-              <h2 id="today-h" className="text-title-md">
-                {t('home.today.title')}
-              </h2>
-              <SeeLink href="/attendance">{t('home.today.open')}</SeeLink>
-            </div>
+          <Panel
+            span={7}
+            title={t('home.today.title')}
+            actions={<SeeLink href="/attendance">{t('home.today.open')}</SeeLink>}
+          >
             {todayData.working === 0 ? (
               <p className="text-body text-[var(--ink-muted)]">{t('home.today.nobody')}</p>
             ) : (
               <>
-                <ul className="flex flex-wrap gap-2">
+                <ul className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                   <Chip token="present" icon={Check} count={todayData.present} k="present" />
                   <Chip token="absent" icon={X} count={todayData.absent} k="absent" />
                   <Chip token="late" icon={Clock} count={todayData.late.length} k="late" />
@@ -195,64 +241,14 @@ export default async function DashboardPage() {
                 )}
               </>
             )}
-          </section>
+          </Panel>
         )}
 
-        <div className="flex flex-col gap-4">
-          {(money || spent) && (
-            <div className="grid gap-4 sm:grid-cols-2">
-              {spent && (
-                <Tile
-                  href="/expenses"
-                  icon={Receipt}
-                  label={t('home.money.expenses')}
-                  tone="var(--ink)"
-                  amount={spent.totals.total}
-                  meta={t('home.money.expensesMeta', { count: spent.counts.shop })}
-                />
-              )}
-              {money && showMoney && (
-                <Tile
-                  href="/staff"
-                  icon={Hourglass}
-                  label={t('home.money.due')}
-                  tone="var(--money-owed)"
-                  amount={money.due}
-                  meta={
-                    money.dueCount > 0
-                      ? t('home.money.dueMeta', { count: money.dueCount })
-                      : t('home.money.none')
-                  }
-                />
-              )}
-              {money && (
-                <Tile
-                  href="/advances"
-                  icon={ArrowUpRight}
-                  label={t('home.money.advances')}
-                  tone="var(--money-advance)"
-                  amount={money.advances}
-                  meta={
-                    money.advanceCount === 0
-                      ? t('home.money.none')
-                      : money.monthlyCut > 0
-                        ? t('home.money.advMeta', {
-                            count: money.advanceCount,
-                            cut: formatINR(money.monthlyCut),
-                          })
-                        : t('home.money.advMetaNoCut', { count: money.advanceCount })
-                  }
-                />
-              )}
-            </div>
-          )}
-
+        <div className={`flex flex-col gap-4 ${todayData ? 'lg:col-span-5' : 'lg:col-span-12'}`}>
           {salary && (
-            <section aria-labelledby="salary-h" className={card}>
-              <div className="flex items-center justify-between gap-3">
-                <h2 id="salary-h" className="text-title-md">
-                  {t('home.salary.title', { month: monthName })}
-                </h2>
+            <Panel
+              title={t('home.salary.title', { month: monthName })}
+              actions={
                 <span
                   className={`text-caption rounded-[var(--radius-pill)] px-2.5 py-1 font-semibold ${
                     salary.state === 'paid'
@@ -264,7 +260,8 @@ export default async function DashboardPage() {
                 >
                   {t(`home.salary.state.${salary.state}`)}
                 </span>
-              </div>
+              }
+            >
               <ol aria-label={t('home.salary.steps')} className="grid grid-cols-3 gap-2">
                 {STEPS.map((s, i) => {
                   const done = i < REACHED[salary.state];
@@ -314,22 +311,15 @@ export default async function DashboardPage() {
               </p>
               <Link
                 href="/salary"
-                className={`text-label-sm inline-flex min-h-12 w-fit items-center gap-1 rounded-[var(--radius-md)] px-4 ${
-                  salary.state === 'paid'
-                    ? 'border border-[var(--line-strong)]'
-                    : 'bg-[var(--accent)] text-[var(--on-accent)]'
-                }`}
+                className={`mt-auto ${salary.state === 'paid' ? quietButtonClass : buttonClass} w-fit`}
               >
                 {t(`home.salary.button.${salary.state}`)}
                 <ChevronRight size={20} aria-hidden="true" />
               </Link>
-            </section>
+            </Panel>
           )}
 
-          <section aria-labelledby="soon-h" className={`${card} gap-2`}>
-            <h2 id="soon-h" className="text-title-md mb-1">
-              {t('home.soon.title')}
-            </h2>
+          <Panel title={t('home.soon.title')} className="flex-1">
             {soonItems.length === 0 ? (
               <p className="text-body text-[var(--ink-muted)]">{t('home.soon.none')}</p>
             ) : (
@@ -388,9 +378,9 @@ export default async function DashboardPage() {
                 })}
               </ul>
             )}
-          </section>
+          </Panel>
         </div>
-      </div>
+      </Bento>
     </>
   );
 }
@@ -421,7 +411,7 @@ function Chip({
 }) {
   return (
     <li
-      className="flex min-h-14 min-w-28 flex-1 items-center gap-2 rounded-[var(--radius-md)] px-3 py-2"
+      className="flex min-h-14 items-center gap-2 rounded-md px-3 py-2"
       style={
         token
           ? { background: `var(--status-${token}-soft)`, color: `var(--status-${token})` }
@@ -471,38 +461,5 @@ function PeopleList({
         ))}
       </ul>
     </div>
-  );
-}
-
-function Tile({
-  href,
-  icon: Icon,
-  label,
-  tone,
-  amount,
-  meta,
-}: {
-  href: string;
-  icon: LucideIcon;
-  label: string;
-  tone: string;
-  amount: number;
-  meta: string;
-}) {
-  return (
-    <Link
-      href={href}
-      className="flex flex-col gap-1.5 rounded-[var(--radius-lg)] bg-[var(--surface)] px-5 py-4 shadow-[var(--elevation-1)] hover:bg-[var(--surface-muted)]"
-    >
-      <span
-        className="text-caption inline-flex items-center gap-1.5 font-semibold"
-        style={{ color: tone }}
-      >
-        <Icon size={16} aria-hidden="true" />
-        {label}
-      </span>
-      <span className="text-money-lg">{formatINR(amount)}</span>
-      <span className="text-caption text-[var(--ink-muted)]">{meta}</span>
-    </Link>
   );
 }

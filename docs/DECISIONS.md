@@ -473,6 +473,10 @@ Owner's instruction: every value is customisable by the admin, and staff may hav
 - **The website has its own, denser scale.** The design tokens are sized for phones (48 px
   taps, 20 px corners); on the website the same token names get desk sizes in `globals.css`.
   The phone apps are unchanged.
+- **One page grid for the website**: figures in a `StatGrid` (auto-fit columns, so 2, 3 or 4
+  figures always fill the row evenly), sections in a 12-column `Bento` whose panels stretch to
+  the tallest in the row. Pairs of lists (allowances / deductions) are always shown, with
+  "None yet", so rows stay aligned instead of a column collapsing.
 - **Tasks open in dialogs; pages show lists and numbers** (owner: "a task should be in modal").
   `FormDialog` closes on the action's `done` or on a redirect; redirects that close a dialog
   carry a changing value so saving the same thing twice still closes it.

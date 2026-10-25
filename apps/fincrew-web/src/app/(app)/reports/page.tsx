@@ -8,6 +8,7 @@ import { todayIST } from '@/lib/format';
 import { t } from '@/lib/i18n';
 import { requireMe } from '@/lib/session';
 import { createClient } from '@/lib/supabase/server';
+import { StatCard, StatGrid } from '@/components/app/layout';
 import { PageHeader, quietButtonClass } from '../../components';
 
 const RANGES = [3, 6, 12] as const;
@@ -113,7 +114,7 @@ export default async function ReportsPage({
         <p className="text-body-lg text-[var(--ink-muted)]">{t('reports.nothing')}</p>
       ) : (
         <>
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <StatGrid>
             {showTotal && (
               <Tile
                 label={t('reports.tiles.total')}
@@ -145,7 +146,7 @@ export default async function ReportsPage({
                 tone="var(--money-advance)"
               />
             )}
-          </div>
+          </StatGrid>
 
           <section aria-labelledby="month-h" className={card}>
             <h2 id="month-h" className="text-title-md">
@@ -323,13 +324,5 @@ function Tile({
   meta: string;
   tone?: string;
 }) {
-  return (
-    <section className="flex flex-col gap-1 rounded-lg border bg-card p-4 shadow-xs">
-      <span className="text-caption font-semibold" style={tone ? { color: tone } : {}}>
-        {label}
-      </span>
-      <span className="text-money-lg">{formatINR(value)}</span>
-      <span className="text-caption text-[var(--ink-muted)]">{meta}</span>
-    </section>
-  );
+  return <StatCard label={label} paise={value} meta={meta} tone={tone} />;
 }

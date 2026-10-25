@@ -26,7 +26,7 @@ export default async function LeaveTemplatesPage() {
   const sorted = [...templates].sort((a, b) => Number(a.archived) - Number(b.archived));
 
   return (
-    <div className="flex max-w-3xl flex-col gap-3">
+    <div className="flex flex-col gap-3">
       <section className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="text-muted-foreground text-sm">{t('settings.leave.subtitle')}</p>
@@ -50,16 +50,16 @@ export default async function LeaveTemplatesPage() {
             {t('settings.leave.empty')}
           </p>
         ) : (
-          <ul className="bg-card overflow-hidden rounded-lg border shadow-xs">
+          <ul className="grid gap-3 [grid-template-columns:repeat(auto-fill,minmax(min(100%,17rem),1fr))]">
             {sorted.map((tpl) => {
               const versions = versionsByTemplate.get(tpl.id) ?? [];
               const current = effectiveOn(versions, today) ?? versions.at(-1);
               const count = staff.filter((s) => s.templateId === tpl.id).length;
               return (
-                <li key={tpl.id} className="border-b border-[var(--line)] last:border-0">
+                <li key={tpl.id} className="bg-card flex rounded-lg border shadow-xs">
                   <Link
                     href={`/settings/leave/${tpl.id}`}
-                    className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-[var(--surface-muted)]"
+                    className="flex w-full items-center justify-between gap-3 rounded-lg px-4 py-3 transition-colors hover:bg-muted/60"
                   >
                     <span className="flex min-w-0 flex-col gap-0.5">
                       <span className="text-label-sm flex items-center gap-2">

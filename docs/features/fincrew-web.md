@@ -60,6 +60,17 @@ roomy, forms stacked as cards inside pages, no sign of loading). Reworked:
   shadcn side sheet at `?edit=<id>`), Settings: Add category / Edit per row, Add holiday, New
   leave template, Rename / Assign / Change rules on a template, New role, Add helper, Rename
   role. Salary: Finalize asks first (AlertDialog), Pay opens a dialog with how it was paid.
+- **Page grid** (owner, 2026-10-25: "proper grid or bento"; `src/components/app/layout.tsx`):
+  every page is PageHeader → `StatGrid` of `StatCard`s (equal widths, fills the row whatever
+  the count) → `Bento` (12 columns) of `Panel`s (title row with actions, `span` out of 12,
+  stretched to the row's height; `flush` for edge-to-edge lists; `PanelEmpty` for "none yet").
+  Dashboard: money figures row, then Today (7) beside Salary + Coming up (5). Expenses: figures,
+  then By category (4, sticky) beside the list (8). Advances: figures + "Who owes" panel.
+  Reports, salary: figures rows. Staff page: Overview balance (6) + opening balance (6), sign-in
+  card full width; Ledger months (8) beside the balance (4, sticky); Pay in four panels, two
+  rows (current pay | history, allowances | deductions — empty ones say "None yet"). Requests and
+  the attendance code page: cards stretch to equal heights. Settings: categories and leave
+  templates as card grids, holidays full width.
 - Left inline on purpose: request decisions (a queue is quicker inline), Settings → rules (the
   page is the form), a role's permissions and people (the page is for them), the attendance grid.
 

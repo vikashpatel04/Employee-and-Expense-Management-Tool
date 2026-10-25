@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Changed — 2026-10-25 (website page grid)
+
+- Every page lines up on one grid: a row of figures of equal width, then sections side by side
+  at equal heights (dashboard, expenses, advances, reports, salary, staff page, settings lists).
+
 ### Changed — 2026-10-25 (website look and feel)
 
 - The website now uses shadcn/ui with the FinCrew colours, at a denser desk size.

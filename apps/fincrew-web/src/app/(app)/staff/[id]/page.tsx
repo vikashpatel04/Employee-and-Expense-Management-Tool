@@ -1,5 +1,5 @@
 import { PendingLink as Link } from '@/components/app/pending-link';
-import { Suspense } from 'react';
+import { Suspense, type ReactNode } from 'react';
 import { notFound, redirect } from 'next/navigation';
 import {
   ArrowUpRight,
@@ -29,6 +29,7 @@ import { t } from '@/lib/i18n';
 import { requireMe } from '@/lib/session';
 import { createClient } from '@/lib/supabase/server';
 import { FormDialog } from '@/components/app/form-dialog';
+import { Bento, Panel, PanelEmpty, StatCard } from '@/components/app/layout';
 import { PanelSkeleton } from '@/components/app/skeletons';
 import { TabLinks } from '@/components/app/tab-links';
 import { Button } from '@/components/ui/button';
@@ -205,17 +206,18 @@ export default async function StaffDetailPage({
             canEditPay={can('staff.pay.edit')}
             canRun={can('salary.run')}
             joiningDate={s.joining_date}
-          />
-        )}
-        {tab === 'overview' && can('staff.edit') && (
-          <SignInSection
-            shopId={me.shopId}
-            staffId={id}
-            name={name}
-            phone={phone}
-            active={s.status === 'active'}
-            selfAttendance={s.self_attendance}
-          />
+          >
+            {can('staff.edit') && (
+              <SignInSection
+                shopId={me.shopId}
+                staffId={id}
+                name={name}
+                phone={phone}
+                active={s.status === 'active'}
+                selfAttendance={s.self_attendance}
+              />
+            )}
+          </Overview>
         )}
         {tab === 'attendance' && (
           <AttendanceTab
@@ -255,6 +257,8 @@ async function Overview(props: {
   canEditPay: boolean;
   canRun: boolean;
   joiningDate: string;
+  /** Shown full width under the cards (the Staffora sign-in card). */
+  children?: ReactNode;
 }) {
   const supabase = await createClient();
   const { data: opening } = props.canEditPay
@@ -296,9 +300,9 @@ async function Overview(props: {
   const outstanding = Number(adv?.outstanding_paise ?? 0);
 
   return (
-    <div className="grid items-start gap-4 lg:grid-cols-2">
+    <Bento>
       {props.canMoney && (
-        <section className={`${card} flex flex-col gap-1`}>
+        <section className={`${card} flex flex-col gap-1 lg:col-span-6`}>
           <span
             className={`inline-flex items-center gap-1.5 text-sm font-medium ${
               balance > 0
@@ -364,7 +368,7 @@ async function Overview(props: {
         </section>
       )}
       {props.canEditPay && (
-        <section className={`${card} flex flex-col gap-2`}>
+        <section className={`${card} flex flex-col gap-2 lg:col-span-6`}>
           <div className="flex items-center justify-between gap-2">
             <h2 className="text-sm font-semibold">{t('staffDetail.opening.title')}</h2>
             {opening ? (
@@ -423,7 +427,8 @@ async function Overview(props: {
           </p>
         </section>
       )}
-    </div>
+      {props.children && <div className="flex flex-col lg:col-span-12">{props.children}</div>}
+    </Bento>
   );
 }
 
@@ -462,61 +467,67 @@ async function Ledger({ staffId, canUndo }: { staffId: string; canUndo: boolean 
   const balance = withBalance[0]!.balance;
 
   return (
-    <div className="flex max-w-2xl flex-col gap-4">
-      <section className={`${card} flex items-center justify-between`}>
-        <span className="text-caption text-[var(--ink-muted)]">
-          {t('staffDetail.ledger.balance')}
-        </span>
-        <span className="text-money-lg">{formatINR(balance)}</span>
-      </section>
-      {[...byMonth.entries()].map(([month, rows]) => (
-        <section key={month} className="flex flex-col gap-2">
-          <h2 className="text-title-md px-1">{MONTH.format(new Date(`${month}-01T00:00:00Z`))}</h2>
-          <ul className="overflow-hidden rounded-lg border bg-card shadow-xs">
-            {rows.map((l) => (
-              <li
-                key={l.id}
-                className="flex items-center justify-between gap-3 border-b border-[var(--line)] px-4 py-3 last:border-0"
-              >
-                <span className="flex min-w-0 flex-col">
-                  <span className="text-label-sm">
-                    {t(`ledgerTypes.${l.type}`)}
-                    {l.name ? ` · ${l.name}` : ''}
-                    {l.adjusts ? ` · ${t(`ledgerTypes.${l.adjusts}`)}` : ''}
-                  </span>
-                  <span className="text-caption text-[var(--ink-muted)]">
-                    {formatDate(l.date)}
-                    {l.mode ? ` · ${l.mode.toUpperCase()}` : ''}
-                    {l.note ? ` · ${l.note}` : ''}
-                  </span>
-                </span>
-                <span className="flex flex-col items-end">
-                  <span
-                    className={`text-money-sm ${l.amount > 0 ? 'text-[var(--money-owed)]' : ''}`}
-                  >
-                    {l.amount > 0 ? '+' : ''}
-                    {formatINR(l.amount)}
-                  </span>
-                  <span className="text-caption text-[var(--ink-muted)]">
-                    {t('staffDetail.ledger.runningBalance', { amount: formatINR(l.balance) })}
-                  </span>
-                  {reversed.has(l.id) ? (
-                    <span className="text-caption text-[var(--ink-muted)]">
-                      {t('advances.undone')}
+    <Bento>
+      <div className="lg:col-span-4 lg:order-2">
+        <StatCard
+          className="lg:sticky lg:top-0"
+          label={t('staffDetail.ledger.balance')}
+          paise={balance}
+          meta={t('staffDetail.ledger.lines', { count: lines.length })}
+        />
+      </div>
+      <div className="flex flex-col gap-4 lg:order-1 lg:col-span-8">
+        {[...byMonth.entries()].map(([month, rows]) => (
+          <section key={month} className="flex flex-col gap-2">
+            <h2 className="text-title-md px-1">
+              {MONTH.format(new Date(`${month}-01T00:00:00Z`))}
+            </h2>
+            <ul className="overflow-hidden rounded-lg border bg-card shadow-xs">
+              {rows.map((l) => (
+                <li
+                  key={l.id}
+                  className="flex items-center justify-between gap-3 border-b border-[var(--line)] px-4 py-3 last:border-0"
+                >
+                  <span className="flex min-w-0 flex-col">
+                    <span className="text-label-sm">
+                      {t(`ledgerTypes.${l.type}`)}
+                      {l.name ? ` · ${l.name}` : ''}
+                      {l.adjusts ? ` · ${t(`ledgerTypes.${l.adjusts}`)}` : ''}
                     </span>
-                  ) : (
-                    canUndo &&
-                    (l.type === 'salary_payment' || l.type === 'advance') && (
-                      <UndoButton staffId={staffId} lineId={l.id} label={t('advances.undo')} />
-                    )
-                  )}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ))}
-    </div>
+                    <span className="text-caption text-[var(--ink-muted)]">
+                      {formatDate(l.date)}
+                      {l.mode ? ` · ${l.mode.toUpperCase()}` : ''}
+                      {l.note ? ` · ${l.note}` : ''}
+                    </span>
+                  </span>
+                  <span className="flex flex-col items-end">
+                    <span
+                      className={`text-money-sm ${l.amount > 0 ? 'text-[var(--money-owed)]' : ''}`}
+                    >
+                      {l.amount > 0 ? '+' : ''}
+                      {formatINR(l.amount)}
+                    </span>
+                    <span className="text-caption text-[var(--ink-muted)]">
+                      {t('staffDetail.ledger.runningBalance', { amount: formatINR(l.balance) })}
+                    </span>
+                    {reversed.has(l.id) ? (
+                      <span className="text-caption text-[var(--ink-muted)]">
+                        {t('advances.undone')}
+                      </span>
+                    ) : (
+                      canUndo &&
+                      (l.type === 'salary_payment' || l.type === 'advance') && (
+                        <UndoButton staffId={staffId} lineId={l.id} label={t('advances.undo')} />
+                      )
+                    )}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ))}
+      </div>
+    </Bento>
   );
 }
 
@@ -711,164 +722,157 @@ async function Pay(props: {
           )}
         </div>
       )}
-      <div className="grid items-start gap-4 lg:grid-cols-2">
-        <div className="flex flex-col gap-4">
-          {props.saved && (
-            <p
-              role="status"
-              className="text-body rounded-[var(--radius-md)] bg-[var(--status-present-soft)] px-4 py-3 text-[var(--status-present)]"
-            >
-              {t('staffDetail.pay.form.saved', { date: formatDate(props.saved) })}
-            </p>
-          )}
+      {props.saved && (
+        <p
+          role="status"
+          className="text-body rounded-md bg-[var(--status-present-soft)] px-4 py-3 text-[var(--status-present)]"
+        >
+          {t('staffDetail.pay.form.saved', { date: formatDate(props.saved) })}
+        </p>
+      )}
+      <Bento>
+        <Panel span={6} title={t('staffDetail.pay.current')} flush>
           {!current ? (
-            <p className={`${card} text-body-lg text-[var(--ink-muted)]`}>
-              {t('staffDetail.pay.none')}
-            </p>
+            <PanelEmpty>{t('staffDetail.pay.none')}</PanelEmpty>
           ) : (
-            <section className="flex flex-col gap-2">
-              <h2 className="text-title-md px-1">{t('staffDetail.pay.current')}</h2>
-              <ul className="overflow-hidden rounded-lg border bg-card shadow-xs">
+            <ul>
+              <li className={row}>
+                <span className="flex flex-col">
+                  <span className="text-label-sm">
+                    {t(`staffDetail.pay.amount.${current.pay_type}`)}
+                  </span>
+                  <span className="text-caption text-[var(--ink-muted)]">
+                    {t(`staffDetail.pay.types.${current.pay_type}`)} ·{' '}
+                    {t('staffDetail.pay.since', { date: formatDate(current.effective_from) })}
+                  </span>
+                </span>
+                <span className="text-money-sm">{formatINR(amountOf(current))}</span>
+              </li>
+              {current.overtime_rate_paise != null && (
                 <li className={row}>
+                  <span className="text-label-sm">{t('staffDetail.pay.overtime')}</span>
+                  <span className="text-money-sm">
+                    {formatINR(Number(current.overtime_rate_paise))}
+                  </span>
+                </li>
+              )}
+              <li className={row}>
+                <span className="flex flex-col">
+                  <span className="text-label-sm">{t('staffDetail.pay.shift')}</span>
+                  {current.shift_start != null && (
+                    <span className="text-caption text-[var(--ink-muted)]">
+                      {t('staffDetail.pay.grace', { minutes: current.grace_minutes })}
+                    </span>
+                  )}
+                </span>
+                <span className="text-body">
+                  {current.shift_start != null && current.shift_end != null
+                    ? `${formatTimeOfDay(current.shift_start)} – ${formatTimeOfDay(current.shift_end)}`
+                    : t('staffDetail.pay.noShift')}
+                </span>
+              </li>
+              <li className={row}>
+                <span className="flex flex-col">
+                  <span className="text-label-sm">{t('staffDetail.pay.template')}</span>
+                  {template && (
+                    <span className="text-caption text-[var(--ink-muted)]">
+                      {t('staffDetail.pay.templateSince', {
+                        date: formatDate(template.effective_from),
+                      })}
+                    </span>
+                  )}
+                </span>
+                <span className="text-body text-right">
+                  {template?.leave_templates?.name ?? t('staffDetail.pay.noTemplate')}
+                </span>
+              </li>
+              <li className={row}>
+                <span className="text-label-sm">{t('staffDetail.rules.label')}</span>
+                <span className="text-body text-right">
+                  {ownRules > 0
+                    ? t('staffDetail.rules.own', { count: ownRules })
+                    : t('staffDetail.rules.none')}
+                </span>
+              </li>
+            </ul>
+          )}
+        </Panel>
+
+        <Panel span={6} title={t('staffDetail.pay.history')} flush>
+          {(pays ?? []).length === 0 ? (
+            <PanelEmpty>{t('staffDetail.pay.none')}</PanelEmpty>
+          ) : (
+            <ul>
+              {(pays ?? []).map((p) => (
+                <li key={p.id} className={row}>
                   <span className="flex flex-col">
                     <span className="text-label-sm">
-                      {t(`staffDetail.pay.amount.${current.pay_type}`)}
+                      {t('staffDetail.pay.since', { date: formatDate(p.effective_from) })}
                     </span>
                     <span className="text-caption text-[var(--ink-muted)]">
-                      {t(`staffDetail.pay.types.${current.pay_type}`)} ·{' '}
-                      {t('staffDetail.pay.since', { date: formatDate(current.effective_from) })}
+                      {t(`staffDetail.pay.types.${p.pay_type}`)}
                     </span>
                   </span>
-                  <span className="text-money-sm">{formatINR(amountOf(current))}</span>
+                  <span className="text-money-sm">{formatINR(amountOf(p))}</span>
                 </li>
-                {current.overtime_rate_paise != null && (
-                  <li className={row}>
-                    <span className="text-label-sm">{t('staffDetail.pay.overtime')}</span>
-                    <span className="text-money-sm">
-                      {formatINR(Number(current.overtime_rate_paise))}
-                    </span>
-                  </li>
-                )}
-                <li className={row}>
-                  <span className="flex flex-col">
-                    <span className="text-label-sm">{t('staffDetail.pay.shift')}</span>
-                    {current.shift_start != null && (
-                      <span className="text-caption text-[var(--ink-muted)]">
-                        {t('staffDetail.pay.grace', { minutes: current.grace_minutes })}
-                      </span>
-                    )}
-                  </span>
-                  <span className="text-body">
-                    {current.shift_start != null && current.shift_end != null
-                      ? `${formatTimeOfDay(current.shift_start)} – ${formatTimeOfDay(current.shift_end)}`
-                      : t('staffDetail.pay.noShift')}
-                  </span>
-                </li>
-                <li className={row}>
-                  <span className="flex flex-col">
-                    <span className="text-label-sm">{t('staffDetail.pay.template')}</span>
-                    {template && (
-                      <span className="text-caption text-[var(--ink-muted)]">
-                        {t('staffDetail.pay.templateSince', {
-                          date: formatDate(template.effective_from),
-                        })}
-                      </span>
-                    )}
-                  </span>
-                  <span className="text-body text-right">
-                    {template?.leave_templates?.name ?? t('staffDetail.pay.noTemplate')}
-                  </span>
-                </li>
-                <li className={row}>
-                  <span className="text-label-sm">{t('staffDetail.rules.label')}</span>
-                  <span className="text-body text-right">
-                    {ownRules > 0
-                      ? t('staffDetail.rules.own', { count: ownRules })
-                      : t('staffDetail.rules.none')}
-                  </span>
-                </li>
-              </ul>
-            </section>
+              ))}
+            </ul>
           )}
+        </Panel>
 
-          {(
-            [
-              { kind: 'allowance', title: t('staffDetail.pay.allowances'), rows: allowances ?? [] },
-              { kind: 'deduction', title: t('staffDetail.pay.deductions'), rows: deductions ?? [] },
-            ] as const
-          ).map(
-            (group) =>
-              group.rows.length > 0 && (
-                <section key={group.kind} className="flex flex-col gap-2">
-                  <h2 className="text-title-md px-1">{group.title}</h2>
-                  <ul className="overflow-hidden rounded-lg border bg-card shadow-xs">
-                    {group.rows.map((a) => {
-                      const ended = a.effective_to != null && a.effective_to < today;
-                      return (
-                        <li key={a.id} className={row}>
-                          <span className="flex flex-col">
-                            <span className="text-label-sm">
-                              {a.name}
-                              {ended && (
-                                <span className="text-caption ml-2 rounded-full bg-[var(--surface-muted)] px-2 py-0.5 text-[var(--ink-muted)]">
-                                  {t('staffDetail.items.ended')}
-                                </span>
-                              )}
+        {(
+          [
+            { kind: 'allowance', title: t('staffDetail.pay.allowances'), rows: allowances ?? [] },
+            { kind: 'deduction', title: t('staffDetail.pay.deductions'), rows: deductions ?? [] },
+          ] as const
+        ).map((group) => (
+          <Panel key={group.kind} span={6} title={group.title} flush>
+            {group.rows.length === 0 ? (
+              <PanelEmpty>{t('staffDetail.items.none')}</PanelEmpty>
+            ) : (
+              <ul>
+                {group.rows.map((a) => {
+                  const ended = a.effective_to != null && a.effective_to < today;
+                  return (
+                    <li key={a.id} className={row}>
+                      <span className="flex flex-col">
+                        <span className="text-label-sm">
+                          {a.name}
+                          {ended && (
+                            <span className="text-caption ml-2 rounded-full bg-[var(--surface-muted)] px-2 py-0.5 text-[var(--ink-muted)]">
+                              {t('staffDetail.items.ended')}
                             </span>
-                            <span className="text-caption text-[var(--ink-muted)]">
-                              {'prorated' in a && a.prorated
-                                ? t('staffDetail.pay.prorated')
-                                : t('staffDetail.pay.fixed')}{' '}
-                              · {t('staffDetail.pay.since', { date: formatDate(a.effective_from) })}
-                              {a.effective_to &&
-                                ` · ${t('staffDetail.items.until', { date: formatDate(a.effective_to) })}`}
-                            </span>
-                          </span>
-                          <span className="flex flex-col items-end">
-                            <span className="text-money-sm">
-                              {formatINR(Number(a.amount_paise))}
-                            </span>
-                            {props.canEdit && (
-                              <ItemButtons
-                                staffId={props.staffId}
-                                kind={group.kind}
-                                id={a.id}
-                                name={a.name}
-                                canEnd={a.effective_to == null || a.effective_to > today}
-                              />
-                            )}
-                          </span>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </section>
-              ),
-          )}
-        </div>
-        <div className="flex flex-col gap-4">
-          {(pays ?? []).length > 0 && (
-            <section className="flex flex-col gap-2">
-              <h2 className="text-title-md px-1">{t('staffDetail.pay.history')}</h2>
-              <ul className="overflow-hidden rounded-lg border bg-card shadow-xs">
-                {(pays ?? []).map((p) => (
-                  <li key={p.id} className={row}>
-                    <span className="flex flex-col">
-                      <span className="text-label-sm">
-                        {t('staffDetail.pay.since', { date: formatDate(p.effective_from) })}
+                          )}
+                        </span>
+                        <span className="text-caption text-[var(--ink-muted)]">
+                          {'prorated' in a && a.prorated
+                            ? t('staffDetail.pay.prorated')
+                            : t('staffDetail.pay.fixed')}{' '}
+                          · {t('staffDetail.pay.since', { date: formatDate(a.effective_from) })}
+                          {a.effective_to &&
+                            ` · ${t('staffDetail.items.until', { date: formatDate(a.effective_to) })}`}
+                        </span>
                       </span>
-                      <span className="text-caption text-[var(--ink-muted)]">
-                        {t(`staffDetail.pay.types.${p.pay_type}`)}
+                      <span className="flex flex-col items-end">
+                        <span className="text-money-sm">{formatINR(Number(a.amount_paise))}</span>
+                        {props.canEdit && (
+                          <ItemButtons
+                            staffId={props.staffId}
+                            kind={group.kind}
+                            id={a.id}
+                            name={a.name}
+                            canEnd={a.effective_to == null || a.effective_to > today}
+                          />
+                        )}
                       </span>
-                    </span>
-                    <span className="text-money-sm">{formatINR(amountOf(p))}</span>
-                  </li>
-                ))}
+                    </li>
+                  );
+                })}
               </ul>
-            </section>
-          )}
-        </div>
-      </div>
+            )}
+          </Panel>
+        ))}
+      </Bento>
     </div>
   );
 }

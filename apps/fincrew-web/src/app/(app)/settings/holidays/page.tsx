@@ -40,7 +40,7 @@ export default async function HolidaysPage({
   const yearLink = `${quietButtonClass} inline-flex items-center justify-center px-2`;
 
   return (
-    <div className="flex max-w-3xl flex-col gap-3">
+    <div className="flex flex-col gap-3">
       <section className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="text-muted-foreground text-sm">{t('settings.holidays.subtitle')}</p>

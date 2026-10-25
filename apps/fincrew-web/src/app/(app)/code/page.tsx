@@ -53,7 +53,7 @@ export default async function CodePage() {
         }
       />
 
-      <div className="grid items-start gap-5 [grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))]">
+      <div className="grid items-stretch gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))]">
         <section className={`${card} flex flex-col items-center gap-3 px-6 py-7 text-center`}>
           <span className="text-label-sm text-[var(--ink-muted)]">{t('code.today')}</span>
           <span
