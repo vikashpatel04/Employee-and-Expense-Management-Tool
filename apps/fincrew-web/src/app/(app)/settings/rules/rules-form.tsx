@@ -277,11 +277,6 @@ export function RulesForm({ rules }: { rules: ShopRules }) {
         </Section>
 
         <Section title={t(`${r}.login.title`)}>
-          <NumberField
-            name="inviteHours"
-            label={t(`${r}.login.inviteHours`)}
-            value={login.inviteHours}
-          />
           <div className="grid gap-3 sm:grid-cols-3">
             <NumberField
               name="pinsBeforeWait"
@@ -299,6 +294,11 @@ export function RulesForm({ rules }: { rules: ShopRules }) {
               value={login.wrongPinsBeforeLock}
             />
           </div>
+          <Check
+            name="allowBiometrics"
+            label={t(`${r}.login.allowBiometrics`)}
+            checked={login.allowBiometrics}
+          />
         </Section>
 
         <div className="flex flex-col gap-3">

@@ -51,7 +51,7 @@ any computer has them):
   revert. Append-only rows (ledger lines, advances, requests, check-in scans, audit, undoing
   payments) need the owner's OK each time; never disable their guards to clean up.
 - **Sign-ins are the owner's.** Never type the owner's password or PIN, never create a real
-  sign-in (accepting a Staffora invite counts): open the screen and wait. Never ask for or paste
+  sign-in (setting a Staffora staff member's first PIN counts): open the screen and wait. Never ask for or paste
   the database password, access tokens or secret keys; the publishable key is fine. The
   service-role key never goes in app code, Vercel or GitHub.
 - Don't touch the Supabase project `cheque-tracker-dev`.

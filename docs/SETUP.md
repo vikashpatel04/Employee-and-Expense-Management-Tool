@@ -104,5 +104,5 @@ edge function secrets (PLAN §9).
 `apps/staffora-mobile` works like the FinCrew app (section 6): copy `.env.example` to
 `.env.local` with the same two public values, then run it in a browser with the
 "staffora-mobile-web" preview (port 8082) or `pnpm --filter @fincrew/staffora web`. Signing in
-needs an invite link from the website (staff page → Staffora sign-in → Invite); paste it on the
-Welcome screen when trying it in a browser. Feature doc: `docs/features/staffora.md`.
+uses the phone number saved for the staff member in FinCrew (staff details): type it on the
+Welcome screen and choose a PIN. Forgot it → staff page → Staffora sign-in → Reset PIN. Feature doc: `docs/features/staffora.md`.

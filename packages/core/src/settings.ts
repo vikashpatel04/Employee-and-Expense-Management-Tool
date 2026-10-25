@@ -117,13 +117,15 @@ export function validateShopRules(r: ShopRules): string[] {
   if (!wholeAtLeast(c.maxWrongCodes, 1))
     problems.push('attendanceCode.maxWrongCodes must be 1 or more');
   const l = r.staffLogin;
-  for (const k of ['inviteHours', 'wrongPinsBeforeWait', 'wrongPinsBeforeLock'] as const) {
+  for (const k of ['wrongPinsBeforeWait', 'wrongPinsBeforeLock'] as const) {
     if (!wholeAtLeast(l[k], 1)) problems.push(`staffLogin.${k} must be 1 or more`);
   }
   if (!wholeAtLeast(l.pinWaitMinutes, 0))
     problems.push('staffLogin.pinWaitMinutes must be 0 or more');
   if (l.wrongPinsBeforeLock < l.wrongPinsBeforeWait)
     problems.push('staffLogin.wrongPinsBeforeLock must be at least wrongPinsBeforeWait');
+  if (typeof l.allowBiometrics !== 'boolean')
+    problems.push('staffLogin.allowBiometrics must be true or false');
   if (r.smallExpenseLimit !== undefined && !wholeAtLeast(r.smallExpenseLimit, 0)) {
     problems.push('smallExpenseLimit must be 0 or more');
   }

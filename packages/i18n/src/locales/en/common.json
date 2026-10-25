@@ -865,10 +865,10 @@
       "done": "Rules saved. The next salary run uses them; finalized payslips never change.",
       "login": {
         "title": "Staff sign-in",
-        "inviteHours": "Invite link works for (hours)",
         "pinsBeforeWait": "Wrong PINs before a wait",
         "pinWait": "Wait (minutes)",
-        "pinsBeforeLock": "Wrong PINs before the login locks"
+        "pinsBeforeLock": "Wrong PINs before the login locks",
+        "allowBiometrics": "Staff may open Staffora with their fingerprint or face instead of the PIN"
       }
     },
     "roles": {
@@ -1470,54 +1470,35 @@
   "signin": {
     "title": "Staffora sign-in",
     "state": {
-      "none": "Not invited",
-      "invited": "Invited · link works until {{date}}, {{time}}",
+      "noPhone": "No phone number",
+      "notSetUp": "Not set up yet",
       "signedIn": "Signed in",
       "locked": "Locked after wrong PINs",
       "waiting": "Waiting after wrong PINs until {{time}}"
     },
     "body": {
-      "none": "{{name}} can see their attendance, payslips and ledger, check in and ask for leave in Staffora. Send them a link; they set a 4-digit PIN on their phone.",
-      "invited": "Send the link to {{name}}. It works once. Opening it on their phone sets the PIN and ties Staffora to that phone.",
-      "signedIn": "Staffora is on {{name}}'s phone. Forgot the PIN? Send a new link: it sets a new PIN on the same account.",
-      "noPhone": "No phone is tied yet; the next sign-in ties it."
+      "noPhone": "Add {{name}}'s 10-digit mobile number in the details above. It is their Staffora user id.",
+      "waiting": "{{name}} opens Staffora on their phone, types this number and chooses a 4-digit PIN. Staffora then stays on that phone.",
+      "signedIn": "Staffora is on {{name}}'s phone. Forgot the PIN? Reset it: they choose a new one on their phone.",
+      "phoneNotBound": "No phone is tied yet; the next sign-in ties it."
     },
-    "invite": "Invite to Staffora",
-    "newLink": "New link",
-    "cancelInvite": "Cancel invite",
-    "copy": "Copy link",
-    "copied": "Copied",
-    "whatsapp": "Send on WhatsApp",
-    "whatsappText": "Hi {{name}}, open this link on your phone to use Staffora for {{shop}}: {{url}}",
-    "linkOnce": "Copy or send it now: the link is shown only once. You can always make a new one.",
+    "userId": "Staffora user id",
     "unlock": "Unlock",
     "newPhone": "New phone",
     "newPhoneHint": "Lets {{name}} sign in from a different phone; the next sign-in ties it.",
-    "resetPin": "Reset PIN (new link)",
+    "resetPin": "Reset PIN",
+    "resetConfirm": "Reset {{name}}'s PIN? They will choose a new one the next time they open Staffora.",
     "selfAttendance": "Can check in with the attendance code",
     "done": {
       "unlocked": "Unlocked.",
       "phone": "Phone cleared. The next sign-in ties the new one.",
-      "cancelled": "Invite cancelled.",
+      "reset": "PIN reset. They choose a new one when they open Staffora.",
       "self": "Saved."
     },
     "errors": {
       "failed": "Couldn't save: {{reason}}",
       "noPermission": "You can't change sign-ins."
     }
-  },
-  "join": {
-    "title": "Join {{shop}} on Staffora",
-    "hello": "Hi {{name}}",
-    "body": "{{shop}} invited you to Staffora: check in with the shop code, see your attendance, payslips and money, and ask for leave or an advance.",
-    "open": "Open in Staffora",
-    "steps": "Open this link on your own phone with Staffora installed. You will set a 4-digit PIN, and Staffora will stay tied to that phone.",
-    "noApp": "Staffora is not out yet. Keep this link and open it once the app is on your phone; ask the shop for a new link if it has expired.",
-    "checking": "Checking the link…",
-    "invalid": "This link doesn't work. Ask the shop for a new one.",
-    "used": "This link was already used. Ask the shop for a new one if you need to sign in again.",
-    "expired": "This link has expired. Ask the shop for a new one.",
-    "failed": "Couldn't check the link. Try again in a moment."
   },
   "staffora": {
     "appName": "Staffora",
@@ -1528,38 +1509,18 @@
       "me": "Me"
     },
     "welcome": {
-      "title": "Staffora",
+      "title": "Sign in to Staffora",
       "body": "Your attendance, payslips and money from the shop, on your phone.",
-      "howTo": "Open the invite link the shop sent you (WhatsApp or SMS) on this phone.",
-      "pasteLabel": "Or paste the link here",
-      "pastePlaceholder": "https://…/join/…",
-      "open": "Open the link",
-      "bad": "That doesn't look like an invite link."
-    },
-    "join": {
-      "checking": "Checking the link…",
-      "hello": "Hi {{name}}",
-      "invited": "{{shop}} invited you to Staffora.",
-      "features": {
-        "code": "Check in with the shop's code",
-        "days": "See your days and leave",
-        "money": "See your payslips and money"
-      },
-      "notYou": "Not you? Close this and tell the shop.",
-      "itsMe": "That is me, set my PIN",
-      "back": "Back",
-      "pinTitle": "Choose a 4-digit PIN",
-      "pinSub": "You type it each time you open Staffora. Staffora stays on this phone.",
-      "pinHint": "4 digits you will remember. Not your birth year.",
-      "confirmTitle": "Type the PIN again",
-      "confirmSub": "To make sure.",
-      "mismatch": "The two PINs were different. Choose one again.",
-      "saving": "Setting up Staffora…",
-      "invalid": "This link doesn't work. Ask the shop for a new one.",
-      "used": "This link was already used. Ask the shop for a new one if you need to sign in again.",
-      "expired": "This link has expired. Ask the shop for a new one.",
-      "failed": "Couldn't reach the shop's server. Check the internet and try again.",
-      "badPin": "Use exactly 4 digits."
+      "phoneLabel": "Your mobile number",
+      "phoneHint": "The number the shop saved for you.",
+      "countryCode": "+91",
+      "next": "Next",
+      "checking": "Checking…",
+      "badNumber": "Type your 10-digit mobile number.",
+      "not_found": "This number isn't on the shop's staff list. Ask the shop to check the number they saved for you.",
+      "left": "You are no longer on the shop's staff list.",
+      "many": "This number is on more than one staff record. Ask the shop to fix it.",
+      "failed": "Couldn't reach the shop's server. Check the internet and try again."
     },
     "pin": {
       "title": "Enter your PIN",
@@ -1569,10 +1530,13 @@
       "locked": "Staffora is locked after too many wrong PINs. Ask the shop to unlock it.",
       "wrongDevice": "Staffora is tied to another phone. Ask the shop to free it, then sign in again.",
       "left": "You are no longer on the shop's staff list.",
-      "noLogin": "This phone isn't set up any more. Ask the shop for a new link.",
-      "forgot": "Forgot your PIN? Ask the shop for a new link.",
+      "noLogin": "This phone isn't set up any more. Remove Staffora from this phone in Me, then sign in with your number.",
+      "forgot": "Forgot your PIN? Ask the shop to reset it.",
       "checking": "Checking…",
-      "failed": "Couldn't reach the shop's server. Check the internet and try again."
+      "failed": "Couldn't reach the shop's server. Check the internet and try again.",
+      "useBiometric": "Use fingerprint",
+      "biometricPrompt": "Open Staffora",
+      "notOnStaff": "You are no longer on the shop's staff list."
     },
     "pad": {
       "clear": "Clear",
@@ -1664,10 +1628,13 @@
       "lock": "Lock Staffora",
       "lockHint": "You'll need your PIN to open it again.",
       "forget": "Remove from this phone",
-      "forgetHint": "Staffora forgets this phone. You'll need a new link from the shop.",
+      "forgetHint": "Staffora forgets this phone. Sign in again with your number and PIN.",
       "changePin": "Change PIN",
       "changePinHint": "Choose a new 4-digit PIN for opening Staffora.",
-      "pinChanged": "PIN changed. Use the new PIN next time you open Staffora."
+      "pinChanged": "PIN changed. Use the new PIN next time you open Staffora.",
+      "biometric": "Open with fingerprint",
+      "biometricHint": "Use your fingerprint or face instead of typing the PIN.",
+      "biometricPrompt": "Turn on fingerprint for Staffora"
     },
     "next": {
       "title": "Coming next",
@@ -1740,6 +1707,30 @@
       "samePin": "The new PIN is the same as the current one. Choose a different one.",
       "badPin": "Use exactly 4 digits.",
       "saving": "Changing your PIN…"
+    },
+    "signIn": {
+      "hello": "Hi {{name}}",
+      "onList": "You're on the staff list at {{shop}}.",
+      "features": {
+        "code": "Check in with the shop's code",
+        "days": "See your days and leave",
+        "money": "See your payslips and money"
+      },
+      "notYou": "Not you? Go back and check the number.",
+      "itsMe": "That is me, set my PIN",
+      "back": "Back",
+      "pinTitle": "Choose a 4-digit PIN",
+      "pinSub": "You sign in with your phone number and this PIN. Staffora stays on this phone.",
+      "pinHint": "4 digits you will remember. Not your birth year.",
+      "confirmTitle": "Type the PIN again",
+      "confirmSub": "To make sure.",
+      "mismatch": "The two PINs were different. Choose one again.",
+      "saving": "Setting up Staffora…",
+      "resetTitle": "Choose a new PIN",
+      "resetSub": "The shop reset your PIN. Choose a new one for this phone.",
+      "badPin": "Use exactly 4 digits.",
+      "hasPin": "A PIN is already set for this number. Enter it to sign in.",
+      "enterTitle": "Enter your PIN"
     }
   }
 }

@@ -1,14 +1,15 @@
 import { beforeAll, describe, expect, it } from 'vitest';
-import { DEFAULT_STAFF_LOGIN, evaluatePinAttempt, type PinState } from '@fincrew/core';
+import { DEFAULT_STAFF_LOGIN, evaluatePinAttempt, phoneKey, type PinState } from '@fincrew/core';
 import { as, createAuthUser, freshDb, rejects, type Db } from './harness';
 
 /**
- * Invites and PIN sign-in (migration 20261024000005).
+ * Staffora sign-in: phone number + PIN (migrations 20261024000005, 20261025000001-2).
  *   Asha owns Shop 1 and Shop 2.
- *   Ravi:  Shop 1 "Manager" role: staff.edit.
- *   Meena: Shop 1 staff, no sign-in yet (gets invited).
- *   Selvi: Shop 1 staff, no sign-in (left the shop).
+ *   Ravi:  Shop 1 "Manager" role: staff.edit (not staff, so no Staffora).
+ *   Meena: Shop 1 staff, phone "98765 43210", no PIN yet (sets it the first time).
+ *   Selvi: Shop 1 staff who left.
  *   Arun:  Shop 1 staff for the core-parity scenario.
+ *   Banu:  Shop 1 and Shop 2 staff with the same phone (ambiguous).
  *   Kiran: Shop 2 staff with a sign-in (other shop).
  * The edge function's calls are made as service_role. Tests run in order.
  */
@@ -16,7 +17,6 @@ let db: Db;
 let asha: string, ravi: string, kiran: string, meenaUser: string, arunUser: string;
 let shop1: string, shop2: string;
 let ashaP: string, meenaP: string, selviP: string, arunP: string;
-let token: string;
 
 const PHONE = 'meena-phone-0001';
 const q = <T = Record<string, unknown>>(user: string | null, sql: string, params: unknown[] = []) =>
@@ -50,11 +50,17 @@ beforeAll(async () => {
   ashaP = (await q<{ id: string }>(asha, 'select id from people where shop_id = $1', [shop1]))[0]!
     .id;
   await as(db, asha, async (tx) => {
-    const person = async (s: string, user: string | null, name: string, staff: boolean) => {
+    const person = async (
+      s: string,
+      user: string | null,
+      name: string,
+      staff: boolean,
+      phone: string | null = null,
+    ) => {
       const id = (
         await tx.query<{ id: string }>(
-          'insert into people (shop_id, auth_user_id, name) values ($1, $2, $3) returning id',
-          [s, user, name],
+          'insert into people (shop_id, auth_user_id, name, phone) values ($1, $2, $3, $4) returning id',
+          [s, user, name, phone],
         )
       ).rows[0]!.id;
       if (staff)
@@ -64,11 +70,13 @@ beforeAll(async () => {
         );
       return id;
     };
-    const raviP = await person(shop1, ravi, 'Ravi', false);
-    meenaP = await person(shop1, null, 'Meena', true);
-    selviP = await person(shop1, null, 'Selvi', true);
-    arunP = await person(shop1, null, 'Arun', true);
-    await person(shop2, kiran, 'Kiran', true);
+    const raviP = await person(shop1, ravi, 'Ravi', false, '9000000005');
+    meenaP = await person(shop1, null, 'Meena Kumari', true, '98765 43210');
+    selviP = await person(shop1, null, 'Selvi', true, '9000000002');
+    arunP = await person(shop1, null, 'Arun', true, '9000000003');
+    await person(shop1, null, 'Banu', true, '9000000006');
+    await person(shop2, null, 'Banu', true, '+91 90000 00006');
+    await person(shop2, kiran, 'Kiran', true, '9000000004');
     await tx.query(
       `update staff set status = 'left', leaving_date = '2026-06-30' where person_id = $1`,
       [selviP],
@@ -91,72 +99,39 @@ beforeAll(async () => {
   });
 });
 
-describe('invites', () => {
-  it('staff.edit makes an invite: a long token that lasts 48 hours by default', async () => {
-    const r = await one<{ token: string; expiresAt: string }>(
-      ravi,
-      'select public.create_invite($1) as r',
-      [meenaP],
-    );
-    expect(r.token).toMatch(/^[0-9a-f]{48}$/);
-    const hours = (Date.parse(r.expiresAt) - Date.now()) / 3_600_000;
-    expect(hours).toBeGreaterThan(47.9);
-    expect(hours).toBeLessThanOrEqual(48);
-    token = r.token;
-  });
+describe('phone sign-in (migration 20261025000002)', () => {
+  const lookup = (phone: string) => server<R>('select public.phone_lookup($1) as r', [phone]);
+  const setup = (phone: string, pin: string, device = PHONE, user = meenaUser) =>
+    server<R>('select public.pin_setup($1, $2, $3, $4) as r', [phone, pin, device, user]);
 
-  it('not for the owner, people who left, other shops, or without staff.edit', async () => {
-    await rejects(q(asha, 'select public.create_invite($1)', [ashaP]), /owner signs in with email/);
-    await rejects(q(asha, 'select public.create_invite($1)', [selviP]), /has left/);
-    await rejects(q(kiran, 'select public.create_invite($1)', [meenaP]), /Not allowed/);
-    await rejects(q(null, 'select public.create_invite($1)', [meenaP]), /permission denied/);
-  });
-
-  it('only the hash is stored; staff.edit sees the invite but never the hash', async () => {
-    const rows = await q(ravi, 'select person_id, used_at from invites');
-    expect(rows).toEqual([{ person_id: meenaP, used_at: null }]);
-    await rejects(q(asha, 'select token_hash from invites'), /permission denied/);
-    await rejects(q(asha, 'select * from pin_credentials'), /permission denied/);
-    await rejects(
-      q(
-        asha,
-        `insert into invites (shop_id, person_id, token_hash, expires_at)
-               values ($1, $2, 'x', now())`,
-        [shop1, meenaP],
-      ),
-      /permission denied/,
-    );
-  });
-
-  it('a new invite cancels the old one', async () => {
-    const old = token;
-    token = (await one<{ token: string }>(asha, 'select public.create_invite($1) as r', [meenaP]))
-      .token;
-    expect(await server<R>('select public.invite_lookup($1) as r', [old])).toEqual({
-      ok: false,
-      reason: 'invalid',
-    });
-  });
-
-  it('the server looks the invite up', async () => {
-    expect(await server<R>('select public.invite_lookup($1) as r', [token])).toEqual({
+  it('the server finds the staff member by phone number, however it is typed', async () => {
+    const meena = {
       ok: true,
       personId: meenaP,
       shopId: shop1,
-      name: 'Meena',
+      firstName: 'Meena',
       shopName: 'Main Road',
+      hasPin: false,
       authUserId: null,
-    });
-    expect(await server<R>('select public.invite_lookup($1) as r', ['nope'])).toMatchObject({
-      reason: 'invalid',
-    });
+    };
+    expect(await lookup('9876543210')).toEqual(meena);
+    expect(await lookup('+91 98765-43210')).toEqual(meena);
+    expect(await lookup('098765 43210')).toEqual(meena);
   });
 
-  it('apps cannot call the server-only functions', async () => {
+  it('unknown numbers, non-staff, people who left and shared numbers are refused', async () => {
+    expect(await lookup('9999999999')).toEqual({ ok: false, reason: 'not_found' });
+    expect(await lookup('12345')).toEqual({ ok: false, reason: 'not_found' });
+    expect(await lookup('9000000005')).toEqual({ ok: false, reason: 'not_found' }); // Ravi
+    expect(await lookup('9000000002')).toEqual({ ok: false, reason: 'left' });
+    expect(await lookup('9000000006')).toEqual({ ok: false, reason: 'many' });
+  });
+
+  it('apps cannot call the server-only functions; nobody reads PINs', async () => {
     for (const user of [null, asha]) {
-      await rejects(q(user, 'select public.invite_lookup($1)', [token]), /permission denied/);
+      await rejects(q(user, 'select public.phone_lookup($1)', ['9876543210']), /permission denied/);
       await rejects(
-        q(user, `select public.invite_accept($1, '1234', $2, $3)`, [token, PHONE, meenaUser]),
+        q(user, `select public.pin_setup($1, '1234', $2, $3)`, ['9876543210', PHONE, meenaUser]),
         /permission denied/,
       );
       await rejects(
@@ -164,26 +139,19 @@ describe('invites', () => {
         /permission denied/,
       );
     }
+    await rejects(q(asha, 'select * from pin_credentials'), /permission denied/);
   });
 
-  it('accepting needs a 4-digit PIN', async () => {
-    expect(
-      await server<R>(`select public.invite_accept($1, '12a4', $2, $3) as r`, [
-        token,
-        PHONE,
-        meenaUser,
-      ]),
-    ).toEqual({ ok: false, reason: 'bad_pin' });
+  it('the first PIN must be 4 digits', async () => {
+    expect(await setup('9876543210', '12a4')).toEqual({ ok: false, reason: 'bad_pin' });
   });
 
-  it('accepting links the sign-in, saves the PIN, binds the phone and uses the invite', async () => {
-    expect(
-      await server<R>(`select public.invite_accept($1, '4321', $2, $3) as r`, [
-        token,
-        PHONE,
-        meenaUser,
-      ]),
-    ).toEqual({ ok: true, personId: meenaP, shopId: shop1 });
+  it('setting the first PIN links the sign-in, saves the PIN and binds the phone', async () => {
+    expect(await setup('+91 98765 43210', '4321')).toEqual({
+      ok: true,
+      personId: meenaP,
+      shopId: shop1,
+    });
     const p = await db.query<{ auth_user_id: string; device_id: string; pin_hash: string }>(
       `select p.auth_user_id, s.device_id, c.pin_hash from people p
        join staff s on s.person_id = p.id join pin_credentials c on c.person_id = p.id
@@ -192,23 +160,19 @@ describe('invites', () => {
     );
     expect(p.rows[0]).toMatchObject({ auth_user_id: meenaUser, device_id: PHONE });
     expect(p.rows[0]!.pin_hash).not.toContain('4321');
-    expect(await server<R>('select public.invite_lookup($1) as r', [token])).toEqual({
-      ok: false,
-      reason: 'used',
-    });
+    expect(await lookup('9876543210')).toMatchObject({ hasPin: true, authUserId: meenaUser });
   });
 
-  it('an expired invite is refused', async () => {
-    const t = (await one<{ token: string }>(asha, 'select public.create_invite($1) as r', [arunP]))
-      .token;
-    await db.query(
-      `update invites set expires_at = now() - interval '1 minute' where person_id = $1`,
-      [arunP],
+  it('once a PIN is set, setting it again is refused (sign in instead)', async () => {
+    expect(await setup('9876543210', '1111')).toEqual({ ok: false, reason: 'has_pin' });
+  });
+
+  it('the invite links are gone', async () => {
+    const r = await db.query(
+      `select 1 from pg_proc where proname in ('create_invite', 'invite_accept', 'invite_lookup')
+       union all select 1 from pg_class where relname = 'invites'`,
     );
-    expect(await server<R>('select public.invite_lookup($1) as r', [t])).toEqual({
-      ok: false,
-      reason: 'expired',
-    });
+    expect(r.rows).toEqual([]);
   });
 });
 
@@ -316,12 +280,58 @@ describe('change PIN (migration 20261025000001)', () => {
   });
 });
 
+describe('the database reads phone numbers like core (phoneKey)', () => {
+  it('gives the same key for each way of writing a number', async () => {
+    for (const typed of [
+      '9876543210',
+      '+91 98765 43210',
+      '0091 98765 43210',
+      '09876543210',
+      '12345',
+      '+44 7700 900123',
+      '',
+    ]) {
+      const r = await db.query<{ k: string | null }>('select private.phone_key($1) as k', [typed]);
+      expect({ typed, key: r.rows[0]!.k }).toEqual({ typed, key: phoneKey(typed) });
+    }
+  });
+});
+
+describe('reset a forgotten PIN (migration 20261025000002)', () => {
+  const PHONE2 = 'new-phone-00001';
+  const login = (pin: string) =>
+    server<R>('select public.pin_login($1, $2, $3) as r', [meenaP, pin, PHONE2]);
+  const setup = (pin: string, device: string) =>
+    server<R>('select public.pin_setup($1, $2, $3, $4) as r', [
+      '9876543210',
+      pin,
+      device,
+      meenaUser,
+    ]);
+
+  it('staff.edit resets it; the staff member sets a new one on their own phone', async () => {
+    await q(ravi, 'select public.reset_pin($1)', [meenaP]);
+    expect(await login('4321')).toEqual({ ok: false, reason: 'no_pin' });
+    expect(await server<R>('select public.phone_lookup($1) as r', ['9876543210'])).toMatchObject({
+      hasPin: false,
+    });
+    expect(await setup('2468', 'stolen-phone-0001')).toEqual({
+      ok: false,
+      reason: 'wrong_device',
+    });
+    expect(await setup('2468', PHONE2)).toMatchObject({ ok: true });
+    expect(await login('2468')).toMatchObject({ ok: true });
+  });
+
+  it('not for other shops or without staff.edit', async () => {
+    await rejects(q(kiran, 'select public.reset_pin($1)', [meenaP]), /Not allowed/);
+    await rejects(q(null, 'select public.reset_pin($1)', [meenaP]), /permission denied/);
+  });
+});
+
 describe('the database follows the core rules (evaluatePinAttempt)', () => {
   it('gives the same result as core for a run of attempts', async () => {
-    const t = (await one<{ token: string }>(asha, 'select public.create_invite($1) as r', [arunP]))
-      .token;
-    await server(`select public.invite_accept($1, '2580', 'arun-phone-0001', $2) as r`, [
-      t,
+    await server(`select public.pin_setup('9000000003', '2580', 'arun-phone-0001', $1) as r`, [
       arunUser,
     ]);
     const t0 = Date.parse('2030-05-01T10:00:00Z');

@@ -2,8 +2,7 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 import { supabaseEnv } from './lib/supabase/env';
 
-// /join: invite links open before the person has any sign-in.
-const PUBLIC_PATHS = ['/login', '/join/'];
+const PUBLIC_PATHS = ['/login'];
 
 /** Refreshes the Supabase session on every request and sends signed-out users to /login. */
 export async function proxy(request: NextRequest) {

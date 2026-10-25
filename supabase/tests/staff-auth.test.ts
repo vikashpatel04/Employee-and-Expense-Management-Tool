@@ -10,7 +10,6 @@ import { as, createAuthUser, freshDb, type Db } from './harness';
 let db: Db;
 let asha: string;
 let shop: string, meenaP: string;
-let token: string;
 const passwords = new Map<string, string>();
 let created = 0;
 
@@ -64,7 +63,8 @@ beforeAll(async () => {
     await as(db, asha, async (tx) => {
       const id = (
         await tx.query<{ id: string }>(
-          `insert into people (shop_id, name) values ($1, 'Meena') returning id`,
+          `insert into people (shop_id, name, phone) values ($1, 'Meena Kumari', '98765 43210')
+           returning id`,
           [shop],
         )
       ).rows[0]!.id;
@@ -75,43 +75,39 @@ beforeAll(async () => {
       return { rows: [{ id }] };
     })
   ).rows[0]!.id;
-  token = (
-    await as(db, asha, (tx) =>
-      tx.query<{ r: { token: string } }>('select public.create_invite($1) as r', [meenaP]),
-    )
-  ).rows[0]!.r.token;
 });
+
+const PHONE = '+91 98765 43210';
+const DEVICE = 'meena-phone-1';
 
 describe('staff-auth', () => {
   it('rejects bad requests', async () => {
     expect((await handle(null, deps)).status).toBe(400);
     expect((await handle({ action: 'dance' }, deps)).status).toBe(400);
-    expect((await handle({ action: 'accept', token, pin: '1234' }, deps)).status).toBe(400);
+    expect((await handle({ action: 'setup', phone: PHONE, pin: '1234' }, deps)).status).toBe(400);
+    expect((await handle({ action: 'lookup' }, deps)).status).toBe(400);
   });
 
-  it('shows who an invite is for', async () => {
-    expect(await handle({ action: 'invite', token }, deps)).toEqual({
+  it('looks the phone number up: first name, shop, and whether a PIN is set', async () => {
+    expect(await handle({ action: 'lookup', phone: PHONE }, deps)).toEqual({
       status: 200,
-      body: { ok: true, name: 'Meena', shopName: 'Main Road' },
+      body: { ok: true, personId: meenaP, firstName: 'Meena', shopName: 'Main Road', hasPin: false },
     });
-    expect((await handle({ action: 'invite', token: 'nope' }, deps)).body).toEqual({
+    expect((await handle({ action: 'lookup', phone: '9999999999' }, deps)).body).toEqual({
       ok: false,
-      reason: 'invalid',
+      reason: 'not_found',
     });
   });
 
   it('a bad PIN is refused before anything is made', async () => {
     expect(
-      (await handle({ action: 'accept', token, pin: '12', deviceId: 'meena-phone-1' }, deps)).body,
+      (await handle({ action: 'setup', phone: PHONE, pin: '12', deviceId: DEVICE }, deps)).body,
     ).toEqual({ ok: false, reason: 'bad_pin' });
     expect(created).toBe(0);
   });
 
-  it('accepting makes the sign-in, links it and returns a session', async () => {
-    const r = await handle(
-      { action: 'accept', token, pin: '4321', deviceId: 'meena-phone-1' },
-      deps,
-    );
+  it('the first PIN makes the sign-in, links it and returns a session', async () => {
+    const r = await handle({ action: 'setup', phone: PHONE, pin: '4321', deviceId: DEVICE }, deps);
     expect(r.status).toBe(200);
     expect(r.body).toMatchObject({ ok: true, personId: meenaP, shopId: shop });
     expect((r.body.session as { access_token: string }).access_token).toMatch(/^access-/);
@@ -123,56 +119,35 @@ describe('staff-auth', () => {
     expect(created).toBe(1);
   });
 
-  it('the invite works once', async () => {
+  it('the first-PIN step works once', async () => {
     expect(
-      (await handle({ action: 'accept', token, pin: '4321', deviceId: 'meena-phone-1' }, deps))
-        .body,
-    ).toEqual({ ok: false, reason: 'used' });
+      (await handle({ action: 'setup', phone: PHONE, pin: '1111', deviceId: DEVICE }, deps)).body,
+    ).toEqual({ ok: false, reason: 'has_pin' });
   });
 
   it('signs in with the PIN on the bound phone', async () => {
-    const r = await handle(
-      { action: 'login', personId: meenaP, pin: '4321', deviceId: 'meena-phone-1' },
-      deps,
-    );
-    expect(r.body).toMatchObject({ ok: true, personId: meenaP, shopId: shop });
-    expect(
-      (
-        await handle(
-          { action: 'login', personId: meenaP, pin: '0000', deviceId: 'meena-phone-1' },
-          deps,
-        )
-      ).body,
-    ).toEqual({ ok: false, reason: 'wrong_pin', triesLeft: 4 });
-    expect(
-      (
-        await handle(
-          { action: 'login', personId: meenaP, pin: '4321', deviceId: 'other-phone-1' },
-          deps,
-        )
-      ).body,
-    ).toEqual({ ok: false, reason: 'wrong_device' });
+    const login = (pin: string, deviceId = DEVICE) =>
+      handle({ action: 'login', personId: meenaP, pin, deviceId }, deps);
+    expect((await login('4321')).body).toMatchObject({ ok: true, personId: meenaP, shopId: shop });
+    expect((await login('0000')).body).toEqual({ ok: false, reason: 'wrong_pin', triesLeft: 4 });
+    expect((await login('4321', 'other-phone-1')).body).toEqual({
+      ok: false,
+      reason: 'wrong_device',
+    });
   });
 
-  it('a new invite for someone who already has a sign-in reuses it (PIN reset)', async () => {
-    const again = (
-      await as(db, asha, (tx) =>
-        tx.query<{ r: { token: string } }>('select public.create_invite($1) as r', [meenaP]),
-      )
-    ).rows[0]!.r.token;
-    const r = await handle(
-      { action: 'accept', token: again, pin: '9999', deviceId: 'meena-phone-1' },
-      deps,
-    );
+  it('after the shop resets the PIN, a new one reuses the same sign-in', async () => {
+    await as(db, asha, (tx) => tx.query('select public.reset_pin($1)', [meenaP]));
+    expect(
+      (await handle({ action: 'login', personId: meenaP, pin: '4321', deviceId: DEVICE }, deps))
+        .body,
+    ).toEqual({ ok: false, reason: 'no_pin' });
+    const r = await handle({ action: 'setup', phone: PHONE, pin: '9999', deviceId: DEVICE }, deps);
     expect(r.body).toMatchObject({ ok: true });
     expect(created).toBe(1);
     expect(
-      (
-        await handle(
-          { action: 'login', personId: meenaP, pin: '9999', deviceId: 'meena-phone-1' },
-          deps,
-        )
-      ).body,
+      (await handle({ action: 'login', personId: meenaP, pin: '9999', deviceId: DEVICE }, deps))
+        .body,
     ).toMatchObject({ ok: true });
   });
 });

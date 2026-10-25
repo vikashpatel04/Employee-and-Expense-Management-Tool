@@ -332,7 +332,6 @@ export type StaffLogin = {
   hasPin: boolean;
   locked: boolean;
   waitUntil: string | null;
-  inviteExpiresAt: string | null;
   phoneBound: boolean;
 };
 
@@ -347,27 +346,15 @@ export async function loadStaffLogins(supabase: Supabase, shopId: string) {
         hasPin: r.has_pin,
         locked: r.locked,
         waitUntil: r.wait_until,
-        inviteExpiresAt: r.invite_expires_at,
         phoneBound: r.phone_bound,
       },
     ]),
   );
 }
 
-/** A one-time invite link token (cancels the person's earlier unused ones). */
-export async function createInvite(supabase: Supabase, personId: string) {
-  const { data, error } = await supabase.rpc('create_invite', { p_person: personId });
-  return error
-    ? { ok: false as const, message: error.message }
-    : { ok: true as const, ...(data as { token: string; expiresAt: string }) };
-}
-
-/** Where an invite link opens (the website's join page, which hands over to Staffora). */
-export const inviteUrl = (origin: string, token: string) =>
-  `${origin.replace(/\/$/, '')}/join/${token}`;
-
-export async function revokeInvite(supabase: Supabase, personId: string) {
-  return !(await supabase.rpc('revoke_invite', { p_person: personId })).error;
+/** Forgot the PIN: remove it; the person sets a new one in Staffora on their phone. */
+export async function resetPin(supabase: Supabase, personId: string) {
+  return !(await supabase.rpc('reset_pin', { p_person: personId })).error;
 }
 
 export async function unlockLogin(supabase: Supabase, personId: string) {

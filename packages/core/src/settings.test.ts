@@ -17,10 +17,10 @@ describe('resolveShopRules', () => {
       pay: { offDayWork: 'replace' },
       late: { mode: 'deduct', freeLateDays: 0 },
       attendanceCode: { cooldownMinutes: 5 },
-      staffLogin: { inviteHours: 24 },
+      staffLogin: { allowBiometrics: false },
       smallExpenseLimit: 1_000,
     });
-    expect(r.staffLogin).toMatchObject({ inviteHours: 24, wrongPinsBeforeLock: 10 });
+    expect(r.staffLogin).toMatchObject({ allowBiometrics: false, wrongPinsBeforeLock: 10 });
     expect(r.pay).toEqual({ ...DEFAULT_PAY_RULES, offDayWork: 'replace' });
     expect(r.late).toMatchObject({ mode: 'deduct', freeLateDays: 0, halfDayThresholdMinutes: 120 });
     expect(r.attendanceCode).toMatchObject({ cooldownMinutes: 5, minGapMinutes: 30 });
@@ -57,7 +57,6 @@ describe('validateShopRules', () => {
         lockoutMinutes: -1,
       },
       staffLogin: {
-        inviteHours: 0,
         pinWaitMinutes: -1,
         wrongPinsBeforeWait: 6,
         wrongPinsBeforeLock: 5,
@@ -72,7 +71,6 @@ describe('validateShopRules', () => {
       'attendanceCode.rotation.atMinutes must be 0–1439',
       'attendanceCode.lockoutMinutes must be 0 or more',
       'attendanceCode.maxWrongCodes must be 1 or more',
-      'staffLogin.inviteHours must be 1 or more',
       'staffLogin.pinWaitMinutes must be 0 or more',
       'staffLogin.wrongPinsBeforeLock must be at least wrongPinsBeforeWait',
       'smallExpenseLimit must be 0 or more',

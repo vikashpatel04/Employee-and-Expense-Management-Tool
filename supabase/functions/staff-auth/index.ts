@@ -1,4 +1,4 @@
-// Supabase Edge Function (Deno): staff sign-in with an invite link and a PIN.
+// Supabase Edge Function (Deno): Staffora sign-in with a phone number and a PIN.
 // The logic is in handler.ts (tested in supabase/tests/staff-auth.test.ts); this file only
 // connects it to Supabase with the service role, which never leaves the server.
 import { createClient } from 'npm:@supabase/supabase-js@2.118.0';

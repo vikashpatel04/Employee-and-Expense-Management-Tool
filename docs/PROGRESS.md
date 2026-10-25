@@ -12,34 +12,34 @@ first, then `CLAUDE.md`, then the feature doc for whatever you touch._
 - **Website** (https://fincrew-web.vercel.app, `docs/features/fincrew-web.md`): **complete for
   every owner flow and live**: dashboard (with requests banner), attendance grid + phone day view,
   attendance code page (`/code`, `/qr`), requests (`/requests`), staff (detail tabs, helpers,
-  opening balance, Staffora sign-in card: invite / cancel / unlock / new phone / code check-in
-  switch), salary run + payslips, advances, expenses + categories, reports, settings, roles,
-  public invite page `/join/<token>`. **The owner can start using the website now.**
+  opening balance, Staffora sign-in card: phone number as user id / reset PIN / unlock / new
+  phone / code check-in switch), salary run + payslips, advances, expenses + categories,
+  reports, settings, roles. **The owner can start using the website now.**
 - **FinCrew Android** (`apps/fincrew-mobile`, `docs/features/fincrew-mobile.md`): Today (+
   attendance code button, requests banner), Staff (detail with Give advance / Pay), Money
   (expenses with bill photo, salary run, advances), Attendance code screen, Requests, More. All
   checked on live in the browser preview, including salary finalize + pay end to end. **Not on a
   phone yet** (needs EAS builds + the owner's Expo account, which they'll create once the apps
   are complete).
-- **Staffora** (`apps/staffora-mobile`, `docs/features/staffora.md`): welcome, join from the
-  invite (PIN twice), PIN on every open, Home with check-in by code / QR, checked-in screen,
-  Attendance calendar, Money (ledger, payslips, payslip page), Ask for leave / advance with my
-  requests and cancel, Me (change PIN, lock, remove), Home payslip card, share a payslip.
-  **The owner joined as Test Staff** in the
-  "staffora-mobile-web" preview (their PIN — never type it); Home, Attendance, Money, Payslips,
-  Ask were checked on live. Not tried on live: sending a request, checking in (both leave
-  permanent rows — ask first; check-in also needs Test Staff's "Can check in with the attendance
-  code" switched on), Lock / Remove (they sign the owner out of the preview).
+- **Staffora** (`apps/staffora-mobile`, `docs/features/staffora.md`): **sign in with the phone
+  number + a PIN chosen the first time** (since 2026-10-25; invite links removed), PIN on every
+  open or fingerprint, Home with check-in by code / QR and the newest payslip, checked-in screen,
+  Attendance calendar, Money (ledger, payslips, payslip page + share), Ask for leave / advance
+  with my requests and cancel, Me (change PIN, fingerprint, lock, remove). Home, Attendance,
+  Money, Payslips, Ask were checked on live on 2026-10-24 with the owner's Test Staff sign-in;
+  the preview has since lost it. Not tried on live: the phone sign-in, change PIN, payslip card,
+  share, sending a request, checking in (requests / check-ins leave permanent rows — ask
+  first), Lock / Remove, fingerprint (needs a real phone).
 - **Database / server**: Phase 7 data live (`docs/features/staff-self-service.md`): attendance
-  codes + `check_in`, scans log, requests, invites + bcrypt PINs, `staff-auth` edge function
-  (deployed by CI), staff read their payslip's run. Migrations up to
-  `20261024000006_staff_read_runs.sql` are live; `20261025000001_change_pin.sql` waits for
-  the push.
+  codes + `check_in`, scans log, requests, bcrypt PINs, `staff-auth` edge function (deployed
+  by CI), staff read their payslip's run. Migrations up to `20261024000006_staff_read_runs.sql`
+  are live; `20261025000001_change_pin.sql` and `20261025000002_phone_login.sql` (phone sign-in,
+  drops invites) + the new `staff-auth` wait for the push (dry-run both on live first).
 - Shared code: `packages/core` (rules incl. `evaluateCheck`, `evaluatePinAttempt`, `staffLogin`
   settings), **`packages/data`** (used by the website and both apps: attendance month / write,
   session, staff loaders, expenses + saving, salary month + run / finalize / pay, payslip loaders
   `loadMyPayslips` / `loadPayslipView`, advances, reports, roles, leave setup, self-service:
-  code, check-ins, requests + `decideRequest`, logins / invites).
+  code, check-ins, requests + `decideRequest`, logins / reset PIN, payslip share text).
 - **Git:** everything up to `9fd9e02` is pushed (CI run 40104302836 green, Vercel deployed);
   local `main` has docs-only commits after it (this handover), not pushed. Working from another
   PC: `docs/NEW-MACHINE.md`. The owner pushes, or
@@ -48,10 +48,12 @@ first, then `CLAUDE.md`, then the feature doc for whatever you touch._
 
 **Next work, in order** (agreed with the owner 2026-10-24; they usually say "continue")
 
-1. **Finish Staffora**: built on 2026-10-25 — change PIN, Home payslip card, share a payslip
-   (needs the push for `20261025000001_change_pin.sql`). Left: live checks with the owner —
-   re-join Test Staff in the preview (New phone + invite; the owner types the PIN), then change
-   PIN, Home card, Share, and (with their OK — permanent rows) sending a request and checking in.
+1. **Finish Staffora**: built on 2026-10-25 — phone + PIN sign-in (replaces invite links),
+   fingerprint opening, change PIN, Home payslip card, share a payslip; not pushed yet. Left:
+   push (the owner asked to wait and push it together), then live checks with the owner: add
+   Test Staff's phone number in FinCrew, New phone + Reset PIN on their sign-in card, the owner
+   types the number + a new PIN in the Staffora preview; then change PIN, Home card, Share, and
+   (with their OK — permanent rows) sending a request and checking in.
 2. **FinCrew app gaps**: share payslip on WhatsApp (design "Salary run"), undo a ledger line in
    the app (`undoLedgerLine` is shared), pay / advance-rule changes in the app (website only now),
    bill photo upload on a real phone.
@@ -79,15 +81,16 @@ The owner may ask to move 4 + 6 earlier so staff can use Staffora sooner — off
 - Expo account / phone installs: **once the apps are fully complete**.
 - Still open: reviewing the rule defaults (`docs/features/core-rules.md`).
 - Before real use the owner should: set up templates / rules / categories, add real staff, and
-  **mark Test Staff as left** (it can't be deleted any more). Don't send real invite links until
-  Staffora can be installed (links last 48 h).
+  **mark Test Staff as left** (it can't be deleted any more), and save each staff member's
+  10-digit mobile number (it is their Staffora user id; the first one to type it sets the PIN).
 
 **Live test data**: Test Staff (person `55e7a159-1a4b-4615-a1a3-bdbbcdc6b304`; joined
 23/10/2026, ₹22,000 monthly, 9:30 AM – 8:30 PM, advance limit ₹5,000 / cut ₹1,000; attendance
 23/10 half day, 24/10 present (marked by the owner); **October salary finalized and paid**
 ₹1,065.00 by UPI — ledger +₹1,065 (31/10) / −₹1,065 (24/10), so Test Staff can't be deleted;
-**has a Staffora sign-in** (auth user `staff-<person id>@fincrew.invalid`, phone = the browser
-preview's device id) with the owner's PIN; self attendance off; three decided requests whose
+**has a Staffora sign-in** (auth user `staff-<person id>@fincrew.invalid`, bound to an old
+preview browser's device id) with the owner's PIN but **no phone number saved** (needed for the
+new phone sign-in); self attendance off; three decided requests whose
 notes start "TEST:" — requests can't be deleted). An archived "Test category". The shop's
 attendance code exists (made while checking). Everything else tested was reverted.
 
@@ -100,15 +103,15 @@ their OK.
 
 **How to check work**
 
-- `pnpm typecheck` (9 tasks incl. both apps), `pnpm test` (core 234, ui 6, i18n 1, db 165 —
+- `pnpm typecheck` (9 tasks incl. both apps), `pnpm test` (core 236, ui 6, i18n 1, db 166 —
   PGlite, no Docker), `pnpm build`, `pnpm ui:tokens --check`,
   `bash scripts/check-migrations.sh origin/main HEAD`.
 - Live DB (CLI logged in): `pnpm exec supabase db query --linked --project-ref
 ufmlqvvfznemghmnvynz "<sql>"`; advisors: `... db advisors --linked --project-ref
 ufmlqvvfznemghmnvynz --type all` (accepted warnings only: authenticated-callable
   `create_shop`/`finalize_payslip`/`my_permissions`/`shop_exists` and the Phase 7 owner-side
-  functions `attendance_code`/`regenerate_attendance_code`/`check_in`/`create_invite`/
-  `revoke_invite`/`staff_logins`/`unlock_login`/`reset_staff_phone`, Staffora's `change_pin`,
+  functions `attendance_code`/`regenerate_attendance_code`/`check_in`/`reset_pin`/
+  `staff_logins`/`unlock_login`/`reset_staff_phone`, Staffora's `change_pin`,
   Supabase's
   `rls_auto_enable`, leaked-password protection). **Dry-run a new migration** on live before
   asking to push: write `begin; <migration> select 'applied'; rollback;` to a file and run
@@ -154,8 +157,8 @@ ufmlqvvfznemghmnvynz --type all` (accepted warnings only: authenticated-callable
   harness has a `storage` stand-in and loads `pgcrypto` into an `extensions` schema like Supabase.
 - `supabase/functions/<name>/handler.ts` is plain TS (tested from `supabase/tests`);
   `index.ts` is Deno (not typechecked locally). Edge function deploy: CI step with `--use-api`.
-- Creating a staff sign-in on live (accept an invite) counts as creating an account: the owner
-  does it, not you. Loading scripts from a CDN into a page is blocked.
+- Creating a staff sign-in on live (typing a staff phone number and a first PIN in Staffora)
+  counts as creating an account: the owner does it, not you. Loading scripts from a CDN into a page is blocked.
 - Expo: add native libraries with `npx expo install` (from the app folder); pnpm isolated
   installs work; the apps keep Expo's TypeScript 6. One React version inside each app. After
   adding a **new folder** under `src/` or a new package, restart that app's preview.
@@ -267,6 +270,18 @@ Tables still to add (with the phase that uses them, each with RLS tests): `staff
 (storage), `push_tokens` (Phase 7/8).
 
 ## Session log
+
+- **2026-10-25** — **Staffora sign-in by phone number** (owner: "no staff is going to self
+  on-board"). Core `phoneKey` + `allowBiometrics` (tests first); migration
+  `20261025000002_phone_login.sql`: `phone_lookup`, `pin_setup`, `reset_pin`, `pin_login` says
+  `no_pin` after a reset, `staff_logins` without invites, invites dropped (tests rewritten,
+  phone-key parity test). `staff-auth`: `lookup` / `setup` / `login`. Designs: Staffora "Sign in
+  with phone · first run", "PIN to open" (fingerprint), FinCrew "Web · staff sign-in card".
+  Website card (user id, Reset PIN), `/join` page removed, settings switch for fingerprint.
+  Staffora Welcome (phone → hello → PIN twice, or enter PIN), PIN screen (fingerprint, new PIN
+  after reset), Me fingerprint switch (`expo-local-authentication`). Typecheck 9/9, build OK,
+  tests core 236 / db 166. Checked in the preview: the Welcome screen and the 10-digit check;
+  the rest needs the push (edge function). Not pushed: the owner asked to wait.
 
 - **2026-10-25** — **Finish Staffora (built).** Change PIN: `change_pin` SQL function (tests
   first: 5 in `staff-login.test.ts`, dry-run on live OK) + Me → Change PIN screen (same pad as

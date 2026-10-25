@@ -1,21 +1,35 @@
-import { View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Switch, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { KeyRound, Lock, LogOut } from 'lucide-react-native';
+import { toShopRules } from '@fincrew/data';
 import { Avatar, Button, Card, Text } from '@/components/ui';
-import { useAuth } from '@/lib/auth';
+import { biometricAvailable, useAuth } from '@/lib/auth';
 import { t } from '@/lib/i18n';
+import { supabase } from '@/lib/supabase';
 import { radius, space, useTheme } from '@/lib/theme';
 
 /**
- * Me (PLAN §6.3): who you are, change the PIN, lock Staffora (PIN to open again), or remove it
- * from this phone. `?changed=1` (back from Change PIN) shows that the PIN changed.
+ * Me (PLAN §6.3): who you are, change the PIN, open with the fingerprint (when the shop allows it
+ * and the phone has one set up), lock Staffora (PIN to open again), or remove it from this phone. `?changed=1` (back from Change PIN) shows that the PIN changed.
  */
 export default function Me() {
-  const { profile, lock, forget } = useAuth();
+  const { profile, lock, forget, biometricOn, setBiometric } = useAuth();
+  const [canBiometric, setCanBiometric] = useState(false);
   const { c } = useTheme();
   const { changed } = useLocalSearchParams<{ changed?: string }>();
   const m = 'staffora.me';
+
+  useEffect(() => {
+    if (!profile) return;
+    void Promise.all([
+      biometricAvailable(),
+      supabase.from('shops').select('settings').eq('id', profile.shopId).maybeSingle(),
+    ]).then(([available, { data }]) =>
+      setCanBiometric(available && toShopRules(data?.settings).staffLogin.allowBiometrics),
+    );
+  }, [profile]);
   return (
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: c.canvas }}>
       <View style={{ padding: space['space-4'], gap: space['space-4'] }}>
@@ -58,6 +72,29 @@ export default function Me() {
             {t(`${m}.changePinHint`)}
           </Text>
         </View>
+        {canBiometric && (
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: space['space-3'],
+              minHeight: 56,
+            }}
+          >
+            <View style={{ flex: 1, gap: 2 }}>
+              <Text variant="label">{t(`${m}.biometric`)}</Text>
+              <Text variant="caption" muted>
+                {t(`${m}.biometricHint`)}
+              </Text>
+            </View>
+            <Switch
+              accessibilityLabel={t(`${m}.biometric`)}
+              value={biometricOn}
+              onValueChange={(on) => void setBiometric(on, t(`${m}.biometricPrompt`))}
+              trackColor={{ true: c.accent, false: c['line-strong'] }}
+            />
+          </View>
+        )}
         <View style={{ gap: space['space-1'] }}>
           <Button
             label={t(`${m}.lock`)}

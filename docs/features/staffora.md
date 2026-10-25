@@ -15,33 +15,44 @@ pnpm --filter @fincrew/staffora web     # in a browser at phone size (http://loc
 
 Needs `apps/staffora-mobile/.env.local` (same two public values as the FinCrew app; copy
 `.env.example`). Preview config `.claude/launch.json` → "staffora-mobile-web" (port 8082).
-Scheme `staffora` (invite links hand over with `staffora://join/<token>`); Android package id
+Scheme `staffora`; Android package id
 `app.staffora.mobile` (placeholder); icons are still FinCrew's placeholders.
 
 ## How signing in works
 
+Changed 2026-10-25 from invite links to **phone number + PIN** (owner's decision; DECISIONS.md).
+
+- **User id = phone number** the shop saved for the person in FinCrew. **Password = a 4-digit
+  PIN** they choose the first time on their phone. Forgot it → the shop taps Reset PIN in
+  FinCrew and they choose a new one.
 - **Device id**: made once with `expo-crypto` and kept on the phone (AsyncStorage
-  `staffora_device`); the server ties the sign-in to it.
-- **Profile**: after joining, the phone keeps who it belongs to (person, shop, names; no secrets)
-  in AsyncStorage `staffora_profile`.
-- **States** (root `_layout.tsx`, `Stack.Protected`): no profile → Welcome; profile but not opened
-  this time → PIN; opened → tabs and the check-in screens. `join/[token]` is always reachable (a
-  new link resets the PIN).
-- `src/lib/auth.tsx`: `staffAuth` calls the `staff-auth` edge function; `join` (accept: set PIN,
-  tie phone, session), `unlock` (PIN login), `lock` (sign out locally; PIN needed again),
-  `forget` (remove the profile; a new link is needed). Sessions are set with
-  `supabase.auth.setSession`, so RLS shows only the person's own rows.
+  `staffora_device`); the first PIN ties the sign-in to it.
+- **Profile**: after signing in, the phone keeps who it belongs to (person, shop, names, the phone
+  number; no secrets) in AsyncStorage `staffora_profile`.
+- **States** (root `_layout.tsx`, `Stack.Protected`): no profile → Welcome (phone number); profile
+  but not opened this time → PIN (or fingerprint); opened → tabs and the other screens.
+- `src/lib/auth.tsx`: `staffAuth` calls the `staff-auth` edge function; `lookup` (who the number
+  is), `setUp` (first PIN / new PIN after a reset), `signIn` (a number that already has a PIN, on a
+  phone without a profile), `unlock` (PIN), `unlockWithBiometric`, `setBiometric`, `changePin`,
+  `lock`, `forget`. Sessions are set with `supabase.auth.setSession`, so RLS shows only the
+  person's own rows.
+- **Fingerprint / face** (`expo-local-authentication`): when the shop allows it
+  (`staffLogin.allowBiometrics`) and the phone has one set up, Me shows "Open with fingerprint".
+  With it on, Lock keeps the session on the phone, and the PIN screen asks for the fingerprint
+  first; then Staffora checks the person is still active on this phone and the shop still allows
+  it (else back to the PIN). Not available in the browser preview.
 
 ## Built
 
-- **Welcome** (`welcome.tsx`): what Staffora is, "open the invite link on this phone", and a box to
-  paste the link (pulls the 48-character token out of it).
-- **Join** (`join/[token].tsx`, design "Join · first run"): asks `staff-auth` who the link is for
-  ("Hi <first name>", shop, what Staffora does), then "That is me, set my PIN": PIN twice on the
-  CodePad (a mismatch starts again, checked on the phone), then accept → Home. Clear messages for
-  used / expired / wrong links.
+- **Welcome** (`welcome.tsx`, design "Sign in with phone · first run", 2026-10-25): mobile number
+  (+91 field, checked with core `phoneKey`) → `lookup`. No PIN yet: "Hi <first name>, you're on
+  the staff list at <shop>" → "That is me, set my PIN" → PIN twice (a mismatch starts again) →
+  `setUp` → Home. Already has a PIN (Staffora removed or reinstalled): enter it → `signIn`.
+  Messages for a number that isn't on the list, has left, or is on two staff records.
 - **PIN** (`pin.tsx`, design "PIN to open"): avatar, name, shop, 4-digit pad; messages for a
   wrong PIN (tries left), a wait (until when), locked, another phone, left the shop, no sign-in.
+  **Use fingerprint** (and an automatic prompt) when it's on. After the shop resets the PIN
+  (`no_pin`) the same screen asks for a new one twice (`setUp` with the saved phone number).
 - **CodePad** (`components/code-pad.tsx`): digit boxes + big number pad, Clear / Delete, dots for
   PINs; used for the PIN and the 6-digit code.
 - **Home** (`(tabs)/index.tsx`, design "Home"): greeting, today (status, in / out, minutes late,

@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+### Changed — 2026-10-25 (Staffora sign-in)
+
+- Staff sign in to Staffora with the **phone number** saved in FinCrew and a PIN they choose
+  the first time; no invite links any more (the website's join page and the invite buttons are
+  gone). Forgot PIN → **Reset PIN** on the staff page. Migration
+  `20261025000002_phone_login.sql`.
+- Staffora can open with a **fingerprint** (Me → Open with fingerprint), if the shop allows it
+  (Settings → Staff sign-in, on by default).
+
 ### Added — 2026-10-25 (Staffora)
 
 - Staffora: change your PIN (Me → Change PIN; the current PIN is checked like a sign-in).

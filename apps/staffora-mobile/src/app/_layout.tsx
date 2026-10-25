@@ -29,9 +29,8 @@ export default function RootLayout() {
 }
 
 /**
- * Not set up on this phone → Welcome (open the invite link). Set up but closed → PIN.
- * Opened → the tabs and the check-in screens. The invite screen is always reachable, so a new
- * link can reset the PIN.
+ * Not set up on this phone → Welcome (phone number, first PIN). Set up but closed → PIN (or
+ * fingerprint). Opened → the tabs and the other screens.
  */
 function Gate({ fontsLoaded }: { fontsLoaded: boolean }) {
   const { ready, profile, unlocked } = useAuth();
@@ -60,7 +59,6 @@ function Gate({ fontsLoaded }: { fontsLoaded: boolean }) {
           <Stack.Screen name="payslip/[id]" />
           <Stack.Screen name="change-pin" />
         </Stack.Protected>
-        <Stack.Screen name="join/[token]" />
       </Stack>
     </>
   );

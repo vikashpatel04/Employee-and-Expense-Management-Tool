@@ -58,11 +58,10 @@ back again without losing anything. Everything a new Claude session needs is in 
   rules) and `docs/PROGRESS.md`, so nothing is lost.
 - **Sign-ins in the preview browser**: the owner signs in to the FinCrew website / app again on
   the new PC (their own password).
-- **Staffora as Test Staff**: the sign-in is tied to the first PC's preview browser (its device
-  id). Using it on the other PC needs the website's staff page → Staffora sign-in → **New phone**
-  and a new invite, and the owner joins and types the PIN. That moves Test Staff to the new PC;
-  doing the same again moves it back. Skip it if tonight's work doesn't need Staffora's live
-  data.
+- **Staffora as Test Staff**: the sign-in is tied to one browser (its device id). On another
+  PC: website staff page → Staffora sign-in → **New phone** (and **Reset PIN** if needed),
+  then the owner types Test Staff's phone number in Staffora and the PIN. Doing the same
+  again moves it back.
 - Claude Design canvases and the live website / database are online, the same from any PC.
 
 ## Every time you switch computers

@@ -3,6 +3,7 @@ import {
   DEFAULT_STAFF_LOGIN,
   evaluatePinAttempt,
   isValidPin,
+  phoneKey,
   type PinState,
   type StaffLoginSettings,
 } from './staff-login';
@@ -23,13 +24,36 @@ function wrongTimes(n: number, settings: StaffLoginSettings = s, start: PinState
 }
 
 describe('defaults (PLAN §10)', () => {
-  it('wait after 5 wrong PINs for 15 minutes, lock after 10, invites last 48 hours', () => {
+  it('wait after 5 wrong PINs for 15 minutes, lock after 10, fingerprint unlock allowed', () => {
     expect(DEFAULT_STAFF_LOGIN).toEqual({
-      inviteHours: 48,
       wrongPinsBeforeWait: 5,
       pinWaitMinutes: 15,
       wrongPinsBeforeLock: 10,
+      allowBiometrics: true,
     });
+  });
+});
+
+describe('phoneKey (the phone number is the Staffora user id)', () => {
+  it('reads the usual ways of writing an Indian mobile number as the same 10 digits', () => {
+    for (const typed of [
+      '9876543210',
+      '98765 43210',
+      '+91 98765 43210',
+      '+91-98765-43210',
+      '919876543210',
+      '09876543210',
+      '0091 98765 43210',
+      ' (98765) 43210 ',
+    ]) {
+      expect(phoneKey(typed), typed).toBe('9876543210');
+    }
+  });
+
+  it('anything that is not 10 digits after that is no number', () => {
+    for (const bad of ['', '12345', '98765432101', '+44 7700 900123', 'abc', null, undefined]) {
+      expect(phoneKey(bad), String(bad)).toBeNull();
+    }
   });
 });
 
@@ -108,7 +132,7 @@ describe('evaluatePinAttempt', () => {
 
   it('follows the shop settings', () => {
     const strict: StaffLoginSettings = {
-      inviteHours: 24,
+      ...DEFAULT_STAFF_LOGIN,
       wrongPinsBeforeWait: 3,
       pinWaitMinutes: 30,
       wrongPinsBeforeLock: 3,

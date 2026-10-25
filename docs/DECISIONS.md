@@ -33,23 +33,35 @@ Choices made during the build that PLAN.md doesn't spell out. Newest first.
   migrations. The rules mirror core `evaluateCheck`, and a test runs the same attempts through
   both. A check-in on a day marked something else (absent, leave) makes it present: the person
   is at the shop with today's code.
-- **The first accepted check-in binds the phone** when none is bound yet (normally the invite
-  binds it), so "reset phone" followed by the next check-in or sign-in moves the binding.
+- **The first accepted check-in binds the phone** when none is bound yet (normally the first
+  PIN binds it), so "reset phone" followed by the next check-in or sign-in moves the binding.
 - **Request approvals happen in the apps' shared code**, not a database function: approving
   leave reuses `writeAttendance` (paid leave within the balance) and approving an advance reuses
   `recordAdvance` (limit check), then the request records the result. Future leave days are
   written ahead; the screens show them once the day comes.
-- **PIN sign-in**: the edge function only turns an accepted invite / PIN into a session; all
+- **Staffora sign-in is phone number + PIN, no invite links** (owner, 2026-10-25: "no staff is
+  going to self on-board"; the owner creates the staff with their number). The number the shop
+  saved is the user id; the first time, the person types it in Staffora and chooses a PIN, which
+  ties Staffora to that phone; afterwards number (remembered) + PIN. Forgot → owner taps Reset
+  PIN, the person chooses a new one on their bound phone (the owner never knows it). Accepted by
+  the owner: whoever types a staff member's number first sets their PIN, so a coworker who knows
+  the number could take it before them; FinCrew shows "Signed in" vs "Not set up yet", and
+  Reset PIN + New phone undo it. A number on two active staff is refused (`many`). This
+  replaces the invite entries below (migration `20261025000002_phone_login.sql`).
+- **Fingerprint opening** (`staffLogin.allowBiometrics`, default on) is the person's choice in
+  Me. It reuses the session kept on the phone instead of a PIN sign-in, then checks the person is
+  still active on this phone and the shop still allows it.
+- (Superseded 2026-10-25) **PIN sign-in**: the edge function only turns an accepted invite / PIN into a session; all
   rules live in SQL (`invite_accept`, `pin_login`), mirrored by core `evaluatePinAttempt`. Each
   staff sign-in is a normal Supabase user with a server-only email and **no stored password**:
   a fresh random password is set right before each sign-in. A new invite for someone who
   already signed in resets their PIN on the same sign-in (that's how a forgotten PIN is reset).
 - Wrong phone, or a person who has left, is refused before the PIN is checked, and doesn't count
   as a wrong PIN (someone else's phone can't lock a person out).
-- The PIN wait / lock numbers and invite lifetime are shop settings (`staffLogin`, defaults
-  5 / 15 min / 10 / 48 h from PLAN §10), like every other rule. The PIN is always 4 digits.
-- Invites can be made for any non-owner person (staff or helper); helpers have no phone binding.
-- **Invite links open the website** (`/join/<token>`, public) which hands over to the Staffora
+- The PIN wait / lock numbers are shop settings (`staffLogin`, defaults 5 / 15 min / 10 from
+  PLAN §10; the invite lifetime went with the links), like every other rule. The PIN is always 4 digits.
+- (Superseded 2026-10-25) Invites could be made for any non-owner person (staff or helper).
+- (Superseded 2026-10-25) **Invite links opened the website** (`/join/<token>`, public) which hands over to the Staffora
   app with the `staffora://join/<token>` scheme. A plain https link works in WhatsApp and on any
   phone; the page explains what to do if the app isn't there. The link is shown once when made
   (only its hash is stored); "New link" makes another.

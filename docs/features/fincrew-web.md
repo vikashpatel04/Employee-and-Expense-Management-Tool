@@ -130,7 +130,8 @@ Checked in the browser on 2026-10-23 with Test Staff: Mark today present, paid l
 ## Attendance code, requests, Staffora sign-in (Phase 7)
 
 `/code`, `/qr`, `/requests`, the staff Overview "Staffora sign-in" card and the public
-`/join/<token>` page: see `docs/features/staff-self-service.md`.
+Staffora sign-in card (phone number + PIN; the `/join` page was removed 2026-10-25): see
+`docs/features/staff-self-service.md`.
 
 ## Salary run — `(app)/salary`
 

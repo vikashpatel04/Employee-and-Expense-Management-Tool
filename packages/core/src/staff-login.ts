@@ -1,26 +1,38 @@
 /**
- * Staff sign-in with an invite link and a 4-digit PIN (docs/PLAN.md §1, §10).
+ * Staff sign-in to Staffora: the phone number FinCrew has for the person is the user id, and a
+ * 4-digit PIN they choose the first time is the password (docs/DECISIONS.md, 2026-10-25).
  * Pure rules only: hashing, sessions and the phone binding happen in the database and the
  * `staff-auth` edge function. Instants are epoch milliseconds.
  */
 
 export interface StaffLoginSettings {
-  /** How long an invite link works. */
-  inviteHours: number;
   /** Wrong PINs in a row before a wait… */
   wrongPinsBeforeWait: number;
   /** …of this many minutes (from the last wrong PIN). */
   pinWaitMinutes: number;
   /** Wrong PINs in a row that lock the login until the owner unlocks it. */
   wrongPinsBeforeLock: number;
+  /** Staff may turn on fingerprint / face unlock in Staffora instead of typing the PIN. */
+  allowBiometrics: boolean;
 }
 
 export const DEFAULT_STAFF_LOGIN: StaffLoginSettings = {
-  inviteHours: 48,
   wrongPinsBeforeWait: 5,
   pinWaitMinutes: 15,
   wrongPinsBeforeLock: 10,
+  allowBiometrics: true,
 };
+
+/**
+ * A phone number as Staffora matches it: the 10 digits of an Indian mobile number, however it was
+ * typed (spaces, dashes, brackets, a leading 0, +91 / 91 / 0091). Null when that doesn't leave
+ * exactly 10 digits. The database has the same rule (`private.phone_key`), tested to match.
+ */
+export function phoneKey(raw: string | null | undefined): string | null {
+  let d = (raw ?? '').replace(/\D/g, '').replace(/^0+/, '');
+  if (d.length === 12 && d.startsWith('91')) d = d.slice(2);
+  return /^\d{10}$/.test(d) ? d : null;
+}
 
 export const PIN_LENGTH = 4;
 

@@ -1,4 +1,4 @@
-# Attendance codes, requests, invites and PIN sign-in
+# Attendance codes, requests, phone + PIN sign-in
 
 Phase 7 data (started 2026-10-24): what Staffora (the staff app) and the owner's code screen
 and requests list need. Migrations `20261024000003_attendance_codes.sql`,
@@ -48,25 +48,32 @@ Status: **live** (pushed 2026-10-24, CI run 40098230155 applied the 3 migrations
 - Approving does the work in the apps' shared code (next step): mark the leave days, or give the
   advance (limit check), then record the approval.
 
-## Invites and PIN sign-in (PLAN §1, §10)
+## Phone + PIN sign-in (owner's decision 2026-10-25; replaced invite links)
 
-- `create_invite(person)` (`staff.edit`; not the owner, not people who left) →
-  `{ token, expiresAt }`. 48 random hex characters; only the SHA-256 is stored; valid for
-  `staffLogin.inviteHours` (48); a new invite cancels the person's unused ones.
-  `revoke_invite(person)` cancels them. `invites` rows are readable by `staff.edit` without the
-  hash.
+Migration `20261025000002_phone_login.sql` (invite links, `invites` and their functions removed).
+
+- **The phone number is the Staffora user id.** The owner adds staff with their mobile number in
+  FinCrew; nothing is sent. `private.phone_key(text)` reads a number the same way however it was
+  typed (spaces, dashes, leading 0, +91 / 91 / 0091 → 10 digits, else null), exactly like core
+  `phoneKey` (parity test). Index `people_phone_key_idx`.
+- Server side (service role only, called by `staff-auth`): `phone_lookup(phone)` → `{ ok,
+personId, shopId, firstName, shopName, hasPin, authUserId }` for the one active staff member
+  (not the owner) with that number, else `not_found` / `left` / `many` (two active staff share
+  it). `pin_setup(phone, pin, device, authUser)` sets the first PIN (or a new one after a reset):
+  `bad_pin`, `has_pin` (sign in instead), `wrong_device` (another phone than the bound one);
+  links the sign-in, saves the bcrypt PIN, binds the phone. `pin_login(person, pin, device)` →
+  `{ ok, authUserId, shopId }` or `no_login`, `left`, `wrong_device`, `no_pin` (the shop reset
+  it: choose a new one), `locked`, `wait` (+ `retryAt`), `wrong_pin` (+ `triesLeft`).
 - `pin_credentials`: bcrypt PIN hash (pgcrypto), wrong-PIN count, wait, lock. No API access.
 - Owner side (`staff.edit`): `staff_logins(shop)` (per person: PIN set, locked, waiting until,
-  open invite expiry, phone bound), `unlock_login(person)`, `reset_staff_phone(person)`.
-- Server side (service role only, called by `staff-auth`): `invite_lookup(token)`,
-  `invite_accept(token, pin, device, authUser)` (links the sign-in, saves the PIN, binds the
-  phone, uses the invite; a later invite resets the PIN on the same sign-in),
-  `pin_login(person, pin, device)` → `{ ok, authUserId, shopId }` or `wrong_device`, `left`,
-  `no_login`, `locked`, `wait` (+ `retryAt`), `wrong_pin` (+ `triesLeft`).
+  phone bound), `reset_pin(person)` (forgot the PIN: removes it; the person chooses a new one on
+  their bound phone), `unlock_login(person)`, `reset_staff_phone(person)`.
 - PIN rules (core `evaluatePinAttempt`, settings `staffLogin`): wrong PINs count; every 5th
   starts a 15-minute wait; the 10th locks until someone with `staff.edit` unlocks; a right PIN
-  clears the count; wrong phone or left staff are refused before the PIN is checked. Settings →
-  Pay & attendance rules → Staff sign-in. A test compares SQL and core attempt by attempt.
+  clears the count; wrong phone or left staff are refused before the PIN is checked.
+  `staffLogin.allowBiometrics` (default on): staff may open Staffora with their fingerprint.
+  Settings → Pay & attendance rules → Staff sign-in. A test compares SQL and core attempt by
+  attempt.
 - **Change PIN** (migration `20261025000001_change_pin.sql`): `change_pin(person, current, new,
 device)`, called by the signed-in staff member (authenticated, own person only, `is_self`).
   The new PIN must be 4 digits (`bad_pin`, not counted); the current one is checked by
@@ -80,8 +87,9 @@ device)`, called by the signed-in staff member (authenticated, own person only, 
 functions in PGlite and a fake Auth) and `index.ts` (Deno, service role from the function's
 environment). POST JSON:
 
-- `{ action: 'invite', token }` → `{ ok, name, shopName }`
-- `{ action: 'accept', token, pin, deviceId }` → `{ ok, personId, shopId, session }`
+- `{ action: 'lookup', phone }` → `{ ok, personId, firstName, shopName, hasPin }`
+- `{ action: 'setup', phone, pin, deviceId }` → `{ ok, personId, shopId, session }` (makes the
+  person's sign-in the first time)
 - `{ action: 'login', personId, pin, deviceId }` → `{ ok, personId, shopId, session }`
 
 Each person's sign-in is a normal Supabase user with a server-only email
@@ -102,8 +110,7 @@ decided), `loadRequestContext` (paid leave left for the asked days via `paidLeav
 advance owed / limit / cut), `countPendingRequests`, `decideRequest` (approve leave →
 `writeAttendance` with `allowFuture`; approve advance → `recordAdvance`, which now returns the
 advance id; then the request records it; refusals come back as reason codes), `askRequest` /
-`cancelRequest` (for Staffora), `loadStaffLogins`, `createInvite`, `inviteUrl`, `revokeInvite`,
-`unlockLogin`, `resetStaffPhone`, `setSelfAttendance`, `minutesUntil`, `dateOfInstant`.
+`cancelRequest` (for Staffora), `loadStaffLogins`, `resetPin`, `unlockLogin`, `resetStaffPhone`, `setSelfAttendance`, `minutesUntil`, `dateOfInstant`.
 
 ## Screens
 
@@ -121,13 +128,11 @@ existed already.
     limit / cut). Leave: mark as paid or unpaid leave (starts on unpaid when the balance is short);
     advance: paid with. Reply, Reject / Approve; past the limit "Approve anyway". Decided cards
     say who decided, when, how. The dashboard shows "N requests waiting → Review".
-  - Staff detail → Overview, **Staffora sign-in** card (`staff.edit`): Not invited → "Invite to
-    Staffora" makes a link shown once (Copy, WhatsApp with a ready message); Invited (until when)
-    → New link / Cancel invite; Signed in (or locked / waiting) → Unlock, New phone, Reset PIN
-    (new link). "Can check in with the attendance code" switch (`staff.self_attendance`).
-  - `/join/<token>` (public): asks the edge function who the invite is for and shows "Join
-    <shop> on Staffora", **Open in Staffora** (`staffora://join/<token>`) and what happens next;
-    clear messages for used / expired / wrong links. Opening it uses nothing up.
+  - Staff detail → Overview, **Staffora sign-in** card (`staff.edit`, design "Web · staff sign-in
+    card", reworked 2026-10-25): No phone number → add one in the details (it is the Staffora user
+    id); Not set up yet → shows the number to type in Staffora; Signed in (or locked / waiting) →
+    Unlock, New phone, Reset PIN (asks first). "Can check in with the attendance code" switch
+    (`staff.self_attendance`). The public `/join/<token>` page is gone.
 - **Android app**
   - Today: "Attendance code" button (with `attendance.code`) and the "N requests waiting →
     Review" banner (with `requests.decide`, refreshed when Today comes back into view).

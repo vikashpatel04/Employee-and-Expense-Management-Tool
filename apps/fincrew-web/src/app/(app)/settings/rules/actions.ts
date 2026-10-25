@@ -84,10 +84,10 @@ function readRules(form: FormData): ShopRules {
       lockoutMinutes: whole('lockout', `${r}.code.lockout`),
     },
     staffLogin: {
-      inviteHours: whole('inviteHours', `${r}.login.inviteHours`),
       wrongPinsBeforeWait: whole('pinsBeforeWait', `${r}.login.pinsBeforeWait`),
       pinWaitMinutes: whole('pinWait', `${r}.login.pinWait`),
       wrongPinsBeforeLock: whole('pinsBeforeLock', `${r}.login.pinsBeforeLock`),
+      allowBiometrics: form.get('allowBiometrics') === 'on',
     },
   };
   return smallExpenseLimit === undefined ? rules : { ...rules, smallExpenseLimit };

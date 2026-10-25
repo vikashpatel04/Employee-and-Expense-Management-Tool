@@ -600,64 +600,6 @@ export type Database = {
           },
         ]
       }
-      invites: {
-        Row: {
-          created_at: string
-          created_by: string | null
-          expires_at: string
-          id: string
-          person_id: string
-          revoked_at: string | null
-          shop_id: string
-          token_hash: string
-          used_at: string | null
-        }
-        Insert: {
-          created_at?: string
-          created_by?: string | null
-          expires_at: string
-          id?: string
-          person_id: string
-          revoked_at?: string | null
-          shop_id: string
-          token_hash: string
-          used_at?: string | null
-        }
-        Update: {
-          created_at?: string
-          created_by?: string | null
-          expires_at?: string
-          id?: string
-          person_id?: string
-          revoked_at?: string | null
-          shop_id?: string
-          token_hash?: string
-          used_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "invites_shop_id_created_by_fkey"
-            columns: ["shop_id", "created_by"]
-            isOneToOne: false
-            referencedRelation: "people"
-            referencedColumns: ["shop_id", "id"]
-          },
-          {
-            foreignKeyName: "invites_shop_id_fkey"
-            columns: ["shop_id"]
-            isOneToOne: false
-            referencedRelation: "shops"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "invites_shop_id_person_id_fkey"
-            columns: ["shop_id", "person_id"]
-            isOneToOne: false
-            referencedRelation: "people"
-            referencedColumns: ["shop_id", "id"]
-          },
-        ]
-      }
       leave_balances: {
         Row: {
           carried: number
@@ -1651,37 +1593,35 @@ export type Database = {
         }
         Returns: Json
       }
-      create_invite: { Args: { p_person: string }; Returns: Json }
       create_shop: {
         Args: { owner_name: string; shop_name: string }
         Returns: string
       }
       finalize_payslip: { Args: { p_payslip: string }; Returns: undefined }
-      invite_accept: {
-        Args: {
-          p_auth_user: string
-          p_device: string
-          p_pin: string
-          p_token: string
-        }
-        Returns: Json
-      }
-      invite_lookup: { Args: { p_token: string }; Returns: Json }
       my_permissions: { Args: { p_shop: string }; Returns: string[] }
+      phone_lookup: { Args: { p_phone: string }; Returns: Json }
       pin_login: {
         Args: { p_device: string; p_person: string; p_pin: string }
         Returns: Json
       }
+      pin_setup: {
+        Args: {
+          p_auth_user: string
+          p_device: string
+          p_phone: string
+          p_pin: string
+        }
+        Returns: Json
+      }
       ping: { Args: never; Returns: string }
       regenerate_attendance_code: { Args: { p_shop: string }; Returns: Json }
+      reset_pin: { Args: { p_person: string }; Returns: undefined }
       reset_staff_phone: { Args: { p_person: string }; Returns: undefined }
-      revoke_invite: { Args: { p_person: string }; Returns: undefined }
       shop_exists: { Args: never; Returns: boolean }
       staff_logins: {
         Args: { p_shop: string }
         Returns: {
           has_pin: boolean
-          invite_expires_at: string
           locked: boolean
           person_id: string
           phone_bound: boolean

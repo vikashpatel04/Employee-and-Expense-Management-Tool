@@ -1,15 +1,16 @@
 /**
- * Staff sign-in with an invite link and a 4-digit PIN (docs/PLAN.md §10). Plain TypeScript with
- * no Deno or npm imports, so the tests run it with fake dependencies; `index.ts` wires it to
- * Supabase. Rules live in the database (`invite_lookup`, `invite_accept`, `pin_login`); this
- * only turns an accepted invite or PIN into a normal Supabase session, so RLS works on
- * `auth.uid()`. Each staff sign-in has a server-only email and a password nobody keeps: a new
- * random one is set just before each sign-in.
+ * Staff sign-in to Staffora with the phone number FinCrew has for them and a 4-digit PIN they
+ * choose the first time (docs/DECISIONS.md, 2026-10-25). Plain TypeScript with no Deno or npm
+ * imports, so the tests run it with fake dependencies; `index.ts` wires it to Supabase. Rules
+ * live in the database (`phone_lookup`, `pin_setup`, `pin_login`); this only turns a first PIN or
+ * a PIN into a normal Supabase session, so RLS works on `auth.uid()`. Each staff sign-in has a
+ * server-only email and a password nobody keeps: a new random one is set before each sign-in.
  *
  * Requests (POST JSON):
- *   { action: 'invite', token }                    → { ok, name, shopName } | { ok: false, reason }
- *   { action: 'accept', token, pin, deviceId }     → { ok, personId, shopId, session }
- *   { action: 'login', personId, pin, deviceId }   → { ok, personId, shopId, session }
+ *   { action: 'lookup', phone }                  → { ok, personId, firstName, shopName, hasPin }
+ *   { action: 'setup', phone, pin, deviceId }    → { ok, personId, shopId, session }
+ *   { action: 'login', personId, pin, deviceId } → { ok, personId, shopId, session }
+ * Refusals are { ok: false, reason } (not_found, left, many, bad_pin, has_pin, wrong_pin, …).
  */
 
 export type Session = { access_token: string; refresh_token: string; expires_at?: number };
@@ -72,8 +73,9 @@ type Lookup = {
   reason?: string;
   personId?: string;
   shopId?: string;
-  name?: string;
+  firstName?: string;
   shopName?: string;
+  hasPin?: boolean;
   authUserId?: string | null;
 };
 type Login = {
@@ -90,31 +92,39 @@ export async function handle(body: unknown, deps: Deps): Promise<Reply> {
   const b = body as Record<string, unknown>;
   try {
     switch (b.action) {
-      case 'invite': {
-        if (!isText(b.token)) return bad('token');
-        const r = await call<Lookup>(deps, 'invite_lookup', { p_token: b.token });
-        return r.ok ? ok({ name: r.name, shopName: r.shopName }) : refuse(r.reason ?? 'invalid');
+      case 'lookup': {
+        if (!isText(b.phone)) return bad('phone');
+        const r = await call<Lookup>(deps, 'phone_lookup', { p_phone: b.phone });
+        return r.ok
+          ? ok({
+              personId: r.personId,
+              firstName: r.firstName,
+              shopName: r.shopName,
+              hasPin: r.hasPin,
+            })
+          : refuse(r.reason ?? 'not_found');
       }
 
-      case 'accept': {
-        if (!isText(b.token)) return bad('token');
+      case 'setup': {
+        if (!isText(b.phone)) return bad('phone');
         if (!isText(b.deviceId, 8)) return bad('deviceId');
         if (typeof b.pin !== 'string' || !PIN.test(b.pin)) return refuse('bad_pin');
-        const r = await call<Lookup>(deps, 'invite_lookup', { p_token: b.token });
-        if (!r.ok) return refuse(r.reason ?? 'invalid');
+        const r = await call<Lookup>(deps, 'phone_lookup', { p_phone: b.phone });
+        if (!r.ok) return refuse(r.reason ?? 'not_found');
+        if (r.hasPin) return refuse('has_pin');
         let userId = r.authUserId ?? null;
         if (!userId) {
           const made = await deps.createUser(staffEmail(r.personId!));
           if ('error' in made) return fail(made.error);
           userId = made.id;
         }
-        const a = await call<Lookup>(deps, 'invite_accept', {
-          p_token: b.token,
+        const a = await call<Lookup>(deps, 'pin_setup', {
+          p_phone: b.phone,
           p_pin: b.pin,
           p_device: b.deviceId,
           p_auth_user: userId,
         });
-        if (!a.ok) return refuse(a.reason ?? 'invalid');
+        if (!a.ok) return refuse(a.reason ?? 'not_found');
         const s = await session(deps, userId);
         if (typeof s === 'string') return fail(s);
         return ok({ personId: a.personId, shopId: a.shopId, session: s });
@@ -141,7 +151,7 @@ export async function handle(body: unknown, deps: Deps): Promise<Reply> {
       }
 
       default:
-        return bad('action must be invite, accept or login');
+        return bad('action must be lookup, setup or login');
     }
   } catch (e) {
     return fail(e instanceof Error ? e.message : String(e));

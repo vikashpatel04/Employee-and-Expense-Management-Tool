@@ -130,7 +130,6 @@ export default async function StaffDetailPage({
       {tab === 'overview' && can('staff.edit') && (
         <SignInSection
           shopId={me.shopId}
-          shopName={me.shopName}
           staffId={id}
           name={name}
           phone={phone}

@@ -67,6 +67,17 @@ weekly offs.
 | `checkOutRequired`                                            | yes                                           |
 | `maxWrongCodes` / `wrongCodeWindowMinutes` / `lockoutMinutes` | 5 / 10 / 10                                   |
 
+### Staff sign-in (`staff-login.ts`, `StaffLoginSettings`)
+
+Staffora user id = the phone number (`phoneKey`: the 10 digits of an Indian mobile however it
+was typed); password = a 4-digit PIN (fixed length).
+
+| Setting                                  | Default                                           |
+| ---------------------------------------- | ------------------------------------------------- |
+| `wrongPinsBeforeWait` / `pinWaitMinutes` | 5 wrong PINs → 15-minute wait                     |
+| `wrongPinsBeforeLock`                    | 10 (locked until someone with staff.edit unlocks) |
+| `allowBiometrics`                        | yes (staff may open Staffora with a fingerprint)  |
+
 ### Other
 
 | Setting                                                                 | Where               | Default                                        |
