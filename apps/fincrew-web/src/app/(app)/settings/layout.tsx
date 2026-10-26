@@ -14,12 +14,24 @@ export default async function SettingsLayout({ children }: { children: ReactNode
   const has = (x: string) => sections.includes(x as never);
   const link = (x: string) => ({ href: `/settings/${x}`, label: t(`settings.tabs.${x}`) });
   const groups: SettingsGroup[] = [
-    { title: t('settings.groups.rules'), items: [has('rules') && link('rules')].filter(Boolean) as SettingsGroup['items'] },
-    { title: t('settings.groups.leave'), items: [has('leave') && link('leave'), has('holidays') && link('holidays')].filter(Boolean) as SettingsGroup['items'] },
-    { title: t('settings.groups.money'), items: [has('categories') && link('categories')].filter(Boolean) as SettingsGroup['items'] },
-    { title: t('settings.groups.team'), items: [has('roles') && link('roles')].filter(Boolean) as SettingsGroup['items'] },
-    // Owner only: clear all data.
-    { title: t('settings.groups.owner'), items: me.isOwner ? [link('data')] : [] },
+    {
+      title: t('settings.groups.rules'),
+      items: [has('rules') && link('rules')].filter(Boolean) as SettingsGroup['items'],
+    },
+    {
+      title: t('settings.groups.leave'),
+      items: [has('leave') && link('leave'), has('holidays') && link('holidays')].filter(
+        Boolean,
+      ) as SettingsGroup['items'],
+    },
+    {
+      title: t('settings.groups.money'),
+      items: [has('categories') && link('categories')].filter(Boolean) as SettingsGroup['items'],
+    },
+    {
+      title: t('settings.groups.team'),
+      items: [has('roles') && link('roles')].filter(Boolean) as SettingsGroup['items'],
+    },
   ].filter((g) => g.items.length > 0);
 
   return (

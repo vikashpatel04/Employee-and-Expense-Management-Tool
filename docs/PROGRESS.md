@@ -280,6 +280,10 @@ notifications).
 
 ## Session log
 
+- **2026-10-26** — Test data cleared on live (one time, with `clear_shop_data`, after fixing finalized
+  payslips and the audit actor); the feature was then removed (`20261026000006_remove_clear_data.sql`
+  restores the original guards; Settings → Data and its docs are gone). Shop and owner remain.
+
 - **2026-10-26** — Settings rework step 2: rules page as rows (label + hint left, control right) in
   section cards, one column. Checked it renders; not every option clicked. Not pushed.
 
