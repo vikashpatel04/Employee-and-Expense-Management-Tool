@@ -280,6 +280,9 @@ notifications).
 
 ## Session log
 
+- **2026-10-26** — Settings rework step 2: rules page as rows (label + hint left, control right) in
+  section cards, one column. Checked it renders; not every option clicked. Not pushed.
+
 - **2026-10-26** — Fix: Clear all data failed on finalized payslips (`20261026000004_clear_finalized_payslips.sql`,
   test extended).
 

@@ -86,7 +86,8 @@ roomy, forms stacked as cards inside pages, no sign of loading). Reworked:
 
 Since 2026-10-26 (design "Web · settings"): a grouped sub-menu on the left (phone: a scrolling
 row), the page on the right. Groups and pages shown by permission; **Data** (clear all data) for
-the owner only. Rules page rework to two-column rows is still to do.
+the owner only. The rules page (2026-10-26) is a single column of section cards; each rule is a row with its
+explanation on the left and the control on the right (stacked on a phone), Save at the end.
 
 ## App shell — `apps/fincrew-web/src/app/(app)/layout.tsx`
 
