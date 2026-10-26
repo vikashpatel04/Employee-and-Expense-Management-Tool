@@ -83,6 +83,7 @@ export function Button({
   disabled,
   busy,
   block,
+  center,
 }: {
   label: string;
   onPress: () => void;
@@ -91,6 +92,8 @@ export function Button({
   disabled?: boolean;
   busy?: boolean;
   block?: boolean;
+  /** Sit in the middle of a centred column (otherwise a short button sits at the start). */
+  center?: boolean;
 }) {
   const { c } = useTheme();
   const fg = variant === 'primary' ? c['on-accent'] : variant === 'quiet' ? c['accent-ink'] : c.ink;
@@ -108,7 +111,7 @@ export function Button({
         alignItems: 'center',
         justifyContent: 'center',
         gap: space['space-2'],
-        alignSelf: block ? 'stretch' : 'flex-start',
+        alignSelf: block ? 'stretch' : center ? 'center' : 'flex-start',
         opacity: disabled ? 0.45 : 1,
         backgroundColor:
           variant === 'primary'

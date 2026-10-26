@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Fixed — 2026-10-26
+
+- Staffora: the camera "Allow" button on the scan screen is centred.
+
+### Added — 2026-10-26
+
+- Build setup for both Android apps (`eas.json`, `pnpm build:apk`, `docs/BUILDS.md`).
+
 ### Changed — 2026-10-26
 
 - Expenses: **List** and **By category** are two views of the month (tabs next to the month),

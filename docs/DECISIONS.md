@@ -473,6 +473,11 @@ Owner's instruction: every value is customisable by the admin, and staff may hav
 - **The website has its own, denser scale.** The design tokens are sized for phones (48 px
   taps, 20 px corners); on the website the same token names get desk sizes in `globals.css`.
   The phone apps are unchanged.
+- **Phase 8 is only import / export** (owner, 2026-10-26): no home-screen widgets, no Tamil /
+  Hindi, no offline attendance marking, no StaffBook import.
+- **App builds read the Supabase keys from EAS environment variables**, not from the repo: the
+  `.env.local` files stay out of git; `eas.json` profiles name the EAS environment (`preview` /
+  `production`). Steps in `docs/BUILDS.md`.
 - **Attendance is marked from a day roster** (owner, 2026-10-25: "like PagarBook"): one tap per
   person saves straight away, with Undo in the toast, instead of select-then-set. The month
   grid stays as the second view for looking back and for marking many days at once.

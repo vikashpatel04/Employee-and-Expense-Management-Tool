@@ -8,6 +8,7 @@ Staff, salary and expense management for one shop. Read these before doing anyth
 4. `docs/features/` — one file per shipped feature: what it does and where the code lives.
 5. `docs/DESIGN.md` — the design system in Claude Design (link, how to read it). All UI follows it.
 6. `docs/NEW-MACHINE.md` — working from another computer (setup, env files, switching back).
+7. `docs/BUILDS.md` — building the Android apps with Expo (EAS).
 
 ## House rules
 

@@ -8,7 +8,9 @@
     "android": "expo start --android",
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "build:apk": "eas build --platform android --profile preview",
+    "build:store": "eas build --platform android --profile production"
   },
   "dependencies": {
     "@expo-google-fonts/anek-latin": "^0.4.2",

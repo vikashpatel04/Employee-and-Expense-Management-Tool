@@ -107,7 +107,7 @@ export default function Scan() {
                 {permission && !permission.canAskAgain ? t(`${s}.noCamera`) : t(`${s}.permission`)}
               </Text>
               {(!permission || permission.canAskAgain) && (
-                <Button label={t(`${s}.allow`)} onPress={() => void requestPermission()} />
+                <Button label={t(`${s}.allow`)} center onPress={() => void requestPermission()} />
               )}
             </View>
           )}

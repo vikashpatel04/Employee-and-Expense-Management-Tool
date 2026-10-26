@@ -49,12 +49,8 @@ first, then `CLAUDE.md`, then the feature doc for whatever you touch._
 
 **Next work, in order** (agreed with the owner 2026-10-24; they usually say "continue")
 
-1. **Finish Staffora**: built on 2026-10-25 — phone + PIN sign-in (replaces invite links),
-   fingerprint opening, change PIN, Home payslip card, share a payslip; pushed and live
-   2026-10-25. Left: live checks with the owner: add
-   Test Staff's phone number in FinCrew, New phone + Reset PIN on their sign-in card, the owner
-   types the number + a new PIN in the Staffora preview; then change PIN, Home card, Share, and
-   (with their OK — permanent rows) sending a request and checking in.
+1. **Finish Staffora**: done — the owner checked Staffora on 2026-10-26 ("perfect condition");
+   only fix: the camera "Allow" button wasn't centred (fixed, `Button center`).
 2. **FinCrew app gaps**: built on 2026-10-25 — payslip on WhatsApp (pay sheet tick, Send
    payslip, Share payslips), pay part of a payslip, undo a ledger line, change pay from a date,
    advance rules. Pushed and live (1edc131). Left: check them in the app preview with the owner signed in
@@ -68,10 +64,13 @@ first, then `CLAUDE.md`, then the feature doc for whatever you touch._
    website's staff detail page and payslip page onto the shared loaders when next touched.
 4. **Push notifications** (PLAN §6.4): `push_tokens` table, expo-notifications; Android needs a
    free Firebase project + the owner's Expo account.
-5. **Polish (Phase 8)**: widgets, Tamil/Hindi, offline attendance marking, StaffBook import,
-   backup/export. (App icons are done: FinCrew "Rupee ring", Staffora "Staff badge".)
-6. **Install builds**: EAS for both apps with the owner's Expo account (package ids
-   `app.fincrew.mobile` / `app.staffora.mobile` are placeholders), APK or Play Store.
+5. **Import and export (Phase 8, trimmed by the owner 2026-10-26)**: data import and export /
+   backup only. Dropped: home-screen widgets, Tamil/Hindi, offline attendance marking, StaffBook
+   import.
+6. **Install builds**: both apps have `eas.json` and `pnpm build:apk` / `build:store`; the owner
+   has an Expo account. Setup steps (`eas login`, `eas init`, EAS env vars): `docs/BUILDS.md`.
+   The owner wants the builds once the work above is done. Package ids `app.fincrew.mobile` /
+   `app.staffora.mobile` are placeholders until the first Play Store upload.
 
 The owner may ask to move 4 + 6 earlier so staff can use Staffora sooner — offer that.
 
@@ -277,6 +276,9 @@ Tables still to add (with the phase that uses them, each with RLS tests): `staff
 (storage), `push_tokens` (Phase 7/8).
 
 ## Session log
+
+- **2026-10-26** — Owner checked Staffora (all good; camera Allow button centred now). Polish
+  trimmed to import / export. EAS build config for both apps + `docs/BUILDS.md`.
 
 - **2026-10-26** — Expenses: List | By category views (`?view=categories`), category table with
   count and share. Typecheck and build OK; not seen with data (the website preview's sign-in had
