@@ -19,7 +19,8 @@ The owner's Expo account owns the projects; the owner signs in (never typed for 
 
    Check with `eas whoami`.
 
-3. **Link each app to an Expo project** (creates the project on expo.dev and writes its id into
+3. **Link each app to an Expo project** (done 2026-10-26: owner `vikashpatel`, FinCrew
+   `e47791a0-…`, Staffora `083b25a1-…` in each `app.json`) (creates the project on expo.dev and writes its id into
    `app.json` → `extra.eas.projectId`; commit that change):
 
    ```bash

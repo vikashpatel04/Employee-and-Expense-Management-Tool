@@ -115,7 +115,8 @@ ufmlqvvfznemghmnvynz "<sql>"`; advisors: `... db advisors --linked --project-ref
 ufmlqvvfznemghmnvynz --type all` (accepted warnings only: authenticated-callable
   `create_shop`/`finalize_payslip`/`my_permissions`/`shop_exists` and the Phase 7 owner-side
   functions `attendance_code`/`regenerate_attendance_code`/`check_in`/`reset_pin`/
-  `staff_logins`/`unlock_login`/`reset_staff_phone`, Staffora's `change_pin`,
+  `staff_logins`/`unlock_login`/`reset_staff_phone`, Staffora's `change_pin`, `helper_login_target`
+  (the helper sign-in permission check, runs as the caller),
   Supabase's
   `rls_auto_enable`, leaked-password protection). **Dry-run a new migration** on live before
   asking to push: write `begin; <migration> select 'applied'; rollback;` to a file and run
@@ -253,6 +254,7 @@ setup against the live project, and sign-in on the Vercel deployment (2026-10-23
 | `20261024000006_staff_read_runs.sql`  | 2026-10-24 | CI migrate job, run 40104302836 |
 | `20261025000001_change_pin.sql`       | 2026-10-25 | CI migrate job, run 40165654747 |
 | `20261025000002_phone_login.sql`      | 2026-10-25 | CI migrate job, run 40165654747 |
+| `20261026000001_helper_logins.sql`    | 2026-10-26 | CI migrate job                  |
 
 Migrations are applied by the CI **migrate** job on every push to `main`, so **everything in
 `supabase/migrations/` on `main` counts as applied** and must never change (CI enforces this).
