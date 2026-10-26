@@ -20,7 +20,11 @@ export default async function SettingsLayout({ children }: { children: ReactNode
       />
       <SettingsTabs
         label={t('settings.tabs.label')}
-        items={sections.map((s) => ({ href: `/settings/${s}`, label: t(`settings.tabs.${s}`) }))}
+        items={[
+          ...sections.map((s) => ({ href: `/settings/${s}`, label: t(`settings.tabs.${s}`) })),
+          // Owner only: clear all data.
+          ...(me.isOwner ? [{ href: '/settings/data', label: t('settings.tabs.data') }] : []),
+        ]}
       />
       {children}
     </>

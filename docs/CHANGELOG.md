@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Added — 2026-10-26 (clear all data)
+
+- Settings → Data (owner only): **Clear all data** empties staff, attendance, money, expenses,
+  requests and documents; settings and the audit log stay. Needs your password and the shop name.
+
 ### Added — 2026-10-26 (staff documents)
 
 - Staff page → **Documents** (website) / **Docs** (FinCrew app): keep ID proofs, bank details

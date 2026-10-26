@@ -1638,6 +1638,7 @@ export type Database = {
         }
         Returns: Json
       }
+      clear_shop_data: { Args: { p_shop: string }; Returns: Json }
       create_shop: {
         Args: { owner_name: string; shop_name: string }
         Returns: string

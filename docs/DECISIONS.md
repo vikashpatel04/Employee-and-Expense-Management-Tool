@@ -473,6 +473,9 @@ Owner's instruction: every value is customisable by the admin, and staff may hav
 - **The website has its own, denser scale.** The design tokens are sized for phones (48 px
   taps, 20 px corners); on the website the same token names get desk sizes in `globals.css`.
   The phone apps are unchanged.
+- **Clear all data keeps setup and the audit log, and lifts the append-only guards only inside
+  one owner-only function** (transaction flag `fincrew.clearing`, never for `audit_log`); the
+  website also asks for the password and the shop name.
 - **Staff documents are named freely** (suggestions, not a fixed list: no hard-coded kinds), read
   with staff.view or by the person, changed with staff.edit, and deleted for real (not money
   records). Files up to 4 MB because the website uploads through a Vercel function (4.5 MB

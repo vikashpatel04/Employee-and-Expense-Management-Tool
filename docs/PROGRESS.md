@@ -280,6 +280,10 @@ notifications).
 
 ## Session log
 
+- **2026-10-26** — **Clear all data** (Settings → Data, owner only; password + shop name;
+  migration `20261026000003_clear_shop_data.sql`, `docs/features/clear-data.md`). Tests db 192.
+  Next (owner, low on tokens): rework the Settings UI.
+
 - **2026-10-26** — **Staff documents**: design "Web · staff documents" (canvas v33), migration
   `20261026000002_staff_documents.sql` (table, RLS, audit, bucket `staff-docs` 4 MB; dry-run on
   live OK), 10 tests, `packages/data/src/staff-documents.ts`, website Documents tab, app Docs tab

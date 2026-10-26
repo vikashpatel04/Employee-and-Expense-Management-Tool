@@ -686,7 +686,8 @@
       "leave": "Leave templates",
       "rules": "Pay & attendance rules",
       "roles": "Roles",
-      "categories": "Expense categories"
+      "categories": "Expense categories",
+      "data": "Data"
     },
     "saving": "Saving…",
     "errors": {
@@ -1064,6 +1065,24 @@
         "amber": "Amber",
         "red": "Red",
         "slate": "Slate"
+      }
+    },
+    "data": {
+      "title": "Clear all data",
+      "hint": "Start fresh after testing. This can't be undone.",
+      "removes": "Removes: staff and helpers, attendance, salary and payslips, advances and the ledger, expenses and their bills, requests and staff documents.",
+      "keeps": "Keeps: the shop, your sign-in, settings, roles, leave templates, holidays and expense categories. The audit log is kept, with a record of this.",
+      "clear": "Clear all data",
+      "confirmTitle": "Clear all data?",
+      "confirmBody": "Everything listed will be deleted for good. Staff and helpers lose their sign-ins to this shop.",
+      "typeName": "Type the shop name ({{name}}) to confirm",
+      "password": "Your password",
+      "clearing": "Clearing…",
+      "done": "All data cleared.",
+      "errors": {
+        "owner": "Only the shop owner can clear the data.",
+        "name": "The shop name doesn't match.",
+        "password": "Your password is not right."
       }
     }
   },
