@@ -16,6 +16,9 @@ tab, owner only.
   migration `20261026000003_clear_shop_data.sql` lets `private.reject_modification` stand aside
   only while the transaction flag `fincrew.clearing` is on, which only `public.clear_shop_data`
   sets (and it never applies to `audit_log`).
+- Finalized payslips are removed the same way: `20261026000004_clear_finalized_payslips.sql` lets
+  `private.guard_payslip` allow a DELETE only while `fincrew.clearing` is on (the first version
+  failed with "A finalized payslip can't be changed"; the test now includes one).
 - Files in Storage (`bills`, `staff-docs`) are removed by the server action afterwards, using
   the paths the function returns.
 - Left behind: staff and helper sign-in accounts in Supabase Auth are not deleted (no

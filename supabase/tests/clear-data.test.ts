@@ -60,6 +60,22 @@ beforeAll(async () => {
         [s, p, `${s}/${p}/a.jpg`],
       );
     }
+    // A finalized payslip (and its run) must not stop the clearing.
+    const run = (
+      await tx.query<{ id: string }>(
+        `insert into salary_runs (shop_id, year, month) values ($1, 2026, 10) returning id`,
+        [shop1],
+      )
+    ).rows[0]!.id;
+    const slip = (
+      await tx.query<{ id: string }>(
+        `insert into payslips (shop_id, run_id, staff_id, lines, leave, gross_paise, deductions_paise,
+           net_before_advance_paise, advance_cut_paise, net_pay_paise)
+         values ($1, $2, $3, '[]', '{}', 1000, 0, 1000, 0, 1000) returning id`,
+        [shop1, run, meenaP],
+      )
+    ).rows[0]!.id;
+    await tx.query('select public.finalize_payslip($1)', [slip]);
     const cat = (
       await tx.query<{ id: string }>(
         `insert into expense_categories (shop_id, name, icon, colour) values ($1, 'Tea', 'receipt', 'slate') returning id`,
@@ -93,7 +109,7 @@ describe('clear_shop_data', () => {
   it('only the owner, even a role with every permission is refused', async () => {
     await rejects(q(ravi, 'select public.clear_shop_data($1)', [shop1]), /Only the shop owner/);
     await rejects(q(null, 'select public.clear_shop_data($1)', [shop1]), /permission denied/);
-    expect(await count('ledger_entries', shop1)).toBe(1);
+    expect(await count('ledger_entries', shop1)).toBe(2);
   });
 
   it('the ledger guard still holds for everyone, owner included', async () => {
@@ -114,7 +130,15 @@ describe('clear_shop_data', () => {
     expect(r.counts).toMatchObject({ staff: 1, expenses: 1, attendance: 1 });
     expect(r.bills).toEqual([`${shop1}/bill.jpg`]);
     expect(r.docs).toEqual([`${shop1}/${meenaP}/a.jpg`]);
-    for (const t of ['staff', 'attendance', 'ledger_entries', 'expenses', 'staff_documents'])
+    for (const t of [
+      'staff',
+      'attendance',
+      'ledger_entries',
+      'expenses',
+      'staff_documents',
+      'payslips',
+      'salary_runs',
+    ])
       expect(await count(t, shop1)).toBe(0);
     // owner and Ravi?  Ravi (not owner) is removed with the other people; the owner stays.
     const people = await q<{ name: string; is_owner: boolean }>(

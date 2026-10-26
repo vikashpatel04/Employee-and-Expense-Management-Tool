@@ -280,6 +280,9 @@ notifications).
 
 ## Session log
 
+- **2026-10-26** — Fix: Clear all data failed on finalized payslips (`20261026000004_clear_finalized_payslips.sql`,
+  test extended).
+
 - **2026-10-26** — **Settings rework, step 1**: design "Web · settings" (canvas v35); grouped left
   sub-menu (Shop rules · Leave · Money · Team · Owner) replaces the tab row (`settings/tabs.tsx`,
   `layout.tsx`). Not seen with data yet. Still to do from the design: rules as two-column rows
