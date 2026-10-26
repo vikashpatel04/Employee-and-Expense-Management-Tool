@@ -1,5 +1,6 @@
 import {
   addDays,
+  businessDateOf,
   calculateSalary,
   daysBetween,
   maxDate,
@@ -132,6 +133,7 @@ export async function computeMonth(
           effectiveTo: d.effective_to ?? undefined,
         })),
         rules: { pay: rules.pay, late: rules.late },
+        asOf: businessDateOf(new Date()),
         advance: {
           scheduledCut: Number(s.advance_cut_paise ?? 0),
           outstanding: outstanding.get(staffId) ?? 0,

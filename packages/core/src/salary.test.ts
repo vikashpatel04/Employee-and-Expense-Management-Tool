@@ -116,6 +116,19 @@ describe('monthly salary', () => {
     expect(r.earned).toBe(3_096_800);
   });
 
+  it('does not warn about days that have not happened yet (asOf)', () => {
+    // Days 5 and 20 are unmarked; "today" is the 10th, so only the 5th is overdue.
+    const records = workingDays().filter((x) => x.date !== d(5) && x.date !== d(20));
+    const r = calculateSalary({ ...input({ records }), asOf: d(10) });
+    expect(r.warnings).toContainEqual({ code: 'unmarked_days', count: 1 });
+    // The pay itself is unchanged: the rule (unpaid / paid) still applies to the day.
+    expect(r.summary.unmarked).toBe(2);
+    expect(calculateSalary({ ...input({ records }) }).warnings).toContainEqual({
+      code: 'unmarked_days',
+      count: 2,
+    });
+  });
+
   it('warns about unmarked working days and treats them as unpaid', () => {
     const r = calculateSalary(input({ records: workingDays().filter((x) => x.date !== d(5)) }));
     expect(r.summary.unmarked).toBe(1);

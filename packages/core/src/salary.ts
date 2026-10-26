@@ -76,6 +76,8 @@ export interface FixedDeduction {
 }
 
 export interface SalaryInput {
+  /** Today: unmarked days after it are not warned about (they haven't happened yet). */
+  asOf?: BusinessDate;
   year: number;
   month: number;
   joiningDate: BusinessDate;
@@ -302,7 +304,11 @@ export function calculateSalary(input: SalaryInput): SalaryResult {
   const netPay = netBeforeAdvance - advanceCut;
 
   const warnings: SalaryWarning[] = [];
-  if (summary.unmarked > 0) warnings.push({ code: 'unmarked_days', count: summary.unmarked });
+  const overdueUnmarked = input.asOf
+    ? employed.filter((d) => d.status === 'unmarked' && compareDates(d.date, input.asOf!) <= 0)
+        .length
+    : summary.unmarked;
+  if (overdueUnmarked > 0) warnings.push({ code: 'unmarked_days', count: overdueUnmarked });
   if (noSettings > 0) warnings.push({ code: 'no_pay_settings', count: noSettings });
   if (missingCheckOut > 0) warnings.push({ code: 'missing_check_out', count: missingCheckOut });
   if (netPay < 0) warnings.push({ code: 'negative_net_pay' });

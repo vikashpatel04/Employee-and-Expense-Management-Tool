@@ -280,6 +280,11 @@ notifications).
 
 ## Session log
 
+- **2026-10-26** — Fix: the salary run said "5 working days not marked" for days that hadn't
+  happened yet (27–31 Oct on the 26th). `calculateSalary` takes `asOf` (today); the warning counts
+  only unmarked days up to it (pay rules unchanged). Test added (core 237). Re-run the salary to
+  refresh a stored warning.
+
 - **2026-10-26** — Test data cleared on live (one time, with `clear_shop_data`, after fixing finalized
   payslips and the audit actor); the feature was then removed (`20261026000006_remove_clear_data.sql`
   restores the original guards; Settings → Data and its docs are gone). Shop and owner remain.

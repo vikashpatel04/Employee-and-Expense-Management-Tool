@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fixed — 2026-10-26
+
+- Salary run: "days not marked" no longer counts days that haven't happened yet.
+
 ### Added — 2026-10-26 (clear all data)
 
 - Settings → Data (owner only): **Clear all data** empties staff, attendance, money, expenses,
