@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Changed — 2026-10-26
+
+- Expenses: **List** and **By category** are two views of the month (tabs next to the month),
+  each full width; By category shows each category's share, count and % of the month.
+
 ### Changed — 2026-10-25 (marking attendance)
 
 - Attendance opens on **Day**: everyone on one list with P / A / HD / PL / UL buttons; one tap

@@ -65,7 +65,9 @@ roomy, forms stacked as cards inside pages, no sign of loading). Reworked:
   the count) → `Bento` (12 columns) of `Panel`s (title row with actions, `span` out of 12,
   stretched to the row's height; `flush` for edge-to-edge lists; `PanelEmpty` for "none yet").
   Dashboard: money figures row, then Today (7) beside Salary + Coming up (5). Expenses: figures,
-  then By category (4, sticky) beside the list (8). Advances: figures + "Who owes" panel.
+  then **List | By category** views (owner, 2026-10-26: categories as their own view, not beside
+  the list; `?view=categories`, month arrows keep the view): the list full width, or a category
+  table (share bar, number of expenses, % of the month, amount, shop total row). Advances: figures + "Who owes" panel.
   Reports, salary: figures rows. Staff page: Overview balance (6) + opening balance (6), sign-in
   card full width; Ledger months (8) beside the balance (4, sticky); Pay in four panels, two
   rows (current pay | history, allowances | deductions — empty ones say "None yet"). Requests and

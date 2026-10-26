@@ -9,7 +9,8 @@ import { t } from '@/lib/i18n';
 import { requireMe } from '@/lib/session';
 import { createClient } from '@/lib/supabase/server';
 import { FormDialog } from '@/components/app/form-dialog';
-import { Bento, Panel, StatCard, StatGrid } from '@/components/app/layout';
+import { Panel, PanelEmpty, StatCard, StatGrid } from '@/components/app/layout';
+import { TabLinks } from '@/components/app/tab-links';
 import { PageHeader, quietButtonClass } from '../../components';
 import { ExpenseForm, ExpensePanel, type FormExpense } from './expense-form';
 import { UrlToast } from '@/components/app/url-toast';
@@ -26,7 +27,13 @@ const card = 'rounded-lg border bg-card p-5 shadow-xs';
 export default async function ExpensesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ month?: string; add?: string; edit?: string; saved?: string }>;
+  searchParams: Promise<{
+    month?: string;
+    view?: string;
+    add?: string;
+    edit?: string;
+    saved?: string;
+  }>;
 }) {
   const me = (await requireMe())!;
   const can = (k: string) => me.permissions.includes(k);
@@ -42,7 +49,10 @@ export default async function ExpensesPage({
   const prev = shift(year, month, -1);
   const next = shift(year, month, 1);
   const hasNext = ym(next.year, next.month) <= ym(current.year, current.month);
-  const here = `/expenses?month=${ym(year, month)}`;
+  // Two views of the month: the expense list, or totals by category.
+  const view: 'list' | 'categories' = sp.view === 'categories' ? 'categories' : 'list';
+  const viewParam = view === 'categories' ? '&view=categories' : '';
+  const here = `/expenses?month=${ym(year, month)}${viewParam}`;
 
   const supabase = await createClient();
   const [data, { data: shop }] = await Promise.all([
@@ -60,6 +70,11 @@ export default async function ExpensesPage({
   for (const e of expenses) byDay.set(e.date, [...(byDay.get(e.date) ?? []), e]);
   const ranked = Object.entries(totals.byCategory).sort((a, b) => b[1] - a[1]);
   const top = ranked[0]?.[1] ?? 0;
+  // How many shop-charged expenses each category has (the ones its total counts).
+  const catCount = new Map<string, number>();
+  for (const e of expenses)
+    if (e.charged_to_kind === 'shop')
+      catCount.set(e.category_id, (catCount.get(e.category_id) ?? 0) + 1);
 
   const editing = sp.edit && can('expenses.edit') ? expenses.find((e) => e.id === sp.edit) : null;
   const adding = sp.add === '1' && can('expenses.add') && !editing;
@@ -140,24 +155,41 @@ export default async function ExpensesPage({
         }
       />
 
-      <div className="flex items-center gap-1">
-        <Link
-          href={`/expenses?month=${ym(prev.year, prev.month)}`}
-          aria-label={t('expenses.prevMonth')}
-          className={`${quietButtonClass} inline-flex items-center border-0 px-2`}
-        >
-          <ChevronLeft size={20} aria-hidden="true" />
-        </Link>
-        <span className="text-title-md px-2">{monthName}</span>
-        {hasNext && (
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-1">
           <Link
-            href={`/expenses?month=${ym(next.year, next.month)}`}
-            aria-label={t('expenses.nextMonth')}
+            href={`/expenses?month=${ym(prev.year, prev.month)}${viewParam}`}
+            aria-label={t('expenses.prevMonth')}
             className={`${quietButtonClass} inline-flex items-center border-0 px-2`}
           >
-            <ChevronRight size={20} aria-hidden="true" />
+            <ChevronLeft size={20} aria-hidden="true" />
           </Link>
-        )}
+          <span className="text-title-md px-2">{monthName}</span>
+          {hasNext && (
+            <Link
+              href={`/expenses?month=${ym(next.year, next.month)}${viewParam}`}
+              aria-label={t('expenses.nextMonth')}
+              className={`${quietButtonClass} inline-flex items-center border-0 px-2`}
+            >
+              <ChevronRight size={20} aria-hidden="true" />
+            </Link>
+          )}
+        </div>
+        <TabLinks
+          label={t('expenses.views.label')}
+          items={[
+            {
+              href: `/expenses?month=${ym(year, month)}`,
+              label: t('expenses.views.list'),
+              current: view === 'list',
+            },
+            {
+              href: `/expenses?month=${ym(year, month)}&view=categories`,
+              label: t('expenses.views.categories'),
+              current: view === 'categories',
+            },
+          ]}
+        />
       </div>
 
       {sp.saved && <UrlToast message={t('expenses.form.saved')} params={['saved']} />}
@@ -209,11 +241,11 @@ export default async function ExpensesPage({
         <p className="text-caption text-[var(--ink-muted)]">{t('expenses.ownOnly')}</p>
       )}
 
-      <Bento>
+      {view === 'categories' && (
         <Panel
-          span={4}
           title={t('expenses.byCategory')}
-          className="lg:sticky lg:top-0 lg:self-start"
+          description={t('expenses.byCategoryHint')}
+          flush
           actions={
             can('expenses.categories') && (
               <Link
@@ -226,41 +258,62 @@ export default async function ExpensesPage({
           }
         >
           {ranked.length === 0 ? (
-            <p className="text-body text-[var(--ink-muted)]">
-              {t('expenses.empty', { month: monthName })}
-            </p>
+            <PanelEmpty>{t('expenses.empty', { month: monthName })}</PanelEmpty>
           ) : (
-            <ul className="flex flex-col gap-3">
+            <ul className="divide-y">
               {ranked.map(([id, v]) => {
                 const c = cats.get(id);
                 const Icon = categoryIcon(c?.icon ?? 'receipt');
                 const col = categoryColour(c?.colour ?? 'slate');
+                const share = totals.total > 0 ? Math.round((v / totals.total) * 100) : 0;
                 return (
-                  <li key={id} className="flex flex-col gap-1.5">
-                    <span className="flex items-center gap-2.5">
+                  <li
+                    key={id}
+                    className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1.5 px-4 py-3 md:grid-cols-[minmax(12rem,16rem)_minmax(0,1fr)_6rem_4rem_8rem]"
+                  >
+                    <span className="flex min-w-0 items-center gap-2.5">
                       <span
-                        className="grid h-8 w-8 shrink-0 place-items-center rounded-full"
+                        className="grid size-8 shrink-0 place-items-center rounded-full"
                         style={{ background: col.soft, color: col.fg }}
                       >
-                        <Icon size={16} aria-hidden="true" />
+                        <Icon className="size-4" aria-hidden="true" />
                       </span>
-                      <span className="text-label-sm flex-1">{c?.name}</span>
-                      <span className="text-money-sm">{formatINR(v)}</span>
+                      <span className="truncate text-sm font-semibold">{c?.name}</span>
                     </span>
-                    <span className="h-1.5 overflow-hidden rounded-full bg-[var(--surface-muted)]">
+                    <span className="col-span-2 h-2 overflow-hidden rounded-full bg-[var(--surface-muted)] md:col-span-1">
                       <span
-                        className="block h-1.5 rounded-full"
+                        className="block h-2 rounded-full"
                         style={{ width: `${Math.round((v / top) * 100)}%`, background: col.fg }}
                       />
+                    </span>
+                    <span className="text-muted-foreground hidden text-xs md:block">
+                      {t('expenses.tiles.count', { count: catCount.get(id) ?? 0 })}
+                    </span>
+                    <span className="text-muted-foreground hidden text-right text-xs tabular-nums md:block">
+                      {share}%
+                    </span>
+                    <span className="text-money-sm row-start-1 text-right md:row-start-auto">
+                      {formatINR(v)}
                     </span>
                   </li>
                 );
               })}
+              <li className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 bg-[var(--surface-muted)]/50 px-4 py-3 font-semibold md:grid-cols-[minmax(12rem,16rem)_minmax(0,1fr)_6rem_4rem_8rem]">
+                <span className="text-sm">{t('expenses.tiles.shop')}</span>
+                <span className="hidden md:block" />
+                <span className="text-muted-foreground hidden text-xs md:block">
+                  {t('expenses.tiles.count', { count: counts.shop })}
+                </span>
+                <span className="hidden text-right text-xs md:block">100%</span>
+                <span className="text-money-sm text-right">{formatINR(totals.total)}</span>
+              </li>
             </ul>
           )}
         </Panel>
+      )}
 
-        <Panel span={8} title={t('expenses.list')}>
+      {view === 'list' && (
+        <Panel title={t('expenses.list')}>
           {expenses.length === 0 ? (
             <p className="text-body text-[var(--ink-muted)]">
               {t('expenses.empty', { month: monthName })}
@@ -345,7 +398,7 @@ export default async function ExpensesPage({
             ))
           )}
         </Panel>
-      </Bento>
+      )}
 
       {(adding || formExpense) && (
         <ExpensePanel

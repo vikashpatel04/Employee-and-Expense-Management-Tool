@@ -396,8 +396,24 @@
     "cancel": "Cancel"
   },
   "weekdays": {
-    "short": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
-    "tiny": ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"]
+    "short": [
+      "Sun",
+      "Mon",
+      "Tue",
+      "Wed",
+      "Thu",
+      "Fri",
+      "Sat"
+    ],
+    "tiny": [
+      "Su",
+      "Mo",
+      "Tu",
+      "We",
+      "Th",
+      "Fr",
+      "Sa"
+    ]
   },
   "status": {
     "present": "Present",
@@ -1215,7 +1231,13 @@
       "note": "Note",
       "yes": "Yes",
       "no": "No"
-    }
+    },
+    "views": {
+      "label": "Expenses view",
+      "list": "List",
+      "categories": "By category"
+    },
+    "byCategoryHint": "Shop expenses only; charged to staff and not tracked are left out."
   },
   "reports": {
     "title": "Reports",

@@ -277,6 +277,10 @@ Tables still to add (with the phase that uses them, each with RLS tests): `staff
 
 ## Session log
 
+- **2026-10-26** — Expenses: List | By category views (`?view=categories`), category table with
+  count and share. Typecheck and build OK; not seen with data (the website preview's sign-in had
+  expired).
+
 - **2026-10-25** — **Attendance day roster + toasts** (owner: "like PagarBook", "no info in
   confirmation in site, it should be toaster"). Design "Web · mark attendance (day)" added to the
   FinCrew canvas (v32). `attendance/day-roster.tsx` (one-tap marks, Undo toast, chips filter,
