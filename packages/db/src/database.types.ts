@@ -1478,7 +1478,36 @@ export type Database = {
           staff_id?: string
           uploaded_by?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "staff_documents_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_documents_shop_id_staff_id_fkey"
+            columns: ["shop_id", "staff_id"]
+            isOneToOne: false
+            referencedRelation: "advance_balances"
+            referencedColumns: ["shop_id", "staff_id"]
+          },
+          {
+            foreignKeyName: "staff_documents_shop_id_staff_id_fkey"
+            columns: ["shop_id", "staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["shop_id", "person_id"]
+          },
+          {
+            foreignKeyName: "staff_documents_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       staff_leave_templates: {
         Row: {
