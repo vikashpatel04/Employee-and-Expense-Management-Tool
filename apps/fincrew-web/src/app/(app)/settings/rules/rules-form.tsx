@@ -10,7 +10,6 @@ import { FormMessage } from '../holidays/holiday-forms';
 import { saveRules, type RulesState } from './actions';
 
 const r = 'settings.rules';
-const card = 'flex flex-col gap-4 rounded-lg border bg-card p-4 shadow-xs';
 const checkbox = 'h-5 w-5 shrink-0 accent-[var(--accent)]';
 
 function Choice({
@@ -30,14 +29,17 @@ function Choice({
   hint?: string;
 }) {
   return (
-    <label className="text-label-sm block">
-      {label}
+    <label className="grid gap-2 py-3 md:grid-cols-[minmax(0,1fr)_minmax(0,18rem)] md:items-center md:gap-6">
+      <span className="flex flex-col">
+        <span className="text-sm font-medium">{label}</span>
+        {hint && <span className="text-muted-foreground text-xs font-normal">{hint}</span>}
+      </span>
       <select
         name={name}
         {...(onChange
           ? { value, onChange: (e) => onChange(e.target.value) }
           : { defaultValue: value })}
-        className={inputClass}
+        className={`${inputClass} mt-0`}
       >
         {Object.entries(options).map(([v, key]) => (
           <option key={v} value={v}>
@@ -45,7 +47,6 @@ function Choice({
           </option>
         ))}
       </select>
-      {hint && <span className="text-caption font-normal text-[var(--ink-muted)]">{hint}</span>}
     </label>
   );
 }
@@ -66,23 +67,25 @@ function NumberField({
   decimal?: boolean;
 }) {
   return (
-    <label className="text-label-sm block">
-      {label}
+    <label className="grid gap-2 py-3 md:grid-cols-[minmax(0,1fr)_minmax(0,18rem)] md:items-center md:gap-6">
+      <span className="flex flex-col">
+        <span className="text-sm font-medium">{label}</span>
+        {hint && <span className="text-muted-foreground text-xs font-normal">{hint}</span>}
+      </span>
       <input
         name={name}
         required={required}
         inputMode={decimal ? 'decimal' : 'numeric'}
         defaultValue={value}
-        className={inputClass}
+        className={`${inputClass} mt-0`}
       />
-      {hint && <span className="text-caption font-normal text-[var(--ink-muted)]">{hint}</span>}
     </label>
   );
 }
 
 function Check({ name, label, checked }: { name: string; label: string; checked: boolean }) {
   return (
-    <label className="text-body flex min-h-12 items-center gap-3">
+    <label className="flex min-h-12 items-center gap-3 py-2 text-sm font-medium">
       <input type="checkbox" name={name} defaultChecked={checked} className={checkbox} />
       {label}
     </label>
@@ -100,9 +103,9 @@ function Section({
   children: ReactNode;
 }) {
   return (
-    <section className={`${card} ${grow ? 'flex-1' : ''}`}>
-      <h2 className="text-sm font-semibold">{title}</h2>
-      {children}
+    <section className={`bg-card rounded-lg border shadow-xs ${grow ? 'flex-1' : ''}`}>
+      <h2 className="border-b px-4 py-3 text-sm font-semibold">{title}</h2>
+      <div className="divide-y px-4">{children}</div>
     </section>
   );
 }
@@ -120,7 +123,7 @@ export function RulesForm({ rules }: { rules: ShopRules }) {
   const { pay, late, attendanceCode: code, staffLogin: login } = rules;
 
   return (
-    <form onSubmit={onSubmit} className="grid items-stretch gap-4 lg:grid-cols-2">
+    <form onSubmit={onSubmit} className="flex flex-col gap-4">
       {/* Rows of equal height: Pay | Coming late, then Attendance code | Expenses + Staff sign-in. */}
       <Section title={t(`${r}.pay.title`)}>
         <Choice
@@ -243,7 +246,7 @@ export function RulesForm({ rules }: { rules: ShopRules }) {
           label={t(`${r}.code.checkOutRequired`)}
           checked={code.checkOutRequired}
         />
-        <div className="grid gap-3 sm:grid-cols-3">
+        <div className="contents">
           <NumberField name="maxWrong" label={t(`${r}.code.maxWrong`)} value={code.maxWrongCodes} />
           <NumberField
             name="wrongWindow"
@@ -253,7 +256,7 @@ export function RulesForm({ rules }: { rules: ShopRules }) {
           <NumberField name="lockout" label={t(`${r}.code.lockout`)} value={code.lockoutMinutes} />
         </div>
       </Section>
-      <div className="flex flex-col gap-4">
+      <div className="contents">
         <Section title={t(`${r}.expenses.title`)}>
           <NumberField
             name="smallLimit"
@@ -267,7 +270,7 @@ export function RulesForm({ rules }: { rules: ShopRules }) {
           />
         </Section>
         <Section title={t(`${r}.login.title`)} grow>
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="contents">
             <NumberField
               name="pinsBeforeWait"
               label={t(`${r}.login.pinsBeforeWait`)}

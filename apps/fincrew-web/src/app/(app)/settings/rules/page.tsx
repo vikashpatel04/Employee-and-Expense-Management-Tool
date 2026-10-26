@@ -20,7 +20,10 @@ export default async function RulesPage() {
 
   return (
     <>
-      <p className="text-body text-[var(--ink-muted)]">{t('settings.rules.subtitle')}</p>
+      <div className="flex flex-col">
+        <h2 className="text-lg font-semibold">{t('settings.tabs.rules')}</h2>
+        <p className="text-muted-foreground text-sm">{t('settings.rules.subtitle')}</p>
+      </div>
       <RulesForm rules={toShopRules(shop?.settings)} />
     </>
   );
