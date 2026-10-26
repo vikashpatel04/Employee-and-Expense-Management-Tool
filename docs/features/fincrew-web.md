@@ -82,6 +82,12 @@ roomy, forms stacked as cards inside pages, no sign of loading). Reworked:
 - Left inline on purpose: request decisions (a queue is quicker inline), Settings → rules (the
   page is the form), a role's permissions and people (the page is for them), the attendance grid.
 
+## Settings layout
+
+Since 2026-10-26 (design "Web · settings"): a grouped sub-menu on the left (phone: a scrolling
+row), the page on the right. Groups and pages shown by permission; **Data** (clear all data) for
+the owner only. Rules page rework to two-column rows is still to do.
+
 ## App shell — `apps/fincrew-web/src/app/(app)/layout.tsx`
 
 - Sidebar (see "Look and feel"): FinCrew, the **shop switcher** (current shop, "N shops";

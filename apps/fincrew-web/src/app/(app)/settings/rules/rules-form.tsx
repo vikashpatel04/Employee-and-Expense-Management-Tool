@@ -101,7 +101,7 @@ function Section({
 }) {
   return (
     <section className={`${card} ${grow ? 'flex-1' : ''}`}>
-      <h2 className="text-title-md">{title}</h2>
+      <h2 className="text-sm font-semibold">{title}</h2>
       {children}
     </section>
   );

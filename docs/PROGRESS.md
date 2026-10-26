@@ -280,6 +280,11 @@ notifications).
 
 ## Session log
 
+- **2026-10-26** — **Settings rework, step 1**: design "Web · settings" (canvas v35); grouped left
+  sub-menu (Shop rules · Leave · Money · Team · Owner) replaces the tab row (`settings/tabs.tsx`,
+  `layout.tsx`). Not seen with data yet. Still to do from the design: rules as two-column rows
+  (explanation left, options right) and a header with Save per section.
+
 - **2026-10-26** — **Clear all data** (Settings → Data, owner only; password + shop name;
   migration `20261026000003_clear_shop_data.sql`, `docs/features/clear-data.md`). Tests db 192.
   Next (owner, low on tokens): rework the Settings UI.
