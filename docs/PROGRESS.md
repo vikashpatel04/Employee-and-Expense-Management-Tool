@@ -61,7 +61,8 @@ first, then `CLAUDE.md`, then the feature doc for whatever you touch._
    (paying / undoing on live writes permanent lines — ask first; opening the sheets and
    cancelling is fine), bill photo upload on a real phone. Still website-only: allowances,
    deductions, leave template, own rules.
-3. **Plan pieces not built yet**: staff documents (`staff_documents` + storage, PLAN §6.1 staff
+3. **Plan pieces not built yet**: sign-ins for helpers (roles work, but a manager or
+   accountant can't sign in to FinCrew yet), staff documents (`staff_documents` + storage, PLAN §6.1 staff
    detail "Documents"), add staff from the app (stepper: details → pay → template → shift →
    invite), website audit log viewer (PLAN §6.2), dashboard "recent activity". Also move the
    website's staff detail page and payslip page onto the shared loaders when next touched.
@@ -180,16 +181,16 @@ ref `ufmlqvvfznemghmnvynz` (never touch `cheque-tracker-dev`).
 
 ## Phase status (docs/PLAN.md §8)
 
-| #   | Phase                        | Status                                                                                                                                                                      |
-| --- | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | Foundation                   | **Done** (2026-10-23)                                                                                                                                                       |
-| 2   | Core logic (`packages/core`) | **Done**: 225 tests, every rule a setting; `docs/features/core-rules.md`                                                                                                    |
-| 3   | Design                       | **Done** (2026-10-23): design system, key screens (owner reviewed), `packages/ui` tokens                                                                                    |
-| 4   | FinCrew web core             | **Done** (2026-10-24): data layer live; screens slices 1–10 (dashboard, shell, staff + extras, attendance grid + CSV, salary run, payslip print, advances, settings, roles) |
-| 5   | FinCrew Android              | **Built** (Today, Staff, Money, code, requests), checked live in the browser; phone builds wait (EAS)                                                                       |
-| 6   | Expenses                     | **Done** (2026-10-24): website and Android                                                                                                                                  |
-| 7   | Staffora                     | **In progress**: data + FinCrew screens live; Staffora app slices A + B checked; change PIN etc. next                                                                       |
-| 8   | Polish                       | Not started                                                                                                                                                                 |
+| #   | Phase                        | Status                                                                                                                                                                           |
+| --- | ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Foundation                   | **Done** (2026-10-23)                                                                                                                                                            |
+| 2   | Core logic (`packages/core`) | **Done**: 225 tests, every rule a setting; `docs/features/core-rules.md`                                                                                                         |
+| 3   | Design                       | **Done** (2026-10-23): design system, key screens (owner reviewed), `packages/ui` tokens                                                                                         |
+| 4   | FinCrew web core             | **Done** (2026-10-24): data layer live; screens slices 1–10 (dashboard, shell, staff + extras, attendance grid + CSV, salary run, payslip print, advances, settings, roles)      |
+| 5   | FinCrew Android              | **Built** (Today, Staff, Money, code, requests), checked live in the browser; phone builds wait (EAS)                                                                            |
+| 6   | Expenses                     | **Done** (2026-10-24): website and Android                                                                                                                                       |
+| 7   | Staffora                     | **Built and live** (2026-10-25): phone + PIN sign-in, fingerprint, check-in, attendance, money, payslips, requests, change PIN; left: live checks with the owner, install builds |
+| 8   | Polish                       | Not started                                                                                                                                                                      |
 
 ## Phase 1 — Foundation
 

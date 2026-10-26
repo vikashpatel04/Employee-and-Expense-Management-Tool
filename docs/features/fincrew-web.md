@@ -307,4 +307,7 @@ only the 23/10 half day).
 
 ## Not built yet
 
-Staffora invites (staff and helper logins), requests, attendance code screen (Phase 7).
+Sign-ins for helpers (people with a role but no payroll: they can be added and given a role, but
+can't sign in to FinCrew yet), audit log viewer (PLAN §6.2), staff documents, dashboard "recent
+activity". Staffora sign-ins, requests and the attendance code are built (see
+`staff-self-service.md`).
