@@ -119,6 +119,13 @@ describe('clear_shop_data', () => {
     );
   });
 
+  it('people who appear in the audit log (as actor) can still be removed', async () => {
+    await db.query(
+      `insert into audit_log (shop_id, actor_id, table_name, action) values ($1, $2, 'x', 'INSERT')`,
+      [shop1, meenaP],
+    );
+  });
+
   it('clears the shop: records gone, setup and the owner stay, files are listed', async () => {
     const r = (
       await q<{ r: { counts: Record<string, number>; bills: string[]; docs: string[] } }>(
