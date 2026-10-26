@@ -31,6 +31,8 @@ export default function RootLayout() {
 function Gate({ fontsLoaded }: { fontsLoaded: boolean }) {
   const { ready, session } = useSession();
   const { c, scheme } = useTheme();
+  // A helper on the shop's first password chooses their own before anything else.
+  const mustChange = !!session?.user.user_metadata?.must_change_password;
   const show = ready && fontsLoaded;
   useEffect(() => {
     if (show) void SplashScreen.hideAsync();
@@ -40,7 +42,10 @@ function Gate({ fontsLoaded }: { fontsLoaded: boolean }) {
     <>
       <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: c.canvas } }}>
-        <Stack.Protected guard={!!session}>
+        <Stack.Protected guard={!!session && mustChange}>
+          <Stack.Screen name="password" />
+        </Stack.Protected>
+        <Stack.Protected guard={!!session && !mustChange}>
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="staff/[id]" />
           <Stack.Screen name="expense" />

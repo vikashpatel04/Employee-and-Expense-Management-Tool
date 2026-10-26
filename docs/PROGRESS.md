@@ -57,8 +57,8 @@ first, then `CLAUDE.md`, then the feature doc for whatever you touch._
    (paying / undoing on live writes permanent lines — ask first; opening the sheets and
    cancelling is fine), bill photo upload on a real phone. Still website-only: allowances,
    deductions, leave template, own rules.
-3. **Plan pieces not built yet**: sign-ins for helpers (roles work, but a manager or
-   accountant can't sign in to FinCrew yet), staff documents (`staff_documents` + storage, PLAN §6.1 staff
+3. **Plan pieces not built yet**: ~~sign-ins for helpers~~ built 2026-10-26 (email + first
+   password, `docs/features/helper-sign-in.md`; needs the push), staff documents (`staff_documents` + storage, PLAN §6.1 staff
    detail "Documents"), add staff from the app (stepper: details → pay → template → shift →
    invite), website audit log viewer (PLAN §6.2), dashboard "recent activity". Also move the
    website's staff detail page and payslip page onto the shared loaders when next touched.
@@ -276,6 +276,13 @@ Tables still to add (with the phase that uses them, each with RLS tests): `staff
 (storage), `push_tokens` (Phase 7/8).
 
 ## Session log
+
+- **2026-10-26** — **Helper sign-ins** (owner: email + password). Migration
+  `20261026000001_helper_logins.sql` (`login_email`, guard on sign-in links, `helper_login_target`,
+  service-only `auth_user_by_email` / `helper_login_link`; dry-run on live OK), edge function
+  `helper-auth` (give / reset / remove; CI deploys it), `helperLogin` in packages/data, Roles →
+  Helpers sign-in controls, `/password` on the website and `password.tsx` in the app for the
+  first sign-in. Tests db 177 (11 new). Not tried live yet (needs the push).
 
 - **2026-10-26** — Owner checked Staffora (all good; camera Allow button centred now). Polish
   trimmed to import / export. EAS build config for both apps + `docs/BUILDS.md`.

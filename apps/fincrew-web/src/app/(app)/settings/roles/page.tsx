@@ -1,13 +1,20 @@
 import { PendingLink as Link } from '@/components/app/pending-link';
 import { redirect } from 'next/navigation';
-import { ChevronRight, Plus, UserPlus } from 'lucide-react';
+import { ChevronRight, Mail, Plus, UserPlus } from 'lucide-react';
 import { FormDialog } from '@/components/app/form-dialog';
 import { loadRoles, permissionGroups } from '@fincrew/data';
 import { t } from '@/lib/i18n';
 import { requireMe } from '@/lib/session';
 import { SETTINGS_SECTIONS } from '@/lib/settings-access';
 import { createClient } from '@/lib/supabase/server';
-import { HelperForm, NewRoleForm, RemoveHelperButton } from './role-forms';
+import {
+  HelperForm,
+  HelperLoginForm,
+  HelperResetForm,
+  NewRoleForm,
+  RemoveHelperButton,
+  RemoveHelperLoginButton,
+} from './role-forms';
 
 const card = 'rounded-lg border bg-card p-4 shadow-xs';
 
@@ -114,22 +121,61 @@ export default async function RolesPage() {
                   {helpers.map((h) => (
                     <li
                       key={h.id}
-                      className="flex min-h-12 items-center justify-between gap-3 border-b border-[var(--line)] px-3 py-2 last:border-0"
+                      className="flex flex-col gap-2 border-b border-[var(--line)] px-3 py-2.5 last:border-0"
                     >
-                      <span className="flex min-w-0 flex-col">
-                        <span className="text-label-sm">{h.name}</span>
-                        <span className="text-caption text-[var(--ink-muted)]">
-                          {[
-                            h.phone,
-                            t('settings.roles.helpers.roleCount', {
-                              count: roles.filter((r) => r.people.includes(h.id)).length,
-                            }),
-                          ]
-                            .filter(Boolean)
-                            .join(' · ')}
+                      <span className="flex items-start justify-between gap-3">
+                        <span className="flex min-w-0 flex-col">
+                          <span className="text-label-sm">{h.name}</span>
+                          <span className="text-caption text-[var(--ink-muted)]">
+                            {[
+                              h.phone,
+                              t('settings.roles.helpers.roleCount', {
+                                count: roles.filter((r) => r.people.includes(h.id)).length,
+                              }),
+                            ]
+                              .filter(Boolean)
+                              .join(' · ')}
+                          </span>
+                        </span>
+                        <RemoveHelperButton personId={h.id} name={h.name} />
+                      </span>
+                      <span className="flex flex-wrap items-center justify-between gap-2 rounded-md bg-[var(--surface-muted)] px-2.5 py-1.5">
+                        <span className="inline-flex min-w-0 items-center gap-1.5 text-xs">
+                          <Mail className="size-3.5 shrink-0" aria-hidden="true" />
+                          <span className="truncate">
+                            {h.hasLogin
+                              ? t('settings.roles.login.signsInAs', {
+                                  email: h.loginEmail ?? '—',
+                                })
+                              : t('settings.roles.login.none')}
+                          </span>
+                        </span>
+                        <span className="flex items-center gap-1">
+                          {h.hasLogin ? (
+                            <>
+                              <FormDialog
+                                title={t('settings.roles.login.resetTitle', { name: h.name })}
+                                description={t('settings.roles.login.resetHint')}
+                                variant="ghost"
+                                size="xs"
+                                trigger={t('settings.roles.login.resetButton')}
+                              >
+                                <HelperResetForm personId={h.id} />
+                              </FormDialog>
+                              <RemoveHelperLoginButton personId={h.id} name={h.name} />
+                            </>
+                          ) : (
+                            <FormDialog
+                              title={t('settings.roles.login.giveTitle', { name: h.name })}
+                              description={t('settings.roles.login.giveHint')}
+                              size="xs"
+                              trigger={t('settings.roles.login.give')}
+                            >
+                              <HelperLoginForm personId={h.id} />
+                            </FormDialog>
+                          )}
                         </span>
                       </span>
-                      <RemoveHelperButton personId={h.id} name={h.name} />
                     </li>
                   ))}
                 </ul>

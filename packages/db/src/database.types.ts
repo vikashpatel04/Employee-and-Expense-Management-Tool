@@ -1027,6 +1027,7 @@ export type Database = {
           created_at: string
           id: string
           is_owner: boolean
+          login_email: string | null
           name: string
           phone: string | null
           photo_path: string | null
@@ -1037,6 +1038,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_owner?: boolean
+          login_email?: string | null
           name: string
           phone?: string | null
           photo_path?: string | null
@@ -1047,6 +1049,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_owner?: boolean
+          login_email?: string | null
           name?: string
           phone?: string | null
           photo_path?: string | null
@@ -1580,6 +1583,7 @@ export type Database = {
         Returns: string
       }
       attendance_code: { Args: { p_shop: string }; Returns: Json }
+      auth_user_by_email: { Args: { p_email: string }; Returns: string }
       change_pin: {
         Args: {
           p_current: string
@@ -1603,6 +1607,11 @@ export type Database = {
         Returns: string
       }
       finalize_payslip: { Args: { p_payslip: string }; Returns: undefined }
+      helper_login_link: {
+        Args: { p_email: string; p_person: string; p_user: string }
+        Returns: undefined
+      }
+      helper_login_target: { Args: { p_person: string }; Returns: Json }
       my_permissions: { Args: { p_shop: string }; Returns: string[] }
       phone_lookup: { Args: { p_phone: string }; Returns: Json }
       pin_login: {

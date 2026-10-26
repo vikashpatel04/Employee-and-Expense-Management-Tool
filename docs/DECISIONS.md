@@ -473,6 +473,14 @@ Owner's instruction: every value is customisable by the admin, and staff may hav
 - **The website has its own, denser scale.** The design tokens are sized for phones (48 px
   taps, 20 px corners); on the website the same token names get desk sizes in `globals.css`.
   The phone apps are unchanged.
+- **Helpers sign in with email + a first password the shop gives** (owner chose email +
+  password, 2026-10-26). No invite emails: Supabase's built-in mailer only delivers to the
+  project's own team, so the shop tells the helper the first password and the helper chooses
+  their own at the first sign-in (`must_change_password`). Reset works like Staffora's Reset
+  PIN. A sign-in used in several shops is the person's own: it can be linked or unlinked, not
+  reset, by one shop.
+- **Only the server changes who a person signs in as** (`private.guard_login_link`): before,
+  RLS let anyone with staff.edit write `people.auth_user_id`.
 - **Phase 8 is only import / export** (owner, 2026-10-26): no home-screen widgets, no Tamil /
   Hindi, no offline attendance marking, no StaffBook import.
 - **App builds read the Supabase keys from EAS environment variables**, not from the repo: the

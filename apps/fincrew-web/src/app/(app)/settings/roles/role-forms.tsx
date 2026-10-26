@@ -2,7 +2,10 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import { KeyRound } from 'lucide-react';
+import { toast } from 'sonner';
 import type { PermissionKey } from '@fincrew/core';
+import { firstPassword } from '@fincrew/data';
 import { t } from '@/lib/i18n';
 import { useDialogDone } from '@/components/app/form-dialog';
 import { useFormAction } from '@/lib/use-form-action';
@@ -12,8 +15,11 @@ import {
   addHelper,
   createRole,
   deleteRole,
+  giveHelperLogin,
   removeHelper,
+  removeHelperLogin,
   renameRole,
+  resetHelperPassword,
   savePeople,
   savePermissions,
   type RoleState,
@@ -254,5 +260,124 @@ export function RemoveHelperButton({ personId, name }: { personId: string; name:
         </span>
       )}
     </span>
+  );
+}
+
+/** First password field with "Make one" (easy to read out to the helper). */
+function FirstPassword() {
+  const [value, setValue] = useState('');
+  return (
+    <label className="text-label-sm block">
+      {t('settings.roles.login.password')}
+      <span className="mt-1 flex gap-2">
+        <input
+          name="password"
+          required
+          autoComplete="new-password"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          className={`${inputClass} mt-0 font-mono`}
+        />
+        <button
+          type="button"
+          className={quietButtonClass}
+          onClick={() =>
+            setValue(
+              firstPassword((n) => {
+                const a = new Uint32Array(1);
+                crypto.getRandomValues(a);
+                return a[0]! % n;
+              }),
+            )
+          }
+        >
+          <KeyRound aria-hidden="true" />
+          {t('settings.roles.login.make')}
+        </button>
+      </span>
+      <span className="text-caption mt-1 block text-[var(--ink-muted)]">
+        {t('settings.roles.login.passwordHint')}
+      </span>
+    </label>
+  );
+}
+
+/** Give a helper a sign-in: email + first password (helper-sign-in.md). */
+export function HelperLoginForm({ personId }: { personId: string }) {
+  const [state, onSubmit, pending] = useFormAction<RoleState>(
+    giveHelperLogin.bind(null, personId),
+    {},
+  );
+  useDialogDone(state);
+  return (
+    <form onSubmit={onSubmit} className="flex flex-col gap-3">
+      <label className="text-label-sm block">
+        {t('settings.roles.login.email')}
+        <input
+          name="email"
+          type="email"
+          required
+          autoComplete="off"
+          inputMode="email"
+          className={inputClass}
+        />
+      </label>
+      <FirstPassword />
+      <FormMessage state={state} />
+      <button type="submit" disabled={pending} aria-busy={pending} className={buttonClass}>
+        {pending ? t('settings.saving') : t('settings.roles.login.give')}
+      </button>
+    </form>
+  );
+}
+
+/** A new first password for a helper who forgot theirs. */
+export function HelperResetForm({ personId }: { personId: string }) {
+  const [state, onSubmit, pending] = useFormAction<RoleState>(
+    resetHelperPassword.bind(null, personId),
+    {},
+  );
+  useDialogDone(state);
+  return (
+    <form onSubmit={onSubmit} className="flex flex-col gap-3">
+      <FirstPassword />
+      <FormMessage state={state} />
+      <button type="submit" disabled={pending} aria-busy={pending} className={buttonClass}>
+        {pending ? t('settings.saving') : t('settings.roles.login.resetButton')}
+      </button>
+    </form>
+  );
+}
+
+/** Two-step "Remove sign-in"; the helper stays with their roles. */
+export function RemoveHelperLoginButton({ personId, name }: { personId: string; name: string }) {
+  const router = useRouter();
+  const [asking, setAsking] = useState(false);
+  const [pending, start] = useTransition();
+  return (
+    <button
+      type="button"
+      disabled={pending}
+      aria-busy={pending}
+      aria-label={asking ? undefined : t('settings.roles.login.removeLabel', { name })}
+      onClick={() =>
+        asking
+          ? start(async () => {
+              const r = await removeHelperLogin(personId);
+              if (r.error) toast.error(r.error);
+              else {
+                toast.success(r.done ?? '');
+                router.refresh();
+              }
+              setAsking(false);
+            })
+          : setAsking(true)
+      }
+      className={`text-caption min-h-8 rounded-[var(--radius-sm)] px-2 underline disabled:opacity-[var(--opacity-disabled)] ${
+        asking ? 'text-[var(--danger)]' : 'text-[var(--accent-ink)]'
+      }`}
+    >
+      {asking ? t('settings.roles.login.removeConfirm') : t('settings.roles.login.remove')}
+    </button>
   );
 }

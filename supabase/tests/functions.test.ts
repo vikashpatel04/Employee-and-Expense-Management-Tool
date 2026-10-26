@@ -23,10 +23,13 @@ describe('exposed (public schema) functions', () => {
     expect(r.rows.map((x) => x.name)).toEqual([
       'add_staff',
       'attendance_code',
+      'auth_user_by_email',
       'change_pin',
       'check_in',
       'create_shop',
       'finalize_payslip',
+      'helper_login_link',
+      'helper_login_target',
       'my_permissions',
       'phone_lookup',
       'pin_login',

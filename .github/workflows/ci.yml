@@ -74,4 +74,6 @@ jobs:
       # Edge functions (supabase/functions), after the migrations they call. Bundled on
       # Supabase's side (--use-api); settings come from supabase/config.toml.
       - name: Deploy edge functions
-        run: supabase functions deploy staff-auth --project-ref "$SUPABASE_PROJECT_ID" --use-api --no-verify-jwt
+        run: |
+          supabase functions deploy staff-auth --project-ref "$SUPABASE_PROJECT_ID" --use-api --no-verify-jwt
+          supabase functions deploy helper-auth --project-ref "$SUPABASE_PROJECT_ID" --use-api --no-verify-jwt

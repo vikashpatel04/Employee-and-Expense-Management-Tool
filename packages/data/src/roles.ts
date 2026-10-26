@@ -24,7 +24,7 @@ export async function loadRoles(supabase: Supabase, shopId: string) {
       supabase.from('person_roles').select('role_id, person_id').eq('shop_id', shopId),
       supabase
         .from('people')
-        .select('id, name, phone, is_owner, auth_user_id')
+        .select('id, name, phone, is_owner, auth_user_id, login_email')
         .eq('shop_id', shopId)
         .order('name'),
       supabase.from('staff').select('person_id').eq('shop_id', shopId),
@@ -42,6 +42,8 @@ export async function loadRoles(supabase: Supabase, shopId: string) {
       phone: p.phone,
       isOwner: p.is_owner,
       hasLogin: p.auth_user_id != null,
+      /** The email a helper signs in with (helper sign-ins only). */
+      loginEmail: p.login_email,
       /** On the payroll; everyone else (not the owner) is a helper. */
       isStaff: staffIds.has(p.id),
     })),

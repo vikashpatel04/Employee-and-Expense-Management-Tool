@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { isPermissionKey } from '@fincrew/core';
+import { helperLogin, type HelperLoginResult } from '@fincrew/data';
 import { t } from '@/lib/i18n';
 import { requireMe } from '@/lib/session';
 import { SETTINGS_SECTIONS } from '@/lib/settings-access';
@@ -206,6 +207,16 @@ export async function removeHelper(personId: string): Promise<RoleState> {
     .eq('person_id', personId)
     .maybeSingle();
   if (staff) return { error: t('settings.roles.helpers.errors.isStaff') };
+  // Their sign-in goes first (it would otherwise be left without a shop).
+  const { data: person } = await supabase
+    .from('people')
+    .select('auth_user_id')
+    .eq('id', personId)
+    .maybeSingle();
+  if (person?.auth_user_id) {
+    const r = await helperLogin(supabase, { action: 'remove', personId });
+    if (!r.ok) return { error: loginError(r) };
+  }
   const { error, count } = await supabase
     .from('people')
     .delete({ count: 'exact' })
@@ -216,4 +227,66 @@ export async function removeHelper(personId: string): Promise<RoleState> {
     return { error: t('settings.errors.failed', { reason: error?.message ?? '—' }) };
   refresh();
   return {};
+}
+
+/** A refused sign-in change → the words for it (docs/features/helper-sign-in.md). */
+function loginError(r: Exclude<HelperLoginResult, { ok: true }>): string {
+  const known = [
+    'no_permission',
+    'owner',
+    'staff',
+    'has_login',
+    'no_login',
+    'bad_email',
+    'in_shop',
+    'other_shops',
+  ];
+  if (r.reason === 'password')
+    return r.message
+      ? t('settings.roles.login.errors.passwordRule', { reason: r.message })
+      : t('settings.roles.login.errors.password');
+  if (known.includes(r.reason)) return t(`settings.roles.login.errors.${r.reason}`);
+  return t('settings.errors.failed', { reason: r.message || r.reason });
+}
+
+/** Give a helper a sign-in: their email and a first password they change at the first sign-in. */
+export async function giveHelperLogin(
+  personId: string,
+  _prev: RoleState,
+  form: FormData,
+): Promise<RoleState> {
+  const r = await helperLogin(await createClient(), {
+    action: 'give',
+    personId,
+    email: String(form.get('email') ?? ''),
+    password: String(form.get('password') ?? ''),
+  });
+  if (!r.ok) return { error: loginError(r) };
+  refresh();
+  return {
+    done: t(r.linked === 'existing' ? 'settings.roles.login.linked' : 'settings.roles.login.given'),
+  };
+}
+
+/** A new first password for a helper who forgot theirs. */
+export async function resetHelperPassword(
+  personId: string,
+  _prev: RoleState,
+  form: FormData,
+): Promise<RoleState> {
+  const r = await helperLogin(await createClient(), {
+    action: 'reset',
+    personId,
+    password: String(form.get('password') ?? ''),
+  });
+  if (!r.ok) return { error: loginError(r) };
+  return { done: t('settings.roles.login.reset') };
+}
+
+/** Take a helper's sign-in away (they stay on the list with their roles). */
+export async function removeHelperLogin(personId: string): Promise<RoleState> {
+  const r = await helperLogin(await createClient(), { action: 'remove', personId });
+  if (!r.ok) return { error: loginError(r) };
+  refresh();
+  return { done: t('settings.roles.login.removed') };
 }

@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Added — 2026-10-26 (helper sign-ins)
+
+- Helpers (managers, accountants with a role) can sign in to FinCrew: Settings → Roles →
+  Helpers → Give a sign-in (email + first password). They choose their own password at the
+  first sign-in; Reset password and Remove sign-in when needed. Migration
+  `20261026000001_helper_logins.sql`, edge function `helper-auth`.
+
 ### Fixed — 2026-10-26
 
 - Staffora: the camera "Allow" button on the scan screen is centred.

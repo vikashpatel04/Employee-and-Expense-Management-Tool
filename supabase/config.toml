@@ -386,9 +386,16 @@ deno_version = 2
 # [edge_runtime.secrets]
 # secret_key = "env(SECRET_VALUE)"
 
-# Staff sign-in with an invite link and a PIN (supabase/functions/staff-auth). Callers are not
+# Staff sign-in with a phone number and a PIN (supabase/functions/staff-auth). Callers are not
 # signed in yet, so the gateway must not require a user JWT; the function checks everything.
 [functions.staff-auth]
+enabled = true
+verify_jwt = false
+
+# Helper sign-ins (supabase/functions/helper-auth). The function checks the caller's token itself
+# (its permission check runs as the caller through PostgREST), so the gateway doesn't have to;
+# with the new API keys the gateway's JWT check isn't reliable.
+[functions.helper-auth]
 enabled = true
 verify_jwt = false
 

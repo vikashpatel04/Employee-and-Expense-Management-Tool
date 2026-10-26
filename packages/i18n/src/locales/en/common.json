@@ -396,24 +396,8 @@
     "cancel": "Cancel"
   },
   "weekdays": {
-    "short": [
-      "Sun",
-      "Mon",
-      "Tue",
-      "Wed",
-      "Thu",
-      "Fri",
-      "Sat"
-    ],
-    "tiny": [
-      "Su",
-      "Mo",
-      "Tu",
-      "We",
-      "Th",
-      "Fr",
-      "Sa"
-    ]
+    "short": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+    "tiny": ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"]
   },
   "status": {
     "present": "Present",
@@ -985,6 +969,39 @@
         "errors": {
           "name": "Enter a name.",
           "isStaff": "This person is on the payroll. Change them on the Staff page."
+        }
+      },
+      "login": {
+        "signsInAs": "Signs in as {{email}}",
+        "none": "No sign-in",
+        "give": "Give a sign-in",
+        "giveTitle": "Sign-in for {{name}}",
+        "giveHint": "They sign in to FinCrew (website or app) with this email and the first password; at the first sign-in they choose their own. If the email already signs in to another of your shops, it is added to this shop and keeps its own password.",
+        "email": "Email",
+        "password": "First password",
+        "passwordHint": "Tell them this password. They change it at the first sign-in.",
+        "make": "Make one",
+        "given": "Sign-in made. Give them the email and first password.",
+        "linked": "This email already signs in to FinCrew; it now opens this shop too.",
+        "resetButton": "Reset password",
+        "resetTitle": "New first password for {{name}}",
+        "resetHint": "For a helper who forgot their password: they sign in with this one and choose their own again.",
+        "reset": "Password reset. Give them the new first password.",
+        "remove": "Remove sign-in",
+        "removeConfirm": "Yes, remove the sign-in",
+        "removeLabel": "Remove {{name}}'s sign-in",
+        "removed": "Sign-in removed.",
+        "errors": {
+          "no_permission": "You don't have permission to change sign-ins (Edit staff).",
+          "owner": "The owner's sign-in can't be changed here.",
+          "staff": "Staff sign in to Staffora with their phone number, not here.",
+          "has_login": "This helper already has a sign-in.",
+          "no_login": "This helper has no sign-in.",
+          "bad_email": "Enter a full email address, like name@gmail.com.",
+          "in_shop": "That email already signs in to this shop as someone else.",
+          "other_shops": "This sign-in is also used in another shop, so its password is the person's own: they can change it themselves.",
+          "password": "Enter a first password.",
+          "passwordRule": "That password isn't allowed: {{reason}}"
         }
       }
     },
@@ -1822,6 +1839,19 @@
       "badPin": "Use exactly 4 digits.",
       "hasPin": "A PIN is already set for this number. Enter it to sign in.",
       "enterTitle": "Enter your PIN"
+    }
+  },
+  "password": {
+    "title": "Choose your password",
+    "subtitle": "You signed in with the password the shop gave you. Choose your own to go on.",
+    "new": "New password",
+    "again": "New password again",
+    "save": "Save and go on",
+    "saving": "Saving…",
+    "errors": {
+      "empty": "Enter a new password.",
+      "mismatch": "The two passwords are different.",
+      "failed": "Couldn't save: {{reason}}"
     }
   }
 }

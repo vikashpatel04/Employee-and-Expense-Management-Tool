@@ -17,6 +17,10 @@ export const myMemberships = cache(async (): Promise<Membership[]> => {
   const supabase = await createClient();
   const { data: claims } = await supabase.auth.getClaims();
   if (!claims?.claims) redirect('/login');
+  // A helper still on the first password the shop gave chooses their own first.
+  const meta = (claims.claims as { user_metadata?: { must_change_password?: boolean } })
+    .user_metadata;
+  if (meta?.must_change_password) redirect('/password');
 
   return loadMemberships(supabase, claims.claims.sub);
 });
