@@ -12,6 +12,7 @@ import {
 } from '@fincrew/data';
 import type { StatusKey } from '@fincrew/ui';
 import { AttendanceSection } from '@/components/staff/attendance';
+import { DocumentsSection } from '@/components/staff/documents';
 import { LedgerSection } from '@/components/staff/ledger';
 import { OverviewSection } from '@/components/staff/overview';
 import { PaySection } from '@/components/staff/pay';
@@ -21,11 +22,11 @@ import { useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
 import { space, useTheme } from '@/lib/theme';
 
-type Tab = 'overview' | 'attendance' | 'ledger' | 'pay';
+type Tab = 'overview' | 'attendance' | 'ledger' | 'pay' | 'documents';
 
 /**
  * Staff detail (design: "Staff detail"): header with today's status, then Overview · Attendance
- * · Ledger · Pay, each shown with the permission the website uses (yourself always).
+ * · Ledger · Pay · Docs, each shown with the permission the website uses (yourself always).
  */
 export default function StaffDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -62,6 +63,7 @@ export default function StaffDetail() {
     'attendance',
     ...(canMoney ? (['ledger'] as const) : []),
     ...(canPay ? (['pay'] as const) : []),
+    'documents',
   ];
   const showToday =
     todayCell && todayCell.status !== 'future' && todayCell.status !== 'not_employed';
@@ -126,7 +128,11 @@ export default function StaffDetail() {
               label={t('staffDetail.tabs.label')}
               value={tab}
               onChange={setTab}
-              options={tabs.map((x) => ({ value: x, label: t(`staffDetail.tabs.${x}`) }))}
+              options={tabs.map((x) => ({
+                value: x,
+                // "Documents" doesn't fit five tabs on a phone.
+                label: x === 'documents' ? t('mobile.staff.docsTab') : t(`staffDetail.tabs.${x}`),
+              }))}
             />
 
             {tab === 'overview' && <OverviewSection info={info} onChanged={load} />}
@@ -134,6 +140,7 @@ export default function StaffDetail() {
               <AttendanceSection staffId={info.id} name={info.name} onChanged={load} />
             )}
             {tab === 'ledger' && <LedgerSection staffId={info.id} />}
+            {tab === 'documents' && <DocumentsSection staffId={info.id} name={info.name} />}
             {tab === 'pay' && (
               <PaySection
                 staffId={info.id}

@@ -23,3 +23,4 @@ export * from './self-service';
 export * from './payslip-text';
 export * from './pay-write';
 export * from './helper-login';
+export * from './staff-documents';

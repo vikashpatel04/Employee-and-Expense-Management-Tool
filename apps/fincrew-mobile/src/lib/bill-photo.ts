@@ -33,8 +33,8 @@ function decode(b64: string): Uint8Array {
   return out.subarray(0, o);
 }
 
-/** Shrink a picked photo to a JPEG of about 200 KB, smaller each try. */
-async function shrink(uri: string, width: number): Promise<BillPhoto> {
+/** Shrink a picked photo to a JPEG of about `target` bytes, smaller each try. */
+async function shrink(uri: string, width: number, target = TARGET_BYTES): Promise<BillPhoto> {
   let last: BillPhoto | null = null;
   for (const step of TRIES) {
     const r = await manipulateAsync(
@@ -53,7 +53,7 @@ async function shrink(uri: string, width: number): Promise<BillPhoto> {
       size: bytes.byteLength,
       type: 'image/jpeg',
     };
-    if (bytes.byteLength <= TARGET_BYTES) break;
+    if (bytes.byteLength <= target) break;
   }
   return last!;
 }
@@ -63,6 +63,17 @@ async function shrink(uri: string, width: number): Promise<BillPhoto> {
  * person cancels or refuses the permission.
  */
 export async function pickBillPhoto(source: 'camera' | 'library'): Promise<BillPhoto | null> {
+  return pickPhoto(source, TARGET_BYTES);
+}
+
+/**
+ * Take or pick a photo and shrink it to about `target` bytes (bills ~200 KB; staff documents
+ * ~600 KB so ID cards stay readable). Null when cancelled or the permission is refused.
+ */
+export async function pickPhoto(
+  source: 'camera' | 'library',
+  target: number,
+): Promise<BillPhoto | null> {
   if (source === 'camera') {
     const perm = await ImagePicker.requestCameraPermissionsAsync();
     if (!perm.granted) return null;
@@ -74,5 +85,5 @@ export async function pickBillPhoto(source: 'camera' | 'library'): Promise<BillP
       : await ImagePicker.launchImageLibraryAsync(options);
   const asset = r.canceled ? null : r.assets[0];
   if (!asset) return null;
-  return shrink(asset.uri, asset.width);
+  return shrink(asset.uri, asset.width, target);
 }

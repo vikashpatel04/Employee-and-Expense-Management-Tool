@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Added — 2026-10-26 (staff documents)
+
+- Staff page → **Documents** (website) / **Docs** (FinCrew app): keep ID proofs, bank details
+  and contracts as photos or PDFs, open them, delete them. Migration
+  `20261026000002_staff_documents.sql`.
+
 ### Added — 2026-10-26 (helper sign-ins)
 
 - Helpers (managers, accountants with a role) can sign in to FinCrew: Settings → Roles →

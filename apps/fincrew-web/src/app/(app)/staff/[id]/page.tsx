@@ -40,9 +40,10 @@ import { DetailsForm, ItemButtons, ItemForm, OpeningForm, TemplateForm } from '.
 import { OverridesForm } from './overrides-form';
 import { PayForm } from './pay-form';
 import { SignInSection } from './signin-section';
+import { DocumentsTab } from './documents-tab';
 import { UrlToast } from '@/components/app/url-toast';
 
-type Tab = 'overview' | 'attendance' | 'ledger' | 'pay';
+type Tab = 'overview' | 'attendance' | 'ledger' | 'pay' | 'documents';
 
 const card = 'rounded-lg border bg-card p-4 shadow-xs';
 
@@ -87,6 +88,8 @@ export default async function StaffDetailPage({
     'attendance',
     ...(canLedger ? (['ledger'] as const) : []),
     ...(canPay ? (['pay'] as const) : []),
+    // The person themself, or staff.view (page needs it anyway).
+    'documents',
   ];
   const tab: Tab = tabs.includes(sp.tab as Tab) ? (sp.tab as Tab) : 'overview';
 
@@ -231,6 +234,9 @@ export default async function StaffDetailPage({
           />
         )}
         {tab === 'ledger' && <Ledger staffId={id} canUndo={can('salary.undo_payment')} />}
+        {tab === 'documents' && (
+          <DocumentsTab staffId={id} name={name} canEdit={can('staff.edit')} />
+        )}
         {tab === 'pay' && (
           <Pay
             staffId={id}

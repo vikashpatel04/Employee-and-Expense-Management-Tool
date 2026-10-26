@@ -1444,6 +1444,42 @@ export type Database = {
           },
         ]
       }
+      staff_documents: {
+        Row: {
+          created_at: string
+          file_path: string
+          id: string
+          mime_type: string
+          name: string
+          shop_id: string
+          size_bytes: number
+          staff_id: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          file_path: string
+          id?: string
+          mime_type: string
+          name: string
+          shop_id: string
+          size_bytes: number
+          staff_id: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          file_path?: string
+          id?: string
+          mime_type?: string
+          name?: string
+          shop_id?: string
+          size_bytes?: number
+          staff_id?: string
+          uploaded_by?: string | null
+        }
+        Relationships: []
+      }
       staff_leave_templates: {
         Row: {
           created_at: string

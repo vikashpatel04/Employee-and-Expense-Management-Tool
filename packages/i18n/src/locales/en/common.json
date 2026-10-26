@@ -191,7 +191,8 @@
       "overview": "Overview",
       "attendance": "Attendance",
       "ledger": "Ledger",
-      "pay": "Pay"
+      "pay": "Pay",
+      "documents": "Documents"
     },
     "balance": {
       "due": "Due to {{name}}",
@@ -1371,7 +1372,8 @@
       "advanceLimit": "Advance limit",
       "advanceCut": "Cut from each salary",
       "noLimit": "No limit",
-      "cutAtRun": "Decided at each run"
+      "cutAtRun": "Decided at each run",
+      "docsTab": "Docs"
     },
     "money": {
       "none": "You don't have access to money in this shop.",
@@ -1853,5 +1855,43 @@
       "mismatch": "The two passwords are different.",
       "failed": "Couldn't save: {{reason}}"
     }
+  },
+  "staffDocs": {
+    "hint": "ID proofs, bank details, contracts. Photos or PDF, up to 4 MB each.",
+    "add": "Add document",
+    "addTitle": "Add a document",
+    "name": "Name",
+    "suggestionsLabel": "Common documents",
+    "suggestions": [
+      "Aadhaar card",
+      "PAN card",
+      "Bank passbook",
+      "Photo",
+      "Address proof",
+      "Joining letter"
+    ],
+    "choose": "Choose a photo or PDF",
+    "fileHint": "Photos are made smaller before upload; PDFs up to 4 MB.",
+    "upload": "Upload",
+    "uploading": "Uploading…",
+    "added": "Document added.",
+    "deleted": "Document deleted.",
+    "empty": "No documents yet.",
+    "photo": "Photo",
+    "pdf": "PDF",
+    "open": "Open",
+    "openLabel": "Open {{name}}",
+    "delete": "Delete",
+    "deleteConfirm": "Yes, delete",
+    "deleteLabel": "Delete {{name}}",
+    "errors": {
+      "name": "Give the document a name.",
+      "file": "Choose a photo, or a PDF up to 4 MB.",
+      "photo": "This photo couldn't be read. Try a JPEG or PNG.",
+      "failed": "Couldn't save: {{reason}}"
+    },
+    "takePhoto": "Camera",
+    "choosePhoto": "Photo",
+    "choosePdf": "PDF"
   }
 }

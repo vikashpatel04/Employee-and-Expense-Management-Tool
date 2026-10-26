@@ -58,7 +58,8 @@ first, then `CLAUDE.md`, then the feature doc for whatever you touch._
    cancelling is fine), bill photo upload on a real phone. Still website-only: allowances,
    deductions, leave template, own rules.
 3. **Plan pieces not built yet**: ~~sign-ins for helpers~~ built 2026-10-26 (email + first
-   password, `docs/features/helper-sign-in.md`; needs the push), staff documents (`staff_documents` + storage, PLAN §6.1 staff
+   password, `docs/features/helper-sign-in.md`; live), ~~staff documents~~ built 2026-10-26
+   (`docs/features/staff-documents.md`; needs the push) (`staff_documents` + storage, PLAN §6.1 staff
    detail "Documents"), add staff from the app (stepper: details → pay → template → shift →
    invite), website audit log viewer (PLAN §6.2), dashboard "recent activity". Also move the
    website's staff detail page and payslip page onto the shared loaders when next touched.
@@ -274,10 +275,15 @@ Open items (low priority, fold into the next migration that touches these tables
   `supabase/setup-cli@v1` run on deprecated Node 20; bump when newer majors are available.
 - Leaked-password protection in Supabase Auth: not needed (owner, 2026-10-24).
 
-Tables still to add (with the phase that uses them, each with RLS tests): `staff_documents`
-(storage), `push_tokens` (Phase 7/8).
+Tables still to add (with the phase that uses them, each with RLS tests): `push_tokens` (push
+notifications).
 
 ## Session log
+
+- **2026-10-26** — **Staff documents**: design "Web · staff documents" (canvas v33), migration
+  `20261026000002_staff_documents.sql` (table, RLS, audit, bucket `staff-docs` 4 MB; dry-run on
+  live OK), 10 tests, `packages/data/src/staff-documents.ts`, website Documents tab, app Docs tab
+  (`expo-document-picker` added). Typecheck 9/9, tests db 187, build OK. Not pushed.
 
 - **2026-10-26** — **Helper sign-ins** (owner: email + password). Migration
   `20261026000001_helper_logins.sql` (`login_email`, guard on sign-in links, `helper_login_target`,
