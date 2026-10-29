@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Fixed — 2026-10-29 (Staffora QR)
+
+- Staffora **Scan QR** on Android now opens Google's QR scanner, which reads the code and checks
+  in (the camera view saw the QR but never read it). The screen shows the code while checking.
+- The attendance QR (website and FinCrew app) has the standard white border, so it reads faster.
+
 ### Fixed — 2026-10-26
 
 - Salary run: "days not marked" no longer counts days that haven't happened yet.

@@ -1,9 +1,9 @@
-import { useRef, useState } from 'react';
-import { View } from 'react-native';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Platform, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { CameraView, useCameraPermissions } from 'expo-camera';
-import { ChevronLeft, KeyRound } from 'lucide-react-native';
+import { ChevronLeft, KeyRound, QrCode } from 'lucide-react-native';
 import { parseScannedCode } from '@fincrew/core';
 import { Button, IconButton, Text } from '@/components/ui';
 import { useAuth } from '@/lib/auth';
@@ -13,44 +13,77 @@ import { checkIn } from '@/lib/my-day';
 import { radius, space, useTheme } from '@/lib/theme';
 
 /**
- * Scan QR (design: "Scan QR"): the camera reads any QR whose content is the plain 6-digit code
- * (core `parseScannedCode`) and checks in straight away through `check_in`.
+ * Android reads the QR with Google's code scanner (Play services): it opens full screen, reads
+ * and closes, and needs no camera permission. expo-camera's in-view reader analyses full-size
+ * frames on the main thread and often never reports a code on Android phones (owner, 29/10/2026).
+ * Elsewhere (iOS) the in-view camera is used.
+ */
+const GOOGLE_SCANNER = Platform.OS === 'android' && CameraView.isModernBarcodeScannerAvailable;
+
+/**
+ * Scan QR (design: "Scan QR"): reads any QR whose content is the plain 6-digit code (core
+ * `parseScannedCode`) and checks in straight away through `check_in`.
  */
 export default function Scan() {
   const { profile } = useAuth();
   const { c } = useTheme();
   const [permission, requestPermission] = useCameraPermissions();
   const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [reading, setReading] = useState<string | null>(null);
   // The camera reports the same QR many times a second: handle one at a time.
   const handling = useRef(false);
   const s = 'staffora.scan';
 
-  const onScan = async (data: string) => {
-    if (handling.current || !profile) return;
-    const code = parseScannedCode(data);
-    if (!code) {
-      setError(t(`${s}.notCode`));
-      return;
-    }
-    handling.current = true;
-    setBusy(true);
+  const onScan = useCallback(
+    async (data: string) => {
+      if (handling.current || !profile) return;
+      const code = parseScannedCode(data);
+      if (!code) {
+        setError(t(`${s}.notCode`));
+        return;
+      }
+      handling.current = true;
+      setReading(code);
+      setError(null);
+      try {
+        const r = await checkIn(profile.shopId, code, 'scan');
+        if (r.ok) {
+          router.replace({
+            pathname: '/checked-in',
+            params: { kind: r.kind, at: r.at, method: 'scan' },
+          });
+          return;
+        }
+        setError(checkError(r));
+      } catch (e) {
+        setError(t(`${s}.failed`, { reason: e instanceof Error ? e.message : String(e) }));
+      }
+      setReading(null);
+      // Let the person move the phone away before trying again.
+      setTimeout(() => {
+        handling.current = false;
+      }, 2500);
+    },
+    [profile],
+  );
+
+  const openScanner = useCallback(() => {
     setError(null);
-    const r = await checkIn(profile.shopId, code, 'scan');
-    setBusy(false);
-    if (r.ok) {
-      router.replace({
-        pathname: '/checked-in',
-        params: { kind: r.kind, at: r.at, method: 'scan' },
-      });
-      return;
-    }
-    setError(checkError(r));
-    // Let the person move the phone away before trying again.
-    setTimeout(() => {
-      handling.current = false;
-    }, 2500);
-  };
+    void CameraView.launchScanner({ barcodeTypes: ['qr'] }).catch((e: unknown) =>
+      setError(t(`${s}.failed`, { reason: e instanceof Error ? e.message : String(e) })),
+    );
+  }, []);
+
+  useEffect(() => {
+    if (!GOOGLE_SCANNER) return;
+    const sub = CameraView.onModernBarcodeScanned((r) => void onScan(r.data));
+    return () => sub.remove();
+  }, [onScan]);
+
+  // Open the scanner straight away; "Scan again" reopens it.
+  useEffect(() => {
+    if (GOOGLE_SCANNER && profile) openScanner();
+  }, [openScanner, profile]);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: c.canvas }}>
@@ -92,12 +125,28 @@ export default function Scan() {
             justifyContent: 'center',
           }}
         >
-          {permission?.granted ? (
+          {reading ? (
+            <View style={{ alignItems: 'center', gap: space['space-3'] }}>
+              <ActivityIndicator color={c.accent} size="large" />
+              <Text variant="title-lg" style={{ letterSpacing: 4 }}>
+                {reading}
+              </Text>
+            </View>
+          ) : GOOGLE_SCANNER ? (
+            <View style={{ alignItems: 'center', gap: space['space-3'] }}>
+              <QrCode size={96} color={c['ink-muted']} />
+              <Button
+                label={t(error ? `${s}.again` : `${s}.open`)}
+                center
+                onPress={openScanner}
+              />
+            </View>
+          ) : permission?.granted ? (
             <CameraView
               style={{ width: 300, height: 300 }}
               facing="back"
               barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
-              onBarcodeScanned={busy ? undefined : (r) => void onScan(r.data)}
+              onBarcodeScanned={(r) => void onScan(r.data)}
             />
           ) : (
             <View
@@ -120,7 +169,7 @@ export default function Scan() {
           </View>
         ) : (
           <Text muted style={{ textAlign: 'center' }}>
-            {t(`${s}.any`)}
+            {reading ? t(`${s}.checking`, { code: reading }) : t(`${s}.any`)}
           </Text>
         )}
       </View>

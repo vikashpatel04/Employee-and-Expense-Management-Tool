@@ -61,9 +61,13 @@ Changed 2026-10-25 from invite links to **phone number + PIN** (owner's decision
   Check out when you leave / done for today, with **Scan QR** and **Enter code**; when the shop
   has self attendance off for this person, a note instead. Data: `src/lib/my-day.ts`
   (`loadAttendanceMonth`, `loadPay`, the person's `self_attendance`, the shop's code settings).
-- **Enter code** (`enter-code.tsx`), **Scan QR** (`scan.tsx`, `expo-camera` QR scanning, content
-  read with core `parseScannedCode`), both calling `check_in` with this phone's id; refusals
-  explained with the time to try again (`src/lib/check-text.ts`).
+- **Enter code** (`enter-code.tsx`), **Scan QR** (`scan.tsx`, content read with core
+  `parseScannedCode`), both calling `check_in` with this phone's id; refusals explained with the
+  time to try again (`src/lib/check-text.ts`). On Android the scan uses **Google's code scanner**
+  (`CameraView.launchScanner`, Play services; opens on entering the screen, "Scan again" after a
+  refusal, no camera permission needed): expo-camera 58's in-view reader analyses full-size frames
+  on the main thread and never reported the code on the owner's phone (29/10/2026). iOS keeps the
+  in-view camera. While checking, the screen shows the code it read.
 - **Checked in / out** (`checked-in.tsx`): the time large, present + minutes late, day, shop, how,
   and from when check-out works (the shop's minimum gap).
 - **Me**: name and shop, **Change PIN**, Lock Staffora, Remove from this phone; a "PIN

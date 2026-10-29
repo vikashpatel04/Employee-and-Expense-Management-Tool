@@ -1711,7 +1711,11 @@
       "permission": "Staffora needs the camera to read the QR code.",
       "allow": "Allow the camera",
       "notCode": "That QR isn't an attendance code.",
-      "noCamera": "No camera here. Enter the code instead."
+      "noCamera": "No camera here. Enter the code instead.",
+      "open": "Scan the QR",
+      "again": "Scan again",
+      "checking": "Read {{code}}. Checking you in…",
+      "failed": "Couldn't check in: {{reason}}"
     },
     "checked": {
       "in": "You checked in",
