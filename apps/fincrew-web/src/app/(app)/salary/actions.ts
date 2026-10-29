@@ -45,10 +45,17 @@ export async function runSalary(year: number, month: number): Promise<ActionResu
   );
 }
 
-/** Finalize one draft, or every draft of the run: posts each payslip to the ledger. */
-export async function finalizeSalary(runId: string, payslipId?: string): Promise<ActionResult> {
+/**
+ * Finalize one draft, some (`payslipIds`: the ready ones), or every draft of the run: posts each
+ * payslip to the ledger.
+ */
+export async function finalizeSalary(
+  runId: string,
+  payslipId?: string,
+  payslipIds?: string[],
+): Promise<ActionResult> {
   return withRunner(
-    (supabase, me) => finalizeShared(supabase, { ...me, runId, payslipId }),
+    (supabase, me) => finalizeShared(supabase, { ...me, runId, payslipId, payslipIds }),
     (r) => t('salary.done.finalized', { count: r.count }),
   );
 }

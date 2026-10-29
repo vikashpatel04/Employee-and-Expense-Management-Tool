@@ -217,11 +217,24 @@ Staffora sign-in card (phone number + PIN; the `/join` page was removed 2026-10-
 
 ## Salary run — `(app)/salary`
 
+**Redesign (owner, 29/10/2026; design "Web · salary in steps")**: the page opens on the month as
+steps — Attendance (days not marked) → Work out → Check & finalize (n of m ready) → Pay (still to
+pay) — with a **Next step** card and its one button (Work out / Finalize n ready or Finalize
+everyone / Pay everyone; Work out again beside it), the big amount (take-home, then still to pay,
+with a paid bar), **How it adds up** (earned + allowances and overtime + expenses paid back −
+advances cut − expenses charged − deductions = take-home), and people grouped **Needs a look**
+(draft with a warning; Mark days → attendance) / **Ready to finalize** / **Still to pay** (Pay or
+Pay rest) / **Paid**. A person opens their payslip on the side (`?person=<payslip id>`: days,
+lines, take-home, Finalize / Pay / Print). Grouping and totals: `salaryGroup` / `salaryOverview`
+in `packages/data/src/salary-run.ts` (shared with the app); `finalizeSalary` takes `payslipIds`
+(the ready ones). **Full table** (`?table=1`, `salary/salary-table.tsx`) keeps the old wide table
+described below.
+
 - `salary.view` sees it; `salary.run` works out, finalizes and pays. Month switcher (no future
   months); status chip Not worked out / Draft / Finalized / Paid; totals (net, gross, deductions,
   advance cuts); "Check before finalizing" lists payslip warnings (unmarked days, no pay set,
   missing check-out, negative net, paid leave over balance) with a link to attendance.
-- Table per person (design: "Web · salary run review"): days, earned, overtime, allowances
+- Full table per person (design: "Web · salary run review"): days, earned, overtime, allowances
   (incl. leave payout), gross, deductions, advance cut, net, payslip status. A row expands to the
   payslip lines, the month's days and Finalize / Pay for that person.
 - **Work out / Run again** (`runSalary`): `packages/data/src/salary-month.ts` `computeMonth` runs

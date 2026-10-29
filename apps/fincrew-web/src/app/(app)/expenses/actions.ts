@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import {
   deleteExpense as deleteShared,
+  payBackExpenses,
   saveExpense as saveShared,
   type ExpenseWriteResult,
 } from '@fincrew/data';
@@ -48,7 +49,10 @@ function message(r: Exclude<ExpenseWriteResult, { ok: true }>): string {
 
 /**
  * Add (`expenseId` null) or change an expense with the shared rules (`saveExpense` in
- * `@fincrew/data`). A bill photo arrives already shrunk by the browser.
+ * `@fincrew/data`). A bill photo arrives already shrunk by the browser. "Give it back"
+ * (`giveBack`): with the salary or now (both mean the shop owes them), or not needed. "Now" on a
+ * new expense also pays it back today (`payBackExpenses`, salary.run); if only that part fails the
+ * expense stays saved and the page says so (`pb=0`).
  */
 export async function saveExpense(
   expenseId: string | null,
@@ -72,7 +76,7 @@ export async function saveExpense(
       paidByStaffId: text('paidByStaff'),
       chargedTo: text('chargedTo'),
       chargedToStaffId: text('chargedToStaff'),
-      reimburse: form.get('reimburse') === 'on',
+      reimburse: text('giveBack') !== 'none',
       note: text('note'),
     },
     bill: bill instanceof File ? { body: bill, size: bill.size, type: bill.type } : null,
@@ -80,10 +84,22 @@ export async function saveExpense(
     newId: randomUUID,
   });
   if (!r.ok) return { error: message(r) };
+  let paidBack = '';
+  if (!expenseId && text('paidBy') === 'staff' && text('giveBack') === 'now') {
+    const p = await payBackExpenses(await createClient(), {
+      ...me,
+      staffId: text('paidByStaff'),
+      amount: text('amount'),
+      date: text('date'),
+      mode: text('mode'),
+      note: text('note'),
+    });
+    paidBack = p.ok ? '&pb=1' : '&pb=0';
+  }
   refresh();
   // Show the expense's day. A new value each save, so the dialog sees the address change and
   // closes.
-  redirect(`/expenses?view=day&date=${r.date}&saved=${Date.now().toString(36)}`);
+  redirect(`/expenses?view=day&date=${r.date}&saved=${Date.now().toString(36)}${paidBack}`);
 }
 
 /** Delete an expense; the database undoes any staff ledger lines it posted. */

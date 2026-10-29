@@ -632,6 +632,95 @@
       "payAllTitle": "Pay everyone still due for {{month}}",
       "payTitle": "Pay {{name}} for {{month}}",
       "payBody": "Adds a salary payment dated today for what is still due. If it was a mistake, undo it from the staff Ledger."
+    },
+    "steps": {
+      "label": "Salary steps",
+      "attendance": "Attendance",
+      "workOut": "Work out",
+      "finalize": "Check & finalize",
+      "pay": "Pay",
+      "sub": {
+        "unmarked_one": "{{count}} day not marked",
+        "unmarked_other": "{{count}} days not marked",
+        "marked": "Days marked",
+        "markFirst": "Mark the month first",
+        "workedOut": "Worked out",
+        "notYet": "Not yet",
+        "ready": "{{ready}} of {{count}} ready",
+        "finalized_one": "{{count}} finalized",
+        "finalized_other": "{{count}} finalized",
+        "due_one": "{{amount}} to {{count}} person",
+        "due_other": "{{amount}} to {{count}} people",
+        "allPaid": "All paid",
+        "later": "After finalizing"
+      },
+      "next": {
+        "kicker": "Next step",
+        "doneKicker": "Done",
+        "noneTitle": "Work out {{month}}",
+        "noneBody": "Salary is worked out from attendance, pay settings and leave rules. Staff see nothing until you finalize.",
+        "draftTitle": "Finalize {{month}}",
+        "lookBody_one": "{{count}} person needs a look first. Fix it (usually marking the days) and work out again, or finalize the {{ready}} who are ready now. Finalizing locks a payslip and adds it to the staff ledger.",
+        "lookBody_other": "{{count}} people need a look first. Fix it (usually marking the days) and work out again, or finalize the {{ready}} who are ready now. Finalizing locks a payslip and adds it to the staff ledger.",
+        "readyBody": "Everyone looks right. Finalizing locks each payslip and adds it to the staff ledger; staff see it in Staffora.",
+        "payTitle": "Pay {{month}} salaries",
+        "payBody_one": "{{amount}} still to pay to {{count}} person. Pay at once, or one by one; a part payment is fine.",
+        "payBody_other": "{{amount}} still to pay to {{count}} people. Pay everyone at once, or one by one; a part payment is fine.",
+        "paidTitle": "{{month}} is paid",
+        "paidBody": "Everyone has been paid. Their payslips are in Staffora."
+      },
+      "finalizeReady_one": "Finalize {{count}} ready",
+      "finalizeReady_other": "Finalize {{count}} ready",
+      "finalizeAll": "Finalize everyone",
+      "workOutAgain": "Work out again",
+      "confirmReadyTitle_one": "Finalize {{count}} payslip?",
+      "confirmReadyTitle_other": "Finalize {{count}} payslips?",
+      "confirmReadyBody": "The ones that need a look stay as drafts. Finalized payslips are posted to the staff ledger and staff can see them; running again later adds only the differences.",
+      "hero": {
+        "draft": "Take-home this month",
+        "due": "Still to pay",
+        "paid": "Paid for {{month}}",
+        "draftSub_one": "{{count}} person · nothing paid yet",
+        "draftSub_other": "{{count}} people · nothing paid yet",
+        "dueSub": "Paid {{paid}} of {{net}}",
+        "paidSub_one": "{{count}} person paid",
+        "paidSub_other": "All {{count}} paid"
+      },
+      "adds": {
+        "title": "How it adds up",
+        "earned": "Earned for days worked",
+        "extras": "Allowances and overtime",
+        "payback": "Expenses paid back",
+        "cut": "Advances cut",
+        "expenseCut": "Expenses charged to staff",
+        "deductions": "Deductions",
+        "net": "Take-home"
+      },
+      "groups": {
+        "look": "Needs a look",
+        "ready": "Ready to finalize",
+        "due": "Still to pay",
+        "paid": "Paid"
+      },
+      "why": {
+        "days": "{{payable}} of {{employed}} days",
+        "cut": "advance −{{amount}}",
+        "payback": "paid back +{{amount}}",
+        "expenseCut": "charged −{{amount}}",
+        "partly": "Paid {{paid}} · {{left}} left",
+        "paid": "Paid in full"
+      },
+      "markDays": "Mark days",
+      "payRest": "Pay rest",
+      "fullTable": "Full table",
+      "backToSteps": "Back to steps",
+      "panelLabel": "{{name}}'s payslip",
+      "open": "Open {{name}}'s payslip",
+      "close": "Close",
+      "takeHome": "Take-home",
+      "paidSoFar": "Paid so far: {{amount}}",
+      "draftNote": "Draft: finalize to pay it.",
+      "nothingPaid": "Nothing paid yet."
     }
   },
   "advances": {
@@ -1280,6 +1369,46 @@
         "staffPaid": "Choose who paid.",
         "staffCharged": "Choose who it is charged to.",
         "failed": "Couldn't save: {{reason}}"
+      },
+      "steps": {
+        "label": "Steps",
+        "one": "Amount & category",
+        "two": "Who paid",
+        "three": "Bill & note",
+        "stepOf": "Step {{n}} of 3",
+        "next": "Next",
+        "back": "Back",
+        "saveNow": "Save now",
+        "howMuch": "How much, for what?",
+        "whoPaidTitle": "Who paid?",
+        "billTitle": "Bill and note",
+        "defaults": "{{date}} · paid from shop cash. Change it in the next step, or save now.",
+        "summary": "You're saving"
+      },
+      "whose": "Whose expense is it?",
+      "giveBack": "Give it back",
+      "giveBackOptions": {
+        "salary": "With the salary",
+        "now": "Now",
+        "none": "Not needed"
+      },
+      "giveBackNowHint": "Saves the expense and records that you paid {{name}} back today.",
+      "paidBackDone": "Expense saved and paid back.",
+      "paidBackFailed": "Expense saved, but paying it back didn't work. Pay it back from Needs you.",
+      "summaryPaid": {
+        "shop_cash": "Paid from shop cash",
+        "owner": "Paid by the owner",
+        "staff": "Paid by {{name}}"
+      },
+      "summaryBack": {
+        "salary": "given back with the salary",
+        "now": "given back today",
+        "none": "not given back"
+      },
+      "summaryCharged": {
+        "shop": "the shop's expense",
+        "staff": "charged to {{name}}",
+        "not_tracked": "not counted"
       }
     },
     "csvColumns": {
@@ -1312,7 +1441,51 @@
       "show": "Show",
       "monthSoFar": "{{month}} so far: {{amount}} shop expenses"
     },
-    "byCategoryHint": "Shop expenses only; charged to staff and not tracked are left out."
+    "byCategoryHint": "Shop expenses only; charged to staff and not tracked are left out.",
+    "period": {
+      "label": "Period",
+      "day": "Day",
+      "month": "Month"
+    },
+    "show": {
+      "label": "Show",
+      "list": "List",
+      "categories": "By category"
+    },
+    "month": {
+      "spent": "Spent in {{month}}",
+      "perDay": "About {{amount}} a day",
+      "busiest": "Busiest: {{date}}, {{amount}}",
+      "bars": "Spending by day",
+      "empty": "No expenses in {{month}}."
+    },
+    "split": {
+      "shop": "shop",
+      "staff": "charged to staff",
+      "notTracked": "not counted"
+    },
+    "needs": {
+      "title": "Needs you",
+      "owed": "Shop owes staff",
+      "owedBody": "Paid back with the salary unless you pay now.",
+      "charged": "Charged to staff",
+      "chargedBody": "Cut from their salary when it is worked out.",
+      "noBill_one": "{{count}} expense has no bill photo",
+      "noBill_other": "{{count}} expenses have no bill photo",
+      "show": "Show",
+      "clear": "Nothing waiting."
+    },
+    "chips": {
+      "label": "Filter by category",
+      "all": "All categories",
+      "noBill": "No bill photo"
+    },
+    "catTitle": {
+      "day": "{{date}} by category · shop expenses",
+      "month": "{{month}} by category · shop expenses",
+      "hint": "Open a category to see its expenses."
+    },
+    "filtered": "Showing {{name}} only · {{amount}}"
   },
   "reports": {
     "title": "Reports",

@@ -9,7 +9,16 @@ import { toast } from 'sonner';
  * shows it as a toast once, then takes those parameters out of the address so a reload or the
  * back button doesn't show it again.
  */
-export function UrlToast({ message, params }: { message: string; params: string[] }) {
+export function UrlToast({
+  message,
+  params,
+  error = false,
+}: {
+  message: string;
+  params: string[];
+  /** Show it as an error (something after the save didn't work). */
+  error?: boolean;
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const search = useSearchParams();
@@ -17,11 +26,12 @@ export function UrlToast({ message, params }: { message: string; params: string[
   useEffect(() => {
     if (shown.current) return;
     shown.current = true;
-    toast.success(message);
+    if (error) toast.error(message);
+    else toast.success(message);
     const next = new URLSearchParams(search.toString());
     for (const p of params) next.delete(p);
     const q = next.toString();
     router.replace(q ? `${pathname}?${q}` : pathname, { scroll: false });
-  }, [message, params, pathname, router, search]);
+  }, [message, params, pathname, router, search, error]);
   return null;
 }

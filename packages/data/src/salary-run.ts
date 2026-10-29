@@ -114,6 +114,52 @@ export async function loadSalaryRun(
 }
 
 /**
+ * Where a person's payslip is in the month's steps (salary screens, website and app): a draft
+ * with a warning needs a look, a draft without one is ready to finalize, a finalized one is due
+ * until it is fully paid.
+ */
+export type SalaryGroup = 'look' | 'ready' | 'due' | 'paid';
+export const SALARY_GROUPS: readonly SalaryGroup[] = ['look', 'ready', 'due', 'paid'];
+
+export function salaryGroup(p: SalaryPerson): SalaryGroup {
+  if (p.state === 'draft') return p.warnings.length > 0 ? 'look' : 'ready';
+  return p.state === 'paid' ? 'paid' : 'due';
+}
+
+/**
+ * A month's salary for the step-by-step screens: people by group, how the take-home adds up
+ * (earned + allowances and overtime + expenses paid back − advance cut − expenses charged −
+ * deductions = take-home), what's paid and still to pay, and the working days not marked.
+ */
+export function salaryOverview(people: readonly SalaryPerson[]) {
+  const sum = (f: (p: SalaryPerson) => number) => people.reduce((a, p) => a + f(p), 0);
+  const groups = Object.fromEntries(SALARY_GROUPS.map((g) => [g, [] as SalaryPerson[]])) as Record<
+    SalaryGroup,
+    SalaryPerson[]
+  >;
+  for (const p of people) groups[salaryGroup(p)].push(p);
+  const due = (p: SalaryPerson) => (p.state === 'draft' ? 0 : Math.max(0, p.net - p.paidAmount));
+  return {
+    groups,
+    totals: {
+      earned: sum((p) => p.earned),
+      extras: sum((p) => p.gross - p.earned),
+      payback: sum((p) => p.payback),
+      cut: sum((p) => p.cut),
+      expenseCut: sum((p) => p.expenseCut),
+      deductions: sum((p) => p.deductions),
+      net: sum((p) => p.net),
+      paid: sum((p) => Math.min(p.paidAmount, p.net)),
+      due: sum(due),
+    },
+    dueCount: people.filter((p) => due(p) > 0).length,
+    unmarked: sum(
+      (p) => p.warnings.find((w) => w.code === 'unmarked_days' && p.state === 'draft')?.count ?? 0,
+    ),
+  };
+}
+
+/**
  * Work out (or work out again) every payslip of a month with packages/core (needs salary.run).
  * A draft is updated in place; a finalized payslip gets a new revision only when something
  * changed (finalizing that posts just the differences to the ledger).
@@ -193,10 +239,13 @@ export async function runSalary(
   return { ok: true, count: created + updated, created, updated };
 }
 
-/** Finalize one draft, or every draft of the run (needs salary.run): posts each to the ledger. */
+/**
+ * Finalize one draft, some (`payslipIds`: the ones ready, without warnings), or every draft of
+ * the run (needs salary.run): posts each to the ledger.
+ */
 export async function finalizeSalary(
   supabase: Supabase,
-  input: Ctx & { runId: string; payslipId?: string | null },
+  input: Ctx & { runId: string; payslipId?: string | null; payslipIds?: readonly string[] },
 ): Promise<SalaryWriteResult> {
   if (!input.permissions.includes('salary.run')) return noPermission;
   let query = supabase
@@ -205,6 +254,7 @@ export async function finalizeSalary(
     .eq('run_id', input.runId)
     .eq('status', 'draft');
   if (input.payslipId) query = query.eq('id', input.payslipId);
+  else if (input.payslipIds) query = query.in('id', [...input.payslipIds]);
   const { data: drafts } = await query;
   for (const d of drafts ?? []) {
     const { error } = await supabase.rpc('finalize_payslip', { p_payslip: d.id });

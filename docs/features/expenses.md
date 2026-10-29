@@ -28,19 +28,28 @@ Phase 6 (built before Android at the owner's request, 2026-10-24). Rules: docs/P
 
 ## Screens (website)
 
-- **Expenses** (`(app)/expenses`; sidebar with `expenses.add`, `view_all` or `edit`): views
-  **Day** (default, owner 29/10/2026: `?view=day&date=`; ‹ › days, Today, a DD/MM/YYYY date
-  filter `?day=`; the day's spending as a big figure with the shop / charged to staff / not
-  tracked split and the month's shop total so far, `packages/data` `expenseDay`; the day's
-  list), **Month** (`?view=month&month=`: month switcher; tiles Shop expenses / Charged to staff
-  / Paid back to staff / Not tracked (core `expenseTotals`); list by day) and **By category**.
-  Rows show payer, mode, charge, tags and a camera mark for bills. Saving or deleting goes to
-  the expense's day. Rows open the **edit panel** with `expenses.edit` (else a
-  bill link). **Add expense** (`?add=1`) opens the side panel (full screen on a phone): amount,
-  date, category grid, Paid by — **Shop cash or Staff** (+ who, "Shop owes them this", on by
-  default; "Owner" was removed 29/10/2026 and shows only on old expenses that used it), Charged to (+ who; starts as Not tracked
-  below the shop's small-expense limit until changed), Paid with, note, bill photo (shrunk in
-  the browser to about 200 KB, `src/lib/compress-image.ts`), delete (two clicks).
+- **Expenses** (`(app)/expenses`; sidebar with `expenses.add`, `view_all` or `edit`). Redesign
+  (owner, 29/10/2026; design "Web · expenses, today first + add in steps"): **Add expense** is the
+  big header button. **Day | Month** picks the period (`?view=day&date=` with ‹ ›, Today and a
+  DD/MM/YYYY filter `?day=`; `?view=month&month=`), **List | By category** how it shows
+  (`?show=categories`), so categories work for a day or a month. The big figure is all money spent
+  in the period with the shop / charged to staff / not counted split; the month adds bars per day
+  (click a bar for that day), about how much a day and the busiest day (`dailySpending`). **Needs
+  you**: what the shop owes each staff member for expenses with **Pay back now** (`salary.run`),
+  what is charged to staff and not cut yet (`loadExpenseDues`, view `expense_balances`), and how
+  many counted expenses have no bill photo (→ filter). The list has category chips plus "No bill
+  photo" (`?cat=<id>|nobill`); a category row in By category opens the list filtered to it.
+  Period sums: `expenseSummary` / `expenseDay` (`packages/data/src/expenses.ts`). Rows open the
+  **edit panel** with `expenses.edit` (else a bill link); saving or deleting goes to the
+  expense's day.
+  **Add expense** is a dialog in **three steps** (`expense-form.tsx`): 1 amount and category
+  (Save now: today, shop cash, cash); 2 Paid by **Shop cash or Staff** (+ who and **Give it
+  back**: with the salary / now / not needed — "now" needs `salary.run` and also records a
+  pay-back today with `payBackExpenses`; if only that part fails the page says so, `pb=0`), whose
+  expense (shop / staff member / not tracked; starts as Not tracked below the small-expense
+  limit), paid with, date; 3 note, bill photo (shrunk in the browser to about 200 KB,
+  `src/lib/compress-image.ts`) and a summary. Editing shows every field at once, plus delete (two
+  clicks). "Owner" as payer shows only on old expenses that used it.
   Actions: `expenses/actions.ts` (thin wrappers over `saveExpense` / `deleteExpense` in
   `packages/data/src/expense-write.ts`, shared with the Android app); bill link `expenses/bill/[id]` (one-minute signed URL);
   CSV `expenses/export?month=` (`reports.export`).

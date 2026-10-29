@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+### Changed — 2026-10-29 (salary and expenses redesign)
+
+- **Salary in steps** (website and app): Attendance → Work out → Check & finalize → Pay, with
+  the next step and its button first, the big amount to pay, how it adds up, and people grouped
+  Needs a look / Ready / Still to pay / Paid. Finalize just the ready ones while others need a
+  look. Website: click a person for their payslip on the side; the old table is under **Full
+  table**.
+- **Expenses**: Add expense and the period's spending first, then **Needs you** (shop owes staff
+  with Pay back now, charged to staff, no bill photo). **Day | Month** with **List | By
+  category** for either, category chips to filter, bars per day for the month.
+- **Add expense in three steps** (amount & category with Save now → who paid → bill & note).
+  When a staff member paid, **Give it back**: with the salary, now, or not needed.
+
 ### Added — 2026-10-29 (pay back now)
 
 - **Pay back now**: when a staff member paid for something for the shop, give it back before

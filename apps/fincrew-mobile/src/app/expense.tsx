@@ -7,6 +7,7 @@ import {
   Camera,
   Check,
   ChevronLeft,
+  ChevronRight,
   ImageIcon,
   LayoutGrid,
   Receipt,
@@ -26,19 +27,13 @@ import {
   deleteExpense,
   loadExpenseForm,
   loadExpenseOwed,
+  payBackExpenses,
   saveExpense,
   type ChargedToKind,
   type ExpenseWriteResult,
   type PaidByKind,
 } from '@fincrew/data';
-import {
-  AmountField,
-  BottomBar,
-  Checkbox,
-  DayStepper,
-  Field,
-  FormMessage,
-} from '@/components/form';
+import { AmountField, BottomBar, DayStepper, Field, FormMessage } from '@/components/form';
 import { PayBackSheet } from '@/components/payback-sheet';
 import { Sheet } from '@/components/sheet';
 import { Button, Card, IconButton, Segmented, Text } from '@/components/ui';
@@ -80,10 +75,15 @@ function expenseError(r: Exclude<ExpenseWriteResult, { ok: true }>): string {
   }
 }
 
+type GiveBack = 'salary' | 'now' | 'none';
+
 /**
- * Add or edit an expense (design: "Add expense"): amount first, day, category grid, who paid,
- * who it's charged to, bill photo, how it was paid, note. Saving goes through `saveExpense`
- * (`@fincrew/data`), the same rules as the website; without edit permission it is read-only.
+ * Add or edit an expense. Adding goes in three steps (owner, 29/10/2026; design "Add expense ·
+ * in steps"): 1 amount and category (Save now keeps today and shop cash), 2 who paid, give it
+ * back (with salary / now / not needed), whose expense, paid with, date, 3 bill photo and note
+ * with a summary. Editing shows every part at once. Saving goes through `saveExpense`
+ * (`@fincrew/data`), the same rules as the website; "now" also pays it back
+ * (`payBackExpenses`, salary.run). Without edit permission it is read-only.
  */
 export default function ExpenseScreen() {
   const params = useLocalSearchParams<{ id?: string; month?: string; date?: string }>();
@@ -106,7 +106,10 @@ export default function ExpenseScreen() {
   const [allCats, setAllCats] = useState(false);
   const [paidBy, setPaidBy] = useState<PaidByKind>('shop_cash');
   const [paidStaff, setPaidStaff] = useState('');
-  const [reimburse, setReimburse] = useState(true);
+  const [giveBack, setGiveBack] = useState<GiveBack>('salary');
+  const [step, setStep] = useState(1);
+  // Saved, but paying it back failed: the message, and the screen only offers Done.
+  const [savedNote, setSavedNote] = useState<string | null>(null);
   const [charged, setCharged] = useState<ChargedToKind>('shop');
   const [chargedTouched, setChargedTouched] = useState(false);
   const [chargedStaff, setChargedStaff] = useState('');
@@ -135,7 +138,7 @@ export default function ExpenseScreen() {
       setCategoryId(e.category_id);
       setPaidBy(e.paid_by_kind as PaidByKind);
       setPaidStaff(e.paid_by_staff_id ?? '');
-      setReimburse(e.reimburse);
+      setGiveBack(e.reimburse ? 'salary' : 'none');
       setCharged(e.charged_to_kind as ChargedToKind);
       setChargedTouched(true);
       setChargedStaff(e.charged_to_staff_id ?? '');
@@ -182,6 +185,31 @@ export default function ExpenseScreen() {
     }
   };
 
+  const adding = !id;
+  const shows = (n: number) => !adding || step === n;
+  const goNext = () => {
+    setError(null);
+    if (step === 1 && !parseRupees(amount)) return setError(t(`${f}.errors.amount`));
+    if (step === 1 && !categoryId) return setError(t(`${f}.errors.category`));
+    if (step === 2 && paidBy === 'staff' && !paidStaff) return setError(t(`${f}.errors.staffPaid`));
+    if (step === 2 && charged === 'staff' && !chargedStaff)
+      return setError(t(`${f}.errors.staffCharged`));
+    setStep(step + 1);
+  };
+  const giveBackOptions: GiveBack[] =
+    adding && can('salary.run') ? ['salary', 'now', 'none'] : ['salary', 'none'];
+  const summary = [
+    paidBy === 'staff'
+      ? t(`${f}.summaryPaid.staff`, { name: names.get(paidStaff) ?? '' })
+      : t(`${f}.summaryPaid.${paidBy}`),
+    modes[mode],
+    paidBy === 'staff' ? t(`${f}.summaryBack.${giveBack}`) : null,
+    t(`${f}.summaryCharged.${charged}`, { name: names.get(chargedStaff) ?? '' }),
+    formatDisplayDate(date),
+  ]
+    .filter(Boolean)
+    .join(' · ');
+
   const save = async () => {
     if (!me) return;
     setBusy(true);
@@ -199,16 +227,33 @@ export default function ExpenseScreen() {
         paidByStaffId: paidStaff,
         chargedTo: charged,
         chargedToStaffId: chargedStaff,
-        reimburse,
+        reimburse: giveBack !== 'none',
         note,
       },
       bill: photo,
       removeBill,
       newId: randomUUID,
     });
+    if (!r.ok) {
+      setBusy(false);
+      return setError(expenseError(r));
+    }
+    if (adding && paidBy === 'staff' && giveBack === 'now') {
+      const p = await payBackExpenses(supabase, {
+        ...me,
+        staffId: paidStaff,
+        amount,
+        date: formatDisplayDate(date),
+        mode,
+        note,
+      });
+      if (!p.ok) {
+        setBusy(false);
+        return setSavedNote(t(`${f}.paidBackFailed`));
+      }
+    }
     setBusy(false);
-    if (r.ok) back();
-    else setError(expenseError(r));
+    back();
   };
 
   const remove = async () => {
@@ -266,7 +311,31 @@ export default function ExpenseScreen() {
           gap: space['space-6'],
         }}
       >
-        <Text variant="title-xl">{title}</Text>
+        {adding && editable ? (
+          <View style={{ gap: space['space-2'] }}>
+            <Text variant="label-sm" muted>
+              {t(`${f}.steps.stepOf`, { n: step })}
+            </Text>
+            <Text variant="title-xl">
+              {t(`${f}.steps.${(['howMuch', 'whoPaidTitle', 'billTitle'] as const)[step - 1]}`)}
+            </Text>
+            <View accessibilityElementsHidden style={{ flexDirection: 'row', gap: 6 }}>
+              {[1, 2, 3].map((n) => (
+                <View
+                  key={n}
+                  style={{
+                    flex: 1,
+                    height: 4,
+                    borderRadius: radius['radius-pill'],
+                    backgroundColor: n <= step ? c.accent : c['line-strong'],
+                  }}
+                />
+              ))}
+            </View>
+          </View>
+        ) : (
+          <Text variant="title-xl">{title}</Text>
+        )}
         {paidBack && <FormMessage ok text={paidBack} />}
         {data?.expense && owed > 0 && (
           <Card style={{ padding: space['space-4'], gap: space['space-3'] }}>
@@ -303,211 +372,276 @@ export default function ExpenseScreen() {
 
         {data && editable && (!id || data.expense) && (
           <>
-            <Card style={{ padding: space['space-4'], gap: space['space-3'] }}>
-              <AmountField
-                label={t(`${f}.amount`)}
-                value={amount}
-                onChange={changeAmount}
-                quick={QUICK}
-              />
-              <Text variant="caption" muted>
-                {t(`${f}.date`)}
-              </Text>
-              <DayStepper value={date} onChange={setDate} max={today} />
-            </Card>
+            {shows(1) && (
+              <Card style={{ padding: space['space-4'], gap: space['space-3'] }}>
+                <AmountField
+                  label={t(`${f}.amount`)}
+                  value={amount}
+                  onChange={changeAmount}
+                  quick={QUICK}
+                />
+                {!adding && (
+                  <>
+                    <Text variant="caption" muted>
+                      {t(`${f}.date`)}
+                    </Text>
+                    <DayStepper value={date} onChange={setDate} max={today} />
+                  </>
+                )}
+              </Card>
+            )}
 
-            <View style={{ gap: space['space-2'] }}>
-              {sectionTitle(t(`${f}.category`))}
-              <View
-                accessibilityRole="radiogroup"
-                style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space['space-2'] }}
-              >
-                {shownCats.map((cat) => {
-                  const on = cat.id === categoryId;
-                  const Icon = categoryIcon(cat.icon);
-                  const col = categoryColour(cat.colour);
-                  return (
+            {shows(1) && (
+              <View style={{ gap: space['space-2'] }}>
+                {sectionTitle(t(`${f}.category`))}
+                <View
+                  accessibilityRole="radiogroup"
+                  style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space['space-2'] }}
+                >
+                  {shownCats.map((cat) => {
+                    const on = cat.id === categoryId;
+                    const Icon = categoryIcon(cat.icon);
+                    const col = categoryColour(cat.colour);
+                    return (
+                      <Pressable
+                        key={cat.id}
+                        accessibilityRole="radio"
+                        accessibilityState={{ checked: on }}
+                        accessibilityLabel={cat.name}
+                        onPress={() => setCategoryId(cat.id)}
+                        style={{
+                          width: '23%',
+                          flexGrow: 1,
+                          minHeight: 80,
+                          padding: space['space-2'],
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: 6,
+                          borderRadius: radius['radius-md'],
+                          backgroundColor: on ? c['accent-soft'] : c.surface,
+                          borderWidth: on ? 2 : 1,
+                          borderColor: on ? c.accent : c.line,
+                        }}
+                      >
+                        <Icon size={24} color={on ? c['accent-ink'] : c[col.fg]} />
+                        <Text
+                          variant="micro"
+                          color={on ? c['accent-ink'] : c.ink}
+                          numberOfLines={2}
+                          style={{ textAlign: 'center' }}
+                        >
+                          {cat.name}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                  {shownCats.length < cats.length && (
                     <Pressable
-                      key={cat.id}
-                      accessibilityRole="radio"
-                      accessibilityState={{ checked: on }}
-                      accessibilityLabel={cat.name}
-                      onPress={() => setCategoryId(cat.id)}
+                      accessibilityRole="button"
+                      onPress={() => setAllCats(true)}
                       style={{
                         width: '23%',
                         flexGrow: 1,
                         minHeight: 80,
-                        padding: space['space-2'],
                         alignItems: 'center',
                         justifyContent: 'center',
                         gap: 6,
                         borderRadius: radius['radius-md'],
-                        backgroundColor: on ? c['accent-soft'] : c.surface,
-                        borderWidth: on ? 2 : 1,
-                        borderColor: on ? c.accent : c.line,
+                        borderWidth: 1,
+                        borderColor: c.line,
+                        backgroundColor: c.surface,
                       }}
                     >
-                      <Icon size={24} color={on ? c['accent-ink'] : c[col.fg]} />
-                      <Text
-                        variant="micro"
-                        color={on ? c['accent-ink'] : c.ink}
-                        numberOfLines={2}
-                        style={{ textAlign: 'center' }}
-                      >
-                        {cat.name}
+                      <LayoutGrid size={24} color={c['accent-ink']} />
+                      <Text variant="micro" color={c['accent-ink']}>
+                        {t('mobile.money.expenses.allCategories', { count: cats.length })}
                       </Text>
                     </Pressable>
-                  );
-                })}
-                {shownCats.length < cats.length && (
-                  <Pressable
-                    accessibilityRole="button"
-                    onPress={() => setAllCats(true)}
-                    style={{
-                      width: '23%',
-                      flexGrow: 1,
-                      minHeight: 80,
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: 6,
-                      borderRadius: radius['radius-md'],
-                      borderWidth: 1,
-                      borderColor: c.line,
-                      backgroundColor: c.surface,
-                    }}
-                  >
-                    <LayoutGrid size={24} color={c['accent-ink']} />
-                    <Text variant="micro" color={c['accent-ink']}>
-                      {t('mobile.money.expenses.allCategories', { count: cats.length })}
+                  )}
+                </View>
+              </View>
+            )}
+            {adding && step === 1 && (
+              <Card style={{ padding: space['space-3'], backgroundColor: c['surface-muted'] }}>
+                <Text variant="caption">
+                  {t(`${f}.steps.defaults`, { date: formatDisplayDate(date) })}
+                </Text>
+              </Card>
+            )}
+
+            {shows(2) && (
+              <View style={{ gap: space['space-2'] }}>
+                {sectionTitle(t(`${f}.paidBy`))}
+                <Segmented
+                  label={t(`${f}.paidBy`)}
+                  value={paidBy}
+                  onChange={setPaidBy}
+                  // The shop pays or a staff member does (owner, 29/10/2026); "Owner" stays only on
+                  // old expenses that used it.
+                  options={(data.expense?.paid_by_kind === 'owner'
+                    ? (['owner', 'shop_cash', 'staff'] as const)
+                    : (['shop_cash', 'staff'] as const)
+                  ).map((v) => ({
+                    value: v,
+                    label: t(`${f}.paidByOptions.${v}`),
+                  }))}
+                />
+                {paidBy === 'staff' && (
+                  <>
+                    <PersonButton
+                      label={t(`${f}.whoPaid`)}
+                      name={names.get(paidStaff)}
+                      onPress={() => setPicking('paid')}
+                    />
+                    <Text variant="caption" muted>
+                      {t(`${f}.giveBack`)}
                     </Text>
-                  </Pressable>
+                    <Segmented<GiveBack>
+                      label={t(`${f}.giveBack`)}
+                      value={giveBack}
+                      onChange={setGiveBack}
+                      options={giveBackOptions.map((v) => ({
+                        value: v,
+                        label: t(`${f}.giveBackOptions.${v}`),
+                      }))}
+                    />
+                    {giveBack === 'now' && (
+                      <Text variant="caption" muted>
+                        {t(`${f}.giveBackNowHint`, { name: names.get(paidStaff) ?? '—' })}
+                      </Text>
+                    )}
+                  </>
                 )}
               </View>
-            </View>
+            )}
 
-            <View style={{ gap: space['space-2'] }}>
-              {sectionTitle(t(`${f}.paidBy`))}
-              <Segmented
-                label={t(`${f}.paidBy`)}
-                value={paidBy}
-                onChange={setPaidBy}
-                // The shop pays or a staff member does (owner, 29/10/2026); "Owner" stays only on
-                // old expenses that used it.
-                options={(data.expense?.paid_by_kind === 'owner'
-                  ? (['owner', 'shop_cash', 'staff'] as const)
-                  : (['shop_cash', 'staff'] as const)
-                ).map((v) => ({
-                  value: v,
-                  label: t(`${f}.paidByOptions.${v}`),
-                }))}
-              />
-              {paidBy === 'staff' && (
-                <>
-                  <PersonButton
-                    label={t(`${f}.whoPaid`)}
-                    name={names.get(paidStaff)}
-                    onPress={() => setPicking('paid')}
-                  />
-                  <Checkbox label={t(`${f}.reimburse`)} value={reimburse} onChange={setReimburse} />
-                </>
-              )}
-            </View>
-
-            <View style={{ gap: space['space-2'] }}>
-              {sectionTitle(t(`${f}.chargedTo`))}
-              <Segmented
-                label={t(`${f}.chargedTo`)}
-                value={charged}
-                onChange={(v) => {
-                  setCharged(v);
-                  setChargedTouched(true);
-                }}
-                options={(['shop', 'staff', 'not_tracked'] as const).map((v) => ({
-                  value: v,
-                  label: t(`${f}.chargedOptions.${v}`),
-                }))}
-              />
-              {charged === 'staff' && (
-                <PersonButton
-                  label={t(`${f}.staffMember`)}
-                  name={names.get(chargedStaff)}
-                  onPress={() => setPicking('charged')}
+            {shows(2) && (
+              <View style={{ gap: space['space-2'] }}>
+                {sectionTitle(adding ? t(`${f}.whose`) : t(`${f}.chargedTo`))}
+                <Segmented
+                  label={t(`${f}.chargedTo`)}
+                  value={charged}
+                  onChange={(v) => {
+                    setCharged(v);
+                    setChargedTouched(true);
+                  }}
+                  options={(['shop', 'staff', 'not_tracked'] as const).map((v) => ({
+                    value: v,
+                    label: t(`${f}.chargedOptions.${v}`),
+                  }))}
                 />
-              )}
-              <Text variant="caption" muted style={{ paddingHorizontal: space['space-1'] }}>
-                {!chargedTouched && !id && autoCharged === 'not_tracked' && data.smallLimit != null
-                  ? t(`${f}.smallHint`, { limit: formatINR(data.smallLimit) })
-                  : t(`${f}.chargedHint.${charged}`, {
-                      month: monthLabel(Number(date.slice(0, 4)), Number(date.slice(5, 7))),
-                    })}
-              </Text>
-            </View>
+                {charged === 'staff' && (
+                  <PersonButton
+                    label={t(`${f}.staffMember`)}
+                    name={names.get(chargedStaff)}
+                    onPress={() => setPicking('charged')}
+                  />
+                )}
+                <Text variant="caption" muted style={{ paddingHorizontal: space['space-1'] }}>
+                  {!chargedTouched &&
+                  !id &&
+                  autoCharged === 'not_tracked' &&
+                  data.smallLimit != null
+                    ? t(`${f}.smallHint`, { limit: formatINR(data.smallLimit) })
+                    : t(`${f}.chargedHint.${charged}`, {
+                        month: monthLabel(Number(date.slice(0, 4)), Number(date.slice(5, 7))),
+                      })}
+                </Text>
+              </View>
+            )}
 
-            <View style={{ gap: space['space-2'] }}>
-              {sectionTitle(t(`${f}.bill`))}
-              {billShown ? (
-                <Card style={{ padding: space['space-2'], gap: space['space-2'] }}>
-                  <Image
-                    source={{ uri: billShown }}
-                    accessibilityLabel={t('expenses.hasBill')}
-                    resizeMode="contain"
-                    style={{ width: '100%', height: 220, borderRadius: radius['radius-sm'] }}
-                  />
-                  <Button
-                    label={t(`${f}.billRemove`)}
-                    variant="quiet"
-                    icon={Trash2}
-                    onPress={() => {
-                      setPhoto(null);
-                      setRemoveBill(!!savedBill);
-                    }}
-                  />
-                </Card>
-              ) : (
-                <View style={{ flexDirection: 'row', gap: space['space-2'] }}>
-                  {Platform.OS !== 'web' && (
+            {shows(3) && (
+              <View style={{ gap: space['space-2'] }}>
+                {sectionTitle(t(`${f}.bill`))}
+                {billShown ? (
+                  <Card style={{ padding: space['space-2'], gap: space['space-2'] }}>
+                    <Image
+                      source={{ uri: billShown }}
+                      accessibilityLabel={t('expenses.hasBill')}
+                      resizeMode="contain"
+                      style={{ width: '100%', height: 220, borderRadius: radius['radius-sm'] }}
+                    />
+                    <Button
+                      label={t(`${f}.billRemove`)}
+                      variant="quiet"
+                      icon={Trash2}
+                      onPress={() => {
+                        setPhoto(null);
+                        setRemoveBill(!!savedBill);
+                      }}
+                    />
+                  </Card>
+                ) : (
+                  <View style={{ flexDirection: 'row', gap: space['space-2'] }}>
+                    {Platform.OS !== 'web' && (
+                      <View style={{ flex: 1 }}>
+                        <Button
+                          label={t('mobile.money.expenses.takePhoto')}
+                          variant="secondary"
+                          icon={Camera}
+                          block
+                          onPress={() => pick('camera')}
+                        />
+                      </View>
+                    )}
                     <View style={{ flex: 1 }}>
                       <Button
-                        label={t('mobile.money.expenses.takePhoto')}
+                        label={t('mobile.money.expenses.pickPhoto')}
                         variant="secondary"
-                        icon={Camera}
+                        icon={ImageIcon}
                         block
-                        onPress={() => pick('camera')}
+                        onPress={() => pick('library')}
                       />
                     </View>
-                  )}
-                  <View style={{ flex: 1 }}>
-                    <Button
-                      label={t('mobile.money.expenses.pickPhoto')}
-                      variant="secondary"
-                      icon={ImageIcon}
-                      block
-                      onPress={() => pick('library')}
-                    />
                   </View>
-                </View>
-              )}
-              <Text variant="caption" muted style={{ paddingHorizontal: space['space-1'] }}>
-                {t(`${f}.billHint`)}
-              </Text>
-            </View>
+                )}
+                <Text variant="caption" muted style={{ paddingHorizontal: space['space-1'] }}>
+                  {t(`${f}.billHint`)}
+                </Text>
+              </View>
+            )}
 
-            <View style={{ gap: space['space-2'] }}>
-              {sectionTitle(t(`${f}.paidWith`))}
-              <Segmented
-                label={t(`${f}.paidWith`)}
-                value={mode}
-                onChange={setMode}
-                options={MODES.map((m) => ({ value: m, label: modes[m] ?? m }))}
+            {shows(2) && (
+              <View style={{ gap: space['space-2'] }}>
+                {sectionTitle(t(`${f}.paidWith`))}
+                <Segmented
+                  label={t(`${f}.paidWith`)}
+                  value={mode}
+                  onChange={setMode}
+                  options={MODES.map((m) => ({ value: m, label: modes[m] ?? m }))}
+                />
+              </View>
+            )}
+            {adding && step === 2 && (
+              <View style={{ gap: space['space-2'] }}>
+                {sectionTitle(t(`${f}.date`))}
+                <DayStepper value={date} onChange={setDate} max={today} />
+              </View>
+            )}
+
+            {shows(3) && (
+              <Field
+                label={t(`${f}.note`)}
+                value={note}
+                onChange={setNote}
+                placeholder={t(`${f}.notePlaceholder`)}
               />
-            </View>
-
-            <Field
-              label={t(`${f}.note`)}
-              value={note}
-              onChange={setNote}
-              placeholder={t(`${f}.notePlaceholder`)}
-            />
+            )}
+            {adding && step === 3 && (
+              <Card style={{ padding: space['space-4'], gap: 2 }}>
+                <Text variant="caption" muted>
+                  {t(`${f}.steps.summary`)}
+                </Text>
+                <Text variant="title-md">
+                  {`${parseRupees(amount) ? formatINR(parseRupees(amount)!) : '—'} · ${
+                    cats.find((x) => x.id === categoryId)?.name ?? '—'
+                  }`}
+                </Text>
+                <Text variant="caption" muted>
+                  {summary}
+                </Text>
+              </Card>
+            )}
 
             {id && can('expenses.edit') && (
               <View style={{ gap: space['space-2'] }}>
@@ -541,13 +675,63 @@ export default function ExpenseScreen() {
       {data && editable && (!id || data.expense) && (
         <BottomBar>
           {error && <FormMessage ok={false} text={error} />}
-          <Button
-            label={busy ? t(`${f}.saving`) : t(`${f}.save`)}
-            icon={Check}
-            busy={busy && !confirmDelete}
-            block
-            onPress={save}
-          />
+          {savedNote ? (
+            <>
+              <FormMessage ok={false} text={savedNote} />
+              <Button label={t(`${f}.close`)} icon={Check} block onPress={back} />
+            </>
+          ) : adding ? (
+            <View style={{ flexDirection: 'row', gap: space['space-2'] }}>
+              {step > 1 && (
+                <Button
+                  label={t(`${f}.steps.back`)}
+                  variant="quiet"
+                  onPress={() => {
+                    setError(null);
+                    setStep(step - 1);
+                  }}
+                />
+              )}
+              {step < 3 && (
+                <View style={{ flex: 1 }}>
+                  <Button
+                    label={busy ? t(`${f}.saving`) : t(`${f}.steps.saveNow`)}
+                    variant="secondary"
+                    busy={busy}
+                    block
+                    onPress={save}
+                  />
+                </View>
+              )}
+              <View style={{ flex: 1.3 }}>
+                {step < 3 ? (
+                  <Button
+                    label={t(`${f}.steps.next`)}
+                    icon={ChevronRight}
+                    block
+                    disabled={busy}
+                    onPress={goNext}
+                  />
+                ) : (
+                  <Button
+                    label={busy ? t(`${f}.saving`) : t(`${f}.save`)}
+                    icon={Check}
+                    busy={busy}
+                    block
+                    onPress={save}
+                  />
+                )}
+              </View>
+            </View>
+          ) : (
+            <Button
+              label={busy ? t(`${f}.saving`) : t(`${f}.save`)}
+              icon={Check}
+              busy={busy && !confirmDelete}
+              block
+              onPress={save}
+            />
+          )}
         </BottomBar>
       )}
 

@@ -2,6 +2,24 @@
 
 Choices made during the build that PLAN.md doesn't spell out. Newest first.
 
+## 2026-10-29 — Salary and expenses redesign (owner)
+
+- **Most important first** (owner: "design in the thought of what is priority"): salary leads with
+  the next step and the amount to pay; expenses with Add expense and the period's total, then
+  what needs the owner (money owed to staff, missing bills). Detail (the full salary table, a
+  payslip, categories) is one click away.
+- **Finalize the ready ones**: while some payslips need a look (a warning), the main button
+  finalizes only the drafts without warnings; the rest stay drafts. With no warnings it
+  finalizes everyone.
+- **Categories are a way of showing a period**, not a third view (owner): Day | Month and List |
+  By category are separate switches.
+- **Give it back "now" when adding**: saves the expense, then records the pay-back the same way
+  as Pay back now (a separate `reimbursement_paid` line, not linked to the expense, see below).
+  Only for a new expense and with `salary.run`. If the pay-back fails the expense stays saved and
+  the screen says so (no second save that would duplicate it).
+- **Website still uses Intl for month names** on Salary and Expenses (as before); dates shown
+  are DD/MM/YYYY.
+
 ## 2026-10-29 — Pay back now (owner)
 
 - **A pay-back is a ledger line, not tied to one expense** (`reimbursement_paid`): the expenses

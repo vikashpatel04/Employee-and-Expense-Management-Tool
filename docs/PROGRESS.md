@@ -37,11 +37,10 @@ whatever you touch._
 - **Git:** everything up to the handover commit is on this PC; the owner pushes. CI (`check` +
   `migrate`) and Vercel deploy on push to `main`.
 
-**Redesign waiting for approval (2026-10-29)**: salary and expenses, website and app, are drawn on
-the FinCrew canvas (`docs/DESIGN.md` → "Salary and expenses redesign"). Build only after the owner
-approves. New behaviour the design needs: "Give it back: now" while adding a staff-paid expense
-(save + `payBackExpenses` together), a "no bill photo" filter, salary people grouped by state with
-a per-person panel, the month's daily bars on Expenses.
+**Salary and expenses redesign: built (2026-10-29)**, website and app, after the owner approved
+the designs (`docs/DESIGN.md` → "Salary and expenses redesign"; feature docs: fincrew-web.md
+"Salary run", expenses.md, fincrew-mobile.md "Money"). Not seen with data yet: every signed-in
+page needs the owner's sign-in.
 
 **Left, by flow (2026-10-29)** — W = website, A = FinCrew app, S = Staffora
 
@@ -51,8 +50,8 @@ a per-person panel, the month's daily bars on Expenses.
 | Attendance       | W, A, S (code / QR)                      | S: new APK for the QR fix; push reminders (all)                                      |
 | Requests         | W, A, S                                  | push notification when one comes in                                                  |
 | Advances         | W, A, S                                  | —                                                                                    |
-| Expenses         | W, A                                     | redesign (above); check Day view and Pay back now with data                          |
-| Salary           | W, A, S payslips                         | redesign (above); owner re-runs October                                              |
+| Expenses         | W, A (redesigned)                        | check the new pages and Pay back now with data                                       |
+| Salary           | W, A (redesigned), S payslips            | check with data; owner re-runs October                                               |
 | Reports          | W                                        | A: reports                                                                           |
 | Settings         | W                                        | A: opens the website instead; other W settings pages in the new rows style if wanted |
 | Audit / activity | —                                        | W audit log viewer, dashboard "recent activity"                                      |
@@ -271,6 +270,14 @@ Tables still to add (with the phase that uses them, each with RLS tests): `push_
 notifications).
 
 ## Session log
+
+- **2026-10-29** — **Salary and expenses redesign built** (owner: "Build it"). Data:
+  `salaryGroup` / `salaryOverview`, `finalizeSalary` `payslipIds`, `expenseSummary`,
+  `dailySpending`, `loadExpenseDues`. Website: salary in steps with person panel and Full table;
+  expenses with Day | Month × List | By category, Needs you, chips; add expense in three steps
+  with Give it back now. App: same for the salary run, Money · Expenses and Add expense. Typecheck
+  9/9, tests (core 242, ui 6, i18n 1, db 199), website build OK. Not seen in the browser: the preview
+  waits at the owner's sign-in.
 
 - **2026-10-29** — Owner: salary and expense pages have bad UX; redesign with steps, most
   important first, web + app. Five artboards added to the FinCrew canvas (v37), waiting for the

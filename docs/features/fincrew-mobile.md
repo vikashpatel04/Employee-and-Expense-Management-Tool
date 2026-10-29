@@ -68,15 +68,24 @@ is a placeholder until the first store build.
 - **Money** (`(tabs)/money.tsx`, design "Money · expenses / salary / advances"): segments by
   permission (Expenses: `expenses.add` / `view_all` / `edit`; Salary: `salary.view`; Advances:
   `salary.view` or `advances.give`), components in `src/components/money/`:
-  - **Expenses** (`expenses.tsx`): **Day | Month | By category** (opens on Day, owner
-    29/10/2026). Day: ‹ › through days, the day's spending as a big figure (`expenseDay`: all
+  - **Expenses** (`expenses.tsx`), redesign 29/10/2026 (design "Money · expenses, today
+    first"): **Day | Month** period, the period's spending as a big figure (month: bars per day,
+    about how much a day), **Shop owes staff** with **Pay back** per person (`salary.run`,
+    `PayBackSheet`) and **Charged to staff** (`loadExpenseDues`), then **List | By category**;
+    category chips and "No bill photo" filter the list, a category opens the list filtered to
+    it; **Add expense** at the bottom. (Before the redesign: **Day | Month | By category**,
+    opens on Day, owner 29/10/2026.) Day: ‹ › through days, the day's spending as a big figure (`expenseDay`: all
     spent, split shop / charged to staff / not tracked, plus the month's shop total so far) and
     its expenses. Month: month switcher, shop total with charged to staff / paid back / not
     tracked, expenses by day (category icon and colour, note or category, who paid, mode, staff /
     not-tracked tag, bill icon). By category: the month's bars. Tap → the expense; **Add expense**
     (needs an active category; starts on the day being viewed). Data: `loadExpenseMonth`;
     reloads when you come back.
-  - **Add / edit expense** (`src/app/expense.tsx`, design "Add expense"): amount with quick
+  - **Add / edit expense** (`src/app/expense.tsx`, design "Add expense"; adding is in **three
+    steps** since 29/10/2026, design "Add expense · in steps": 1 amount + category with Save now,
+    2 who paid + Give it back (with salary / now / not needed; "now" also calls
+    `payBackExpenses`), whose expense, paid with, date, 3 bill photo, note and a summary; editing
+    shows everything): amount with quick
     amounts, day stepper (no future days), category grid (7 + "All N"), Paid by (+ who from a
     sheet, Pay them back), Charged to (+ who; below the small-expense limit a new one starts as
     Not tracked), bill photo (camera or gallery with `expo-image-picker`, shrunk to ~200 KB
@@ -85,7 +94,11 @@ is a placeholder until the first store build.
     through `saveExpense` / `deleteExpense` (`@fincrew/data`), ids from `expo-crypto`.
   - **Salary** (`salary.tsx`): this month and the 3 before with state (Not worked out / Draft /
     Finalized / Paid), net and what's still to pay; tap → the run.
-  - **Salary run** (`src/app/salary/[month].tsx`, design "Salary run"): month switcher, state
+  - **Salary run** (`src/app/salary/[month].tsx`; redesign 29/10/2026, design "Salary · in
+    steps": step dots Attendance / Work out / Finalize / Pay, the big amount with a paid bar and
+    the next step in words, people grouped Needs a look / Ready to finalize / Still to pay / Paid
+    via `salaryOverview`; Finalize n ready (only the drafts without a warning) or Finalize
+    everyone; earlier design "Salary run"): month switcher, state
     pill, net (or still to pay), gross / deductions / advance cuts, "Check before finalizing"
     warnings, people (days, advance cut or first warning, net, Paid / Due); tap a person for the
     payslip lines, **Send payslip** and **Pay ₹…** for them. Bottom: Work out salary / Finalize
