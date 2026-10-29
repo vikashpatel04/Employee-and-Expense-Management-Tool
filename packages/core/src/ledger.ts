@@ -17,6 +17,7 @@ export const LEDGER_TYPES = [
   'late_deduction',
   'deduction',
   'reimbursement',
+  'reimbursement_paid',
   'staff_charge',
   'adjustment',
   'reversal',

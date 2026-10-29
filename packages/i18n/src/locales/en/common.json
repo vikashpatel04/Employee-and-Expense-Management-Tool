@@ -379,6 +379,26 @@
       "payable": "{{days}} payable days so far"
     }
   },
+  "payBack": {
+    "button": "Pay back now",
+    "title": "Pay back expenses",
+    "owed": "Expenses to pay back",
+    "hint": "The shop owes {{name}} {{amount}} for expenses they paid. Paying it now means the salary won't pay it again.",
+    "amount": "Amount (₹)",
+    "date": "Date",
+    "mode": "Paid with",
+    "note": "Note (optional)",
+    "save": "Pay back",
+    "saving": "Saving…",
+    "done": "Paid back.",
+    "errors": {
+      "amount": "Enter the amount in rupees.",
+      "date": "Enter the date as DD/MM/YYYY.",
+      "tooMuch": "That's more than the shop owes them for expenses.",
+      "noPermission": "Only someone who can run salaries can pay staff back.",
+      "failed": "Couldn't save: {{reason}}"
+    }
+  },
   "ledgerTypes": {
     "opening_balance": "Opening balance",
     "salary_earned": "Salary",
@@ -388,6 +408,7 @@
     "late_deduction": "Late deduction",
     "deduction": "Deduction",
     "reimbursement": "Reimbursement",
+    "reimbursement_paid": "Expenses paid back",
     "staff_charge": "Charged to staff",
     "adjustment": "Correction",
     "reversal": "Undone"

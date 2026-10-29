@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import {
+  payBackExpenses,
   recordAdvance as recordShared,
   saveAdvanceSettings as saveSettingsShared,
   undoLedgerLine,
@@ -83,6 +84,40 @@ export async function saveAdvanceSettings(
     };
   revalidatePath(`/staff/${staffId}`);
   return { done: t('advances.done.settings') };
+}
+
+/**
+ * Pay a staff member back now for expenses they paid (shared `payBackExpenses`, salary.run):
+ * the salary then no longer pays it.
+ */
+export async function payBack(
+  staffId: string,
+  _prev: AdvanceState,
+  form: FormData,
+): Promise<AdvanceState> {
+  const me = await requireMe();
+  if (!me) return { error: t('payBack.errors.noPermission') };
+  const text = (k: string) => String(form.get(k) ?? '').trim();
+  const r = await payBackExpenses(await createClient(), {
+    ...me,
+    staffId,
+    amount: text('amount'),
+    date: text('date'),
+    mode: text('mode'),
+    note: text('note'),
+  });
+  if (!r.ok)
+    return {
+      error:
+        r.reason === 'failed'
+          ? t('payBack.errors.failed', { reason: r.message })
+          : t(
+              `payBack.errors.${r.reason === 'no_permission' ? 'noPermission' : r.reason === 'too_much' ? 'tooMuch' : r.reason}`,
+            ),
+    };
+  revalidatePath(`/staff/${staffId}`);
+  revalidatePath('/expenses');
+  return { done: t('payBack.done') };
 }
 
 /** Undo a ledger line (payment or advance) with an exact reversal, once (PLAN §4.7). */

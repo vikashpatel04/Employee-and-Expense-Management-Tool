@@ -35,7 +35,17 @@ expenses they paid for the shop are paid back with the salary and expenses charg
 cut from it. Like the advance cut, the pay-back and the expense cut are payslip amounts, not
 ledger lines: the reimbursement / charge is already on the ledger and paying net pay settles
 it. A re-run of a finalized month adds back what that payslip had settled
-(`salary-month.ts` `settledThisMonth`). Tests: `supabase/tests/expense-dues.test.ts` (7).
+(`salary-month.ts` `settledThisMonth`). Tests: `supabase/tests/expense-dues.test.ts` (12).
+
+**Pay back now (2026-10-29, `20261029000002_reimbursement_paid.sql`)**: a `reimbursement_paid`
+ledger line (negative, with payment mode) pays a staff member back for expenses before the
+salary ("paid ₹30 for snacks, give it back tomorrow"). Needs `salary.run`; the trigger refuses
+more than `expense_dues` says the shop owes; undo is a reversal (`salary.undo_payment`), shown
+with Undo on the ledger. `expense_dues` subtracts these lines, so the salary won't pay it again.
+Data: `payBackExpenses`, `loadExpenseOwed` (`packages/data/src/advances.ts`). Screens: staff
+Overview "Expenses to pay back" + **Pay back now** (website dialog, app sheet
+`components/payback-sheet.tsx`) and on an expense paid by staff (website expense panel, app
+expense screen; amount starts at that expense, capped at what's owed).
 
 Example from the tests: advances −₹9,000 + ₹1,000 repaid = −₹8,000; October finalized
 (+₹30,000 − ₹1,800 PF − ₹44 late) → ₹20,156; paid ₹26,156 (₹2,000 cut) → **−₹6,000**, exactly
@@ -71,7 +81,8 @@ Views run with the caller's rights, so the same access rules apply.
 | Give / record repaid advances                                     | `advances.give`                          |
 | Opening balance (once per person)                                 | `staff.pay.edit`                         |
 | Write `salary_earned` / `deduction` / `late_deduction` lines      | nobody directly: only `finalize_payslip` |
-| `staff_charge` / `reimbursement` lines                            | reserved for expenses (Phase 6)          |
+| `staff_charge` / `reimbursement` lines                            | only the expenses trigger                |
+| `reimbursement_paid` (pay back now)                               | `salary.run`                             |
 
 The owner has all of these in their shop. Nothing crosses shops. Update and delete on ledger
 lines and advances are refused by a trigger, even for the database owner.

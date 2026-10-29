@@ -2,6 +2,15 @@
 
 Choices made during the build that PLAN.md doesn't spell out. Newest first.
 
+## 2026-10-29 — Pay back now (owner)
+
+- **A pay-back is a ledger line, not tied to one expense** (`reimbursement_paid`): the expenses
+  trigger reverses every line pointing at an expense when it is edited, so a pay-back linked to
+  the expense would silently vanish on an edit. Opening it from an expense only pre-fills the
+  amount. It needs `salary.run` (paying staff money, like a salary payment) and can't exceed
+  what the shop owes for expenses.
+- **Opening balance starts on "<name> owes the shop"**: old advances are the usual case.
+
 ## 2026-10-29 — Expenses page and Paid by (owner)
 
 - **Paid by is the shop or a staff member**: the owner's money is the shop's cash, so "Owner" is

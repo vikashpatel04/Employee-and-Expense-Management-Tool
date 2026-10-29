@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Added — 2026-10-29 (pay back now)
+
+- **Pay back now**: when a staff member paid for something for the shop, give it back before
+  the salary — from their staff page ("Expenses to pay back") or from the expense itself
+  (website and app). The salary then won't pay it again; Undo on their ledger. Migration
+  `20261029000002_reimbursement_paid.sql`.
+- Opening balance: "<name> owes the shop" is now first and already selected.
+
 ### Changed — 2026-10-29 (expenses)
 
 - **Expenses opens on today** (website and app): what was spent today in a big figure, then

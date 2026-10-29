@@ -12,6 +12,7 @@ import {
   Pencil,
   Phone,
   Plus,
+  Receipt,
   SlidersHorizontal,
 } from 'lucide-react';
 import {
@@ -24,7 +25,7 @@ import {
   type LedgerType,
   type PayRules,
 } from '@fincrew/core';
-import { toShopRules } from '@fincrew/data';
+import { loadExpenseOwed, toShopRules } from '@fincrew/data';
 import { formatDate, todayIST } from '@/lib/format';
 import { t } from '@/lib/i18n';
 import { requireMe } from '@/lib/session';
@@ -36,9 +37,11 @@ import { TabLinks } from '@/components/app/tab-links';
 import { Button } from '@/components/ui/button';
 import { Avatar } from '../../../components';
 import { AttendanceTab } from './attendance-tab';
+import { payBackLabels } from './payback-labels';
 import {
   AdvanceForm,
   AdvanceSettingsForm,
+  PayBackForm,
   UndoButton,
   type AdvanceSettingsLabels,
 } from './advance-forms';
@@ -301,7 +304,7 @@ async function Overview(props: {
   const openingNow = opening
     ? Number(opening.amount_paise) + (fixes ?? []).reduce((a, f) => a + Number(f.amount_paise), 0)
     : 0;
-  const [{ data: bal }, { data: adv }] = props.canMoney
+  const [{ data: bal }, { data: adv }, owed] = props.canMoney
     ? await Promise.all([
         supabase
           .from('ledger_balances')
@@ -313,8 +316,9 @@ async function Overview(props: {
           .select('outstanding_paise')
           .eq('staff_id', props.staffId)
           .maybeSingle(),
+        loadExpenseOwed(supabase, props.staffId),
       ])
-    : [{ data: null }, { data: null }];
+    : [{ data: null }, { data: null }, 0];
   const balance = Number(bal?.balance_paise ?? 0);
   const outstanding = Number(adv?.outstanding_paise ?? 0);
 
@@ -403,6 +407,36 @@ async function Overview(props: {
               </FormDialog>
             )}
           </div>
+          {owed > 0 && (
+            <>
+              <div className="my-2 h-px bg-[var(--line)]" />
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <span className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--money-owed)]">
+                  <Receipt className="size-4" aria-hidden="true" />
+                  {t('payBack.owed')}
+                </span>
+                <span className="flex items-center gap-2">
+                  <span className="text-money-md">{formatINR(owed)}</span>
+                  {props.canRun && (
+                    <FormDialog
+                      title={t('payBack.title')}
+                      description={props.name}
+                      variant="outline"
+                      size="sm"
+                      trigger={t('payBack.button')}
+                    >
+                      <PayBackForm
+                        staffId={props.staffId}
+                        today={todayIST()}
+                        amount={owed}
+                        labels={payBackLabels(props.name, owed)}
+                      />
+                    </FormDialog>
+                  )}
+                </span>
+              </div>
+            </>
+          )}
         </section>
       )}
       {props.canEditPay && (
@@ -551,7 +585,9 @@ async function Ledger({ staffId, canUndo }: { staffId: string; canUndo: boolean 
                       </span>
                     ) : (
                       canUndo &&
-                      (l.type === 'salary_payment' || l.type === 'advance') && (
+                      (l.type === 'salary_payment' ||
+                        l.type === 'advance' ||
+                        l.type === 'reimbursement_paid') && (
                         <UndoButton staffId={staffId} lineId={l.id} label={t('advances.undo')} />
                       )
                     )}

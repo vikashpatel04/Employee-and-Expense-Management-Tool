@@ -98,6 +98,65 @@ export async function recordAdvance(
   return { ok: true, kind, id: data.id };
 }
 
+/** What the shop still owes a person for expenses they paid (to pay back now or with salary). */
+export async function loadExpenseOwed(supabase: Supabase, staffId: string): Promise<number> {
+  const { data } = await supabase
+    .from('expense_balances')
+    .select('payback_paise')
+    .eq('staff_id', staffId)
+    .maybeSingle();
+  return Number(data?.payback_paise ?? 0);
+}
+
+export type PayBackResult =
+  | { ok: true; id: string }
+  | { ok: false; reason: 'no_permission' | 'amount' | 'date' | 'too_much' }
+  | { ok: false; reason: 'failed'; message: string };
+
+/**
+ * Pay a staff member back now for expenses they paid for the shop (needs salary.run; owner,
+ * 29/10/2026): a `reimbursement_paid` ledger line, so the salary no longer pays it. The database
+ * refuses more than the shop owes them for expenses; undo it like a payment.
+ */
+export async function payBackExpenses(
+  supabase: Supabase,
+  input: {
+    shopId: string;
+    permissions: readonly string[];
+    staffId: string;
+    /** As typed: rupees and DD/MM/YYYY. */
+    amount: string;
+    date: string;
+    mode: string;
+    note?: string | null;
+  },
+): Promise<PayBackResult> {
+  if (!input.permissions.includes('salary.run')) return { ok: false, reason: 'no_permission' };
+  const amount = parseRupees(input.amount.trim());
+  if (!amount) return { ok: false, reason: 'amount' };
+  const date = parseDisplayDate(input.date.trim());
+  if (!date) return { ok: false, reason: 'date' };
+  const mode = PAYMENT_MODES.find((m) => m === input.mode) ?? 'cash';
+  const { data, error } = await supabase
+    .from('ledger_entries')
+    .insert({
+      shop_id: input.shopId,
+      staff_id: input.staffId,
+      date,
+      type: 'reimbursement_paid',
+      amount_paise: -amount,
+      payment_mode: mode,
+      note: input.note?.trim() || null,
+    })
+    .select('id')
+    .single();
+  if (error) {
+    if (/more than the shop owes/.test(error.message)) return { ok: false, reason: 'too_much' };
+    return { ok: false, reason: 'failed', message: error.message };
+  }
+  return { ok: true, id: data.id };
+}
+
 /**
  * Undo a ledger line (payment or advance) with an exact reversal, once (needs
  * salary.undo_payment; PLAN §4.7). The database refuses a second reversal.

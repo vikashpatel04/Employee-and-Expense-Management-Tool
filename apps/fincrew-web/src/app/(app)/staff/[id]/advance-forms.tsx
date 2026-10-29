@@ -6,7 +6,13 @@ import { formatDisplayDate, paiseToInput, type AdvanceCutMode } from '@fincrew/c
 import { useDialogDone } from '@/components/app/form-dialog';
 import { useFormAction } from '@/lib/use-form-action';
 import { buttonClass, dateFieldProps, inputClass } from '../../../components';
-import { recordAdvance, saveAdvanceSettings, undoLine, type AdvanceState } from './advance-actions';
+import {
+  payBack,
+  recordAdvance,
+  saveAdvanceSettings,
+  undoLine,
+  type AdvanceState,
+} from './advance-actions';
 
 type AdvanceLabels = {
   kind: { label: string; given: string; repaid: string };
@@ -237,6 +243,81 @@ export function AdvanceSettingsForm({
         aria-busy={pending}
         className="text-label-sm min-h-12 rounded-[var(--radius-md)] border border-[var(--line-strong)] px-4 disabled:opacity-[var(--opacity-disabled)]"
       >
+        {pending ? labels.saving : labels.save}
+      </button>
+    </form>
+  );
+}
+
+export type PayBackLabels = {
+  hint: string;
+  amount: string;
+  date: string;
+  mode: string;
+  modes: Record<string, string>;
+  note: string;
+  save: string;
+  saving: string;
+};
+
+/**
+ * Pay back now what the shop owes for expenses this person paid (amount starts at what's owed,
+ * or at one expense's amount when opened from that expense).
+ */
+export function PayBackForm({
+  staffId,
+  today,
+  amount,
+  labels,
+}: {
+  staffId: string;
+  today: string;
+  amount: number;
+  labels: PayBackLabels;
+}) {
+  const [state, onSubmit, pending] = useFormAction<AdvanceState>(payBack.bind(null, staffId), {});
+  useDialogDone(state);
+  return (
+    <form onSubmit={onSubmit} className="flex flex-col gap-3">
+      <p className="text-body text-[var(--ink-muted)]">{labels.hint}</p>
+      <div className="grid grid-cols-2 gap-3">
+        <label className="text-label-sm block">
+          {labels.amount}
+          <input
+            name="amount"
+            required
+            inputMode="decimal"
+            defaultValue={paiseToInput(amount)}
+            className={`${inputClass} text-money-md`}
+          />
+        </label>
+        <label className="text-label-sm block">
+          {labels.date}
+          <input
+            name="date"
+            required
+            {...dateFieldProps}
+            defaultValue={formatDisplayDate(today)}
+            className={inputClass}
+          />
+        </label>
+      </div>
+      <label className="text-label-sm block">
+        {labels.mode}
+        <select name="mode" defaultValue="cash" className={inputClass}>
+          {Object.entries(labels.modes).map(([k, v]) => (
+            <option key={k} value={k}>
+              {v}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="text-label-sm block">
+        {labels.note}
+        <input name="note" maxLength={200} className={inputClass} />
+      </label>
+      <Message state={state} />
+      <button type="submit" disabled={pending} aria-busy={pending} className={buttonClass}>
         {pending ? labels.saving : labels.save}
       </button>
     </form>

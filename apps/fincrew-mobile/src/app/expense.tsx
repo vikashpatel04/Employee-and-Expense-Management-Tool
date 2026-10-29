@@ -3,7 +3,15 @@ import { Image, Platform, Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { randomUUID } from 'expo-crypto';
-import { Camera, Check, ChevronLeft, ImageIcon, LayoutGrid, Trash2 } from 'lucide-react-native';
+import {
+  Camera,
+  Check,
+  ChevronLeft,
+  ImageIcon,
+  LayoutGrid,
+  Receipt,
+  Trash2,
+} from 'lucide-react-native';
 import {
   businessDateOf,
   defaultChargedTo,
@@ -17,6 +25,7 @@ import {
   billUrl,
   deleteExpense,
   loadExpenseForm,
+  loadExpenseOwed,
   saveExpense,
   type ChargedToKind,
   type ExpenseWriteResult,
@@ -30,6 +39,7 @@ import {
   Field,
   FormMessage,
 } from '@/components/form';
+import { PayBackSheet } from '@/components/payback-sheet';
 import { Sheet } from '@/components/sheet';
 import { Button, Card, IconButton, Segmented, Text } from '@/components/ui';
 import { pickBillPhoto, type BillPhoto } from '@/lib/bill-photo';
@@ -109,6 +119,10 @@ export default function ExpenseScreen() {
   const [busy, setBusy] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Paid by staff and owed to them: what the shop still owes them, to pay back now (salary.run).
+  const [owed, setOwed] = useState(0);
+  const [payBackOpen, setPayBackOpen] = useState(false);
+  const [paidBack, setPaidBack] = useState<string | null>(null);
 
   useEffect(() => {
     if (!me) return;
@@ -127,6 +141,8 @@ export default function ExpenseScreen() {
       setChargedStaff(e.charged_to_staff_id ?? '');
       setMode(e.payment_mode);
       setNote(e.note ?? '');
+      if (e.paid_by_kind === 'staff' && e.reimburse && e.paid_by_staff_id && can('salary.run'))
+        setOwed(await loadExpenseOwed(supabase, e.paid_by_staff_id));
       if (e.bill_path) setSavedBill(await billUrl(supabase, e.bill_path));
     });
   }, [me, id]);
@@ -251,6 +267,22 @@ export default function ExpenseScreen() {
         }}
       >
         <Text variant="title-xl">{title}</Text>
+        {paidBack && <FormMessage ok text={paidBack} />}
+        {data?.expense && owed > 0 && (
+          <Card style={{ padding: space['space-4'], gap: space['space-3'] }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+              <Text variant="label-sm">{t('payBack.owed')}</Text>
+              <Text variant="money-md">{formatINR(owed)}</Text>
+            </View>
+            <Button
+              label={t('payBack.button')}
+              variant="secondary"
+              icon={Receipt}
+              block
+              onPress={() => setPayBackOpen(true)}
+            />
+          </Card>
+        )}
         {id && data && !data.expense && <Text muted>{t('mobile.money.expenses.notFound')}</Text>}
 
         {data && (!id || data.expense) && !editable && data.expense && (
@@ -552,6 +584,21 @@ export default function ExpenseScreen() {
           );
         })}
       </Sheet>
+
+      {data?.expense?.paid_by_staff_id && (
+        <PayBackSheet
+          open={payBackOpen}
+          onClose={() => setPayBackOpen(false)}
+          staffId={data.expense.paid_by_staff_id}
+          name={data.staff.find((p) => p.id === data.expense!.paid_by_staff_id)?.name ?? ''}
+          owed={owed}
+          amount={Math.min(owed, Number(data.expense.amount_paise))}
+          onSaved={(text) => {
+            setPaidBack(text);
+            void loadExpenseOwed(supabase, data.expense!.paid_by_staff_id!).then(setOwed);
+          }}
+        />
+      )}
     </SafeAreaView>
   );
 }

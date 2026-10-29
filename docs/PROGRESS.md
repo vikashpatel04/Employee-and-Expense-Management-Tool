@@ -257,6 +257,10 @@ notifications).
   category kept; Paid by drops "Owner". Website build passes; the signed-in pages were not
   checked in the preview (it waits at the owner's sign-in) and the Claude Design canvas has no
   artboard for the Day view or the new Advance rules dialog yet.
+  (4) **Pay back now** (`reimbursement_paid` ledger line, salary.run, capped at what's owed,
+  undoable): staff page and expense, website + app; migration
+  `20261029000002_reimbursement_paid.sql` (dry-run on live with 000001, rolled back). Opening
+  balance defaults to "owes the shop". db 199.
 
 - **2026-10-26** — Fix: the salary run said "5 working days not marked" for days that hadn't
   happened yet (27–31 Oct on the 26th). `calculateSalary` takes `asOf` (today); the warning counts

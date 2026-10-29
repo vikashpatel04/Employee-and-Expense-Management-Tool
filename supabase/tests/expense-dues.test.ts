@@ -182,3 +182,62 @@ describe('expenses to settle through salary', () => {
     ).toBe(0);
   });
 });
+
+describe('paying back now (20261029000002)', () => {
+  let payback: string;
+  const payBack = (user: string, amount: number) =>
+    q<{ id: string }>(
+      user,
+      `insert into ledger_entries (shop_id, staff_id, date, type, amount_paise, payment_mode)
+       values ($1, $2, '2026-11-02', 'reimbursement_paid', $3, 'cash') returning id`,
+      [shop1, meenaP, -amount],
+    );
+
+  it('Meena pays ₹30 for snacks; the shop owes her ₹30', async () => {
+    await q(
+      asha,
+      `insert into expenses (shop_id, date, amount_paise, category_id, paid_by_kind, paid_by_staff_id,
+         charged_to_kind, reimburse)
+       values ($1, '2026-11-01', 3000, $2, 'staff', $3, 'shop', true)`,
+      [shop1, cat, meenaP],
+    );
+    expect(await dues(asha, meenaP)).toEqual({ payback: 3_000, charges: 0 });
+  });
+
+  it('needs salary.run; staff and other shops can not record it', async () => {
+    await rejects(payBack(meena, 3_000), /row-level security/);
+    await rejects(payBack(kiran, 3_000), /row-level security/);
+  });
+
+  it("can't pay back more than is owed, and must be a payment out", async () => {
+    await rejects(payBack(asha, 3_100), /more than the shop owes/);
+    await rejects(payBack(asha, -3_000), /reimbursement_paid_sign/);
+  });
+
+  it('paying back settles it: nothing left for the salary, ledger at zero', async () => {
+    payback = (await payBack(asha, 3_000))[0]!.id;
+    expect(await dues(asha, meenaP)).toEqual({ payback: 0, charges: 0 });
+    expect(
+      n(
+        (
+          await q<{ b: unknown }>(
+            asha,
+            'select balance_paise as b from ledger_balances where staff_id = $1',
+            [meenaP],
+          )
+        )[0]!.b,
+      ),
+    ).toBe(0);
+    await rejects(payBack(asha, 100), /more than the shop owes/);
+  });
+
+  it('undoing the pay-back makes it owed again', async () => {
+    await q(
+      asha,
+      `insert into ledger_entries (shop_id, staff_id, date, type, amount_paise, reverses_id)
+       values ($1, $2, '2026-11-02', 'reversal', 3000, $3)`,
+      [shop1, meenaP, payback],
+    );
+    expect(await dues(asha, meenaP)).toEqual({ payback: 3_000, charges: 0 });
+  });
+});

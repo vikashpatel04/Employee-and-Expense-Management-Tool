@@ -276,13 +276,14 @@ export function OpeningForm({
       <fieldset>
         <legend className="text-label-sm">{t(`${o}.direction`)}</legend>
         <div className="mt-1 flex gap-1 rounded-[var(--radius-md)] bg-[var(--surface-muted)] p-1">
-          {(['dueTo', 'owes'] as const).map((k) => (
+          {/* Usually staff owe the shop (old advances), so that comes first (owner, 29/10/2026). */}
+          {(['owes', 'dueTo'] as const).map((k) => (
             <label key={k} className={segment}>
               <input
                 type="radio"
                 name="direction"
                 value={k}
-                defaultChecked={k === (correcting && current! < 0 ? 'owes' : 'dueTo')}
+                defaultChecked={k === (correcting && current! > 0 ? 'dueTo' : 'owes')}
                 className="sr-only"
               />
               {t(`${o}.${k}`, { name })}

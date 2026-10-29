@@ -12,7 +12,7 @@ import { supabase } from '@/lib/supabase';
 import { space, useTheme } from '@/lib/theme';
 
 /** Lines that can be undone (PLAN §4.7): a salary payment or an advance given. */
-const UNDOABLE = ['salary_payment', 'advance'];
+const UNDOABLE = ['salary_payment', 'advance', 'reimbursement_paid'];
 
 /**
  * Staff detail · Ledger (design: Staff detail · Ledger): balance, then every line by month,

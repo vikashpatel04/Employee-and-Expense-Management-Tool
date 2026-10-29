@@ -1,6 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Linking, View } from 'react-native';
-import { ArrowUpRight, Hourglass, IndianRupee, MessageCircle, Phone } from 'lucide-react-native';
+import {
+  ArrowUpRight,
+  Hourglass,
+  IndianRupee,
+  MessageCircle,
+  Phone,
+  Receipt,
+} from 'lucide-react-native';
 import { businessDateOf, formatINR, monthOf } from '@fincrew/core';
 import {
   loadAttendanceMonth,
@@ -10,6 +17,7 @@ import {
   type StaffOverview,
 } from '@fincrew/data';
 import { AdvanceSheet } from '@/components/advance-sheet';
+import { PayBackSheet } from '@/components/payback-sheet';
 import { FormMessage } from '@/components/form';
 import { Sheet } from '@/components/sheet';
 import { Button, Card, Segmented, SummaryChip, Text } from '@/components/ui';
@@ -40,6 +48,7 @@ export function OverviewSection({
   const [due, setDue] = useState<Due>([]);
   const [advanceOpen, setAdvanceOpen] = useState(false);
   const [payOpen, setPayOpen] = useState(false);
+  const [payBackOpen, setPayBackOpen] = useState(false);
   const [mode, setMode] = useState<string>('cash');
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
@@ -144,6 +153,24 @@ export function OverviewSection({
               ? t('staffDetail.advance.limit', { amount: formatINR(info.advanceLimit) })
               : t('staffDetail.advance.noLimit')}
           </Text>
+          {(info.expenseOwed ?? 0) > 0 && (
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginTop: space['space-2'],
+              }}
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Receipt size={20} color={c['money-owed']} />
+                <Text variant="label-sm" color={c['money-owed']}>
+                  {t('payBack.owed')}
+                </Text>
+              </View>
+              <Text variant="money-md">{formatINR(info.expenseOwed ?? 0)}</Text>
+            </View>
+          )}
         </Card>
       )}
       {balance == null && <Text muted>{t('mobile.staff.noMoney')}</Text>}
@@ -156,6 +183,16 @@ export function OverviewSection({
           icon={IndianRupee}
           block
           onPress={() => setPayOpen(true)}
+        />
+      )}
+
+      {canPay && (info.expenseOwed ?? 0) > 0 && (
+        <Button
+          label={t('payBack.button')}
+          variant="secondary"
+          icon={Receipt}
+          block
+          onPress={() => setPayBackOpen(true)}
         />
       )}
 
@@ -217,6 +254,19 @@ export function OverviewSection({
           outstanding: info.advance ?? undefined,
           limit: info.advanceLimit,
         }}
+        onSaved={(text) => {
+          setMessage({ ok: true, text });
+          onChanged();
+        }}
+      />
+
+      <PayBackSheet
+        open={payBackOpen}
+        onClose={() => setPayBackOpen(false)}
+        staffId={info.id}
+        name={info.name}
+        owed={info.expenseOwed ?? 0}
+        amount={info.expenseOwed ?? 0}
         onSaved={(text) => {
           setMessage({ ok: true, text });
           onChanged();

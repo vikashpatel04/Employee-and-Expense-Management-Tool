@@ -2,7 +2,9 @@ import { PendingLink as Link } from '@/components/app/pending-link';
 import { redirect } from 'next/navigation';
 import { Camera, ChevronLeft, ChevronRight, Download, Plus } from 'lucide-react';
 import { addDays, formatINR, monthOf, parseDisplayDate, weekday } from '@fincrew/core';
-import { expenseDay, loadExpenseMonth, toShopRules } from '@fincrew/data';
+import { expenseDay, loadExpenseMonth, loadExpenseOwed, toShopRules } from '@fincrew/data';
+import { PayBackForm } from '../staff/[id]/advance-forms';
+import { payBackLabels } from '../staff/[id]/payback-labels';
 import { categoryColour, categoryIcon } from '@/lib/expense-style';
 import { formatDate, todayIST } from '@/lib/format';
 import { t } from '@/lib/i18n';
@@ -102,6 +104,12 @@ export default async function ExpensesPage({
 
   const editing = sp.edit && can('expenses.edit') ? expenses.find((e) => e.id === sp.edit) : null;
   const adding = sp.add === '1' && can('expenses.add') && !editing;
+  // Paid by staff and owed to them: offer to pay it back now (salary.run).
+  const owedFor =
+    editing?.paid_by_kind === 'staff' && editing.reimburse && can('salary.run')
+      ? editing.paid_by_staff_id
+      : null;
+  const owed = owedFor ? await loadExpenseOwed(supabase, owedFor) : 0;
   const formExpense: FormExpense | null = editing
     ? {
         id: editing.id,
@@ -543,6 +551,25 @@ export default async function ExpensesPage({
             closeHref={here}
             canDelete={can('expenses.edit')}
           />
+          {owedFor && owed > 0 && (
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--line)] pt-4">
+              <span className="text-body text-[var(--ink-muted)]">
+                {t('payBack.owed')}: {formatINR(owed)}
+              </span>
+              <FormDialog
+                title={t('payBack.title')}
+                description={names.get(owedFor) ?? ''}
+                trigger={t('payBack.button')}
+              >
+                <PayBackForm
+                  staffId={owedFor}
+                  today={today}
+                  amount={Math.min(owed, Number(editing!.amount_paise))}
+                  labels={payBackLabels(names.get(owedFor) ?? '', owed)}
+                />
+              </FormDialog>
+            </div>
+          )}
         </ExpensePanel>
       )}
     </>
