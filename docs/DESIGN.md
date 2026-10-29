@@ -58,6 +58,15 @@ Use the Artifact tool, not a web fetch:
   check-in, Scan QR, Enter code incl. wrong code, Checked in, Money ledger/payslips; light + dark;
   "Join · first run", "PIN to open", "Attendance" and "Ask for leave / advance, my requests"
   added 2026-10-24)
+- **Salary and expenses redesign (2026-10-29, waiting for the owner's OK before building)** on
+  the FinCrew canvas: phone "Salary · in steps", "Money · expenses, today first", "Add expense ·
+  in steps" (light row, x 7520–8850); web "Web · salary in steps" (tweak `stage`: finalize / pay /
+  done, person panel) and "Web · expenses, today first + add in steps" (tweaks `view`, `addStep`),
+  web row x 16470–19430. Idea: each screen leads with the next thing to do and the one big number;
+  detail is one tap away (salary: steps Attendance → Work out → Finalize → Pay, people grouped
+  Needs a look / Ready / Still to pay / Paid, "How it adds up"; expenses: Add expense and today's
+  total first, "Needs you" (shop owes staff, charged to staff, missing bills), then the list; add
+  expense in three steps with Save now after step 1).
 - Reviewed by the owner (2026-10-23). Change made from their comment: Attendance code now has
   **Show QR** instead of Copy code, plus a new artboard "Attendance code · QR" (full-screen QR
   view).

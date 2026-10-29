@@ -37,6 +37,31 @@ whatever you touch._
 - **Git:** everything up to the handover commit is on this PC; the owner pushes. CI (`check` +
   `migrate`) and Vercel deploy on push to `main`.
 
+**Redesign waiting for approval (2026-10-29)**: salary and expenses, website and app, are drawn on
+the FinCrew canvas (`docs/DESIGN.md` → "Salary and expenses redesign"). Build only after the owner
+approves. New behaviour the design needs: "Give it back: now" while adding a staff-paid expense
+(save + `payBackExpenses` together), a "no bill photo" filter, salary people grouped by state with
+a per-person panel, the month's daily bars on Expenses.
+
+**Left, by flow (2026-10-29)** — W = website, A = FinCrew app, S = Staffora
+
+| Flow             | Done                                     | Left                                                                                 |
+| ---------------- | ---------------------------------------- | ------------------------------------------------------------------------------------ |
+| Staff setup      | W all; A change pay, advance rules, docs | A: add staff, allowances / deductions, leave template, own rules                     |
+| Attendance       | W, A, S (code / QR)                      | S: new APK for the QR fix; push reminders (all)                                      |
+| Requests         | W, A, S                                  | push notification when one comes in                                                  |
+| Advances         | W, A, S                                  | —                                                                                    |
+| Expenses         | W, A                                     | redesign (above); check Day view and Pay back now with data                          |
+| Salary           | W, A, S payslips                         | redesign (above); owner re-runs October                                              |
+| Reports          | W                                        | A: reports                                                                           |
+| Settings         | W                                        | A: opens the website instead; other W settings pages in the new rows style if wanted |
+| Audit / activity | —                                        | W audit log viewer, dashboard "recent activity"                                      |
+| Backup           | —                                        | import / export (Phase 8)                                                            |
+| Install          | —                                        | build FinCrew APK; rebuild Staffora APK                                              |
+
+Designs still missing: Advance rules dialog, Pay back now, settings pages (leave templates,
+holidays, rules, roles).
+
 **Next work, in order** (owner, 2026-10-26; they usually say "continue")
 
 1. **Settings rework**: done for the layout and the rules page (design "Web · settings", canvas
@@ -246,6 +271,10 @@ Tables still to add (with the phase that uses them, each with RLS tests): `push_
 notifications).
 
 ## Session log
+
+- **2026-10-29** — Owner: salary and expense pages have bad UX; redesign with steps, most
+  important first, web + app. Five artboards added to the FinCrew canvas (v37), waiting for the
+  owner's OK; "Left, by flow" table added to Start here. No code changed.
 
 - **2026-10-29** — Owner feedback round. (1) Staffora QR scan on Android uses Google's code scanner
   (the in-view reader never fired); QR border widened. (2) Advances and expenses settle in the
