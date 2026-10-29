@@ -81,12 +81,13 @@ export async function saveExpense(
   });
   if (!r.ok) return { error: message(r) };
   refresh();
-  // A new value each save, so the dialog sees the address change and closes.
-  redirect(`/expenses?month=${r.date.slice(0, 7)}&saved=${Date.now().toString(36)}`);
+  // Show the expense's day. A new value each save, so the dialog sees the address change and
+  // closes.
+  redirect(`/expenses?view=day&date=${r.date}&saved=${Date.now().toString(36)}`);
 }
 
 /** Delete an expense; the database undoes any staff ledger lines it posted. */
-export async function deleteExpense(expenseId: string, month: string): Promise<ExpenseState> {
+export async function deleteExpense(expenseId: string, date: string): Promise<ExpenseState> {
   const me = await requireMe();
   if (!me) return { error: t('settings.errors.noPermission') };
   const r = await deleteShared(await createClient(), { ...me, expenseId });
@@ -98,5 +99,5 @@ export async function deleteExpense(expenseId: string, month: string): Promise<E
           : t(`${f}.failed`, { reason: r.message }),
     };
   refresh();
-  redirect(`/expenses?month=${month}`);
+  redirect(`/expenses?view=day&date=${date}`);
 }

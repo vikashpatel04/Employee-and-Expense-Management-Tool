@@ -76,20 +76,25 @@ function expenseError(r: Exclude<ExpenseWriteResult, { ok: true }>): string {
  * (`@fincrew/data`), the same rules as the website; without edit permission it is read-only.
  */
 export default function ExpenseScreen() {
-  const params = useLocalSearchParams<{ id?: string; month?: string }>();
+  const params = useLocalSearchParams<{ id?: string; month?: string; date?: string }>();
   const id = params.id || null;
   const { me, can } = useSession();
   const { c } = useTheme();
   const today = businessDateOf(new Date());
   const asked = parseYm(params.month);
-  const startDate = asked ? monthEnd(asked.year, asked.month) : today;
+  // Starts on the day being viewed (Day view), else the month's last day, else today.
+  const startDate = /^\d{4}-\d{2}-\d{2}$/.test(params.date ?? '')
+    ? params.date!
+    : asked
+      ? monthEnd(asked.year, asked.month)
+      : today;
 
   const [data, setData] = useState<FormData | null>(null);
   const [amount, setAmount] = useState('');
   const [date, setDate] = useState(startDate < today ? startDate : today);
   const [categoryId, setCategoryId] = useState('');
   const [allCats, setAllCats] = useState(false);
-  const [paidBy, setPaidBy] = useState<PaidByKind>('owner');
+  const [paidBy, setPaidBy] = useState<PaidByKind>('shop_cash');
   const [paidStaff, setPaidStaff] = useState('');
   const [reimburse, setReimburse] = useState(true);
   const [charged, setCharged] = useState<ChargedToKind>('shop');
@@ -354,7 +359,12 @@ export default function ExpenseScreen() {
                 label={t(`${f}.paidBy`)}
                 value={paidBy}
                 onChange={setPaidBy}
-                options={(['owner', 'shop_cash', 'staff'] as const).map((v) => ({
+                // The shop pays or a staff member does (owner, 29/10/2026); "Owner" stays only on
+                // old expenses that used it.
+                options={(data.expense?.paid_by_kind === 'owner'
+                  ? (['owner', 'shop_cash', 'staff'] as const)
+                  : (['shop_cash', 'staff'] as const)
+                ).map((v) => ({
                   value: v,
                   label: t(`${f}.paidByOptions.${v}`),
                 }))}

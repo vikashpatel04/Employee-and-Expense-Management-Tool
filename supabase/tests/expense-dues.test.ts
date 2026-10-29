@@ -27,7 +27,13 @@ const dues = async (user: string, staff: string) => {
   return r ? { payback: n(r.payback_paise), charges: n(r.charge_paise) } : null;
 };
 
-const draft = (t: { gross: number; payback: number; cut: number; expenseCut: number; net?: number }) =>
+const draft = (t: {
+  gross: number;
+  payback: number;
+  cut: number;
+  expenseCut: number;
+  net?: number;
+}) =>
   q<{ id: string }>(
     asha,
     `insert into payslips (shop_id, run_id, staff_id, lines, gross_paise, deductions_paise,
@@ -147,8 +153,7 @@ describe('expenses to settle through salary', () => {
       draft({ gross: 3_000_000, payback: 120_000, cut: 0, expenseCut: 30_000, net: 3_000_000 }),
       /payslips_net_pay_check/,
     );
-    slip = (await draft({ gross: 3_000_000, payback: 120_000, cut: 0, expenseCut: 30_000 }))[0]!
-      .id;
+    slip = (await draft({ gross: 3_000_000, payback: 120_000, cut: 0, expenseCut: 30_000 }))[0]!.id;
   });
 
   it('a draft settles nothing; finalizing settles the dues', async () => {

@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Changed — 2026-10-29 (expenses)
+
+- **Expenses opens on today** (website and app): what was spent today in a big figure, then
+  today's expenses. Go back day by day, type a date (DD/MM/YYYY) on the website, or switch to
+  **Month** and **By category**.
+- **Paid by** is now **Shop cash** or **Staff**; "Owner" is gone (old expenses keep it).
+
 ### Changed — 2026-10-29 (advances and expenses in the salary)
 
 - Each staff member's **Advance rules** now choose how the salary run recovers their advance:

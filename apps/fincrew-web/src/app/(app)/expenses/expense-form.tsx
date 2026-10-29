@@ -106,7 +106,7 @@ export function ExpenseForm({
   const [prepError, setPrepError] = useState<string | null>(null);
   const [amount, setAmount] = useState(expense ? paiseToInput(expense.amount) : '');
   const [paidBy, setPaidBy] = useState(
-    (expense?.paidBy ?? 'owner') as 'owner' | 'shop_cash' | 'staff',
+    (expense?.paidBy ?? 'shop_cash') as 'owner' | 'shop_cash' | 'staff',
   );
   const [charged, setCharged] = useState(
     (expense?.chargedTo ?? 'shop') as 'shop' | 'staff' | 'not_tracked',
@@ -199,7 +199,13 @@ export function ExpenseForm({
         <Segmented
           name="paidBy"
           legend={t(`${f}.paidBy`)}
-          options={['owner', 'shop_cash', 'staff'] as const}
+          // The shop pays or a staff member does (owner, 29/10/2026); "Owner" stays only on old
+          // expenses that used it.
+          options={
+            expense?.paidBy === 'owner'
+              ? (['owner', 'shop_cash', 'staff'] as const)
+              : (['shop_cash', 'staff'] as const)
+          }
           labels={t(`${f}.paidByOptions`, { returnObjects: true }) as Record<string, string>}
           value={paidBy}
           onChange={setPaidBy}
@@ -355,7 +361,7 @@ export function ExpenseForm({
             onClick={() =>
               asking
                 ? startDelete(async () => {
-                    await deleteExpense(expense.id, expense.date.slice(0, 7));
+                    await deleteExpense(expense.id, expense.date);
                   })
                 : setAsking(true)
             }

@@ -3,12 +3,7 @@ import type { AttendanceRecord } from './attendance';
 import { DEFAULT_LATE_POLICY } from './late';
 import { DEFAULT_SANDWICH_RULE, type LeaveTemplateVersion } from './leave';
 import { DEFAULT_PAY_RULES } from './settings';
-import {
-  calculateSalary,
-  scheduledAdvanceCut,
-  type PaySettings,
-  type SalaryInput,
-} from './salary';
+import { calculateSalary, scheduledAdvanceCut, type PaySettings, type SalaryInput } from './salary';
 
 // October 2026: 31 days, Sundays 4, 11, 18, 25.
 const SUNDAYS = [4, 11, 18, 25];

@@ -68,6 +68,23 @@ export async function loadExpenseMonth(
 }
 
 /**
+ * One day of a loaded month (the Expenses page's Day view, website and app): its expenses, all
+ * money spent that day (`spent`, the big figure) and how it splits: shop, charged to staff, not
+ * tracked.
+ */
+export function expenseDay(expenses: readonly ExpenseRow[], date: string) {
+  const rows = expenses.filter((e) => e.date === date);
+  const t = expenseTotals(rows.map(toExpense));
+  return {
+    rows,
+    spent: t.total + t.chargedToStaff + t.notTracked,
+    shop: t.total,
+    chargedToStaff: t.chargedToStaff,
+    notTracked: t.notTracked,
+  };
+}
+
+/**
  * What the add / edit expense form needs: the expense (when editing), categories, staff names
  * and the shop's small-expense limit (below it a new expense starts as Not tracked).
  */

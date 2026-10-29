@@ -1222,7 +1222,7 @@
         "staff": "Staff"
       },
       "whoPaid": "Who paid",
-      "reimburse": "Pay them back (adds to what the shop owes them)",
+      "reimburse": "Shop owes them this (paid back with their salary)",
       "chargedTo": "Charged to",
       "chargedOptions": {
         "shop": "Shop",
@@ -1275,8 +1275,21 @@
     },
     "views": {
       "label": "Expenses view",
-      "list": "List",
+      "day": "Day",
+      "list": "Month",
       "categories": "By category"
+    },
+    "day": {
+      "today": "Spent today",
+      "on": "Spent on {{date}}",
+      "split": "Shop {{shop}} · Charged to staff {{staff}} · Not tracked {{notTracked}}",
+      "empty": "No expenses on {{date}}.",
+      "prev": "Previous day",
+      "next": "Next day",
+      "today_link": "Today",
+      "pick": "Date",
+      "show": "Show",
+      "monthSoFar": "{{month}} so far: {{amount}} shop expenses"
     },
     "byCategoryHint": "Shop expenses only; charged to staff and not tracked are left out."
   },

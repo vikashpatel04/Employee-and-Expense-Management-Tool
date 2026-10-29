@@ -2,6 +2,15 @@
 
 Choices made during the build that PLAN.md doesn't spell out. Newest first.
 
+## 2026-10-29 — Expenses page and Paid by (owner)
+
+- **Paid by is the shop or a staff member**: the owner's money is the shop's cash, so "Owner" is
+  gone from new expenses (website and app). The database still allows `owner` so old expenses
+  keep it and show it when edited.
+- **Expenses open on the day**: the big figure is everything spent that day (shop + charged to
+  staff + not tracked), because it answers "how much went out today"; the split is under it.
+  The date filter is a typed DD/MM/YYYY box (no browser date picker, house date rule).
+
 ## 2026-10-29 — Advances and expenses settled in the salary (owner)
 
 - **The advance comes off the salary automatically, set per staff member** (owner: "should be in

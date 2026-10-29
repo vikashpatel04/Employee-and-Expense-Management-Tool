@@ -1,8 +1,8 @@
 import { PendingLink as Link } from '@/components/app/pending-link';
 import { redirect } from 'next/navigation';
 import { Camera, ChevronLeft, ChevronRight, Download, Plus } from 'lucide-react';
-import { formatINR, monthOf, weekday } from '@fincrew/core';
-import { loadExpenseMonth, toShopRules } from '@fincrew/data';
+import { addDays, formatINR, monthOf, parseDisplayDate, weekday } from '@fincrew/core';
+import { expenseDay, loadExpenseMonth, toShopRules } from '@fincrew/data';
 import { categoryColour, categoryIcon } from '@/lib/expense-style';
 import { formatDate, todayIST } from '@/lib/format';
 import { t } from '@/lib/i18n';
@@ -11,7 +11,7 @@ import { createClient } from '@/lib/supabase/server';
 import { FormDialog } from '@/components/app/form-dialog';
 import { Panel, PanelEmpty, StatCard, StatGrid } from '@/components/app/layout';
 import { TabLinks } from '@/components/app/tab-links';
-import { PageHeader, quietButtonClass } from '../../components';
+import { dateFieldProps, inputClass, PageHeader, quietButtonClass } from '../../components';
 import { ExpenseForm, ExpensePanel, type FormExpense } from './expense-form';
 import { UrlToast } from '@/components/app/url-toast';
 
@@ -23,13 +23,20 @@ const shift = (y: number, m: number, by: number) => {
 };
 const card = 'rounded-lg border bg-card p-5 shadow-xs';
 
-/** Expenses for a month (design: "Web · expenses"): totals, by category, list, add/edit panel. */
+/**
+ * Expenses (design: "Web · expenses"). Opens on **Day** (owner, 29/10/2026): the day's spending as
+ * a big figure and the day's list, with previous / next day and a DD/MM/YYYY date filter.
+ * **Month** has the month switcher, totals and the list by day; **By category** the month's
+ * categories.
+ */
 export default async function ExpensesPage({
   searchParams,
 }: {
   searchParams: Promise<{
     month?: string;
     view?: string;
+    date?: string;
+    day?: string;
     add?: string;
     edit?: string;
     saved?: string;
@@ -42,17 +49,33 @@ export default async function ExpensesPage({
   const today = todayIST();
   const current = monthOf(today);
   const sp = await searchParams;
-  const asked = /^\d{4}-\d{2}$/.test(sp.month ?? '') ? monthOf(`${sp.month}-01`) : current;
+  // Three views: one day (default), the month's list, or the month by category.
+  const view: 'day' | 'list' | 'categories' =
+    sp.view === 'categories'
+      ? 'categories'
+      : sp.view === 'month' || sp.view === 'list'
+        ? 'list'
+        : 'day';
+  // The day: typed DD/MM/YYYY (the filter), or YYYY-MM-DD from a link; never after today.
+  const pickedDay =
+    (sp.day ? parseDisplayDate(sp.day) : null) ??
+    (/^\d{4}-\d{2}-\d{2}$/.test(sp.date ?? '') ? sp.date! : today);
+  const date = pickedDay > today ? today : pickedDay;
+  const asked =
+    view === 'day'
+      ? monthOf(date)
+      : /^\d{4}-\d{2}$/.test(sp.month ?? '')
+        ? monthOf(`${sp.month}-01`)
+        : current;
   const { year, month } =
     ym(asked.year, asked.month) > ym(current.year, current.month) ? current : asked;
   const monthName = MONTH.format(new Date(Date.UTC(year, month - 1, 1)));
   const prev = shift(year, month, -1);
   const next = shift(year, month, 1);
   const hasNext = ym(next.year, next.month) <= ym(current.year, current.month);
-  // Two views of the month: the expense list, or totals by category.
-  const view: 'list' | 'categories' = sp.view === 'categories' ? 'categories' : 'list';
-  const viewParam = view === 'categories' ? '&view=categories' : '';
-  const here = `/expenses?month=${ym(year, month)}${viewParam}`;
+  const viewParam = view === 'categories' ? '&view=categories' : '&view=month';
+  const dayHref = (d: string) => `/expenses?view=day&date=${d}`;
+  const here = view === 'day' ? dayHref(date) : `/expenses?month=${ym(year, month)}${viewParam}`;
 
   const supabase = await createClient();
   const [data, { data: shop }] = await Promise.all([
@@ -66,6 +89,7 @@ export default async function ExpensesPage({
   const modes = t('salary.modes', { returnObjects: true }) as unknown as Record<string, string>;
   const activeCats = categories.filter((c) => !c.archived);
 
+  const day = expenseDay(expenses, date);
   const byDay = new Map<string, typeof expenses>();
   for (const e of expenses) byDay.set(e.date, [...(byDay.get(e.date) ?? []), e]);
   const ranked = Object.entries(totals.byCategory).sort((a, b) => b[1] - a[1]);
@@ -107,6 +131,84 @@ export default async function ExpensesPage({
         : '';
     return `${payer} · ${modes[e.payment_mode] ?? e.payment_mode}${charged}`;
   };
+
+  const dayGroup = (date: string, rows: typeof expenses) => (
+    <div key={date} className="flex flex-col">
+      <span className="text-caption flex justify-between pt-2 pb-1 font-semibold text-[var(--ink-muted)]">
+        <span>
+          {days[weekday(date)]} {formatDate(date)}
+        </span>
+        <span>{formatINR(rows.reduce((a, e) => a + Number(e.amount_paise), 0))}</span>
+      </span>
+      <ul>
+        {rows.map((e) => {
+          const c = cats.get(e.category_id);
+          const Icon = categoryIcon(c?.icon ?? 'receipt');
+          const col = categoryColour(c?.colour ?? 'slate');
+          const body = (
+            <>
+              <span
+                className="grid h-9 w-9 shrink-0 place-items-center rounded-full"
+                style={{ background: col.soft, color: col.fg }}
+              >
+                <Icon size={20} aria-hidden="true" />
+              </span>
+              <span className="flex min-w-0 flex-1 flex-col">
+                <span className="text-label-sm truncate">{e.note || c?.name}</span>
+                <span className="text-caption text-[var(--ink-muted)]">
+                  {e.note ? `${c?.name} · ` : ''}
+                  {meta(e)}
+                </span>
+              </span>
+              {e.charged_to_kind !== 'shop' && (
+                <span className="text-micro rounded-full bg-[var(--surface-muted)] px-2 py-0.5 font-semibold text-[var(--ink-muted)]">
+                  {t(`expenses.tags.${e.charged_to_kind}`)}
+                </span>
+              )}
+              {e.bill_path && (
+                <Camera
+                  size={16}
+                  aria-label={t('expenses.hasBill')}
+                  className="shrink-0 text-[var(--ink-muted)]"
+                />
+              )}
+              <span
+                className={`text-money-sm ${e.charged_to_kind === 'not_tracked' ? 'text-[var(--ink-muted)]' : ''}`}
+              >
+                {formatINR(Number(e.amount_paise))}
+              </span>
+            </>
+          );
+          const rowClass =
+            'flex min-h-[60px] items-center gap-3 border-b border-[var(--line)] py-2';
+          return (
+            <li key={e.id}>
+              {can('expenses.edit') ? (
+                <Link
+                  href={`${here}&edit=${e.id}`}
+                  aria-label={`${t('expenses.edit')}: ${e.note || c?.name}, ${formatINR(Number(e.amount_paise))}`}
+                  className={`${rowClass} hover:bg-[var(--surface-muted)]`}
+                >
+                  {body}
+                </Link>
+              ) : e.bill_path ? (
+                <a
+                  href={`/expenses/bill/${e.id}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={rowClass}
+                >
+                  {body}
+                </a>
+              ) : (
+                <div className={rowClass}>{body}</div>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
 
   return (
     <>
@@ -156,30 +258,80 @@ export default async function ExpensesPage({
       />
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-1">
-          <Link
-            href={`/expenses?month=${ym(prev.year, prev.month)}${viewParam}`}
-            aria-label={t('expenses.prevMonth')}
-            className={`${quietButtonClass} inline-flex items-center border-0 px-2`}
-          >
-            <ChevronLeft size={20} aria-hidden="true" />
-          </Link>
-          <span className="text-title-md px-2">{monthName}</span>
-          {hasNext && (
+        {view === 'day' ? (
+          <div className="flex flex-wrap items-center gap-1">
             <Link
-              href={`/expenses?month=${ym(next.year, next.month)}${viewParam}`}
-              aria-label={t('expenses.nextMonth')}
+              href={dayHref(addDays(date, -1))}
+              aria-label={t('expenses.day.prev')}
               className={`${quietButtonClass} inline-flex items-center border-0 px-2`}
             >
-              <ChevronRight size={20} aria-hidden="true" />
+              <ChevronLeft size={20} aria-hidden="true" />
             </Link>
-          )}
-        </div>
+            <span className="text-title-md px-2">
+              {days[weekday(date)]} {formatDate(date)}
+            </span>
+            {date < today && (
+              <Link
+                href={dayHref(addDays(date, 1))}
+                aria-label={t('expenses.day.next')}
+                className={`${quietButtonClass} inline-flex items-center border-0 px-2`}
+              >
+                <ChevronRight size={20} aria-hidden="true" />
+              </Link>
+            )}
+            {date !== today && (
+              <Link href="/expenses" className={`${quietButtonClass} ml-1`}>
+                {t('expenses.day.today_link')}
+              </Link>
+            )}
+            <form action="/expenses" className="ml-2 flex items-center gap-2">
+              <input type="hidden" name="view" value="day" />
+              <label className="sr-only" htmlFor="expense-day">
+                {t('expenses.day.pick')}
+              </label>
+              <input
+                id="expense-day"
+                name="day"
+                {...dateFieldProps}
+                defaultValue={formatDate(date)}
+                className={`${inputClass} mt-0 w-36`}
+              />
+              <button type="submit" className={quietButtonClass}>
+                {t('expenses.day.show')}
+              </button>
+            </form>
+          </div>
+        ) : (
+          <div className="flex items-center gap-1">
+            <Link
+              href={`/expenses?month=${ym(prev.year, prev.month)}${viewParam}`}
+              aria-label={t('expenses.prevMonth')}
+              className={`${quietButtonClass} inline-flex items-center border-0 px-2`}
+            >
+              <ChevronLeft size={20} aria-hidden="true" />
+            </Link>
+            <span className="text-title-md px-2">{monthName}</span>
+            {hasNext && (
+              <Link
+                href={`/expenses?month=${ym(next.year, next.month)}${viewParam}`}
+                aria-label={t('expenses.nextMonth')}
+                className={`${quietButtonClass} inline-flex items-center border-0 px-2`}
+              >
+                <ChevronRight size={20} aria-hidden="true" />
+              </Link>
+            )}
+          </div>
+        )}
         <TabLinks
           label={t('expenses.views.label')}
           items={[
             {
-              href: `/expenses?month=${ym(year, month)}`,
+              href: dayHref(view === 'day' ? date : today),
+              label: t('expenses.views.day'),
+              current: view === 'day',
+            },
+            {
+              href: `/expenses?month=${ym(year, month)}&view=month`,
               label: t('expenses.views.list'),
               current: view === 'list',
             },
@@ -206,36 +358,63 @@ export default async function ExpensesPage({
         </p>
       )}
 
-      <StatGrid>
-        {(
-          [
-            ['shop', totals.total, counts.shop, '', ''],
-            ['staff', totals.chargedToStaff, counts.staff, 'var(--money-advance)', 'staffMeta'],
+      {view === 'day' && (
+        <section className={`${card} flex flex-col gap-2`}>
+          <span className="text-label-sm text-[var(--ink-muted)]">
+            {date === today
+              ? t('expenses.day.today')
+              : t('expenses.day.on', { date: formatDate(date) })}
+          </span>
+          <span className="text-money-hero text-[3.5rem] leading-none sm:text-[4.5rem]">
+            {formatINR(day.spent)}
+          </span>
+          <span className="text-muted-foreground text-sm">
+            {t('expenses.tiles.count', { count: day.rows.length })}
+            {day.rows.length > 0 &&
+              ` · ${t('expenses.day.split', {
+                shop: formatINR(day.shop),
+                staff: formatINR(day.chargedToStaff),
+                notTracked: formatINR(day.notTracked),
+              })}`}
+          </span>
+          <span className="text-muted-foreground text-xs">
+            {t('expenses.day.monthSoFar', { month: monthName, amount: formatINR(totals.total) })}
+          </span>
+        </section>
+      )}
+
+      {view !== 'day' && (
+        <StatGrid>
+          {(
             [
-              'reimbursed',
-              totals.reimbursed,
-              counts.reimbursed,
-              'var(--money-owed)',
-              'reimbursedMeta',
-            ],
-            [
-              'notTracked',
-              totals.notTracked,
-              counts.notTracked,
-              'var(--ink-muted)',
-              'notTrackedMeta',
-            ],
-          ] as const
-        ).map(([k, v, n, colour, metaKey]) => (
-          <StatCard
-            key={k}
-            label={t(`expenses.tiles.${k}`)}
-            tone={colour || undefined}
-            paise={v}
-            meta={`${t('expenses.tiles.count', { count: n })}${metaKey ? ` · ${t(`expenses.tiles.${metaKey}`)}` : ''}`}
-          />
-        ))}
-      </StatGrid>
+              ['shop', totals.total, counts.shop, '', ''],
+              ['staff', totals.chargedToStaff, counts.staff, 'var(--money-advance)', 'staffMeta'],
+              [
+                'reimbursed',
+                totals.reimbursed,
+                counts.reimbursed,
+                'var(--money-owed)',
+                'reimbursedMeta',
+              ],
+              [
+                'notTracked',
+                totals.notTracked,
+                counts.notTracked,
+                'var(--ink-muted)',
+                'notTrackedMeta',
+              ],
+            ] as const
+          ).map(([k, v, n, colour, metaKey]) => (
+            <StatCard
+              key={k}
+              label={t(`expenses.tiles.${k}`)}
+              tone={colour || undefined}
+              paise={v}
+              meta={`${t('expenses.tiles.count', { count: n })}${metaKey ? ` · ${t(`expenses.tiles.${metaKey}`)}` : ''}`}
+            />
+          ))}
+        </StatGrid>
+      )}
 
       {!can('expenses.view_all') && (
         <p className="text-caption text-[var(--ink-muted)]">{t('expenses.ownOnly')}</p>
@@ -312,6 +491,18 @@ export default async function ExpensesPage({
         </Panel>
       )}
 
+      {view === 'day' && (
+        <Panel title={t('expenses.list')}>
+          {day.rows.length === 0 ? (
+            <p className="text-body text-[var(--ink-muted)]">
+              {t('expenses.day.empty', { date: formatDate(date) })}
+            </p>
+          ) : (
+            dayGroup(date, day.rows)
+          )}
+        </Panel>
+      )}
+
       {view === 'list' && (
         <Panel title={t('expenses.list')}>
           {expenses.length === 0 ? (
@@ -319,83 +510,7 @@ export default async function ExpensesPage({
               {t('expenses.empty', { month: monthName })}
             </p>
           ) : (
-            [...byDay.entries()].map(([date, rows]) => (
-              <div key={date} className="flex flex-col">
-                <span className="text-caption flex justify-between pt-2 pb-1 font-semibold text-[var(--ink-muted)]">
-                  <span>
-                    {days[weekday(date)]} {formatDate(date)}
-                  </span>
-                  <span>{formatINR(rows.reduce((a, e) => a + Number(e.amount_paise), 0))}</span>
-                </span>
-                <ul>
-                  {rows.map((e) => {
-                    const c = cats.get(e.category_id);
-                    const Icon = categoryIcon(c?.icon ?? 'receipt');
-                    const col = categoryColour(c?.colour ?? 'slate');
-                    const body = (
-                      <>
-                        <span
-                          className="grid h-9 w-9 shrink-0 place-items-center rounded-full"
-                          style={{ background: col.soft, color: col.fg }}
-                        >
-                          <Icon size={20} aria-hidden="true" />
-                        </span>
-                        <span className="flex min-w-0 flex-1 flex-col">
-                          <span className="text-label-sm truncate">{e.note || c?.name}</span>
-                          <span className="text-caption text-[var(--ink-muted)]">
-                            {e.note ? `${c?.name} · ` : ''}
-                            {meta(e)}
-                          </span>
-                        </span>
-                        {e.charged_to_kind !== 'shop' && (
-                          <span className="text-micro rounded-full bg-[var(--surface-muted)] px-2 py-0.5 font-semibold text-[var(--ink-muted)]">
-                            {t(`expenses.tags.${e.charged_to_kind}`)}
-                          </span>
-                        )}
-                        {e.bill_path && (
-                          <Camera
-                            size={16}
-                            aria-label={t('expenses.hasBill')}
-                            className="shrink-0 text-[var(--ink-muted)]"
-                          />
-                        )}
-                        <span
-                          className={`text-money-sm ${e.charged_to_kind === 'not_tracked' ? 'text-[var(--ink-muted)]' : ''}`}
-                        >
-                          {formatINR(Number(e.amount_paise))}
-                        </span>
-                      </>
-                    );
-                    const rowClass =
-                      'flex min-h-[60px] items-center gap-3 border-b border-[var(--line)] py-2';
-                    return (
-                      <li key={e.id}>
-                        {can('expenses.edit') ? (
-                          <Link
-                            href={`${here}&edit=${e.id}`}
-                            aria-label={`${t('expenses.edit')}: ${e.note || c?.name}, ${formatINR(Number(e.amount_paise))}`}
-                            className={`${rowClass} hover:bg-[var(--surface-muted)]`}
-                          >
-                            {body}
-                          </Link>
-                        ) : e.bill_path ? (
-                          <a
-                            href={`/expenses/bill/${e.id}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className={rowClass}
-                          >
-                            {body}
-                          </a>
-                        ) : (
-                          <div className={rowClass}>{body}</div>
-                        )}
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            ))
+            [...byDay.entries()].map(([d, rows]) => dayGroup(d, rows))
           )}
         </Panel>
       )}

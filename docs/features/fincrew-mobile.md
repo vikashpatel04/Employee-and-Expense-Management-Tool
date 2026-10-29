@@ -68,10 +68,14 @@ is a placeholder until the first store build.
 - **Money** (`(tabs)/money.tsx`, design "Money · expenses / salary / advances"): segments by
   permission (Expenses: `expenses.add` / `view_all` / `edit`; Salary: `salary.view`; Advances:
   `salary.view` or `advances.give`), components in `src/components/money/`:
-  - **Expenses** (`expenses.tsx`): month switcher, shop total with charged to staff / paid back /
-    not tracked, by category bars, expenses by day (category icon and colour, note or category,
-    who paid, mode, staff / not-tracked tag, bill icon); tap → the expense; **Add expense**
-    (needs an active category). Data: `loadExpenseMonth`; reloads when you come back.
+  - **Expenses** (`expenses.tsx`): **Day | Month | By category** (opens on Day, owner
+    29/10/2026). Day: ‹ › through days, the day's spending as a big figure (`expenseDay`: all
+    spent, split shop / charged to staff / not tracked, plus the month's shop total so far) and
+    its expenses. Month: month switcher, shop total with charged to staff / paid back / not
+    tracked, expenses by day (category icon and colour, note or category, who paid, mode, staff /
+    not-tracked tag, bill icon). By category: the month's bars. Tap → the expense; **Add expense**
+    (needs an active category; starts on the day being viewed). Data: `loadExpenseMonth`;
+    reloads when you come back.
   - **Add / edit expense** (`src/app/expense.tsx`, design "Add expense"): amount with quick
     amounts, day stepper (no future days), category grid (7 + "All N"), Paid by (+ who from a
     sheet, Pay them back), Charged to (+ who; below the small-expense limit a new one starts as

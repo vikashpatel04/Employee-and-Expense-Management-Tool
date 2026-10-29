@@ -352,7 +352,9 @@ async function Overview(props: {
               {props.advanceMode === 'all'
                 ? t('staffDetail.advance.cutAll')
                 : props.advanceMode === 'fixed'
-                  ? t('staffDetail.advance.cut', { amount: formatINR(Number(props.advanceCut ?? 0)) })
+                  ? t('staffDetail.advance.cut', {
+                      amount: formatINR(Number(props.advanceCut ?? 0)),
+                    })
                   : t('staffDetail.advance.noCut')}
               {' · '}
               {props.advanceLimit != null

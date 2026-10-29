@@ -25,7 +25,9 @@ export async function loadAdvanceBalances(supabase: Supabase, shopId: string) {
   const [{ data: balances }, { data: staff }] = await Promise.all([
     supabase
       .from('advance_balances')
-      .select('staff_id, outstanding_paise, advance_limit_paise, advance_cut_paise, advance_cut_mode')
+      .select(
+        'staff_id, outstanding_paise, advance_limit_paise, advance_cut_paise, advance_cut_mode',
+      )
       .eq('shop_id', shopId),
     supabase.from('staff').select('person_id, people!inner(name)').eq('shop_id', shopId),
   ]);

@@ -253,6 +253,10 @@ notifications).
   all / fixed / none, expense pay-back and charge cut switches; migration
   `20261029000001_advance_mode_expense_dues.sql` (dry-run on live, rolled back). Core 242, db 194.
   After the push: `pnpm db:types` (types were extended by hand), re-run October's salary.
+  (3) Expenses open on a Day view with today's spending large (website + app), Month / By
+  category kept; Paid by drops "Owner". Website build passes; the signed-in pages were not
+  checked in the preview (it waits at the owner's sign-in) and the Claude Design canvas has no
+  artboard for the Day view or the new Advance rules dialog yet.
 
 - **2026-10-26** — Fix: the salary run said "5 working days not marked" for days that hadn't
   happened yet (27–31 Oct on the 26th). `calculateSalary` takes `asOf` (today); the warning counts

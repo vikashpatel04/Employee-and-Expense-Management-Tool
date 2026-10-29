@@ -28,12 +28,17 @@ Phase 6 (built before Android at the owner's request, 2026-10-24). Rules: docs/P
 
 ## Screens (website)
 
-- **Expenses** (`(app)/expenses`; sidebar with `expenses.add`, `view_all` or `edit`): month
-  switcher; tiles Shop expenses / Charged to staff / Paid back to staff / Not tracked (core
-  `expenseTotals`); By category with bars; list by day (DD/MM/YYYY) with payer, mode, charge,
-  tags and a camera mark for bills. Rows open the **edit panel** with `expenses.edit` (else a
+- **Expenses** (`(app)/expenses`; sidebar with `expenses.add`, `view_all` or `edit`): views
+  **Day** (default, owner 29/10/2026: `?view=day&date=`; ‹ › days, Today, a DD/MM/YYYY date
+  filter `?day=`; the day's spending as a big figure with the shop / charged to staff / not
+  tracked split and the month's shop total so far, `packages/data` `expenseDay`; the day's
+  list), **Month** (`?view=month&month=`: month switcher; tiles Shop expenses / Charged to staff
+  / Paid back to staff / Not tracked (core `expenseTotals`); list by day) and **By category**.
+  Rows show payer, mode, charge, tags and a camera mark for bills. Saving or deleting goes to
+  the expense's day. Rows open the **edit panel** with `expenses.edit` (else a
   bill link). **Add expense** (`?add=1`) opens the side panel (full screen on a phone): amount,
-  date, category grid, Paid by (+ who, Pay them back), Charged to (+ who; starts as Not tracked
+  date, category grid, Paid by — **Shop cash or Staff** (+ who, "Shop owes them this", on by
+  default; "Owner" was removed 29/10/2026 and shows only on old expenses that used it), Charged to (+ who; starts as Not tracked
   below the shop's small-expense limit until changed), Paid with, note, bill photo (shrunk in
   the browser to about 200 KB, `src/lib/compress-image.ts`), delete (two clicks).
   Actions: `expenses/actions.ts` (thin wrappers over `saveExpense` / `deleteExpense` in

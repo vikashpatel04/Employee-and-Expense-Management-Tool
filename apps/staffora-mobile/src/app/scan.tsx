@@ -135,11 +135,7 @@ export default function Scan() {
           ) : GOOGLE_SCANNER ? (
             <View style={{ alignItems: 'center', gap: space['space-3'] }}>
               <QrCode size={96} color={c['ink-muted']} />
-              <Button
-                label={t(error ? `${s}.again` : `${s}.open`)}
-                center
-                onPress={openScanner}
-              />
+              <Button label={t(error ? `${s}.again` : `${s}.open`)} center onPress={openScanner} />
             </View>
           ) : permission?.granted ? (
             <CameraView
