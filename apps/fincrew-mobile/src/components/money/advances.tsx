@@ -58,7 +58,11 @@ export function AdvancesSection() {
   const a = 'mobile.money.advances';
   const meta = (r: AdvanceBalance) =>
     [
-      r.cut != null ? t(`${a}.cutMonthly`, { amount: formatINR(r.cut) }) : t(`${a}.cutAtRun`),
+      r.mode === 'all'
+        ? t(`${a}.cutAll`)
+        : r.mode === 'fixed'
+          ? t(`${a}.cutMonthly`, { amount: formatINR(r.cut ?? 0) })
+          : t(`${a}.cutAtRun`),
       r.limit != null ? t(`${a}.limit`, { amount: formatINR(r.limit) }) : t(`${a}.noLimit`),
     ].join(' · ');
 

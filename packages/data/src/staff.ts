@@ -1,5 +1,6 @@
 import {
   runningBalances,
+  type AdvanceCutMode,
   type BusinessDate,
   type LedgerLine,
   type LedgerType,
@@ -44,7 +45,7 @@ export async function loadStaffOverview(
     supabase
       .from('staff')
       .select(
-        'person_id, joining_date, leaving_date, status, advance_limit_paise, advance_cut_paise, people!inner(name, phone)',
+        'person_id, joining_date, leaving_date, status, advance_limit_paise, advance_cut_paise, advance_cut_mode, expense_payback, expense_recover, people!inner(name, phone)',
       )
       .eq('person_id', staffId)
       .eq('shop_id', shopId)
@@ -74,6 +75,9 @@ export async function loadStaffOverview(
     status: s.status as 'active' | 'left',
     advanceLimit: s.advance_limit_paise == null ? null : Number(s.advance_limit_paise),
     advanceCut: s.advance_cut_paise == null ? null : Number(s.advance_cut_paise),
+    advanceMode: s.advance_cut_mode as AdvanceCutMode,
+    expensePayback: s.expense_payback,
+    expenseRecover: s.expense_recover,
     balance: money ? Number(money[0].data?.balance_paise ?? 0) : null,
     advance: money ? Number(money[1].data?.outstanding_paise ?? 0) : null,
   };

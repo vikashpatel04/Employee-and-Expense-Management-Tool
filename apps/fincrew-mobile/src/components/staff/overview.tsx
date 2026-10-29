@@ -134,9 +134,11 @@ export function OverviewSection({
             <Text variant="money-md">{formatINR(info.advance ?? 0)}</Text>
           </View>
           <Text variant="caption" muted>
-            {info.advanceCut != null
-              ? t('staffDetail.advance.cut', { amount: formatINR(info.advanceCut) })
-              : t('staffDetail.advance.noCut')}
+            {info.advanceMode === 'all'
+              ? t('staffDetail.advance.cutAll')
+              : info.advanceMode === 'fixed'
+                ? t('staffDetail.advance.cut', { amount: formatINR(info.advanceCut ?? 0) })
+                : t('staffDetail.advance.noCut')}
             {' · '}
             {info.advanceLimit != null
               ? t('staffDetail.advance.limit', { amount: formatINR(info.advanceLimit) })

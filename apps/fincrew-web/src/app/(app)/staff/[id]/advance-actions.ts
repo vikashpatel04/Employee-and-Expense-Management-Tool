@@ -6,6 +6,7 @@ import {
   saveAdvanceSettings as saveSettingsShared,
   undoLedgerLine,
 } from '@fincrew/data';
+import type { AdvanceCutMode } from '@fincrew/core';
 import { todayIST } from '@/lib/format';
 import { t } from '@/lib/i18n';
 import { requireMe } from '@/lib/session';
@@ -54,7 +55,7 @@ export async function recordAdvance(
   return { done: t(r.kind === 'given' ? 'advances.done.given' : 'advances.done.repaid') };
 }
 
-/** Per-person advance limit and monthly cut (shared `saveAdvanceSettings`). */
+/** Per-person advance limit, cut mode and expense switches (shared `saveAdvanceSettings`). */
 export async function saveAdvanceSettings(
   staffId: string,
   _prev: AdvanceState,
@@ -66,7 +67,10 @@ export async function saveAdvanceSettings(
     ...me,
     staffId,
     limit: String(form.get('limit') ?? ''),
+    mode: String(form.get('mode') ?? 'all') as AdvanceCutMode,
     cut: String(form.get('cut') ?? ''),
+    payback: form.get('payback') === 'on',
+    recover: form.get('recover') === 'on',
   });
   if (!r.ok)
     return {

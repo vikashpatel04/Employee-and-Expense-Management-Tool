@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { formatDisplayDate, paiseToInput } from '@fincrew/core';
+import { formatDisplayDate, paiseToInput, type AdvanceCutMode } from '@fincrew/core';
 import { useDialogDone } from '@/components/app/form-dialog';
 import { useFormAction } from '@/lib/use-form-action';
 import { buttonClass, dateFieldProps, inputClass } from '../../../components';
@@ -121,25 +121,84 @@ export function AdvanceForm({
   );
 }
 
-/** The person's advance limit and default monthly cut. */
+export type AdvanceSettingsLabels = {
+  limit: string;
+  how: string;
+  modes: Record<AdvanceCutMode | `${AdvanceCutMode}Hint`, string>;
+  cut: string;
+  expenses: string;
+  payback: string;
+  paybackHint: string;
+  recover: string;
+  recoverHint: string;
+  save: string;
+  saving: string;
+};
+
+/**
+ * How the salary run settles this person's money: advance limit, advance cut mode (all / a fixed
+ * monthly cut, the rest carries / none) and whether expenses are paid back and charges cut.
+ */
 export function AdvanceSettingsForm({
   staffId,
   limit,
+  mode: savedMode,
   cut,
+  payback,
+  recover,
   labels,
 }: {
   staffId: string;
   limit: number | null;
+  mode: AdvanceCutMode;
   cut: number | null;
-  labels: { limit: string; cut: string; save: string; saving: string };
+  payback: boolean;
+  recover: boolean;
+  labels: AdvanceSettingsLabels;
 }) {
   const [state, onSubmit, pending] = useFormAction<AdvanceState>(
     saveAdvanceSettings.bind(null, staffId),
     {},
   );
+  const [mode, setMode] = useState(savedMode);
   useDialogDone(state);
+  const option = 'flex cursor-pointer gap-3 rounded-[var(--radius-md)] border p-3';
   return (
-    <form onSubmit={onSubmit} className="flex flex-col gap-3">
+    <form onSubmit={onSubmit} className="flex flex-col gap-4">
+      <fieldset className="flex flex-col gap-2">
+        <legend className="text-label-sm mb-2">{labels.how}</legend>
+        {(['all', 'fixed', 'none'] as const).map((m) => (
+          <label
+            key={m}
+            className={`${option} ${mode === m ? 'border-[var(--accent)] bg-[var(--accent-soft)]' : 'border-[var(--line-strong)]'}`}
+          >
+            <input
+              type="radio"
+              name="mode"
+              value={m}
+              checked={mode === m}
+              onChange={() => setMode(m)}
+              className="mt-0.5 size-4 accent-[var(--accent)]"
+            />
+            <span className="flex flex-col gap-0.5">
+              <span className="text-label-sm">{labels.modes[m]}</span>
+              <span className="text-muted-foreground text-xs">{labels.modes[`${m}Hint`]}</span>
+            </span>
+          </label>
+        ))}
+        {mode === 'fixed' && (
+          <label className="text-label-sm block">
+            {labels.cut}
+            <input
+              name="cut"
+              inputMode="decimal"
+              required
+              defaultValue={cut == null ? '' : paiseToInput(cut)}
+              className={inputClass}
+            />
+          </label>
+        )}
+      </fieldset>
       <label className="text-label-sm block">
         {labels.limit}
         <input
@@ -149,15 +208,28 @@ export function AdvanceSettingsForm({
           className={inputClass}
         />
       </label>
-      <label className="text-label-sm block">
-        {labels.cut}
-        <input
-          name="cut"
-          inputMode="decimal"
-          defaultValue={cut == null ? '' : paiseToInput(cut)}
-          className={inputClass}
-        />
-      </label>
+      <fieldset className="flex flex-col gap-2">
+        <legend className="text-label-sm mb-2">{labels.expenses}</legend>
+        {(
+          [
+            ['payback', payback, labels.payback, labels.paybackHint],
+            ['recover', recover, labels.recover, labels.recoverHint],
+          ] as const
+        ).map(([name, on, label, hint]) => (
+          <label key={name} className={`${option} border-[var(--line-strong)]`}>
+            <input
+              type="checkbox"
+              name={name}
+              defaultChecked={on}
+              className="mt-0.5 size-4 accent-[var(--accent)]"
+            />
+            <span className="flex flex-col gap-0.5">
+              <span className="text-label-sm">{label}</span>
+              <span className="text-muted-foreground text-xs">{hint}</span>
+            </span>
+          </label>
+        ))}
+      </fieldset>
       <Message state={state} />
       <button
         type="submit"

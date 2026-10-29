@@ -147,6 +147,9 @@ export default function StaffDetail() {
                 name={info.name}
                 advanceLimit={info.advanceLimit}
                 advanceCut={info.advanceCut}
+                advanceMode={info.advanceMode}
+                expensePayback={info.expensePayback}
+                expenseRecover={info.expenseRecover}
                 onChanged={() => void load()}
               />
             )}

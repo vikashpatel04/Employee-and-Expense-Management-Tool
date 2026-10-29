@@ -3,7 +3,12 @@ import type { AttendanceRecord } from './attendance';
 import { DEFAULT_LATE_POLICY } from './late';
 import { DEFAULT_SANDWICH_RULE, type LeaveTemplateVersion } from './leave';
 import { DEFAULT_PAY_RULES } from './settings';
-import { calculateSalary, type PaySettings, type SalaryInput } from './salary';
+import {
+  calculateSalary,
+  scheduledAdvanceCut,
+  type PaySettings,
+  type SalaryInput,
+} from './salary';
 
 // October 2026: 31 days, Sundays 4, 11, 18, 25.
 const SUNDAYS = [4, 11, 18, 25];
@@ -349,6 +354,73 @@ describe('advance cut', () => {
   });
 });
 
+describe('advance cut mode (per staff)', () => {
+  it('all = everything outstanding, fixed = the monthly cut, none = nothing', () => {
+    expect(scheduledAdvanceCut({ mode: 'all', monthlyCut: 100_000, outstanding: 900_000 })).toBe(
+      900_000,
+    );
+    expect(scheduledAdvanceCut({ mode: 'fixed', monthlyCut: 100_000, outstanding: 900_000 })).toBe(
+      100_000,
+    );
+    expect(scheduledAdvanceCut({ mode: 'fixed', monthlyCut: null, outstanding: 900_000 })).toBe(0);
+    expect(scheduledAdvanceCut({ mode: 'none', monthlyCut: 100_000, outstanding: 900_000 })).toBe(
+      0,
+    );
+  });
+
+  it('a whole advance bigger than the salary is cut up to the salary; the rest carries', () => {
+    const r = calculateSalary(
+      input({ advance: { scheduledCut: 4_000_000, outstanding: 4_000_000 } }),
+    );
+    expect(r.advanceCut).toBe(3_000_000);
+    expect(r.netPay).toBe(0);
+  });
+});
+
+describe('expenses in the salary', () => {
+  it('pays back what the shop owes and cuts what is charged to them', () => {
+    const r = calculateSalary(
+      input({
+        advance: { scheduledCut: 500_000, outstanding: 500_000 },
+        expenses: { payback: 120_000, charges: 30_000 },
+      }),
+    );
+    expect(r).toMatchObject({
+      netBeforeAdvance: 3_000_000,
+      expensePayback: 120_000,
+      advanceCut: 500_000,
+      expenseCut: 30_000,
+      netPay: 3_000_000 + 120_000 - 500_000 - 30_000,
+    });
+    expect(r.lines).toEqual(
+      expect.arrayContaining([
+        { kind: 'expense_payback', amount: 120_000 },
+        { kind: 'expense_cut', amount: 30_000 },
+      ]),
+    );
+  });
+
+  it('the pay-back can cover an advance cut, and cuts never take net pay below zero', () => {
+    const r = calculateSalary(
+      input({
+        records: workingDays().slice(0, 2), // ₹5,806
+        advance: { scheduledCut: 600_000, outstanding: 600_000 },
+        expenses: { payback: 50_000, charges: 100_000 },
+      }),
+    );
+    expect(r.netBeforeAdvance).toBe(580_600);
+    expect(r.advanceCut).toBe(600_000);
+    expect(r.expenseCut).toBe(30_600);
+    expect(r.netPay).toBe(0);
+  });
+
+  it('adds no lines when there is nothing to settle', () => {
+    const r = calculateSalary(input({ expenses: { payback: 0, charges: 0 } }));
+    expect(r.lines.some((l) => l.kind.startsWith('expense_'))).toBe(false);
+    expect(r).toMatchObject({ expensePayback: 0, expenseCut: 0 });
+  });
+});
+
 describe('totals and lines', () => {
   it('every line is rounded to the rupee and totals add up from the rounded lines', () => {
     const r = calculateSalary(
@@ -368,7 +440,7 @@ describe('totals and lines', () => {
       r.lines.filter((l) => kinds.includes(l.kind)).reduce((a, l) => a + l.amount, 0);
     expect(r.gross).toBe(sum(['earned', 'overtime', 'allowance', 'leave_payout']));
     expect(r.deductions).toBe(sum(['deduction', 'late_deduction']));
-    expect(r.netPay).toBe(r.gross - r.deductions - r.advanceCut);
+    expect(r.netPay).toBe(r.gross - r.deductions - r.advanceCut + r.expensePayback - r.expenseCut);
   });
 
   it('warns when deductions exceed earnings', () => {

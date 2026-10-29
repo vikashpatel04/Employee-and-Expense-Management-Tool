@@ -247,6 +247,13 @@ notifications).
 
 ## Session log
 
+- **2026-10-29** — Owner feedback round. (1) Staffora QR scan on Android uses Google's code scanner
+  (the in-view reader never fired); QR border widened. (2) Advances and expenses settle in the
+  salary, per staff (`docs/features/money-data.md`, DECISIONS 2026-10-29): advance cut mode
+  all / fixed / none, expense pay-back and charge cut switches; migration
+  `20261029000001_advance_mode_expense_dues.sql` (dry-run on live, rolled back). Core 242, db 194.
+  After the push: `pnpm db:types` (types were extended by hand), re-run October's salary.
+
 - **2026-10-26** — Fix: the salary run said "5 working days not marked" for days that hadn't
   happened yet (27–31 Oct on the 26th). `calculateSalary` takes `asOf` (today); the warning counts
   only unmarked days up to it (pay rules unchanged). Test added (core 237). Re-run the salary to

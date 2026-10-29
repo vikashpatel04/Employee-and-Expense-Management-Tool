@@ -18,6 +18,7 @@ import {
   formatINR,
   formatTimeOfDay,
   runningBalances,
+  type AdvanceCutMode,
   type LatePolicy,
   type LedgerLine,
   type LedgerType,
@@ -35,7 +36,12 @@ import { TabLinks } from '@/components/app/tab-links';
 import { Button } from '@/components/ui/button';
 import { Avatar } from '../../../components';
 import { AttendanceTab } from './attendance-tab';
-import { AdvanceForm, AdvanceSettingsForm, UndoButton } from './advance-forms';
+import {
+  AdvanceForm,
+  AdvanceSettingsForm,
+  UndoButton,
+  type AdvanceSettingsLabels,
+} from './advance-forms';
 import { DetailsForm, ItemButtons, ItemForm, OpeningForm, TemplateForm } from './extra-forms';
 import { OverridesForm } from './overrides-form';
 import { PayForm } from './pay-form';
@@ -97,7 +103,7 @@ export default async function StaffDetailPage({
   const { data: s } = await supabase
     .from('staff')
     .select(
-      'person_id, joining_date, leaving_date, status, self_attendance, advance_limit_paise, advance_cut_paise, people!inner(name, phone)',
+      'person_id, joining_date, leaving_date, status, self_attendance, advance_limit_paise, advance_cut_paise, advance_cut_mode, expense_payback, expense_recover, people!inner(name, phone)',
     )
     .eq('person_id', id)
     .eq('shop_id', me.shopId)
@@ -206,6 +212,9 @@ export default async function StaffDetailPage({
             canMoney={canLedger}
             advanceLimit={s.advance_limit_paise}
             advanceCut={s.advance_cut_paise}
+            advanceMode={s.advance_cut_mode as AdvanceCutMode}
+            expensePayback={s.expense_payback}
+            expenseRecover={s.expense_recover}
             canEditStaff={can('staff.edit')}
             canEditPay={can('staff.pay.edit')}
             canRun={can('salary.run')}
@@ -260,6 +269,9 @@ async function Overview(props: {
   canMoney: boolean;
   advanceLimit: number | null;
   advanceCut: number | null;
+  advanceMode: AdvanceCutMode;
+  expensePayback: boolean;
+  expenseRecover: boolean;
   canEditStaff: boolean;
   canEditPay: boolean;
   canRun: boolean;
@@ -337,9 +349,11 @@ async function Overview(props: {
           </div>
           <div className="flex flex-wrap items-center justify-between gap-2">
             <span className="text-muted-foreground text-xs">
-              {props.advanceCut != null
-                ? t('staffDetail.advance.cut', { amount: formatINR(Number(props.advanceCut)) })
-                : t('staffDetail.advance.noCut')}
+              {props.advanceMode === 'all'
+                ? t('staffDetail.advance.cutAll')
+                : props.advanceMode === 'fixed'
+                  ? t('staffDetail.advance.cut', { amount: formatINR(Number(props.advanceCut ?? 0)) })
+                  : t('staffDetail.advance.noCut')}
               {' · '}
               {props.advanceLimit != null
                 ? t('staffDetail.advance.limit', { amount: formatINR(Number(props.advanceLimit)) })
@@ -361,10 +375,25 @@ async function Overview(props: {
                 <AdvanceSettingsForm
                   staffId={props.staffId}
                   limit={props.advanceLimit == null ? null : Number(props.advanceLimit)}
+                  mode={props.advanceMode}
                   cut={props.advanceCut == null ? null : Number(props.advanceCut)}
+                  payback={props.expensePayback}
+                  recover={props.expenseRecover}
                   labels={{
                     limit: t('advances.settings.limit'),
+                    how: t('advances.settings.how'),
+                    modes: Object.fromEntries(
+                      ['all', 'fixed', 'none', 'allHint', 'fixedHint', 'noneHint'].map((k) => [
+                        k,
+                        t(`advances.settings.modes.${k}`),
+                      ]),
+                    ) as AdvanceSettingsLabels['modes'],
                     cut: t('advances.settings.cut'),
+                    expenses: t('advances.settings.expenses'),
+                    payback: t('advances.settings.payback'),
+                    paybackHint: t('advances.settings.paybackHint'),
+                    recover: t('advances.settings.recover'),
+                    recoverHint: t('advances.settings.recoverHint'),
                     save: t('advances.settings.save'),
                     saving: t('advances.saving'),
                   }}

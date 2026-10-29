@@ -1,4 +1,10 @@
-import { parseDisplayDate, parseRupees, parseTimeOfDay, type BusinessDate } from '@fincrew/core';
+import {
+  parseDisplayDate,
+  parseRupees,
+  parseTimeOfDay,
+  type AdvanceCutMode,
+  type BusinessDate,
+} from '@fincrew/core';
 import type { Supabase } from './client';
 
 type Ctx = { shopId: string; permissions: readonly string[] };
@@ -98,22 +104,42 @@ export type AdvanceSettingsResult =
   | { ok: false; reason: 'failed'; message: string };
 
 /**
- * A person's advance limit and monthly cut (needs staff.edit), typed in rupees; blank = no limit
- * / decide the cut at each salary run.
+ * How the salary run settles a person's money (needs staff.edit): advance limit (rupees, blank =
+ * no limit), advance cut mode (all / fixed monthly cut, the rest carries / none), and whether
+ * expenses are paid back and charges cut through the salary.
  */
 export async function saveAdvanceSettings(
   supabase: Supabase,
-  input: Ctx & { staffId: string; limit: string; cut: string },
+  input: Ctx & {
+    staffId: string;
+    limit: string;
+    mode: AdvanceCutMode;
+    cut: string;
+    payback: boolean;
+    recover: boolean;
+  },
 ): Promise<AdvanceSettingsResult> {
   if (!input.permissions.includes('staff.edit')) return { ok: false, reason: 'no_permission' };
+  if (!['all', 'fixed', 'none'].includes(input.mode)) return { ok: false, reason: 'amount' };
   const read = (v: string) => (v.trim() === '' ? null : parseRupees(v.trim()));
   const limit = read(input.limit);
   const cut = read(input.cut);
   if ((input.limit.trim() && limit === null) || (input.cut.trim() && cut === null))
     return { ok: false, reason: 'amount' };
+  // A fixed cut needs an amount; other modes keep the last one typed for switching back.
+  if (input.mode === 'fixed' && !cut) return { ok: false, reason: 'amount' };
   const { error, count } = await supabase
     .from('staff')
-    .update({ advance_limit_paise: limit, advance_cut_paise: cut }, { count: 'exact' })
+    .update(
+      {
+        advance_limit_paise: limit,
+        advance_cut_mode: input.mode,
+        ...(cut !== null ? { advance_cut_paise: cut } : {}),
+        expense_payback: input.payback,
+        expense_recover: input.recover,
+      },
+      { count: 'exact' },
+    )
     .eq('person_id', input.staffId)
     .eq('shop_id', input.shopId);
   if (error || count === 0) return { ok: false, reason: 'failed', message: error?.message ?? '—' };

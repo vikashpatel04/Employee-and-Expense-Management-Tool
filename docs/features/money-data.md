@@ -28,6 +28,15 @@ Status: **schema + rules done, not yet live** (applies on the next push; then `p
    revision 2 (only after the previous one is final, one draft at a time). Finalizing it posts
    only the **differences** as `adjustment` lines (`adjusts` = the line type), dated today.
 
+**Advance and expense settling (2026-10-29, `20261029000001_advance_mode_expense_dues.sql`)**:
+each person's Advance rules (staff Pay / Overview) say how the salary run cuts their advance —
+all of it (default), a fixed amount a month with the rest carried, or none — and whether
+expenses they paid for the shop are paid back with the salary and expenses charged to them are
+cut from it. Like the advance cut, the pay-back and the expense cut are payslip amounts, not
+ledger lines: the reimbursement / charge is already on the ledger and paying net pay settles
+it. A re-run of a finalized month adds back what that payslip had settled
+(`salary-month.ts` `settledThisMonth`). Tests: `supabase/tests/expense-dues.test.ts` (7).
+
 Example from the tests: advances −₹9,000 + ₹1,000 repaid = −₹8,000; October finalized
 (+₹30,000 − ₹1,800 PF − ₹44 late) → ₹20,156; paid ₹26,156 (₹2,000 cut) → **−₹6,000**, exactly
 the advance still owed.
@@ -43,7 +52,11 @@ the advance still owed.
 | `leave_balances`          | per person per month: opening, earned, used, carried, paid out, lapsed                                    |
 | `ledger_balances` (view)  | balance per person = sum of lines                                                                         |
 | `advance_balances` (view) | outstanding advance = given − repaid − cuts on final payslips (latest revision), limit, monthly cut       |
-| `staff.advance_cut_paise` | the person's default monthly advance cut (null = decide each run)                                         |
+| `staff.advance_cut_paise` | the person's monthly advance cut, used when the mode is `fixed`                                           |
+| `staff.advance_cut_mode`  | `all` (default: cut everything outstanding) · `fixed` (the monthly cut; the rest carries) · `none`        |
+| `staff.expense_payback` / `expense_recover` | settle expenses in salary: pay back what the shop owes / cut charges (both on by default) |
+| `expense_balances` (view) | per person: `payback_paise` (reimbursements not reversed − paid back by final payslips) and `charge_paise` (charges − cut by final payslips), with the two switches |
+| `payslips.expense_payback_paise` / `expense_cut_paise` | expenses settled by this payslip; net pay = net before advance + pay-back − advance cut − expense cut (check `payslips_net_pay_check`) |
 
 Views run with the caller's rights, so the same access rules apply.
 

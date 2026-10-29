@@ -24,6 +24,7 @@ import {
 import {
   finalizeSalary,
   loadSalaryRun,
+  PAYSLIP_MINUS_LINES,
   paySalary,
   runSalary,
   type SalaryPerson,
@@ -50,7 +51,7 @@ import { radius, space, useTheme } from '@/lib/theme';
 type Run = Awaited<ReturnType<typeof loadSalaryRun>>;
 type Confirm = { kind: 'finalize' } | { kind: 'pay'; person: SalaryPerson | null };
 const MODES = ['cash', 'upi', 'bank', 'card'] as const;
-const MINUS = ['deduction', 'late_deduction', 'advance_cut'];
+const MINUS = PAYSLIP_MINUS_LINES;
 
 /**
  * Salary run (design: "Salary run · draft review / finalized, pay one"): work out a month with

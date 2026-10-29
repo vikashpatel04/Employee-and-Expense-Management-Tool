@@ -924,6 +924,8 @@ export type Database = {
           advance_cut_paise: number
           created_at: string
           deductions_paise: number
+          expense_cut_paise: number
+          expense_payback_paise: number
           finalized_at: string | null
           finalized_by: string | null
           gross_paise: number
@@ -945,6 +947,8 @@ export type Database = {
           advance_cut_paise?: number
           created_at?: string
           deductions_paise?: number
+          expense_cut_paise?: number
+          expense_payback_paise?: number
           finalized_at?: string | null
           finalized_by?: string | null
           gross_paise?: number
@@ -966,6 +970,8 @@ export type Database = {
           advance_cut_paise?: number
           created_at?: string
           deductions_paise?: number
+          expense_cut_paise?: number
+          expense_payback_paise?: number
           finalized_at?: string | null
           finalized_by?: string | null
           gross_paise?: number
@@ -1392,10 +1398,13 @@ export type Database = {
       }
       staff: {
         Row: {
+          advance_cut_mode: string
           advance_cut_paise: number | null
           advance_limit_paise: number | null
           created_at: string
           device_id: string | null
+          expense_payback: boolean
+          expense_recover: boolean
           joining_date: string
           leaving_date: string | null
           person_id: string
@@ -1404,10 +1413,13 @@ export type Database = {
           status: string
         }
         Insert: {
+          advance_cut_mode?: string
           advance_cut_paise?: number | null
           advance_limit_paise?: number | null
           created_at?: string
           device_id?: string | null
+          expense_payback?: boolean
+          expense_recover?: boolean
           joining_date: string
           leaving_date?: string | null
           person_id: string
@@ -1416,10 +1428,13 @@ export type Database = {
           status?: string
         }
         Update: {
+          advance_cut_mode?: string
           advance_cut_paise?: number | null
           advance_limit_paise?: number | null
           created_at?: string
           device_id?: string | null
+          expense_payback?: boolean
+          expense_recover?: boolean
           joining_date?: string
           leaving_date?: string | null
           person_id?: string
@@ -1569,6 +1584,7 @@ export type Database = {
     Views: {
       advance_balances: {
         Row: {
+          advance_cut_mode: string | null
           advance_cut_paise: number | null
           advance_limit_paise: number | null
           outstanding_paise: number | null
@@ -1576,6 +1592,7 @@ export type Database = {
           staff_id: string | null
         }
         Insert: {
+          advance_cut_mode?: string | null
           advance_cut_paise?: number | null
           advance_limit_paise?: number | null
           outstanding_paise?: never
@@ -1583,6 +1600,7 @@ export type Database = {
           staff_id?: string | null
         }
         Update: {
+          advance_cut_mode?: string | null
           advance_cut_paise?: number | null
           advance_limit_paise?: number | null
           outstanding_paise?: never
@@ -1603,6 +1621,25 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "people"
             referencedColumns: ["shop_id", "id"]
+          },
+        ]
+      }
+      expense_balances: {
+        Row: {
+          charge_paise: number | null
+          expense_payback: boolean | null
+          expense_recover: boolean | null
+          payback_paise: number | null
+          shop_id: string | null
+          staff_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
           },
         ]
       }

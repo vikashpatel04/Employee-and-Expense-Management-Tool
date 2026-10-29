@@ -4,6 +4,7 @@ import {
   compareDates,
   formatDisplayDate,
   monthOf,
+  type AdvanceCutMode,
   type BusinessDate,
 } from '@fincrew/core';
 import type { Supabase } from './client';
@@ -124,7 +125,13 @@ export type RequestItem = {
 /** What helps decide: paid leave left for the days asked, or the advance state. */
 export type RequestContext =
   | { kind: 'leave'; days: number; paidLeft: number | null }
-  | { kind: 'advance'; outstanding: number; limit: number | null; cut: number | null };
+  | {
+      kind: 'advance';
+      outstanding: number;
+      limit: number | null;
+      cut: number | null;
+      mode: AdvanceCutMode;
+    };
 
 /** Leave days asked for, inclusive. */
 export const requestDays = (from: string, to: string) => {
@@ -189,6 +196,7 @@ export async function loadRequestContext(
         outstanding: b?.outstanding ?? 0,
         limit: b?.limit ?? null,
         cut: b?.cut ?? null,
+        mode: b?.mode ?? 'all',
       });
     } else if (i.from && i.to) {
       const days = requestDays(i.from, i.to);

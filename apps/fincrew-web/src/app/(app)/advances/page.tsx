@@ -75,7 +75,11 @@ export default async function AdvancesPage() {
                       {formatINR(r.outstanding)}
                     </td>
                     <td className="text-money-sm px-4 py-3 text-right">
-                      {r.cut == null ? '—' : formatINR(r.cut)}
+                      {r.mode === 'all'
+                        ? t('staffDetail.advance.cutAll')
+                        : r.mode === 'fixed'
+                          ? formatINR(r.cut ?? 0)
+                          : '—'}
                     </td>
                     <td className="text-money-sm px-4 py-3 text-right">
                       {r.limit == null ? '—' : formatINR(r.limit)}

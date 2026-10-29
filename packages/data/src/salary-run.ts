@@ -30,6 +30,9 @@ export type SalaryPerson = {
   gross: number;
   deductions: number;
   cut: number;
+  /** Expenses paid back with this salary / expenses charged to them cut from it. */
+  payback: number;
+  expenseCut: number;
   net: number;
   paidAmount: number;
   state: 'draft' | 'finalized' | 'paid';
@@ -92,6 +95,8 @@ export async function loadSalaryRun(
       gross: Number(r.gross_paise),
       deductions: Number(r.deductions_paise),
       cut: Number(r.advance_cut_paise),
+      payback: Number(r.expense_payback_paise),
+      expenseCut: Number(r.expense_cut_paise),
       net,
       paidAmount,
       state: r.status === 'draft' ? 'draft' : paidAmount >= net ? 'paid' : 'finalized',
@@ -141,7 +146,7 @@ export async function runSalary(
     computeMonth(supabase, shopId, year, month),
     supabase
       .from('payslips')
-      .select('id, staff_id, revision, status, lines, advance_cut_paise')
+      .select('id, staff_id, revision, status, lines')
       .eq('run_id', run.id)
       .order('revision', { ascending: false }),
   ]);
@@ -167,6 +172,8 @@ export async function runSalary(
       deductions_paise: r.deductions,
       net_before_advance_paise: r.netBeforeAdvance,
       advance_cut_paise: r.advanceCut,
+      expense_payback_paise: r.expensePayback,
+      expense_cut_paise: r.expenseCut,
       net_pay_paise: r.netPay,
     };
     const prev = latest.get(p.staffId);
@@ -174,11 +181,8 @@ export async function runSalary(
       const { error } = await supabase.from('payslips').update(row).eq('id', prev.id);
       if (error) return failed(error.message);
       updated++;
-    } else if (
-      !prev ||
-      !sameJson(prev.lines, r.lines) ||
-      Number(prev.advance_cut_paise) !== r.advanceCut
-    ) {
+    } else if (!prev || !sameJson(prev.lines, r.lines)) {
+      // The lines include the advance and expense cuts, so any money change shows here.
       const { error } = await supabase
         .from('payslips')
         .insert({ ...row, shop_id: shopId, run_id: run.id, staff_id: p.staffId });
@@ -357,6 +361,8 @@ export async function loadPayslipView(supabase: Supabase, payslipId: string) {
     deductions: Number(slip.deductions_paise),
     netBeforeAdvance: Number(slip.net_before_advance_paise),
     cut: Number(slip.advance_cut_paise),
+    payback: Number(slip.expense_payback_paise),
+    expenseCut: Number(slip.expense_cut_paise),
     net: Number(slip.net_pay_paise),
     paid,
   };

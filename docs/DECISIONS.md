@@ -2,6 +2,20 @@
 
 Choices made during the build that PLAN.md doesn't spell out. Newest first.
 
+## 2026-10-29 — Advances and expenses settled in the salary (owner)
+
+- **The advance comes off the salary automatically, set per staff member** (owner: "should be in
+  the settings of staff alone"): mode `all` (default), `fixed` (monthly cut, the rest carries to
+  next month) or `none`. Existing staff with a monthly cut became `fixed`; those without one
+  (which used to mean "no cut") became `all`. No per-run override.
+- **Expenses in the salary are two per-staff switches, both on**: pay back what the shop owes
+  them (staff-paid expenses with "pay them back") and cut what is charged to them. The owner
+  floated a separate "pay back" entry too; not built — the salary settles it, and the switch
+  can be turned off for someone who is paid back another way. Add a pay-back entry if asked.
+- **Pay-back and charges are not netted**: each has its own payslip line (Expenses paid back /
+  Expenses charged), so the payslip shows both. The pay-back is added before the cuts, so it can
+  cover an advance cut; nothing takes net pay below zero; what doesn't fit carries.
+
 ## 2026-10-24 — Staffora app
 
 - **Its own app** (`apps/staffora-mobile`, `@fincrew/staffora`), set up like FinCrew's. The small

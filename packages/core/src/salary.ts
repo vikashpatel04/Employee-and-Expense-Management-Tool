@@ -8,8 +8,11 @@
  *                         daily: wage × payable days; hourly: hours × rate)
  *   gross              = earned + overtime + allowances + leave payout
  *   net_before_advance = gross − (fixed deductions + late deductions)
- *   advance_cut        = scheduled cut, capped at what's outstanding and at net_before_advance
- *   net_pay            = net_before_advance − advance_cut
+ *   expense_payback    = what the shop owes them for expenses they paid (when settled in salary)
+ *   advance_cut        = scheduled cut, capped at what's outstanding and at
+ *                        net_before_advance + expense_payback
+ *   expense_cut        = expenses charged to them, capped at what is left
+ *   net_pay            = net_before_advance + expense_payback − advance_cut − expense_cut
  *
  * Every payslip line is computed exactly (fractions) and rounded to the rupee ONCE.
  * Lines carry kinds and names, never display text: the apps translate them.
@@ -94,6 +97,25 @@ export interface SalaryInput {
   /** Unused paid leave paid out this month (from the leave balance roll). */
   leavePayoutDays?: number;
   advance?: { scheduledCut: Paise; outstanding: Paise };
+  /** Expenses settled through the salary: owed to them (paid back) and charged to them (cut). */
+  expenses?: { payback: Paise; charges: Paise };
+}
+
+/** How a person's advance is recovered (staff Pay → Advance rules). */
+export type AdvanceCutMode = 'all' | 'fixed' | 'none';
+
+/**
+ * This month's scheduled advance cut: all = everything outstanding, fixed = the monthly cut (the
+ * rest carries to the next month), none = no automatic cut. calculateSalary caps it further.
+ */
+export function scheduledAdvanceCut(a: {
+  mode: AdvanceCutMode;
+  monthlyCut: Paise | null;
+  outstanding: Paise;
+}): Paise {
+  if (a.mode === 'all') return Math.max(0, a.outstanding);
+  if (a.mode === 'fixed') return a.monthlyCut ?? 0;
+  return 0;
 }
 
 export type PayslipLineKind =
@@ -103,7 +125,9 @@ export type PayslipLineKind =
   | 'leave_payout'
   | 'deduction'
   | 'late_deduction'
-  | 'advance_cut';
+  | 'advance_cut'
+  | 'expense_payback'
+  | 'expense_cut';
 
 export interface PayslipLine {
   kind: PayslipLineKind;
@@ -129,7 +153,9 @@ export interface SalaryResult {
   gross: Paise;
   deductions: Paise;
   netBeforeAdvance: Paise;
+  expensePayback: Paise;
   advanceCut: Paise;
+  expenseCut: Paise;
   netPay: Paise;
   warnings: SalaryWarning[];
 }
@@ -297,11 +323,16 @@ export function calculateSalary(input: SalaryInput): SalaryResult {
   const deductions = total(['deduction', 'late_deduction']);
   const netBeforeAdvance = gross - deductions;
 
+  const expensePayback = Math.max(0, input.expenses?.payback ?? 0);
+  if (expensePayback > 0) lines.push({ kind: 'expense_payback', amount: expensePayback });
+  const available = netBeforeAdvance + expensePayback;
   const advanceCut = input.advance
-    ? Math.max(0, Math.min(input.advance.scheduledCut, input.advance.outstanding, netBeforeAdvance))
+    ? Math.max(0, Math.min(input.advance.scheduledCut, input.advance.outstanding, available))
     : 0;
   if (advanceCut > 0) lines.push({ kind: 'advance_cut', amount: advanceCut });
-  const netPay = netBeforeAdvance - advanceCut;
+  const expenseCut = Math.max(0, Math.min(input.expenses?.charges ?? 0, available - advanceCut));
+  if (expenseCut > 0) lines.push({ kind: 'expense_cut', amount: expenseCut });
+  const netPay = available - advanceCut - expenseCut;
 
   const warnings: SalaryWarning[] = [];
   const overdueUnmarked = input.asOf
@@ -322,7 +353,9 @@ export function calculateSalary(input: SalaryInput): SalaryResult {
     gross,
     deductions,
     netBeforeAdvance,
+    expensePayback,
     advanceCut,
+    expenseCut,
     netPay,
     warnings,
   };

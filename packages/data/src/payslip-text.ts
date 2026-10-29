@@ -15,7 +15,7 @@ export type PayslipView = NonNullable<Awaited<ReturnType<typeof loadPayslipView>
 export type Translate = (key: string, options?: Record<string, unknown>) => string;
 
 /** Lines that take money away (shown with a minus). */
-export const PAYSLIP_MINUS_LINES = ['deduction', 'late_deduction', 'advance_cut'];
+export const PAYSLIP_MINUS_LINES = ['deduction', 'late_deduction', 'advance_cut', 'expense_cut'];
 
 /** The days a payslip covers: the month, cut to the joining and leaving dates. */
 export function payslipPeriod(slip: PayslipView): { from: BusinessDate; to: BusinessDate } {

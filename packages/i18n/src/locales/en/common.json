@@ -204,7 +204,8 @@
       "title": "Advance to recover",
       "none": "No advance outstanding",
       "cut": "Cut {{amount}} each month",
-      "noCut": "Cut decided at each salary run",
+      "cutAll": "Cut in full from salary",
+      "noCut": "Not cut from salary",
       "limit": "Limit {{amount}}",
       "noLimit": "No limit",
       "edit": "Advance rules"
@@ -570,6 +571,8 @@
       "deduction": "{{name}}",
       "late_deduction": "Late deduction",
       "advance_cut": "Advance cut",
+      "expense_payback": "Expenses paid back",
+      "expense_cut": "Expenses charged",
       "net": "Net pay"
     },
     "days": {
@@ -638,9 +641,23 @@
     "save": "Save",
     "saving": "Saving…",
     "settings": {
-      "title": "Advance rules for this person",
-      "limit": "Limit (₹, blank = no limit)",
-      "cut": "Cut from each salary (₹, blank = decide at each run)",
+      "title": "Advance and expense rules for this person",
+      "limit": "Advance limit (₹, blank = no limit)",
+      "how": "Advance in the salary",
+      "modes": {
+        "all": "Cut all of it",
+        "allHint": "The whole advance comes off the next salary. Anything the salary can't cover carries to the month after.",
+        "fixed": "Cut a fixed amount each month",
+        "fixedHint": "Only this much comes off each salary; the rest carries to the next month.",
+        "none": "Don't cut",
+        "noneHint": "The salary run leaves the advance alone (they repay it in cash)."
+      },
+      "cut": "Monthly cut (₹)",
+      "expenses": "Expenses in the salary",
+      "payback": "Pay back expenses they paid for the shop",
+      "paybackHint": "What the shop owes them is added to their salary.",
+      "recover": "Cut expenses charged to them",
+      "recoverHint": "Expenses charged to them come off their salary.",
       "save": "Save rules"
     },
     "undo": "Undo",
@@ -1377,8 +1394,9 @@
       "advanceRules": "Advance rules",
       "advanceLimit": "Advance limit",
       "advanceCut": "Cut from each salary",
+      "cutAll": "All of it",
       "noLimit": "No limit",
-      "cutAtRun": "Decided at each run",
+      "cutAtRun": "Not cut",
       "docsTab": "Docs"
     },
     "money": {
@@ -1453,7 +1471,8 @@
         "total_other": "Advances outstanding · {{count}} people",
         "whoOwes": "Who owes",
         "cutMonthly": "Cut {{amount}} a month",
-        "cutAtRun": "Cut decided at each salary run",
+        "cutAtRun": "Not cut from salary",
+        "cutAll": "Cut in full from salary",
         "limit": "limit {{amount}}",
         "noLimit": "no limit",
         "owes": "Owes {{amount}}",
@@ -1542,7 +1561,8 @@
     "limit": "limit {{amount}}",
     "noLimit": "no limit",
     "cut": "cut {{amount}} a month",
-    "cutAtRun": "cut decided at the salary run",
+    "cutAtRun": "not cut from salary",
+    "cutAll": "cut in full from salary",
     "markAs": "Mark the days as",
     "leaveStatus": {
       "paid_leave": "Paid leave",
@@ -1767,7 +1787,7 @@
       "settled": "All settled",
       "advance": "Advance to repay",
       "cut": "{{amount}} will be cut from your next salary.",
-      "cutAtRun": "The shop decides the cut at each salary.",
+      "cutAtRun": "The shop doesn't cut it from your salary.",
       "tabsLabel": "Ledger or payslips",
       "ledger": "Ledger",
       "payslips": "Payslips",

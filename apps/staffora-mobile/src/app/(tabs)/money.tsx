@@ -106,11 +106,15 @@ export default function Money() {
             </View>
             {(info.advance ?? 0) > 0 && (
               <Text muted>
-                {info.advanceCut != null
-                  ? t(`${m}.cut`, {
-                      amount: formatINR(Math.min(info.advanceCut, info.advance ?? 0)),
-                    })
-                  : t(`${m}.cutAtRun`)}
+                {info.advanceMode === 'none'
+                  ? t(`${m}.cutAtRun`)
+                  : t(`${m}.cut`, {
+                      amount: formatINR(
+                        info.advanceMode === 'all'
+                          ? (info.advance ?? 0)
+                          : Math.min(info.advanceCut ?? 0, info.advance ?? 0),
+                      ),
+                    })}
               </Text>
             )}
           </Card>

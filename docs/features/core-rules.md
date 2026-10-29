@@ -84,6 +84,9 @@ was typed); password = a 4-digit PIN (fixed length).
 | ----------------------------------------------------------------------- | ------------------- | ---------------------------------------------- |
 | `smallExpenseLimit`                                                     | shop                | none (amounts below it default to Not tracked) |
 | Advance limit                                                           | per staff member    | none                                           |
+| Advance cut mode: all / fixed monthly cut (rest carries) / none         | per staff member    | all                                            |
+| Pay back expenses they paid for the shop in the salary                  | per staff member    | on                                             |
+| Cut expenses charged to them from the salary                            | per staff member    | on                                             |
 | Pay type, salary/wage/rate, overtime rate, `hoursPerDay` (hourly)       | pay settings, dated | —                                              |
 | Allowances / fixed deductions: amount, fixed or prorated, from/to dates | per staff member    | —                                              |
 | Holidays: date, paid or not                                             | shop                | —                                              |
@@ -94,7 +97,9 @@ was typed); password = a 4-digit PIN (fixed length).
 - Business dates are Asia/Kolkata; IST has no daylight saving.
 - Ledger lines are never edited or deleted (PLAN §4.7). The advance cut is a payslip line, not a
   ledger line, because the advance is already on the ledger (see Ledger below).
-- The advance cut never takes net pay below zero (PLAN §4.6).
+- The advance cut never takes net pay below zero (PLAN §4.6). Order: net before advance + expense
+  pay-back, then the advance cut, then the expense cut, each capped at what is left
+  (`calculateSalary` `expenses`, `scheduledAdvanceCut`; owner, 29/10/2026).
 
 ## Modules
 

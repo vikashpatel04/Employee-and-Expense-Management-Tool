@@ -1,4 +1,10 @@
-import { addDays, monthOf, type BusinessDate } from '@fincrew/core';
+import {
+  addDays,
+  monthOf,
+  scheduledAdvanceCut,
+  type AdvanceCutMode,
+  type BusinessDate,
+} from '@fincrew/core';
 import { loadAttendanceMonth } from './attendance-month';
 import { paidByPayslip } from './salary-month';
 import type { Supabase } from './client';
@@ -37,7 +43,7 @@ export async function loadMoney(supabase: Supabase, shopId: string) {
     supabase.from('ledger_balances').select('balance_paise').eq('shop_id', shopId),
     supabase
       .from('advance_balances')
-      .select('outstanding_paise, advance_cut_paise')
+      .select('outstanding_paise, advance_cut_paise, advance_cut_mode')
       .eq('shop_id', shopId),
   ]);
   const due = (balances ?? []).map((b) => Number(b.balance_paise ?? 0)).filter((v) => v > 0);
@@ -47,7 +53,19 @@ export async function loadMoney(supabase: Supabase, shopId: string) {
     dueCount: due.length,
     advances: owing.reduce((a, x) => a + Number(x.outstanding_paise), 0),
     advanceCount: owing.length,
-    monthlyCut: owing.reduce((a, x) => a + Number(x.advance_cut_paise ?? 0), 0),
+    monthlyCut: owing.reduce(
+      (a, x) =>
+        a +
+        Math.min(
+          Number(x.outstanding_paise),
+          scheduledAdvanceCut({
+            mode: x.advance_cut_mode as AdvanceCutMode,
+            monthlyCut: x.advance_cut_paise == null ? null : Number(x.advance_cut_paise),
+            outstanding: Number(x.outstanding_paise),
+          }),
+        ),
+      0,
+    ),
   };
 }
 

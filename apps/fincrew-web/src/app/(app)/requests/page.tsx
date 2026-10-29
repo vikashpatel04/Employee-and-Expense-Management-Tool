@@ -37,7 +37,11 @@ function contextText(c: RequestContext | undefined) {
   return [
     t('requests.owes', { amount: formatINR(c.outstanding) }),
     c.limit != null ? t('requests.limit', { amount: formatINR(c.limit) }) : t('requests.noLimit'),
-    c.cut != null ? t('requests.cut', { amount: formatINR(c.cut) }) : t('requests.cutAtRun'),
+    c.mode === 'all'
+      ? t('requests.cutAll')
+      : c.mode === 'fixed'
+        ? t('requests.cut', { amount: formatINR(c.cut ?? 0) })
+        : t('requests.cutAtRun'),
   ].join(' · ');
 }
 

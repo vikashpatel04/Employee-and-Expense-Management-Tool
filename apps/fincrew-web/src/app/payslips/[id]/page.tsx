@@ -189,11 +189,22 @@ export default async function PayslipPage({ params }: { params: Promise<{ id: st
               {formatINR(Number(slip.net_before_advance_paise))}
             </span>
           </div>
-          {Number(slip.advance_cut_paise) > 0 && (
-            <div className={row}>
-              <span className="text-body">{t('salary.lines.advance_cut')}</span>
-              <span className="text-money-sm">−{formatINR(Number(slip.advance_cut_paise))}</span>
-            </div>
+          {(
+            [
+              ['expense_payback', slip.expense_payback_paise, ''],
+              ['advance_cut', slip.advance_cut_paise, '−'],
+              ['expense_cut', slip.expense_cut_paise, '−'],
+            ] as const
+          ).map(([kind, amount, sign]) =>
+            Number(amount) > 0 ? (
+              <div key={kind} className={row}>
+                <span className="text-body">{t(`salary.lines.${kind}`)}</span>
+                <span className="text-money-sm">
+                  {sign}
+                  {formatINR(Number(amount))}
+                </span>
+              </div>
+            ) : null,
           )}
           <div className="flex items-center justify-between gap-4 py-3">
             <span className="text-title-md">{t('payslip.net')}</span>

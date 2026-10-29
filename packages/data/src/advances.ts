@@ -1,4 +1,9 @@
-import { parseDisplayDate, parseRupees, type BusinessDate } from '@fincrew/core';
+import {
+  parseDisplayDate,
+  parseRupees,
+  type AdvanceCutMode,
+  type BusinessDate,
+} from '@fincrew/core';
 import type { Supabase } from './client';
 import { PAYMENT_MODES } from './expense-write';
 
@@ -6,8 +11,9 @@ export type AdvanceBalance = {
   staffId: string;
   name: string;
   outstanding: number;
-  /** Monthly cut and limit; null = decide at each salary run / no limit. */
+  /** Monthly cut (used when mode is fixed) and limit; null = none set / no limit. */
   cut: number | null;
+  mode: AdvanceCutMode;
   limit: number | null;
 };
 
@@ -19,7 +25,7 @@ export async function loadAdvanceBalances(supabase: Supabase, shopId: string) {
   const [{ data: balances }, { data: staff }] = await Promise.all([
     supabase
       .from('advance_balances')
-      .select('staff_id, outstanding_paise, advance_limit_paise, advance_cut_paise')
+      .select('staff_id, outstanding_paise, advance_limit_paise, advance_cut_paise, advance_cut_mode')
       .eq('shop_id', shopId),
     supabase.from('staff').select('person_id, people!inner(name)').eq('shop_id', shopId),
   ]);
@@ -29,6 +35,7 @@ export async function loadAdvanceBalances(supabase: Supabase, shopId: string) {
     name: names.get(b.staff_id!) ?? '',
     outstanding: Number(b.outstanding_paise ?? 0),
     cut: b.advance_cut_paise == null ? null : Number(b.advance_cut_paise),
+    mode: (b.advance_cut_mode ?? 'all') as AdvanceCutMode,
     limit: b.advance_limit_paise == null ? null : Number(b.advance_limit_paise),
   }));
   const rows = all.filter((r) => r.outstanding > 0).sort((a, b) => b.outstanding - a.outstanding);

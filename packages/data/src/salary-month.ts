@@ -9,7 +9,9 @@ import {
   monthStart,
   paidLeaveUsed,
   rollLeaveMonth,
+  scheduledAdvanceCut,
   templateVersionOn,
+  type AdvanceCutMode,
   type BusinessDate,
   type LeaveMonth,
   type LeaveTemplateVersion,
@@ -37,8 +39,9 @@ export type ComputedPayslip = {
 
 /**
  * Work out every payslip for one month with packages/core, from the same inputs as the
- * attendance grid (src/lib/mappers.ts), plus allowances, deductions, advances and last month's
- * carried leave. Nothing is written here.
+ * attendance grid (src/lib/mappers.ts), plus allowances, deductions, advances, expenses to settle
+ * (each person's advance cut mode and expense switches) and last month's carried leave. Nothing
+ * is written here.
  */
 export async function computeMonth(
   supabase: Supabase,
@@ -52,11 +55,13 @@ export async function computeMonth(
   const lookTo = addDays(end, 31);
   const prev = month === 1 ? { y: year - 1, m: 12 } : { y: year, m: month - 1 };
 
-  const [staffQ, attQ, holQ, asgQ, verQ, payQ, allowQ, dedQ, advQ, balQ, shopQ] = await Promise.all(
-    [
+  const [staffQ, attQ, holQ, asgQ, verQ, payQ, allowQ, dedQ, advQ, balQ, shopQ, expQ, settled] =
+    await Promise.all([
       supabase
         .from('staff')
-        .select('person_id, joining_date, leaving_date, advance_cut_paise, people!inner(name)')
+        .select(
+          'person_id, joining_date, leaving_date, advance_cut_paise, advance_cut_mode, expense_payback, expense_recover, people!inner(name)',
+        )
         .eq('shop_id', shopId)
         .lte('joining_date', end)
         .or(`leaving_date.is.null,leaving_date.gte.${start}`),
@@ -85,8 +90,12 @@ export async function computeMonth(
         .eq('year', prev.y)
         .eq('month', prev.m),
       supabase.from('shops').select('settings').eq('id', shopId).single(),
-    ],
-  );
+      supabase
+        .from('expense_balances')
+        .select('staff_id, payback_paise, charge_paise')
+        .eq('shop_id', shopId),
+      settledThisMonth(supabase, shopId, year, month),
+    ]);
 
   const rules = toShopRules(shopQ.data?.settings);
   const holidays = (holQ.data ?? []).map((h) => ({ date: h.date, name: h.name, paid: h.paid }));
@@ -102,6 +111,12 @@ export async function computeMonth(
     (advQ.data ?? []).map((a) => [a.staff_id, Number(a.outstanding_paise ?? 0)]),
   );
   const carried = new Map((balQ.data ?? []).map((b) => [b.staff_id, Number(b.carried)]));
+  const dues = new Map(
+    (expQ.data ?? []).map((e) => [
+      e.staff_id,
+      { payback: Number(e.payback_paise ?? 0), charges: Number(e.charge_paise ?? 0) },
+    ]),
+  );
 
   return (staffQ.data ?? [])
     .map((s): ComputedPayslip => {
@@ -134,10 +149,26 @@ export async function computeMonth(
         })),
         rules: { pay: rules.pay, late: rules.late },
         asOf: businessDateOf(new Date()),
-        advance: {
-          scheduledCut: Number(s.advance_cut_paise ?? 0),
-          outstanding: outstanding.get(staffId) ?? 0,
-        },
+        ...(() => {
+          // A re-run of a finalized month: what that payslip settled counts as still open.
+          const done = settled.get(staffId);
+          const owed = (outstanding.get(staffId) ?? 0) + (done?.advanceCut ?? 0);
+          const due = dues.get(staffId);
+          return {
+            advance: {
+              scheduledCut: scheduledAdvanceCut({
+                mode: s.advance_cut_mode as AdvanceCutMode,
+                monthlyCut: s.advance_cut_paise == null ? null : Number(s.advance_cut_paise),
+                outstanding: owed,
+              }),
+              outstanding: owed,
+            },
+            expenses: {
+              payback: s.expense_payback ? (due?.payback ?? 0) + (done?.payback ?? 0) : 0,
+              charges: s.expense_recover ? (due?.charges ?? 0) + (done?.expenseCut ?? 0) : 0,
+            },
+          };
+        })(),
       };
 
       // First pass gives the days (and so paid leave used); the leave roll may add a payout.
@@ -174,6 +205,36 @@ export async function computeMonth(
       };
     })
     .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/**
+ * What this month's latest finalized payslips already settled (advance cut, expenses paid back
+ * and cut), per person. The balances views already subtract them; a re-run adds them back.
+ */
+async function settledThisMonth(supabase: Supabase, shopId: string, year: number, month: number) {
+  const out = new Map<string, { advanceCut: number; payback: number; expenseCut: number }>();
+  const { data: run } = await supabase
+    .from('salary_runs')
+    .select('id')
+    .eq('shop_id', shopId)
+    .eq('year', year)
+    .eq('month', month)
+    .maybeSingle();
+  if (!run) return out;
+  const { data } = await supabase
+    .from('payslips')
+    .select('staff_id, advance_cut_paise, expense_payback_paise, expense_cut_paise')
+    .eq('run_id', run.id)
+    .eq('status', 'finalized')
+    .order('revision', { ascending: false });
+  for (const p of data ?? [])
+    if (!out.has(p.staff_id))
+      out.set(p.staff_id, {
+        advanceCut: Number(p.advance_cut_paise),
+        payback: Number(p.expense_payback_paise),
+        expenseCut: Number(p.expense_cut_paise),
+      });
+  return out;
 }
 
 /** Amount paid against each payslip: payments minus their reversals. */

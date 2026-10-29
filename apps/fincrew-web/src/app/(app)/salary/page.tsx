@@ -2,7 +2,7 @@ import { PendingLink as Link } from '@/components/app/pending-link';
 import { redirect } from 'next/navigation';
 import { AlertTriangle, ChevronDown, ChevronLeft, ChevronRight, FileText } from 'lucide-react';
 import { formatINR, monthOf, type PayslipLine } from '@fincrew/core';
-import { loadSalaryRun } from '@fincrew/data';
+import { loadSalaryRun, PAYSLIP_MINUS_LINES } from '@fincrew/data';
 import { todayIST } from '@/lib/format';
 import { t } from '@/lib/i18n';
 import { requireMe } from '@/lib/session';
@@ -296,9 +296,7 @@ export default async function SalaryPage({
                   <div className="grid gap-4 bg-[var(--canvas)] px-4 py-4 md:grid-cols-2">
                     <ul className="rounded-[var(--radius-md)] bg-[var(--surface)] shadow-[var(--elevation-1)]">
                       {p.lines.map((l, i) => {
-                        const minus = ['deduction', 'late_deduction', 'advance_cut'].includes(
-                          l.kind,
-                        );
+                        const minus = PAYSLIP_MINUS_LINES.includes(l.kind);
                         return (
                           <li
                             key={i}

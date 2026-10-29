@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { CalendarClock, Check, Pencil } from 'lucide-react-native';
 import {
@@ -8,15 +8,16 @@ import {
   formatINR,
   formatTimeOfDay,
   paiseToInput,
+  type AdvanceCutMode,
 } from '@fincrew/core';
 import { loadPay, saveAdvanceSettings } from '@fincrew/data';
-import { AmountField, FormMessage } from '@/components/form';
+import { AmountField, Checkbox, FormMessage } from '@/components/form';
 import { Sheet } from '@/components/sheet';
 import { Button, Card, Text } from '@/components/ui';
 import { t } from '@/lib/i18n';
 import { useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
-import { space, useTheme } from '@/lib/theme';
+import { radius, space, useTheme } from '@/lib/theme';
 
 type Pay = Awaited<ReturnType<typeof loadPay>>;
 
@@ -53,8 +54,9 @@ function Row({ label, detail, value }: { label: string; detail?: string; value: 
 
 /**
  * Staff detail · Pay (design: Staff detail · Pay): current pay, advance rules, allowances,
- * deductions, history. "Change pay from a date" (staff.pay.edit) opens `pay-change`; advance
- * limit and monthly cut change in a sheet (staff.edit, shared `saveAdvanceSettings`). Allowances,
+ * deductions, history. "Change pay from a date" (staff.pay.edit) opens `pay-change`; the advance
+ * limit, advance cut mode (all / fixed monthly cut / none) and the expense switches change in a
+ * sheet (staff.edit, shared `saveAdvanceSettings`). Allowances,
  * deductions, leave template and own rules still change on the website.
  */
 export function PaySection({
@@ -62,20 +64,30 @@ export function PaySection({
   name,
   advanceLimit,
   advanceCut,
+  advanceMode,
+  expensePayback,
+  expenseRecover,
   onChanged,
 }: {
   staffId: string;
   name: string;
   advanceLimit: number | null;
   advanceCut: number | null;
+  advanceMode: AdvanceCutMode;
+  expensePayback: boolean;
+  expenseRecover: boolean;
   /** Reload the staff page after the advance rules change. */
   onChanged: () => void;
 }) {
   const { me, can } = useSession();
+  const { c } = useTheme();
   const [pay, setPay] = useState<Pay | null>(null);
   const [rulesOpen, setRulesOpen] = useState(false);
   const [limit, setLimit] = useState('');
   const [cut, setCut] = useState('');
+  const [mode, setMode] = useState<AdvanceCutMode>('all');
+  const [payback, setPayback] = useState(true);
+  const [recover, setRecover] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState<string | null>(null);
@@ -90,6 +102,9 @@ export function PaySection({
   const openRules = () => {
     setLimit(advanceLimit == null ? '' : paiseToInput(advanceLimit));
     setCut(advanceCut == null ? '' : paiseToInput(advanceCut));
+    setMode(advanceMode);
+    setPayback(expensePayback);
+    setRecover(expenseRecover);
     setError(null);
     setSaved(null);
     setRulesOpen(true);
@@ -97,7 +112,15 @@ export function PaySection({
   const saveRules = async () => {
     if (!me) return;
     setBusy(true);
-    const r = await saveAdvanceSettings(supabase, { ...me, staffId, limit, cut });
+    const r = await saveAdvanceSettings(supabase, {
+      ...me,
+      staffId,
+      limit,
+      mode,
+      cut,
+      payback,
+      recover,
+    });
     setBusy(false);
     if (r.ok) {
       setRulesOpen(false);
@@ -183,7 +206,21 @@ export function PaySection({
           />
           <Row
             label={t(`${m}.advanceCut`)}
-            value={advanceCut == null ? t(`${m}.cutAtRun`) : formatINR(advanceCut)}
+            value={
+              advanceMode === 'all'
+                ? t(`${m}.cutAll`)
+                : advanceMode === 'fixed'
+                  ? formatINR(advanceCut ?? 0)
+                  : t(`${m}.cutAtRun`)
+            }
+          />
+          <Row
+            label={t('advances.settings.payback')}
+            value={t(expensePayback ? 'staffDetail.rules.yes' : 'staffDetail.rules.no')}
+          />
+          <Row
+            label={t('advances.settings.recover')}
+            value={t(expenseRecover ? 'staffDetail.rules.yes' : 'staffDetail.rules.no')}
           />
         </Card>
         {can('staff.edit') && (
@@ -252,8 +289,37 @@ export function PaySection({
         title={t('advances.settings.title')}
         subtitle={name}
       >
+        <Text variant="label-sm">{t('advances.settings.how')}</Text>
+        {(['all', 'fixed', 'none'] as const).map((x) => (
+          <Pressable
+            key={x}
+            accessibilityRole="radio"
+            accessibilityState={{ checked: mode === x }}
+            onPress={() => setMode(x)}
+            style={{
+              padding: space['space-3'],
+              gap: 2,
+              borderRadius: radius['radius-md'],
+              borderWidth: 1,
+              borderColor: mode === x ? c.accent : c['line-strong'],
+              backgroundColor: mode === x ? c['accent-soft'] : 'transparent',
+            }}
+          >
+            <Text variant="label-sm">{t(`advances.settings.modes.${x}`)}</Text>
+            <Text variant="caption" muted>
+              {t(`advances.settings.modes.${x}Hint`)}
+            </Text>
+          </Pressable>
+        ))}
+        {mode === 'fixed' && (
+          <AmountField label={t('advances.settings.cut')} value={cut} onChange={setCut} />
+        )}
         <AmountField label={t('advances.settings.limit')} value={limit} onChange={setLimit} />
-        <AmountField label={t('advances.settings.cut')} value={cut} onChange={setCut} />
+        <Text variant="label-sm" style={{ marginTop: space['space-2'] }}>
+          {t('advances.settings.expenses')}
+        </Text>
+        <Checkbox label={t('advances.settings.payback')} value={payback} onChange={setPayback} />
+        <Checkbox label={t('advances.settings.recover')} value={recover} onChange={setRecover} />
         {error && <FormMessage ok={false} text={error} />}
         <View style={{ marginTop: space['space-3'] }}>
           <Button

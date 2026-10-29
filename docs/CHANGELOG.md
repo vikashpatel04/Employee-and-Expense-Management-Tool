@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+### Changed — 2026-10-29 (advances and expenses in the salary)
+
+- Each staff member's **Advance rules** now choose how the salary run recovers their advance:
+  **cut all of it** (new default), **cut a fixed amount each month** (the rest carries to the next
+  month) or **don't cut**. Staff who had a monthly cut keep it; staff without one now have their
+  whole advance cut (up to what the salary covers).
+- Expenses settle in the salary: what the shop owes someone for expenses they paid is **added to
+  their salary** ("Expenses paid back"), and expenses charged to them are **cut** ("Expenses
+  charged"). Two switches per person in Advance rules, both on. Shown on the salary run,
+  payslips and shared payslip text. Migration `20261029000001_advance_mode_expense_dues.sql`.
+- After this goes live, **re-run October's salary** to include them.
+
 ### Fixed — 2026-10-29 (Staffora QR)
 
 - Staffora **Scan QR** on Android now opens Google's QR scanner, which reads the code and checks
