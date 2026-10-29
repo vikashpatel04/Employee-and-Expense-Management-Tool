@@ -65,8 +65,9 @@ Use the Artifact tool, not a web fetch:
   web row x 16470–19430. Idea: each screen leads with the next thing to do and the one big number;
   detail is one tap away (salary: steps Attendance → Work out → Finalize → Pay, people grouped
   Needs a look / Ready / Still to pay / Paid, "How it adds up"; expenses: Add expense and today's
-  total first, "Needs you" (shop owes staff, charged to staff, missing bills), then the list; add
-  expense in three steps with Save now after step 1).
+  total first, "Needs you" (shop owes staff, charged to staff, missing bills), then the list; Day | Month is the
+  period and List | By category how it is shown, so categories work for a day or a month (plus
+  category chips to filter the list); add expense in three steps with Save now after step 1).
 - Reviewed by the owner (2026-10-23). Change made from their comment: Attendance code now has
   **Show QR** instead of Copy code, plus a new artboard "Attendance code · QR" (full-screen QR
   view).
