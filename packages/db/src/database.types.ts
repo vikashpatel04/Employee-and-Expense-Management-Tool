@@ -80,6 +80,13 @@ export type Database = {
             foreignKeyName: "advances_shop_id_staff_id_fkey"
             columns: ["shop_id", "staff_id"]
             isOneToOne: false
+            referencedRelation: "expense_balances"
+            referencedColumns: ["shop_id", "staff_id"]
+          },
+          {
+            foreignKeyName: "advances_shop_id_staff_id_fkey"
+            columns: ["shop_id", "staff_id"]
+            isOneToOne: false
             referencedRelation: "staff"
             referencedColumns: ["shop_id", "person_id"]
           },
@@ -132,6 +139,13 @@ export type Database = {
             columns: ["shop_id", "staff_id"]
             isOneToOne: false
             referencedRelation: "advance_balances"
+            referencedColumns: ["shop_id", "staff_id"]
+          },
+          {
+            foreignKeyName: "allowances_shop_id_staff_id_fkey"
+            columns: ["shop_id", "staff_id"]
+            isOneToOne: false
+            referencedRelation: "expense_balances"
             referencedColumns: ["shop_id", "staff_id"]
           },
           {
@@ -206,6 +220,13 @@ export type Database = {
             columns: ["shop_id", "staff_id"]
             isOneToOne: false
             referencedRelation: "advance_balances"
+            referencedColumns: ["shop_id", "staff_id"]
+          },
+          {
+            foreignKeyName: "attendance_shop_id_staff_id_fkey"
+            columns: ["shop_id", "staff_id"]
+            isOneToOne: false
+            referencedRelation: "expense_balances"
             referencedColumns: ["shop_id", "staff_id"]
           },
           {
@@ -303,6 +324,13 @@ export type Database = {
             columns: ["shop_id", "staff_id"]
             isOneToOne: false
             referencedRelation: "advance_balances"
+            referencedColumns: ["shop_id", "staff_id"]
+          },
+          {
+            foreignKeyName: "attendance_scans_shop_id_staff_id_fkey"
+            columns: ["shop_id", "staff_id"]
+            isOneToOne: false
+            referencedRelation: "expense_balances"
             referencedColumns: ["shop_id", "staff_id"]
           },
           {
@@ -477,6 +505,13 @@ export type Database = {
             foreignKeyName: "expenses_shop_id_charged_to_staff_id_fkey"
             columns: ["shop_id", "charged_to_staff_id"]
             isOneToOne: false
+            referencedRelation: "expense_balances"
+            referencedColumns: ["shop_id", "staff_id"]
+          },
+          {
+            foreignKeyName: "expenses_shop_id_charged_to_staff_id_fkey"
+            columns: ["shop_id", "charged_to_staff_id"]
+            isOneToOne: false
             referencedRelation: "staff"
             referencedColumns: ["shop_id", "person_id"]
           },
@@ -499,6 +534,13 @@ export type Database = {
             columns: ["shop_id", "paid_by_staff_id"]
             isOneToOne: false
             referencedRelation: "advance_balances"
+            referencedColumns: ["shop_id", "staff_id"]
+          },
+          {
+            foreignKeyName: "expenses_shop_id_paid_by_staff_id_fkey"
+            columns: ["shop_id", "paid_by_staff_id"]
+            isOneToOne: false
+            referencedRelation: "expense_balances"
             referencedColumns: ["shop_id", "staff_id"]
           },
           {
@@ -554,6 +596,13 @@ export type Database = {
             columns: ["shop_id", "staff_id"]
             isOneToOne: false
             referencedRelation: "advance_balances"
+            referencedColumns: ["shop_id", "staff_id"]
+          },
+          {
+            foreignKeyName: "fixed_deductions_shop_id_staff_id_fkey"
+            columns: ["shop_id", "staff_id"]
+            isOneToOne: false
+            referencedRelation: "expense_balances"
             referencedColumns: ["shop_id", "staff_id"]
           },
           {
@@ -653,6 +702,13 @@ export type Database = {
             columns: ["shop_id", "staff_id"]
             isOneToOne: false
             referencedRelation: "advance_balances"
+            referencedColumns: ["shop_id", "staff_id"]
+          },
+          {
+            foreignKeyName: "leave_balances_shop_id_staff_id_fkey"
+            columns: ["shop_id", "staff_id"]
+            isOneToOne: false
+            referencedRelation: "expense_balances"
             referencedColumns: ["shop_id", "staff_id"]
           },
           {
@@ -835,6 +891,13 @@ export type Database = {
             foreignKeyName: "ledger_entries_shop_id_staff_id_fkey"
             columns: ["shop_id", "staff_id"]
             isOneToOne: false
+            referencedRelation: "expense_balances"
+            referencedColumns: ["shop_id", "staff_id"]
+          },
+          {
+            foreignKeyName: "ledger_entries_shop_id_staff_id_fkey"
+            columns: ["shop_id", "staff_id"]
+            isOneToOne: false
             referencedRelation: "staff"
             referencedColumns: ["shop_id", "person_id"]
           },
@@ -908,6 +971,13 @@ export type Database = {
             columns: ["shop_id", "staff_id"]
             isOneToOne: false
             referencedRelation: "advance_balances"
+            referencedColumns: ["shop_id", "staff_id"]
+          },
+          {
+            foreignKeyName: "pay_settings_shop_id_staff_id_fkey"
+            columns: ["shop_id", "staff_id"]
+            isOneToOne: false
+            referencedRelation: "expense_balances"
             referencedColumns: ["shop_id", "staff_id"]
           },
           {
@@ -1016,6 +1086,13 @@ export type Database = {
             columns: ["shop_id", "staff_id"]
             isOneToOne: false
             referencedRelation: "advance_balances"
+            referencedColumns: ["shop_id", "staff_id"]
+          },
+          {
+            foreignKeyName: "payslips_shop_id_staff_id_fkey"
+            columns: ["shop_id", "staff_id"]
+            isOneToOne: false
+            referencedRelation: "expense_balances"
             referencedColumns: ["shop_id", "staff_id"]
           },
           {
@@ -1253,6 +1330,13 @@ export type Database = {
             columns: ["shop_id", "staff_id"]
             isOneToOne: false
             referencedRelation: "advance_balances"
+            referencedColumns: ["shop_id", "staff_id"]
+          },
+          {
+            foreignKeyName: "requests_shop_id_staff_id_fkey"
+            columns: ["shop_id", "staff_id"]
+            isOneToOne: false
+            referencedRelation: "expense_balances"
             referencedColumns: ["shop_id", "staff_id"]
           },
           {
@@ -1512,6 +1596,13 @@ export type Database = {
             foreignKeyName: "staff_documents_shop_id_staff_id_fkey"
             columns: ["shop_id", "staff_id"]
             isOneToOne: false
+            referencedRelation: "expense_balances"
+            referencedColumns: ["shop_id", "staff_id"]
+          },
+          {
+            foreignKeyName: "staff_documents_shop_id_staff_id_fkey"
+            columns: ["shop_id", "staff_id"]
+            isOneToOne: false
             referencedRelation: "staff"
             referencedColumns: ["shop_id", "person_id"]
           },
@@ -1562,6 +1653,13 @@ export type Database = {
             columns: ["shop_id", "staff_id"]
             isOneToOne: false
             referencedRelation: "advance_balances"
+            referencedColumns: ["shop_id", "staff_id"]
+          },
+          {
+            foreignKeyName: "staff_leave_templates_shop_id_staff_id_fkey"
+            columns: ["shop_id", "staff_id"]
+            isOneToOne: false
+            referencedRelation: "expense_balances"
             referencedColumns: ["shop_id", "staff_id"]
           },
           {
@@ -1641,6 +1739,13 @@ export type Database = {
             referencedRelation: "shops"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "staff_shop_id_person_id_fkey"
+            columns: ["shop_id", "staff_id"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["shop_id", "id"]
+          },
         ]
       }
       ledger_balances: {
@@ -1662,6 +1767,13 @@ export type Database = {
             columns: ["shop_id", "staff_id"]
             isOneToOne: false
             referencedRelation: "advance_balances"
+            referencedColumns: ["shop_id", "staff_id"]
+          },
+          {
+            foreignKeyName: "ledger_entries_shop_id_staff_id_fkey"
+            columns: ["shop_id", "staff_id"]
+            isOneToOne: false
+            referencedRelation: "expense_balances"
             referencedColumns: ["shop_id", "staff_id"]
           },
           {

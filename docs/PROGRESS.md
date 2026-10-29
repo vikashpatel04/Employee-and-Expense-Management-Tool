@@ -252,7 +252,8 @@ notifications).
   salary, per staff (`docs/features/money-data.md`, DECISIONS 2026-10-29): advance cut mode
   all / fixed / none, expense pay-back and charge cut switches; migration
   `20261029000001_advance_mode_expense_dues.sql` (dry-run on live, rolled back). Core 242, db 194.
-  After the push: `pnpm db:types` (types were extended by hand), re-run October's salary.
+  Pushed 29/10/2026; CI applied both migrations and `pnpm db:types` was regenerated from live.
+  Still to do by the owner: re-run October's salary; build a new Staffora APK for the QR fix.
   (3) Expenses open on a Day view with today's spending large (website + app), Month / By
   category kept; Paid by drops "Owner". Website build passes; the signed-in pages were not
   checked in the preview (it waits at the owner's sign-in) and the Claude Design canvas has no
