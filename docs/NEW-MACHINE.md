@@ -46,8 +46,8 @@ back again without losing anything. Everything a new Claude session needs is in 
 4. **Supabase CLI** (for live database checks and `pnpm db:types`): `pnpm exec supabase login`
    (opens the browser; the owner signs in). If a command asks for the database password, the
    owner types it; never paste it into chat.
-5. **Check it works**: `pnpm typecheck` and `pnpm test` (see Start here → How to check work for
-   the expected counts).
+5. **Check it works**: `pnpm typecheck` (9 tasks) and `pnpm test` (2026-10-29: core 237, ui 6,
+   i18n 1, db 187).
 6. **Open the folder in the Claude desktop app** (Code tab) and say: _"Read CLAUDE.md and
    docs/PROGRESS.md Start here, then continue."_ The previews in `.claude/launch.json` come with
    the repo.
@@ -58,10 +58,13 @@ back again without losing anything. Everything a new Claude session needs is in 
   rules) and `docs/PROGRESS.md`, so nothing is lost.
 - **Sign-ins in the preview browser**: the owner signs in to the FinCrew website / app again on
   the new PC (their own password).
-- **Staffora as Test Staff**: the sign-in is tied to one browser (its device id). On another
-  PC: website staff page → Staffora sign-in → **New phone** (and **Reset PIN** if needed),
-  then the owner types Test Staff's phone number in Staffora and the PIN. Doing the same
-  again moves it back.
+- **Staffora in the browser preview**: a sign-in is tied to one browser (its device id). On
+  another PC: website staff page → Staffora sign-in → **New phone** (and **Reset PIN** if
+  needed), then the owner types the staff member's phone number and a PIN. Test Staff was
+  cleared on 2026-10-26, so use a real staff member only with the owner's OK.
+- **Expo / EAS**: `npm install -g eas-cli` and `eas login` again on each PC (the owner types it).
+  The projects are already linked (`app.json` → `extra.eas.projectId`); EAS env vars live on
+  expo.dev, so they don't need setting again. Builds: `docs/BUILDS.md`.
 - Claude Design canvases and the live website / database are online, the same from any PC.
 
 ## Every time you switch computers

@@ -1,103 +1,70 @@
 # Progress
 
-_Last updated: 2026-10-24 (evening)_
+_Last updated: 2026-10-29_
 
 ## Start here (handover for a new session)
 
-_Handover written 2026-10-24 (evening) before the owner reset the session. Read this section
-first, then `CLAUDE.md`, then the feature doc for whatever you touch._
+_Handover written 2026-10-29: the owner may continue on another PC tonight
+(`docs/NEW-MACHINE.md`). Read this section first, then `CLAUDE.md`, then the feature doc for
+whatever you touch._
 
 **Where we are**
 
-- **Website** (https://fincrew-web.vercel.app, `docs/features/fincrew-web.md`): **complete for
-  every owner flow and live**: dashboard (with requests banner), attendance grid + phone day view,
-  attendance code page (`/code`, `/qr`), requests (`/requests`), staff (detail tabs, helpers,
-  opening balance, Staffora sign-in card: phone number as user id / reset PIN / unlock / new
-  phone / code check-in switch), salary run + payslips, advances, expenses + categories,
-  reports, settings, roles. **The owner can start using the website now.**
-- **FinCrew Android** (`apps/fincrew-mobile`, `docs/features/fincrew-mobile.md`): Today (+
-  attendance code button, requests banner), Staff (detail with Give advance / Pay), Money
-  (expenses with bill photo, salary run, advances), Attendance code screen, Requests, More. All
-  checked on live in the browser preview, including salary finalize + pay end to end. **Not on a
-  phone yet** (needs EAS builds + the owner's Expo account, which they'll create once the apps
-  are complete).
-- **Staffora** (`apps/staffora-mobile`, `docs/features/staffora.md`): **sign in with the phone
-  number + a PIN chosen the first time** (since 2026-10-25; invite links removed), PIN on every
-  open or fingerprint, Home with check-in by code / QR and the newest payslip, checked-in screen,
-  Attendance calendar, Money (ledger, payslips, payslip page + share), Ask for leave / advance
-  with my requests and cancel, Me (change PIN, fingerprint, lock, remove). Home, Attendance,
-  Money, Payslips, Ask were checked on live on 2026-10-24 with the owner's Test Staff sign-in;
-  the preview has since lost it. Not tried on live: the phone sign-in, change PIN, payslip card,
-  share, sending a request, checking in (requests / check-ins leave permanent rows — ask
-  first), Lock / Remove, fingerprint (needs a real phone).
-- **Database / server**: Phase 7 data live (`docs/features/staff-self-service.md`): attendance
-  codes + `check_in`, scans log, requests, bcrypt PINs, `staff-auth` edge function (deployed
-  by CI), staff read their payslip's run, phone + PIN sign-in, change PIN. All migrations up to
-  `20261025000002_phone_login.sql` and the new `staff-auth` (lookup / setup / login) are live
-  (CI run 40165654747, 2026-10-25).
-- Shared code: `packages/core` (rules incl. `evaluateCheck`, `evaluatePinAttempt`, `staffLogin`
-  settings), **`packages/data`** (used by the website and both apps: attendance month / write,
-  session, staff loaders, expenses + saving, salary month + run / finalize / pay, payslip loaders
-  `loadMyPayslips` / `loadPayslipView`, advances, reports, roles, leave setup, self-service:
-  code, check-ins, requests + `decideRequest`, logins / reset PIN, payslip share text, pay and
-  advance-rule saving `savePay` / `saveAdvanceSettings`, part payments in `paySalary`).
-- **Git:** everything up to `ffe45f1` is pushed (CI run 40165654747 green, Vercel deployed).
-  Working from another
-  PC: `docs/NEW-MACHINE.md`. The owner pushes, or
-  tells you to push in that moment. Pushing `.github/workflows` changes needs the `workflow`
-  scope — the owner added it to the GitHub CLI sign-in, which git now uses.
+- **Website** (https://fincrew-web.vercel.app, `docs/features/fincrew-web.md`): complete and in
+  real use. Since 2026-10-25 it is on **shadcn/ui** with the FinCrew tokens (see "Look and feel"
+  in the feature doc): fixed sidebar, loading on every click, tasks in dialogs, toasts for every
+  confirmation, one page grid (`src/components/app/layout.tsx`: StatGrid / Bento / Panel).
+  Attendance opens on a **PagarBook-style day roster** (one tap P / A / HD / PL / UL, Undo in the
+  toast); Month keeps the grid. Expenses has **List | By category** views. Staff page has a
+  **Documents** tab. Settings has a **grouped left menu** and the rules page is rows (label left,
+  control right). Helpers get **email + first password sign-ins** (Settings → Roles → Helpers).
+- **FinCrew Android** (`apps/fincrew-mobile`, `docs/features/fincrew-mobile.md`): Today, Staff
+  (Overview, Attendance, Ledger with Undo, Pay with Change pay / Advance rules, **Docs**), Money
+  (expenses with bill photo, salary run with part payments and WhatsApp payslips, advances),
+  attendance code, requests, choose-your-password for helpers. Linked to Expo (`eas init` done);
+  **not built yet** — the owner builds the APK with `docs/BUILDS.md`.
+- **Staffora** (`apps/staffora-mobile`, `docs/features/staffora.md`): **complete**; the owner
+  checked it on 2026-10-26. Phone number + PIN sign-in, fingerprint, check-in by code / QR,
+  attendance, money, payslips + share, requests, change PIN. Linked to Expo; ready to build
+  (`docs/BUILDS.md`). Fingerprint and QR scan only testable on a real phone.
+- **Database / server**: all migrations up to `20261026000006_remove_clear_data.sql` are live;
+  edge functions `staff-auth` and `helper-auth` deployed by CI. **Clear all data** existed briefly
+  (20261026000003–5), was used once on 2026-10-26 to clear the owner's test data on live, then
+  **removed** (`…000006` restores the original append-only guards; the owner never wants it again).
+- **Live data now**: the shop "Dhanalakshmi Textiles" with the owner's real staff (e.g. Divya,
+  Nidya) and October salary as a draft. **Test Staff is gone** (cleared). Treat everything on live
+  as real: no test writes without the owner's OK.
+- **Git:** everything up to the handover commit is on this PC; the owner pushes. CI (`check` +
+  `migrate`) and Vercel deploy on push to `main`.
 
-**Next work, in order** (agreed with the owner 2026-10-24; they usually say "continue")
+**Next work, in order** (owner, 2026-10-26; they usually say "continue")
 
-1. **Finish Staffora**: done — the owner checked Staffora on 2026-10-26 ("perfect condition");
-   only fix: the camera "Allow" button wasn't centred (fixed, `Button center`).
-2. **FinCrew app gaps**: built on 2026-10-25 — payslip on WhatsApp (pay sheet tick, Send
-   payslip, Share payslips), pay part of a payslip, undo a ledger line, change pay from a date,
-   advance rules. Pushed and live (1edc131). Left: check them in the app preview with the owner signed in
-   (paying / undoing on live writes permanent lines — ask first; opening the sheets and
-   cancelling is fine), bill photo upload on a real phone. Still website-only: allowances,
-   deductions, leave template, own rules.
-3. **Plan pieces not built yet**: ~~sign-ins for helpers~~ built 2026-10-26 (email + first
-   password, `docs/features/helper-sign-in.md`; live), ~~staff documents~~ built 2026-10-26
-   (`docs/features/staff-documents.md`; needs the push) (`staff_documents` + storage, PLAN §6.1 staff
-   detail "Documents"), add staff from the app (stepper: details → pay → template → shift →
-   invite), website audit log viewer (PLAN §6.2), dashboard "recent activity". Also move the
-   website's staff detail page and payslip page onto the shared loaders when next touched.
+1. **Settings rework**: done for the layout and the rules page (design "Web · settings", canvas
+   v35). Left: the other settings pages could follow the same rows / cards style if the owner
+   asks.
+2. **Builds**: the owner builds Staffora, then FinCrew, with `pnpm build:apk` (`docs/BUILDS.md`;
+   EAS env vars `EXPO_PUBLIC_SUPABASE_URL` / `…_PUBLISHABLE_KEY` per app and environment). Help
+   with errors they paste.
+3. **Plan pieces not built yet**: add staff from the app (stepper: details → pay → template →
+   shift), app screens for allowances / deductions / leave template / own rules (website only
+   now), website audit log viewer (PLAN §6.2), dashboard "recent activity".
 4. **Push notifications** (PLAN §6.4): `push_tokens` table, expo-notifications; Android needs a
-   free Firebase project + the owner's Expo account.
-5. **Import and export (Phase 8, trimmed by the owner 2026-10-26)**: data import and export /
-   backup only. Dropped: home-screen widgets, Tamil/Hindi, offline attendance marking, StaffBook
-   import.
-6. **Install builds**: both apps have `eas.json` and `pnpm build:apk` / `build:store`; the owner
-   has an Expo account. Setup steps (`eas login`, `eas init`, EAS env vars): `docs/BUILDS.md`.
-   The owner wants the builds once the work above is done. Package ids `app.fincrew.mobile` /
-   `app.staffora.mobile` are placeholders until the first Play Store upload.
+   free Firebase project (FCM key via `eas credentials`).
+5. **Import and export (Phase 8, trimmed by the owner)**: data import and export / backup only.
+   Dropped: widgets, Tamil/Hindi, offline attendance, StaffBook import.
 
-The owner may ask to move 4 + 6 earlier so staff can use Staffora sooner — offer that.
+Decided and done (don't redo): helper sign-ins are email + a first password the shop gives (no
+invite emails — Supabase's built-in mailer only reaches the project team); staff documents named
+freely, 4 MB; salary "days not marked" counts only days up to today (`calculateSalary` `asOf`).
 
-**Owner's answers (2026-10-24)**
+**Owner's answers (still true)**
 
-- Finalizing and paying **Test Staff's October salary** on live: **allowed** (done). Other
-  permanent writes (giving advances, undoing payments, sending requests, check-in scans) still
+- Permanent writes on live (ledger lines, advances, undoing payments, requests, check-in scans)
   need their OK each time.
-- Real leave templates, pay rules and expense categories: the owner sets them up **later**;
-  samples may be used for testing.
-- Leaked-password protection: **not needed** (open source, self-hosted); the advisor warning stays.
-- Expo account / phone installs: **once the apps are fully complete**.
+- Leaked-password protection: **not needed**; the advisor warning stays.
 - Still open: reviewing the rule defaults (`docs/features/core-rules.md`).
-- Before real use the owner should: set up templates / rules / categories, add real staff, and
-  **mark Test Staff as left** (it can't be deleted any more), and save each staff member's
-  10-digit mobile number (it is their Staffora user id; the first one to type it sets the PIN).
-
-**Live test data**: Test Staff (person `55e7a159-1a4b-4615-a1a3-bdbbcdc6b304`; joined
-23/10/2026, ₹22,000 monthly, 9:30 AM – 8:30 PM, advance limit ₹5,000 / cut ₹1,000; attendance
-23/10 half day, 24/10 present (marked by the owner); **October salary finalized and paid**
-₹1,065.00 by UPI — ledger +₹1,065 (31/10) / −₹1,065 (24/10), so Test Staff can't be deleted;
-**has a Staffora sign-in** (auth user `staff-<person id>@fincrew.invalid`, bound to an old
-preview browser's device id) with the owner's PIN but **no phone number saved** (needed for the
-new phone sign-in); self attendance off; three decided requests whose
-notes start "TEST:" — requests can't be deleted). An archived "Test category". The shop's
-attendance code exists (made while checking). Everything else tested was reverted.
+- Each staff member's 10-digit mobile number is their Staffora user id (first to type it sets the
+  PIN); Reset PIN / New phone on the staff page undo that.
 
 **Owner rules (also in CLAUDE.md and memory)**: no co-author on commits; the owner pushes (push
 only when asked in that moment); docs in every commit; every rule is a setting (no
@@ -108,7 +75,7 @@ their OK.
 
 **How to check work**
 
-- `pnpm typecheck` (9 tasks incl. both apps), `pnpm test` (core 236, ui 6, i18n 1, db 166 —
+- `pnpm typecheck` (9 tasks incl. both apps), `pnpm test` (core 237, ui 6, i18n 1, db 187 —
   PGlite, no Docker), `pnpm build`, `pnpm ui:tokens --check`,
   `bash scripts/check-migrations.sh origin/main HEAD`.
 - Live DB (CLI logged in): `pnpm exec supabase db query --linked --project-ref
@@ -285,6 +252,7 @@ notifications).
   only unmarked days up to it (pay rules unchanged). Test added (core 237). Re-run the salary to
   refresh a stored warning.
 
+- **2026-10-29** — Handover rewritten for a session on another PC (Start here, NEW-MACHINE.md).
 - **2026-10-26** — Test data cleared on live (one time, with `clear_shop_data`, after fixing finalized
   payslips and the audit actor); the feature was then removed (`20261026000006_remove_clear_data.sql`
   restores the original guards; Settings → Data and its docs are gone). Shop and owner remain.
