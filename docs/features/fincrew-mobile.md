@@ -173,5 +173,6 @@ owner to sign in (never typed for them).
 
 ## Next
 
-Allowances, deductions, leave template and own rules from the app (website only), bill photo on
-a real phone, push notifications, widgets (Phase 8), EAS builds.
+Add staff, allowances, deductions, leave template and own rules from the app (website only now),
+reports, push notifications. On a real phone (new APK): bill photo, keyboard above text boxes,
+install of the APK. Widgets were dropped (owner, 2026-10-26).

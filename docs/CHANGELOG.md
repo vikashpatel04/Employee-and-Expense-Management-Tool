@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Changed — 2026-10-30 (open source tidy-up)
+
+- **README** rewritten for people finding the project on GitHub: what it does, how it is laid
+  out, how to run it, how to contribute.
+- **`.gitignore`**: native folders, keystores and service-account files, caches, and personal
+  Claude Code settings are kept out of git.
+- Docs brought up to date (progress, phases, feature "Next" lists, setup for forks).
+
 ### Fixed — 2026-10-30 (staff filter)
 
 - **Website, Staff**: Active / Left / All now filter as soon as you click them (they only worked

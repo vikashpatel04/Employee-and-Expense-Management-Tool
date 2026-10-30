@@ -95,9 +95,10 @@ edge function secrets (PLAN §9).
    same public Supabase URL and publishable key as the website (never the secret key).
 2. `pnpm --filter @fincrew/mobile web` runs the app in a browser at phone size;
    `pnpm --filter @fincrew/mobile start` runs the Expo dev server for a phone or emulator.
-3. Real Android builds use EAS (Expo's cloud build) and need your Expo account — to be set up
-   when the app is ready to install. The Android package id (`app.fincrew.mobile`) can still
-   change until then.
+3. Real Android builds use EAS (Expo's cloud build) with your Expo account: see
+   `docs/BUILDS.md`. Package ids: `app.fincrew.mobile` (FinCrew), `app.staffora.mobile`
+   (Staffora). If you fork this project, run `eas init` in each app so the builds go to your own
+   Expo project (it rewrites `extra.eas.projectId` and `owner` in `app.json`).
 
 ## 7. Staffora app (staff)
 

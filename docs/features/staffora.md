@@ -140,7 +140,7 @@ Not tried yet: sending a request or checking in (both leave permanent rows), Loc
 
 ## Next
 
-Biometric unlock (optional), push notifications. Live checks still to do with the owner:
-change PIN, the Home payslip card and Share on the owner's Test Staff sign-in (the preview lost
-it on 2026-10-25: re-join needs New phone + a new invite, the owner types the PIN), sending a
-request and checking in (permanent rows — ask first).
+Push notifications (reminders, request answers). On a real phone with the new APK: Sign out on
+the PIN screen, keyboard on Ask and Welcome, QR scan, fingerprint. Live checks with the owner:
+change PIN, the Home payslip card and Share, sending a request and checking in (permanent rows,
+ask first). Test Staff was cleared on 2026-10-26, so these use a real staff member's phone.

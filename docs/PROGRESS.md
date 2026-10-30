@@ -1,12 +1,12 @@
 # Progress
 
-_Last updated: 2026-10-29_
+_Last updated: 2026-10-30_
 
 ## Start here (handover for a new session)
 
-_Handover written 2026-10-29: the owner may continue on another PC tonight
-(`docs/NEW-MACHINE.md`). Read this section first, then `CLAUDE.md`, then the feature doc for
-whatever you touch._
+_Handover updated 2026-10-30. Read this section first, then `CLAUDE.md`, then the feature doc for
+whatever you touch. The repo is public (MIT): keep real people's names, phone numbers and keys
+out of every committed file._
 
 **Where we are**
 
@@ -15,27 +15,32 @@ whatever you touch._
   in the feature doc): fixed sidebar, loading on every click, tasks in dialogs, toasts for every
   confirmation, one page grid (`src/components/app/layout.tsx`: StatGrid / Bento / Panel).
   Attendance opens on a **PagarBook-style day roster** (one tap P / A / HD / PL / UL, Undo in the
-  toast); Month keeps the grid. Expenses has **List | By category** views. Staff page has a
-  **Documents** tab. Settings has a **grouped left menu** and the rules page is rows (label left,
+  toast); Month keeps the grid. **Salary** runs in steps and **Expenses** opens on the day with
+  Day | Month × List | By category (redesign 2026-10-29). The staff list filters Active / Left /
+  All at once. Staff page has a **Documents** tab. Settings has a **grouped left menu** and the rules page is rows (label left,
   control right). Helpers get **email + first password sign-ins** (Settings → Roles → Helpers).
 - **FinCrew Android** (`apps/fincrew-mobile`, `docs/features/fincrew-mobile.md`): Today, Staff
   (Overview, Attendance, Ledger with Undo, Pay with Change pay / Advance rules, **Docs**), Money
   (expenses with bill photo, salary run with part payments and WhatsApp payslips, advances),
-  attendance code, requests, choose-your-password for helpers. Linked to Expo (`eas init` done);
-  APK built 29/10/2026 but the owner's phone said "invalid package" (`docs/BUILDS.md`).
+  attendance code, requests, choose-your-password for helpers; salary and expenses redesigned
+  (2026-10-29); text boxes stay above the keyboard (2026-10-30). APKs are built with EAS
+  (`docs/BUILDS.md`); the 29/10 APK said "invalid package" on the owner's phone (the file was
+  checked and is fine; see BUILDS.md). **Needs a new APK** for the 30/10 fixes.
 - **Staffora** (`apps/staffora-mobile`, `docs/features/staffora.md`): **complete**; the owner
   checked it on 2026-10-26. Phone number + PIN sign-in, fingerprint, check-in by code / QR,
-  attendance, money, payslips + share, requests, change PIN. Linked to Expo; ready to build
-  (`docs/BUILDS.md`). Fingerprint and QR scan only testable on a real phone.
+  attendance, money, payslips + share, requests, change PIN, **Sign out** on the PIN screen and
+  in Me (2026-10-30). Android backup is off in both apps, so a reinstall starts clean (the
+  staff member then needs **New phone**). **Needs a new APK** for the 30/10 fixes (sign out,
+  backup, keyboard, QR scanner). Fingerprint and QR scan only testable on a real phone.
 - **Database / server**: all migrations up to `20261026000006_remove_clear_data.sql` are live;
   edge functions `staff-auth` and `helper-auth` deployed by CI. **Clear all data** existed briefly
   (20261026000003–5), was used once on 2026-10-26 to clear the owner's test data on live, then
   **removed** (`…000006` restores the original append-only guards; the owner never wants it again).
-- **Live data now**: the shop "Dhanalakshmi Textiles" with the owner's real staff (e.g. Divya,
-  Nidya) and October salary as a draft. **Test Staff is gone** (cleared). Treat everything on live
+- **Live data now**: the owner's real shop and staff, and October salary as a draft (the owner
+  re-runs it). **Test Staff is gone** (cleared). Treat everything on live
   as real: no test writes without the owner's OK.
-- **Git:** everything up to the handover commit is on this PC; the owner pushes. CI (`check` +
-  `migrate`) and Vercel deploy on push to `main`.
+- **Git:** everything is pushed to `main` (public GitHub repo); the owner says when to push. CI
+  (`check` + `migrate`) and Vercel deploy on push to `main`.
 
 **Salary and expenses redesign: built (2026-10-29)**, website and app, after the owner approved
 the designs (`docs/DESIGN.md` → "Salary and expenses redesign"; feature docs: fincrew-web.md
@@ -66,9 +71,9 @@ holidays, rules, roles).
 1. **Settings rework**: done for the layout and the rules page (design "Web · settings", canvas
    v35). Left: the other settings pages could follow the same rows / cards style if the owner
    asks.
-2. **Builds**: the owner builds Staffora, then FinCrew, with `pnpm build:apk` (`docs/BUILDS.md`;
-   EAS env vars `EXPO_PUBLIC_SUPABASE_URL` / `…_PUBLISHABLE_KEY` per app and environment). Help
-   with errors they paste.
+2. **Builds**: working (first APKs 29/10/2026). The owner rebuilds both with
+   `pnpm build:apk --no-wait` from each app folder (`docs/BUILDS.md`) and checks on the phone:
+   keyboard above text boxes, Staffora Sign out, FinCrew install. Help with errors they paste.
 3. **Plan pieces not built yet**: add staff from the app (stepper: details → pay → template →
    shift), app screens for allowances / deductions / leave template / own rules (website only
    now), website audit log viewer (PLAN §6.2), dashboard "recent activity".
@@ -173,16 +178,16 @@ ref `ufmlqvvfznemghmnvynz` (never touch `cheque-tracker-dev`).
 
 ## Phase status (docs/PLAN.md §8)
 
-| #   | Phase                        | Status                                                                                                                                                                           |
-| --- | ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | Foundation                   | **Done** (2026-10-23)                                                                                                                                                            |
-| 2   | Core logic (`packages/core`) | **Done**: 225 tests, every rule a setting; `docs/features/core-rules.md`                                                                                                         |
-| 3   | Design                       | **Done** (2026-10-23): design system, key screens (owner reviewed), `packages/ui` tokens                                                                                         |
-| 4   | FinCrew web core             | **Done** (2026-10-24): data layer live; screens slices 1–10 (dashboard, shell, staff + extras, attendance grid + CSV, salary run, payslip print, advances, settings, roles)      |
-| 5   | FinCrew Android              | **Built** (Today, Staff, Money, code, requests), checked live in the browser; phone builds wait (EAS)                                                                            |
-| 6   | Expenses                     | **Done** (2026-10-24): website and Android                                                                                                                                       |
-| 7   | Staffora                     | **Built and live** (2026-10-25): phone + PIN sign-in, fingerprint, check-in, attendance, money, payslips, requests, change PIN; left: live checks with the owner, install builds |
-| 8   | Polish                       | Not started                                                                                                                                                                      |
+| #   | Phase                        | Status                                                                                                                                                                      |
+| --- | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Foundation                   | **Done** (2026-10-23)                                                                                                                                                       |
+| 2   | Core logic (`packages/core`) | **Done**: 225 tests, every rule a setting; `docs/features/core-rules.md`                                                                                                    |
+| 3   | Design                       | **Done** (2026-10-23): design system, key screens (owner reviewed), `packages/ui` tokens                                                                                    |
+| 4   | FinCrew web core             | **Done** (2026-10-24): data layer live; screens slices 1–10 (dashboard, shell, staff + extras, attendance grid + CSV, salary run, payslip print, advances, settings, roles) |
+| 5   | FinCrew Android              | **Built** (Today, Staff, Money, code, requests, redesigned salary and expenses); APKs via EAS (`docs/BUILDS.md`)                                                            |
+| 6   | Expenses                     | **Done** (2026-10-24): website and Android                                                                                                                                  |
+| 7   | Staffora                     | **Built and live** (2026-10-25): phone + PIN sign-in, fingerprint, check-in by code / QR, attendance, money, payslips, requests, change PIN, sign out; APKs via EAS         |
+| 8   | Polish                       | Not started                                                                                                                                                                 |
 
 ## Phase 1 — Foundation
 
@@ -213,8 +218,7 @@ Done:
         (CI run 39898016456, 2026-10-23)
   - [x] Verify live DB: 7 tables + 8 functions present (from generated types); anonymous API
         calls refused on every table, insert, `setup_shop`, `shop_exists`; `ping()` answers
-  - [x] Owner login created; signed in locally; shop set up ("Dhanalakshmi Textiles", owner
-        Dinesh Patel). Verified in DB: 1 shop, 1 owner linked to the login, 22 permissions,
+  - [x] Owner login created; signed in locally; the owner's shop set up. Verified in DB: 1 shop, 1 owner linked to the login, 22 permissions,
         2 audit rows, second `setup_shop` refused
   - [x] Hardening migration applied (CI run 39901338816); advisor rerun: only the accepted
         warnings remain (see DECISIONS 2026-10-23); helpers now 404 on the API; owner still
@@ -270,6 +274,11 @@ Tables still to add (with the phase that uses them, each with RLS tests): `push_
 notifications).
 
 ## Session log
+
+- **2026-10-30** — Docs brought up to date for the public repo: README rewritten (what it does,
+  layout, run locally, contributing), `.gitignore` extended (native folders, keystores and
+  service-account files, caches, `.claude/*` except `launch.json`), real people's names removed
+  from PROGRESS (they remain in older git history). Checked: no secrets tracked.
 
 - **2026-10-30** — Owner: the Staff page's Active / Left / All did nothing. They were radios in
   the search form (applied only on Search); now TabLinks (`?status=`, search kept, a hidden

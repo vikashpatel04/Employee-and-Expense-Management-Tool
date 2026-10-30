@@ -53,20 +53,20 @@ the advance still owed.
 
 ## Tables and views
 
-| Object                    | Holds                                                                                                     |
-| ------------------------- | --------------------------------------------------------------------------------------------------------- |
-| `advances`                | given / repaid, amount, mode, note, over-limit confirmation, who; append-only                             |
-| `ledger_entries`          | every money event per person (PLAN §4.7 types); append-only; sign checked per type                        |
-| `salary_runs`             | one per shop per month                                                                                    |
-| `payslips`                | per person per run per revision: core's lines (jsonb), summary, warnings, leave, totals, PDF path, status |
-| `leave_balances`          | per person per month: opening, earned, used, carried, paid out, lapsed                                    |
-| `ledger_balances` (view)  | balance per person = sum of lines                                                                         |
-| `advance_balances` (view) | outstanding advance = given − repaid − cuts on final payslips (latest revision), limit, monthly cut       |
-| `staff.advance_cut_paise` | the person's monthly advance cut, used when the mode is `fixed`                                           |
-| `staff.advance_cut_mode`  | `all` (default: cut everything outstanding) · `fixed` (the monthly cut; the rest carries) · `none`        |
-| `staff.expense_payback` / `expense_recover` | settle expenses in salary: pay back what the shop owes / cut charges (both on by default) |
-| `expense_balances` (view) | per person: `payback_paise` (reimbursements not reversed − paid back by final payslips) and `charge_paise` (charges − cut by final payslips), with the two switches |
-| `payslips.expense_payback_paise` / `expense_cut_paise` | expenses settled by this payslip; net pay = net before advance + pay-back − advance cut − expense cut (check `payslips_net_pay_check`) |
+| Object                                                 | Holds                                                                                                                                                               |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `advances`                                             | given / repaid, amount, mode, note, over-limit confirmation, who; append-only                                                                                       |
+| `ledger_entries`                                       | every money event per person (PLAN §4.7 types); append-only; sign checked per type                                                                                  |
+| `salary_runs`                                          | one per shop per month                                                                                                                                              |
+| `payslips`                                             | per person per run per revision: core's lines (jsonb), summary, warnings, leave, totals, PDF path, status                                                           |
+| `leave_balances`                                       | per person per month: opening, earned, used, carried, paid out, lapsed                                                                                              |
+| `ledger_balances` (view)                               | balance per person = sum of lines                                                                                                                                   |
+| `advance_balances` (view)                              | outstanding advance = given − repaid − cuts on final payslips (latest revision), limit, monthly cut                                                                 |
+| `staff.advance_cut_paise`                              | the person's monthly advance cut, used when the mode is `fixed`                                                                                                     |
+| `staff.advance_cut_mode`                               | `all` (default: cut everything outstanding) · `fixed` (the monthly cut; the rest carries) · `none`                                                                  |
+| `staff.expense_payback` / `expense_recover`            | settle expenses in salary: pay back what the shop owes / cut charges (both on by default)                                                                           |
+| `expense_balances` (view)                              | per person: `payback_paise` (reimbursements not reversed − paid back by final payslips) and `charge_paise` (charges − cut by final payslips), with the two switches |
+| `payslips.expense_payback_paise` / `expense_cut_paise` | expenses settled by this payslip; net pay = net before advance + pay-back − advance cut − expense cut (check `payslips_net_pay_check`)                              |
 
 Views run with the caller's rights, so the same access rules apply.
 

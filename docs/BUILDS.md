@@ -52,6 +52,10 @@ pnpm build:apk     # preview: an .apk to install directly on phones (internal di
 pnpm build:store   # production: an .aab for the Play Store, version code goes up by itself
 ```
 
+Add `--no-wait` (`pnpm build:apk --no-wait`) to stop once the upload is done: the PC can then be
+turned off, and the APK is downloaded later from expo.dev → the project → Builds, on any phone or
+computer signed in to the same Expo account.
+
 The build runs on Expo's servers (10–20 min); the link it prints opens the build page with a QR
 code / download for the APK. Install it on Android (allow "install from this source").
 

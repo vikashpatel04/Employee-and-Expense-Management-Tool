@@ -19,6 +19,32 @@ next-env.d.ts
 expo-env.d.ts
 *.apk
 *.aab
+*.ipa
+.eas/
+android/
+ios/
+
+# Build and tool caches
+out/
+build/
+web-build/
+.cache/
+.eslintcache
+*.tgz
+supabase/.env
+
+# Secrets that must never be committed (keystores, keys, service accounts)
+*.jks
+*.keystore
+*.p8
+*.p12
+*.pem
+*.key
+*.mobileprovision
+google-services.json
+GoogleService-Info.plist
+*service-account*.json
+credentials.json
 
 # Editors, OS and local tool settings
 .idea/
@@ -26,4 +52,6 @@ expo-env.d.ts
 *.swp
 Thumbs.db
 desktop.ini
-.claude/settings.local.json
+# Claude Code: keep the shared launch.json, ignore personal settings and worktrees
+.claude/*
+!.claude/launch.json
