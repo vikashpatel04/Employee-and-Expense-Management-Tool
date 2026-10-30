@@ -271,6 +271,10 @@ notifications).
 
 ## Session log
 
+- **2026-10-30** — Owner: the Staff page's Active / Left / All did nothing. They were radios in
+  the search form (applied only on Search); now TabLinks (`?status=`, search kept, a hidden
+  `status` in the search form). Typecheck and website build OK; not seen signed in.
+
 - **2026-10-30** — Owner: the keyboard covered text boxes in both apps. Added
   `react-native-keyboard-controller` 1.22.7 (`npx expo install`): KeyboardProvider at both roots,
   its KeyboardAvoidingView around every form with text boxes and inside FinCrew's Sheet. Typecheck

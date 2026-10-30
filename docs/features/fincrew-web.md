@@ -74,7 +74,9 @@ roomy, forms stacked as cards inside pages, no sign of loading). Reworked:
   the attendance code page: cards stretch to equal heights. Settings: categories and leave
   templates as card grids, holidays full width, roles intro above both columns, rules in rows
   of equal height (Pay | Coming late, Attendance code | Expenses + Staff sign-in) with Save at
-  the end. Staff list: one toolbar row (search with icon, Active / Left / All, Search).
+  the end. Staff list: one toolbar row (search with icon, Search); **Active / Left / All** are tab links
+  under it that filter at once (`?status=`, keeping the search; 30/10/2026 — they were radios
+  that only applied after pressing Search).
   Staff page Attendance tab: the right column stretches to the calendar; Ledger months are
   panels level with the balance card.
   Checked 2026-10-25 with the owner's sign-in by measuring every card at 1366 px (rows equal

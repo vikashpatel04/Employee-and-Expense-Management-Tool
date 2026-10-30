@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Fixed — 2026-10-30 (staff filter)
+
+- **Website, Staff**: Active / Left / All now filter as soon as you click them (they only worked
+  after pressing Search).
+
 ### Fixed — 2026-10-30 (keyboard covering text boxes)
 
 - **Both apps**: the keyboard no longer covers the box you're typing in. Forms (add expense, change

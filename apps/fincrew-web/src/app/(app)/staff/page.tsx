@@ -10,6 +10,7 @@ import { requireMe } from '@/lib/session';
 import { createClient } from '@/lib/supabase/server';
 import { Avatar, inputClass, PageHeader, quietButtonClass } from '../../components';
 import { AddStaffForm } from './new/add-staff-form';
+import { TabLinks } from '@/components/app/tab-links';
 import { UrlToast } from '@/components/app/url-toast';
 
 type Filter = 'active' | 'left' | 'all';
@@ -104,31 +105,22 @@ export default async function StaffPage({
             className={`${inputClass} mt-0 pl-9`}
           />
         </label>
-        <fieldset className="contents">
-          <legend className="sr-only">{t('staff.filter.label')}</legend>
-          <div className="bg-muted flex h-9 items-center gap-1 rounded-lg p-1">
-            {filters.map((f) => (
-              <label
-                key={f}
-                className="text-muted-foreground has-[:checked]:bg-card has-[:checked]:text-foreground flex h-7 cursor-pointer items-center rounded-md px-3 text-sm font-medium has-[:checked]:shadow-sm has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-[var(--focus)]"
-              >
-                <input
-                  type="radio"
-                  name="status"
-                  value={f}
-                  defaultChecked={f === filter}
-                  className="sr-only"
-                />
-                {t(`staff.filter.${f}`)}
-              </label>
-            ))}
-          </div>
-        </fieldset>
+        {/* Searching keeps the chosen filter; the filter itself is links (applies at once). */}
+        <input type="hidden" name="status" value={filter} />
         <FormSubmit className={quietButtonClass}>
           <Search aria-hidden="true" />
           {t('staff.searchButton')}
         </FormSubmit>
       </Form>
+
+      <TabLinks
+        label={t('staff.filter.label')}
+        items={filters.map((f) => ({
+          href: `/staff?${new URLSearchParams({ status: f, ...(q ? { q } : {}) })}`,
+          label: t(`staff.filter.${f}`),
+          current: f === filter,
+        }))}
+      />
 
       {all.length === 0 && filter === 'active' && !q ? (
         <div className="flex flex-col items-start gap-2 rounded-lg border bg-card p-6 shadow-xs">
