@@ -20,6 +20,11 @@ is a placeholder until the first store build.
 
 ## Built
 
+- **Keyboard** (2026-10-30): `KeyboardProvider` (react-native-keyboard-controller) in
+  `_layout.tsx`; forms with text boxes (expense, pay-change, sign-in, password) sit in its
+  `KeyboardAvoidingView` with their BottomBar, and `components/sheet.tsx` does the same for every
+  sheet, so the box being typed in and the buttons stay above the keyboard (DECISIONS
+  2026-10-30).
 - **Foundations** (`src/lib`): `theme.ts` (FinCrew palette light/dark from `@fincrew/ui`
   `themes`, design text styles in Anek Latin per weight), `supabase.ts` (publishable key only;
   session kept with AsyncStorage on the phone), `session.tsx` (sign-in state, shops and

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Check, ChevronLeft } from 'lucide-react-native';
 import { businessDateOf, formatDisplayDate, minutesToInput, paiseToInput } from '@fincrew/core';
@@ -102,10 +103,7 @@ export default function PayChange() {
           {params.name || t('mobile.staff.back')}
         </Text>
       </View>
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
         <ScrollView
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{

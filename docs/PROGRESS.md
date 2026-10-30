@@ -44,19 +44,19 @@ page needs the owner's sign-in.
 
 **Left, by flow (2026-10-29)** — W = website, A = FinCrew app, S = Staffora
 
-| Flow             | Done                                     | Left                                                                                    |
-| ---------------- | ---------------------------------------- | --------------------------------------------------------------------------------------- |
-| Staff setup      | W all; A change pay, advance rules, docs | A: add staff, allowances / deductions, leave template, own rules                        |
-| Attendance       | W, A, S (code / QR)                      | S: new APK for the QR fix; push reminders (all)                                         |
-| Requests         | W, A, S                                  | push notification when one comes in                                                     |
-| Advances         | W, A, S                                  | —                                                                                       |
-| Expenses         | W, A (redesigned)                        | check the new pages and Pay back now with data                                          |
-| Salary           | W, A (redesigned), S payslips            | check with data; owner re-runs October                                                  |
-| Reports          | W                                        | A: reports                                                                              |
-| Settings         | W                                        | A: opens the website instead; other W settings pages in the new rows style if wanted    |
-| Audit / activity | —                                        | W audit log viewer, dashboard "recent activity"                                         |
-| Backup           | —                                        | import / export (Phase 8)                                                               |
-| Install          | APKs built 29/10 (before the backup fix) | rebuild both with the 30/10 fix; FinCrew "invalid package" on the phone (see BUILDS.md) |
+| Flow             | Done                                      | Left                                                                                                 |
+| ---------------- | ----------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Staff setup      | W all; A change pay, advance rules, docs  | A: add staff, allowances / deductions, leave template, own rules                                     |
+| Attendance       | W, A, S (code / QR)                       | S: new APK for the QR fix; push reminders (all)                                                      |
+| Requests         | W, A, S                                   | push notification when one comes in                                                                  |
+| Advances         | W, A, S                                   | —                                                                                                    |
+| Expenses         | W, A (redesigned)                         | check the new pages and Pay back now with data                                                       |
+| Salary           | W, A (redesigned), S payslips             | check with data; owner re-runs October                                                               |
+| Reports          | W                                         | A: reports                                                                                           |
+| Settings         | W                                         | A: opens the website instead; other W settings pages in the new rows style if wanted                 |
+| Audit / activity | —                                         | W audit log viewer, dashboard "recent activity"                                                      |
+| Backup           | —                                         | import / export (Phase 8)                                                                            |
+| Install          | APKs built 29/10 (before the 30/10 fixes) | rebuild both: backup off, sign out, keyboard; FinCrew "invalid package" on the phone (see BUILDS.md) |
 
 Designs still missing: Advance rules dialog, Pay back now, settings pages (leave templates,
 holidays, rules, roles).
@@ -270,6 +270,12 @@ Tables still to add (with the phase that uses them, each with RLS tests): `push_
 notifications).
 
 ## Session log
+
+- **2026-10-30** — Owner: the keyboard covered text boxes in both apps. Added
+  `react-native-keyboard-controller` 1.22.7 (`npx expo install`): KeyboardProvider at both roots,
+  its KeyboardAvoidingView around every form with text boxes and inside FinCrew's Sheet. Typecheck
+  9/9; both apps still open in the web preview. The keyboard itself can only be checked on a
+  phone: needs new APKs (native module).
 
 - **2026-10-30** — Owner: Staffora kept the old sign-in after a reinstall with no sign-out, and
   the FinCrew APK said "invalid package". Staffora: **Not <name>? Sign out** on the PIN screen,

@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { Modal, Pressable, ScrollView, View } from 'react-native';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { t } from '@/lib/i18n';
 import { radius, space, useTheme } from '@/lib/theme';
@@ -22,8 +23,17 @@ export function Sheet({
   const { c } = useTheme();
   const insets = useSafeAreaInsets();
   return (
-    <Modal visible={open} transparent animationType="slide" onRequestClose={onClose}>
-      <View style={{ flex: 1, justifyContent: 'flex-end' }}>
+    // Edge-to-edge like the app, so the keyboard controller can see the keyboard in the modal.
+    <Modal
+      visible={open}
+      transparent
+      animationType="slide"
+      statusBarTranslucent
+      navigationBarTranslucent
+      onRequestClose={onClose}
+    >
+      {/* Lifts the sheet above the keyboard (amount, note and name fields). */}
+      <KeyboardAvoidingView behavior="padding" style={{ flex: 1, justifyContent: 'flex-end' }}>
         <Pressable
           accessibilityLabel={t('mobile.today.sheet.close')}
           onPress={onClose}
@@ -57,12 +67,13 @@ export function Sheet({
             {subtitle ? <Text muted>{subtitle}</Text> : null}
           </View>
           <ScrollView
+            keyboardShouldPersistTaps="handled"
             contentContainerStyle={{ paddingHorizontal: space['space-4'], gap: space['space-2'] }}
           >
             {children}
           </ScrollView>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

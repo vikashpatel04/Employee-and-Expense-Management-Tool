@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Fixed — 2026-10-30 (keyboard covering text boxes)
+
+- **Both apps**: the keyboard no longer covers the box you're typing in. Forms (add expense, change
+  pay, sign-in, choose password, Staffora ask and phone number) and every FinCrew sheet (advance,
+  pay, pay back, reply, document name) move up above the keyboard, buttons included. Needs new
+  APKs.
+
 ### Fixed — 2026-10-30 (installs and sign-out)
 
 - **Staffora**: **Not <name>? Sign out** on the PIN screen, and "Remove from this phone" in Me is

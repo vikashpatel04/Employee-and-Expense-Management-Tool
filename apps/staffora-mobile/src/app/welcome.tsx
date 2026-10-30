@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { router } from 'expo-router';
 import { Calendar, Check, ChevronLeft, IndianRupee, Phone, QrCode } from 'lucide-react-native';
 import { phoneKey } from '@fincrew/core';
@@ -85,81 +86,85 @@ export default function Welcome() {
   if (step === 'phone') {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: c.canvas }}>
-        <View style={{ flex: 1, padding: space['space-6'], paddingTop: 72, gap: space['space-4'] }}>
+        <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
           <View
-            style={{
-              width: 64,
-              height: 64,
-              borderRadius: 18,
-              backgroundColor: c.accent,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
+            style={{ flex: 1, padding: space['space-6'], paddingTop: 72, gap: space['space-4'] }}
           >
-            <Phone size={32} color={c['on-accent']} strokeWidth={2.6} />
-          </View>
-          <Text variant="title-xl">{t(`${w}.title`)}</Text>
-          <Text variant="body-lg">{t(`${w}.body`)}</Text>
-          <View style={{ gap: 6, marginTop: space['space-2'] }}>
-            <Text variant="label-sm">{t(`${w}.phoneLabel`)}</Text>
             <View
               style={{
-                flexDirection: 'row',
-                minHeight: 56,
-                borderRadius: radius['radius-md'],
-                borderWidth: error ? 2 : 1,
-                borderColor: error ? c.danger : c['line-strong'],
-                backgroundColor: c.surface,
-                overflow: 'hidden',
+                width: 64,
+                height: 64,
+                borderRadius: 18,
+                backgroundColor: c.accent,
+                alignItems: 'center',
+                justifyContent: 'center',
               }}
             >
+              <Phone size={32} color={c['on-accent']} strokeWidth={2.6} />
+            </View>
+            <Text variant="title-xl">{t(`${w}.title`)}</Text>
+            <Text variant="body-lg">{t(`${w}.body`)}</Text>
+            <View style={{ gap: 6, marginTop: space['space-2'] }}>
+              <Text variant="label-sm">{t(`${w}.phoneLabel`)}</Text>
               <View
                 style={{
-                  justifyContent: 'center',
-                  paddingHorizontal: 14,
-                  backgroundColor: c['surface-muted'],
+                  flexDirection: 'row',
+                  minHeight: 56,
+                  borderRadius: radius['radius-md'],
+                  borderWidth: error ? 2 : 1,
+                  borderColor: error ? c.danger : c['line-strong'],
+                  backgroundColor: c.surface,
+                  overflow: 'hidden',
                 }}
               >
-                <Text variant="money-md" muted>
-                  {t(`${w}.countryCode`)}
-                </Text>
+                <View
+                  style={{
+                    justifyContent: 'center',
+                    paddingHorizontal: 14,
+                    backgroundColor: c['surface-muted'],
+                  }}
+                >
+                  <Text variant="money-md" muted>
+                    {t(`${w}.countryCode`)}
+                  </Text>
+                </View>
+                <TextInput
+                  accessibilityLabel={t(`${w}.phoneLabel`)}
+                  value={phone}
+                  onChangeText={(v) => {
+                    setPhone(v);
+                    setError(null);
+                  }}
+                  onSubmitEditing={() => void next()}
+                  keyboardType="phone-pad"
+                  autoComplete="tel"
+                  textContentType="telephoneNumber"
+                  maxLength={16}
+                  style={[
+                    textStyle('money-lg'),
+                    { flex: 1, minWidth: 0, paddingHorizontal: 14, color: c.ink },
+                  ]}
+                />
               </View>
-              <TextInput
-                accessibilityLabel={t(`${w}.phoneLabel`)}
-                value={phone}
-                onChangeText={(v) => {
-                  setPhone(v);
-                  setError(null);
-                }}
-                onSubmitEditing={() => void next()}
-                keyboardType="phone-pad"
-                autoComplete="tel"
-                textContentType="telephoneNumber"
-                maxLength={16}
-                style={[
-                  textStyle('money-lg'),
-                  { flex: 1, minWidth: 0, paddingHorizontal: 14, color: c.ink },
-                ]}
-              />
+              {error ? (
+                <View accessibilityRole="alert">
+                  <Text color={c.danger}>{error}</Text>
+                </View>
+              ) : (
+                <Text muted>{t(`${w}.phoneHint`)}</Text>
+              )}
             </View>
-            {error ? (
-              <View accessibilityRole="alert">
-                <Text color={c.danger}>{error}</Text>
-              </View>
-            ) : (
-              <Text muted>{t(`${w}.phoneHint`)}</Text>
-            )}
           </View>
-        </View>
-        <View style={{ padding: space['space-4'] }}>
-          <Button
-            label={busy ? t(`${w}.checking`) : t(`${w}.next`)}
-            block
-            busy={busy}
-            disabled={!phone.trim()}
-            onPress={() => void next()}
-          />
-        </View>
+          <View style={{ padding: space['space-4'] }}>
+            <Button
+              label={busy ? t(`${w}.checking`) : t(`${w}.next`)}
+              block
+              busy={busy}
+              disabled={!phone.trim()}
+              onPress={() => void next()}
+            />
+          </View>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     );
   }

@@ -45,6 +45,9 @@ Changed 2026-10-25 from invite links to **phone number + PIN** (owner's decision
 
 ## Built
 
+- **Keyboard** (2026-10-30): `KeyboardProvider` (react-native-keyboard-controller) in
+  `_layout.tsx`; Ask (with Send) and Welcome's phone number (with Next) sit in its
+  `KeyboardAvoidingView`, so they stay above the keyboard (DECISIONS 2026-10-30).
 - **Welcome** (`welcome.tsx`, design "Sign in with phone · first run", 2026-10-25): mobile number
   (+91 field, checked with core `phoneKey`) → `lookup`. No PIN yet: "Hi <first name>, you're on
   the staff list at <shop>" → "That is me, set my PIN" → PIN twice (a mismatch starts again) →

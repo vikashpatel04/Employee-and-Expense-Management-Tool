@@ -8,6 +8,7 @@ import {
 import { SplashScreen, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SessionProvider, useSession } from '@/lib/session';
 import { useTheme } from '@/lib/theme';
 
@@ -22,9 +23,11 @@ export default function RootLayout() {
     AnekLatin_700Bold,
   });
   return (
-    <SessionProvider>
-      <Gate fontsLoaded={fontsLoaded} />
-    </SessionProvider>
+    <KeyboardProvider>
+      <SessionProvider>
+        <Gate fontsLoaded={fontsLoaded} />
+      </SessionProvider>
+    </KeyboardProvider>
   );
 }
 

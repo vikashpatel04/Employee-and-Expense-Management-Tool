@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Check, ChevronLeft, X } from 'lucide-react-native';
 import { addDays, businessDateOf, formatDisplayDate, formatINR, parseRupees } from '@fincrew/core';
@@ -142,132 +143,141 @@ export default function Ask() {
           {t(`${a}.back`)}
         </Text>
       </View>
-      <ScrollView
-        keyboardShouldPersistTaps="handled"
-        contentContainerStyle={{ padding: space['space-4'], paddingTop: 0, gap: space['space-4'] }}
-      >
-        <Text variant="title-lg">
-          {t(kind === 'leave' ? `${a}.leaveTitle` : `${a}.advanceTitle`)}
-        </Text>
+      {/* The form and Send move up above the keyboard (Android edge-to-edge). */}
+      <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={{
+            padding: space['space-4'],
+            paddingTop: 0,
+            gap: space['space-4'],
+          }}
+        >
+          <Text variant="title-lg">
+            {t(kind === 'leave' ? `${a}.leaveTitle` : `${a}.advanceTitle`)}
+          </Text>
 
-        {kind === 'leave' ? (
-          <Card style={{ padding: space['space-4'], gap: space['space-2'] }}>
-            <Text variant="caption" muted>
-              {t(`${a}.from`)}
-            </Text>
-            <DayStepper
-              label={t(`${a}.from`)}
-              value={from}
-              onChange={changeFrom}
-              min={today}
-              max={addDays(today, AHEAD_DAYS)}
-            />
-            <Text variant="caption" muted>
-              {t(`${a}.to`)}
-            </Text>
-            <DayStepper
-              label={t(`${a}.to`)}
-              value={to}
-              onChange={setTo}
-              min={from}
-              max={addDays(from, MAX_DAYS - 1)}
-            />
-            <Text muted>{t(`${a}.days`, { count: days })}</Text>
-            <Text variant="caption" muted>
-              {t(`${a}.shopDecides`)}
-            </Text>
-          </Card>
-        ) : (
-          <Card style={{ padding: space['space-4'] }}>
-            <AmountField
-              label={t(`${a}.howMuch`)}
-              value={amount}
-              onChange={setAmount}
-              quick={QUICK}
-              hint={owes ? t(`${a}.owesNow`, { amount: formatINR(owes) }) : t(`${a}.cutHint`)}
-            />
-          </Card>
-        )}
-
-        <Field
-          label={t(`${a}.why`)}
-          value={note}
-          onChange={setNote}
-          placeholder={t(kind === 'leave' ? `${a}.whyLeave` : `${a}.whyAdvance`)}
-        />
-        {message && <FormMessage ok={message.ok} text={message.text} />}
-
-        <View style={{ gap: space['space-2'] }}>
-          <Text variant="title-md">{t(`${a}.mine`)}</Text>
-          {mine.length === 0 ? (
-            <Text muted>{t(`${a}.none`)}</Text>
+          {kind === 'leave' ? (
+            <Card style={{ padding: space['space-4'], gap: space['space-2'] }}>
+              <Text variant="caption" muted>
+                {t(`${a}.from`)}
+              </Text>
+              <DayStepper
+                label={t(`${a}.from`)}
+                value={from}
+                onChange={changeFrom}
+                min={today}
+                max={addDays(today, AHEAD_DAYS)}
+              />
+              <Text variant="caption" muted>
+                {t(`${a}.to`)}
+              </Text>
+              <DayStepper
+                label={t(`${a}.to`)}
+                value={to}
+                onChange={setTo}
+                min={from}
+                max={addDays(from, MAX_DAYS - 1)}
+              />
+              <Text muted>{t(`${a}.days`, { count: days })}</Text>
+              <Text variant="caption" muted>
+                {t(`${a}.shopDecides`)}
+              </Text>
+            </Card>
           ) : (
-            <Card>
-              {mine.map((r, i) => {
-                const p = pill(r.status);
-                return (
-                  <View
-                    key={r.id}
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      gap: space['space-3'],
-                      minHeight: 64,
-                      paddingHorizontal: space['space-4'],
-                      paddingVertical: space['space-2'],
-                      borderBottomWidth: i < mine.length - 1 ? 1 : 0,
-                      borderBottomColor: c.line,
-                    }}
-                  >
-                    <View style={{ flex: 1, minWidth: 0 }}>
-                      <Text variant="label-sm">{what(r)}</Text>
-                      <Text variant="caption" muted numberOfLines={2}>
-                        {[
-                          t(`${a}.asked`, { date: formatDisplayDate(dateOfInstant(r.createdAt)) }),
-                          r.decisionNote ? `“${r.decisionNote}”` : r.note,
-                        ]
-                          .filter(Boolean)
-                          .join(' · ')}
-                      </Text>
-                    </View>
-                    <View style={{ alignItems: 'flex-end', gap: 4 }}>
-                      <View
-                        style={{
-                          paddingHorizontal: 10,
-                          paddingVertical: 2,
-                          borderRadius: radius['radius-pill'],
-                          backgroundColor: p.bg,
-                        }}
-                      >
-                        <Text variant="caption" color={p.fg}>
-                          {t(`${a}.state.${r.status}`)}
-                        </Text>
-                      </View>
-                      {r.status === 'pending' && (
-                        <Button
-                          label={t(`${a}.cancel`)}
-                          variant="quiet"
-                          icon={X}
-                          onPress={() => void cancel(r.id)}
-                        />
-                      )}
-                    </View>
-                  </View>
-                );
-              })}
+            <Card style={{ padding: space['space-4'] }}>
+              <AmountField
+                label={t(`${a}.howMuch`)}
+                value={amount}
+                onChange={setAmount}
+                quick={QUICK}
+                hint={owes ? t(`${a}.owesNow`, { amount: formatINR(owes) }) : t(`${a}.cutHint`)}
+              />
             </Card>
           )}
-        </View>
-      </ScrollView>
-      <BottomBar>
-        <Button
-          label={busy ? t(`${a}.sending`) : t(`${a}.send`)}
-          icon={Check}
-          busy={busy}
-          block
-          onPress={send}
-        />
-      </BottomBar>
+
+          <Field
+            label={t(`${a}.why`)}
+            value={note}
+            onChange={setNote}
+            placeholder={t(kind === 'leave' ? `${a}.whyLeave` : `${a}.whyAdvance`)}
+          />
+          {message && <FormMessage ok={message.ok} text={message.text} />}
+
+          <View style={{ gap: space['space-2'] }}>
+            <Text variant="title-md">{t(`${a}.mine`)}</Text>
+            {mine.length === 0 ? (
+              <Text muted>{t(`${a}.none`)}</Text>
+            ) : (
+              <Card>
+                {mine.map((r, i) => {
+                  const p = pill(r.status);
+                  return (
+                    <View
+                      key={r.id}
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: space['space-3'],
+                        minHeight: 64,
+                        paddingHorizontal: space['space-4'],
+                        paddingVertical: space['space-2'],
+                        borderBottomWidth: i < mine.length - 1 ? 1 : 0,
+                        borderBottomColor: c.line,
+                      }}
+                    >
+                      <View style={{ flex: 1, minWidth: 0 }}>
+                        <Text variant="label-sm">{what(r)}</Text>
+                        <Text variant="caption" muted numberOfLines={2}>
+                          {[
+                            t(`${a}.asked`, {
+                              date: formatDisplayDate(dateOfInstant(r.createdAt)),
+                            }),
+                            r.decisionNote ? `“${r.decisionNote}”` : r.note,
+                          ]
+                            .filter(Boolean)
+                            .join(' · ')}
+                        </Text>
+                      </View>
+                      <View style={{ alignItems: 'flex-end', gap: 4 }}>
+                        <View
+                          style={{
+                            paddingHorizontal: 10,
+                            paddingVertical: 2,
+                            borderRadius: radius['radius-pill'],
+                            backgroundColor: p.bg,
+                          }}
+                        >
+                          <Text variant="caption" color={p.fg}>
+                            {t(`${a}.state.${r.status}`)}
+                          </Text>
+                        </View>
+                        {r.status === 'pending' && (
+                          <Button
+                            label={t(`${a}.cancel`)}
+                            variant="quiet"
+                            icon={X}
+                            onPress={() => void cancel(r.id)}
+                          />
+                        )}
+                      </View>
+                    </View>
+                  );
+                })}
+              </Card>
+            )}
+          </View>
+        </ScrollView>
+        <BottomBar>
+          <Button
+            label={busy ? t(`${a}.sending`) : t(`${a}.send`)}
+            icon={Check}
+            busy={busy}
+            block
+            onPress={send}
+          />
+        </BottomBar>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, TextInput, View } from 'react-native';
+import { TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { Button, Card, Text } from '@/components/ui';
 import { t } from '@/lib/i18n';
 import { supabase } from '@/lib/supabase';
@@ -38,7 +39,7 @@ export default function SignIn() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: c.canvas }}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior="padding"
         style={{ flex: 1, justifyContent: 'center', padding: space['space-4'] }}
       >
         <Card style={{ padding: space['space-6'], gap: space['space-4'] }}>

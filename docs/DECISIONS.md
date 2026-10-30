@@ -2,6 +2,20 @@
 
 Choices made during the build that PLAN.md doesn't spell out. Newest first.
 
+## 2026-10-30 — Keyboard: react-native-keyboard-controller
+
+- Owner: "the keyboard itself overlaps text box when the content is below… happens everywhere".
+  Cause: the apps are edge-to-edge (Expo SDK 58 / React Native 0.88), where Android no longer
+  shrinks the screen for the keyboard, and React Native's `KeyboardAvoidingView` was set to do
+  nothing on Android.
+- Fix: `react-native-keyboard-controller` (1.22.7, Expo's version for SDK 58): `KeyboardProvider`
+  at the root of both apps and its `KeyboardAvoidingView` (`behavior="padding"`) around each form
+  with text boxes, with the scroll and the bottom buttons inside so both move up. FinCrew's
+  `Sheet` wraps its content the same way, so every sheet is covered; its `Modal` is edge-to-edge
+  too (`statusBarTranslucent`, `navigationBarTranslucent`).
+- New screens with text boxes: put the scroll and its BottomBar inside that
+  `KeyboardAvoidingView`, or use a `Sheet`.
+
 ## 2026-10-30 — Android backup off; sign out from the PIN screen
 
 - Owner: after uninstalling and reinstalling, Staffora still opened on the old account with no

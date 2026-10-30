@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Image, Platform, Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { router, useLocalSearchParams } from 'expo-router';
 import { randomUUID } from 'expo-crypto';
 import {
@@ -303,437 +304,440 @@ export default function ExpenseScreen() {
         )}
       </View>
 
-      <ScrollView
-        keyboardShouldPersistTaps="handled"
-        contentContainerStyle={{
-          padding: space['space-4'],
-          paddingTop: space['space-1'],
-          gap: space['space-6'],
-        }}
-      >
-        {adding && editable ? (
-          <View style={{ gap: space['space-2'] }}>
-            <Text variant="label-sm" muted>
-              {t(`${f}.steps.stepOf`, { n: step })}
-            </Text>
-            <Text variant="title-xl">
-              {t(`${f}.steps.${(['howMuch', 'whoPaidTitle', 'billTitle'] as const)[step - 1]}`)}
-            </Text>
-            <View accessibilityElementsHidden style={{ flexDirection: 'row', gap: 6 }}>
-              {[1, 2, 3].map((n) => (
-                <View
-                  key={n}
-                  style={{
-                    flex: 1,
-                    height: 4,
-                    borderRadius: radius['radius-pill'],
-                    backgroundColor: n <= step ? c.accent : c['line-strong'],
-                  }}
-                />
-              ))}
+      {/* The form and its buttons move up above the keyboard (Android edge-to-edge). */}
+      <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={{
+            padding: space['space-4'],
+            paddingTop: space['space-1'],
+            gap: space['space-6'],
+          }}
+        >
+          {adding && editable ? (
+            <View style={{ gap: space['space-2'] }}>
+              <Text variant="label-sm" muted>
+                {t(`${f}.steps.stepOf`, { n: step })}
+              </Text>
+              <Text variant="title-xl">
+                {t(`${f}.steps.${(['howMuch', 'whoPaidTitle', 'billTitle'] as const)[step - 1]}`)}
+              </Text>
+              <View accessibilityElementsHidden style={{ flexDirection: 'row', gap: 6 }}>
+                {[1, 2, 3].map((n) => (
+                  <View
+                    key={n}
+                    style={{
+                      flex: 1,
+                      height: 4,
+                      borderRadius: radius['radius-pill'],
+                      backgroundColor: n <= step ? c.accent : c['line-strong'],
+                    }}
+                  />
+                ))}
+              </View>
             </View>
-          </View>
-        ) : (
-          <Text variant="title-xl">{title}</Text>
-        )}
-        {paidBack && <FormMessage ok text={paidBack} />}
-        {data?.expense && owed > 0 && (
-          <Card style={{ padding: space['space-4'], gap: space['space-3'] }}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-              <Text variant="label-sm">{t('payBack.owed')}</Text>
-              <Text variant="money-md">{formatINR(owed)}</Text>
-            </View>
-            <Button
-              label={t('payBack.button')}
-              variant="secondary"
-              icon={Receipt}
-              block
-              onPress={() => setPayBackOpen(true)}
-            />
-          </Card>
-        )}
-        {id && data && !data.expense && <Text muted>{t('mobile.money.expenses.notFound')}</Text>}
+          ) : (
+            <Text variant="title-xl">{title}</Text>
+          )}
+          {paidBack && <FormMessage ok text={paidBack} />}
+          {data?.expense && owed > 0 && (
+            <Card style={{ padding: space['space-4'], gap: space['space-3'] }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                <Text variant="label-sm">{t('payBack.owed')}</Text>
+                <Text variant="money-md">{formatINR(owed)}</Text>
+              </View>
+              <Button
+                label={t('payBack.button')}
+                variant="secondary"
+                icon={Receipt}
+                block
+                onPress={() => setPayBackOpen(true)}
+              />
+            </Card>
+          )}
+          {id && data && !data.expense && <Text muted>{t('mobile.money.expenses.notFound')}</Text>}
 
-        {data && (!id || data.expense) && !editable && data.expense && (
-          <Card style={{ padding: space['space-4'], gap: space['space-2'] }}>
-            <Text variant="money-lg">{formatINR(Number(data.expense.amount_paise))}</Text>
-            <Text>{`${days[weekday(data.expense.date)]} ${formatDisplayDate(data.expense.date)}`}</Text>
-            <Text muted>
-              {[
-                data.categories.find((x) => x.id === data.expense!.category_id)?.name,
-                modes[data.expense.payment_mode],
-                data.expense.note,
-              ]
-                .filter(Boolean)
-                .join(' · ')}
-            </Text>
-          </Card>
-        )}
+          {data && (!id || data.expense) && !editable && data.expense && (
+            <Card style={{ padding: space['space-4'], gap: space['space-2'] }}>
+              <Text variant="money-lg">{formatINR(Number(data.expense.amount_paise))}</Text>
+              <Text>{`${days[weekday(data.expense.date)]} ${formatDisplayDate(data.expense.date)}`}</Text>
+              <Text muted>
+                {[
+                  data.categories.find((x) => x.id === data.expense!.category_id)?.name,
+                  modes[data.expense.payment_mode],
+                  data.expense.note,
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
+              </Text>
+            </Card>
+          )}
 
-        {data && editable && (!id || data.expense) && (
-          <>
-            {shows(1) && (
-              <Card style={{ padding: space['space-4'], gap: space['space-3'] }}>
-                <AmountField
-                  label={t(`${f}.amount`)}
-                  value={amount}
-                  onChange={changeAmount}
-                  quick={QUICK}
-                />
-                {!adding && (
-                  <>
-                    <Text variant="caption" muted>
-                      {t(`${f}.date`)}
-                    </Text>
-                    <DayStepper value={date} onChange={setDate} max={today} />
-                  </>
-                )}
-              </Card>
-            )}
+          {data && editable && (!id || data.expense) && (
+            <>
+              {shows(1) && (
+                <Card style={{ padding: space['space-4'], gap: space['space-3'] }}>
+                  <AmountField
+                    label={t(`${f}.amount`)}
+                    value={amount}
+                    onChange={changeAmount}
+                    quick={QUICK}
+                  />
+                  {!adding && (
+                    <>
+                      <Text variant="caption" muted>
+                        {t(`${f}.date`)}
+                      </Text>
+                      <DayStepper value={date} onChange={setDate} max={today} />
+                    </>
+                  )}
+                </Card>
+              )}
 
-            {shows(1) && (
-              <View style={{ gap: space['space-2'] }}>
-                {sectionTitle(t(`${f}.category`))}
-                <View
-                  accessibilityRole="radiogroup"
-                  style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space['space-2'] }}
-                >
-                  {shownCats.map((cat) => {
-                    const on = cat.id === categoryId;
-                    const Icon = categoryIcon(cat.icon);
-                    const col = categoryColour(cat.colour);
-                    return (
+              {shows(1) && (
+                <View style={{ gap: space['space-2'] }}>
+                  {sectionTitle(t(`${f}.category`))}
+                  <View
+                    accessibilityRole="radiogroup"
+                    style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space['space-2'] }}
+                  >
+                    {shownCats.map((cat) => {
+                      const on = cat.id === categoryId;
+                      const Icon = categoryIcon(cat.icon);
+                      const col = categoryColour(cat.colour);
+                      return (
+                        <Pressable
+                          key={cat.id}
+                          accessibilityRole="radio"
+                          accessibilityState={{ checked: on }}
+                          accessibilityLabel={cat.name}
+                          onPress={() => setCategoryId(cat.id)}
+                          style={{
+                            width: '23%',
+                            flexGrow: 1,
+                            minHeight: 80,
+                            padding: space['space-2'],
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: 6,
+                            borderRadius: radius['radius-md'],
+                            backgroundColor: on ? c['accent-soft'] : c.surface,
+                            borderWidth: on ? 2 : 1,
+                            borderColor: on ? c.accent : c.line,
+                          }}
+                        >
+                          <Icon size={24} color={on ? c['accent-ink'] : c[col.fg]} />
+                          <Text
+                            variant="micro"
+                            color={on ? c['accent-ink'] : c.ink}
+                            numberOfLines={2}
+                            style={{ textAlign: 'center' }}
+                          >
+                            {cat.name}
+                          </Text>
+                        </Pressable>
+                      );
+                    })}
+                    {shownCats.length < cats.length && (
                       <Pressable
-                        key={cat.id}
-                        accessibilityRole="radio"
-                        accessibilityState={{ checked: on }}
-                        accessibilityLabel={cat.name}
-                        onPress={() => setCategoryId(cat.id)}
+                        accessibilityRole="button"
+                        onPress={() => setAllCats(true)}
                         style={{
                           width: '23%',
                           flexGrow: 1,
                           minHeight: 80,
-                          padding: space['space-2'],
                           alignItems: 'center',
                           justifyContent: 'center',
                           gap: 6,
                           borderRadius: radius['radius-md'],
-                          backgroundColor: on ? c['accent-soft'] : c.surface,
-                          borderWidth: on ? 2 : 1,
-                          borderColor: on ? c.accent : c.line,
+                          borderWidth: 1,
+                          borderColor: c.line,
+                          backgroundColor: c.surface,
                         }}
                       >
-                        <Icon size={24} color={on ? c['accent-ink'] : c[col.fg]} />
-                        <Text
-                          variant="micro"
-                          color={on ? c['accent-ink'] : c.ink}
-                          numberOfLines={2}
-                          style={{ textAlign: 'center' }}
-                        >
-                          {cat.name}
+                        <LayoutGrid size={24} color={c['accent-ink']} />
+                        <Text variant="micro" color={c['accent-ink']}>
+                          {t('mobile.money.expenses.allCategories', { count: cats.length })}
                         </Text>
                       </Pressable>
-                    );
-                  })}
-                  {shownCats.length < cats.length && (
-                    <Pressable
-                      accessibilityRole="button"
-                      onPress={() => setAllCats(true)}
-                      style={{
-                        width: '23%',
-                        flexGrow: 1,
-                        minHeight: 80,
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: 6,
-                        borderRadius: radius['radius-md'],
-                        borderWidth: 1,
-                        borderColor: c.line,
-                        backgroundColor: c.surface,
-                      }}
-                    >
-                      <LayoutGrid size={24} color={c['accent-ink']} />
-                      <Text variant="micro" color={c['accent-ink']}>
-                        {t('mobile.money.expenses.allCategories', { count: cats.length })}
+                    )}
+                  </View>
+                </View>
+              )}
+              {adding && step === 1 && (
+                <Card style={{ padding: space['space-3'], backgroundColor: c['surface-muted'] }}>
+                  <Text variant="caption">
+                    {t(`${f}.steps.defaults`, { date: formatDisplayDate(date) })}
+                  </Text>
+                </Card>
+              )}
+
+              {shows(2) && (
+                <View style={{ gap: space['space-2'] }}>
+                  {sectionTitle(t(`${f}.paidBy`))}
+                  <Segmented
+                    label={t(`${f}.paidBy`)}
+                    value={paidBy}
+                    onChange={setPaidBy}
+                    // The shop pays or a staff member does (owner, 29/10/2026); "Owner" stays only on
+                    // old expenses that used it.
+                    options={(data.expense?.paid_by_kind === 'owner'
+                      ? (['owner', 'shop_cash', 'staff'] as const)
+                      : (['shop_cash', 'staff'] as const)
+                    ).map((v) => ({
+                      value: v,
+                      label: t(`${f}.paidByOptions.${v}`),
+                    }))}
+                  />
+                  {paidBy === 'staff' && (
+                    <>
+                      <PersonButton
+                        label={t(`${f}.whoPaid`)}
+                        name={names.get(paidStaff)}
+                        onPress={() => setPicking('paid')}
+                      />
+                      <Text variant="caption" muted>
+                        {t(`${f}.giveBack`)}
                       </Text>
-                    </Pressable>
+                      <Segmented<GiveBack>
+                        label={t(`${f}.giveBack`)}
+                        value={giveBack}
+                        onChange={setGiveBack}
+                        options={giveBackOptions.map((v) => ({
+                          value: v,
+                          label: t(`${f}.giveBackOptions.${v}`),
+                        }))}
+                      />
+                      {giveBack === 'now' && (
+                        <Text variant="caption" muted>
+                          {t(`${f}.giveBackNowHint`, { name: names.get(paidStaff) ?? '—' })}
+                        </Text>
+                      )}
+                    </>
+                  )}
+                </View>
+              )}
+
+              {shows(2) && (
+                <View style={{ gap: space['space-2'] }}>
+                  {sectionTitle(adding ? t(`${f}.whose`) : t(`${f}.chargedTo`))}
+                  <Segmented
+                    label={t(`${f}.chargedTo`)}
+                    value={charged}
+                    onChange={(v) => {
+                      setCharged(v);
+                      setChargedTouched(true);
+                    }}
+                    options={(['shop', 'staff', 'not_tracked'] as const).map((v) => ({
+                      value: v,
+                      label: t(`${f}.chargedOptions.${v}`),
+                    }))}
+                  />
+                  {charged === 'staff' && (
+                    <PersonButton
+                      label={t(`${f}.staffMember`)}
+                      name={names.get(chargedStaff)}
+                      onPress={() => setPicking('charged')}
+                    />
+                  )}
+                  <Text variant="caption" muted style={{ paddingHorizontal: space['space-1'] }}>
+                    {!chargedTouched &&
+                    !id &&
+                    autoCharged === 'not_tracked' &&
+                    data.smallLimit != null
+                      ? t(`${f}.smallHint`, { limit: formatINR(data.smallLimit) })
+                      : t(`${f}.chargedHint.${charged}`, {
+                          month: monthLabel(Number(date.slice(0, 4)), Number(date.slice(5, 7))),
+                        })}
+                  </Text>
+                </View>
+              )}
+
+              {shows(3) && (
+                <View style={{ gap: space['space-2'] }}>
+                  {sectionTitle(t(`${f}.bill`))}
+                  {billShown ? (
+                    <Card style={{ padding: space['space-2'], gap: space['space-2'] }}>
+                      <Image
+                        source={{ uri: billShown }}
+                        accessibilityLabel={t('expenses.hasBill')}
+                        resizeMode="contain"
+                        style={{ width: '100%', height: 220, borderRadius: radius['radius-sm'] }}
+                      />
+                      <Button
+                        label={t(`${f}.billRemove`)}
+                        variant="quiet"
+                        icon={Trash2}
+                        onPress={() => {
+                          setPhoto(null);
+                          setRemoveBill(!!savedBill);
+                        }}
+                      />
+                    </Card>
+                  ) : (
+                    <View style={{ flexDirection: 'row', gap: space['space-2'] }}>
+                      {Platform.OS !== 'web' && (
+                        <View style={{ flex: 1 }}>
+                          <Button
+                            label={t('mobile.money.expenses.takePhoto')}
+                            variant="secondary"
+                            icon={Camera}
+                            block
+                            onPress={() => pick('camera')}
+                          />
+                        </View>
+                      )}
+                      <View style={{ flex: 1 }}>
+                        <Button
+                          label={t('mobile.money.expenses.pickPhoto')}
+                          variant="secondary"
+                          icon={ImageIcon}
+                          block
+                          onPress={() => pick('library')}
+                        />
+                      </View>
+                    </View>
+                  )}
+                  <Text variant="caption" muted style={{ paddingHorizontal: space['space-1'] }}>
+                    {t(`${f}.billHint`)}
+                  </Text>
+                </View>
+              )}
+
+              {shows(2) && (
+                <View style={{ gap: space['space-2'] }}>
+                  {sectionTitle(t(`${f}.paidWith`))}
+                  <Segmented
+                    label={t(`${f}.paidWith`)}
+                    value={mode}
+                    onChange={setMode}
+                    options={MODES.map((m) => ({ value: m, label: modes[m] ?? m }))}
+                  />
+                </View>
+              )}
+              {adding && step === 2 && (
+                <View style={{ gap: space['space-2'] }}>
+                  {sectionTitle(t(`${f}.date`))}
+                  <DayStepper value={date} onChange={setDate} max={today} />
+                </View>
+              )}
+
+              {shows(3) && (
+                <Field
+                  label={t(`${f}.note`)}
+                  value={note}
+                  onChange={setNote}
+                  placeholder={t(`${f}.notePlaceholder`)}
+                />
+              )}
+              {adding && step === 3 && (
+                <Card style={{ padding: space['space-4'], gap: 2 }}>
+                  <Text variant="caption" muted>
+                    {t(`${f}.steps.summary`)}
+                  </Text>
+                  <Text variant="title-md">
+                    {`${parseRupees(amount) ? formatINR(parseRupees(amount)!) : '—'} · ${
+                      cats.find((x) => x.id === categoryId)?.name ?? '—'
+                    }`}
+                  </Text>
+                  <Text variant="caption" muted>
+                    {summary}
+                  </Text>
+                </Card>
+              )}
+
+              {id && can('expenses.edit') && (
+                <View style={{ gap: space['space-2'] }}>
+                  <Button
+                    label={confirmDelete ? t(`${f}.deleteConfirm`) : t(`${f}.delete`)}
+                    variant={confirmDelete ? 'secondary' : 'quiet'}
+                    icon={Trash2}
+                    busy={busy && confirmDelete}
+                    onPress={() => (confirmDelete ? remove() : setConfirmDelete(true))}
+                  />
+                  {confirmDelete && (
+                    <Text variant="caption" muted>
+                      {t(`${f}.deleteHint`)}
+                    </Text>
+                  )}
+                </View>
+              )}
+            </>
+          )}
+
+          {!editable && billShown && (
+            <Image
+              source={{ uri: billShown }}
+              accessibilityLabel={t('expenses.hasBill')}
+              resizeMode="contain"
+              style={{ width: '100%', height: 320, borderRadius: radius['radius-md'] }}
+            />
+          )}
+        </ScrollView>
+
+        {data && editable && (!id || data.expense) && (
+          <BottomBar>
+            {error && <FormMessage ok={false} text={error} />}
+            {savedNote ? (
+              <>
+                <FormMessage ok={false} text={savedNote} />
+                <Button label={t(`${f}.close`)} icon={Check} block onPress={back} />
+              </>
+            ) : adding ? (
+              <View style={{ flexDirection: 'row', gap: space['space-2'] }}>
+                {step > 1 && (
+                  <Button
+                    label={t(`${f}.steps.back`)}
+                    variant="quiet"
+                    onPress={() => {
+                      setError(null);
+                      setStep(step - 1);
+                    }}
+                  />
+                )}
+                {step < 3 && (
+                  <View style={{ flex: 1 }}>
+                    <Button
+                      label={busy ? t(`${f}.saving`) : t(`${f}.steps.saveNow`)}
+                      variant="secondary"
+                      busy={busy}
+                      block
+                      onPress={save}
+                    />
+                  </View>
+                )}
+                <View style={{ flex: 1.3 }}>
+                  {step < 3 ? (
+                    <Button
+                      label={t(`${f}.steps.next`)}
+                      icon={ChevronRight}
+                      block
+                      disabled={busy}
+                      onPress={goNext}
+                    />
+                  ) : (
+                    <Button
+                      label={busy ? t(`${f}.saving`) : t(`${f}.save`)}
+                      icon={Check}
+                      busy={busy}
+                      block
+                      onPress={save}
+                    />
                   )}
                 </View>
               </View>
-            )}
-            {adding && step === 1 && (
-              <Card style={{ padding: space['space-3'], backgroundColor: c['surface-muted'] }}>
-                <Text variant="caption">
-                  {t(`${f}.steps.defaults`, { date: formatDisplayDate(date) })}
-                </Text>
-              </Card>
-            )}
-
-            {shows(2) && (
-              <View style={{ gap: space['space-2'] }}>
-                {sectionTitle(t(`${f}.paidBy`))}
-                <Segmented
-                  label={t(`${f}.paidBy`)}
-                  value={paidBy}
-                  onChange={setPaidBy}
-                  // The shop pays or a staff member does (owner, 29/10/2026); "Owner" stays only on
-                  // old expenses that used it.
-                  options={(data.expense?.paid_by_kind === 'owner'
-                    ? (['owner', 'shop_cash', 'staff'] as const)
-                    : (['shop_cash', 'staff'] as const)
-                  ).map((v) => ({
-                    value: v,
-                    label: t(`${f}.paidByOptions.${v}`),
-                  }))}
-                />
-                {paidBy === 'staff' && (
-                  <>
-                    <PersonButton
-                      label={t(`${f}.whoPaid`)}
-                      name={names.get(paidStaff)}
-                      onPress={() => setPicking('paid')}
-                    />
-                    <Text variant="caption" muted>
-                      {t(`${f}.giveBack`)}
-                    </Text>
-                    <Segmented<GiveBack>
-                      label={t(`${f}.giveBack`)}
-                      value={giveBack}
-                      onChange={setGiveBack}
-                      options={giveBackOptions.map((v) => ({
-                        value: v,
-                        label: t(`${f}.giveBackOptions.${v}`),
-                      }))}
-                    />
-                    {giveBack === 'now' && (
-                      <Text variant="caption" muted>
-                        {t(`${f}.giveBackNowHint`, { name: names.get(paidStaff) ?? '—' })}
-                      </Text>
-                    )}
-                  </>
-                )}
-              </View>
-            )}
-
-            {shows(2) && (
-              <View style={{ gap: space['space-2'] }}>
-                {sectionTitle(adding ? t(`${f}.whose`) : t(`${f}.chargedTo`))}
-                <Segmented
-                  label={t(`${f}.chargedTo`)}
-                  value={charged}
-                  onChange={(v) => {
-                    setCharged(v);
-                    setChargedTouched(true);
-                  }}
-                  options={(['shop', 'staff', 'not_tracked'] as const).map((v) => ({
-                    value: v,
-                    label: t(`${f}.chargedOptions.${v}`),
-                  }))}
-                />
-                {charged === 'staff' && (
-                  <PersonButton
-                    label={t(`${f}.staffMember`)}
-                    name={names.get(chargedStaff)}
-                    onPress={() => setPicking('charged')}
-                  />
-                )}
-                <Text variant="caption" muted style={{ paddingHorizontal: space['space-1'] }}>
-                  {!chargedTouched &&
-                  !id &&
-                  autoCharged === 'not_tracked' &&
-                  data.smallLimit != null
-                    ? t(`${f}.smallHint`, { limit: formatINR(data.smallLimit) })
-                    : t(`${f}.chargedHint.${charged}`, {
-                        month: monthLabel(Number(date.slice(0, 4)), Number(date.slice(5, 7))),
-                      })}
-                </Text>
-              </View>
-            )}
-
-            {shows(3) && (
-              <View style={{ gap: space['space-2'] }}>
-                {sectionTitle(t(`${f}.bill`))}
-                {billShown ? (
-                  <Card style={{ padding: space['space-2'], gap: space['space-2'] }}>
-                    <Image
-                      source={{ uri: billShown }}
-                      accessibilityLabel={t('expenses.hasBill')}
-                      resizeMode="contain"
-                      style={{ width: '100%', height: 220, borderRadius: radius['radius-sm'] }}
-                    />
-                    <Button
-                      label={t(`${f}.billRemove`)}
-                      variant="quiet"
-                      icon={Trash2}
-                      onPress={() => {
-                        setPhoto(null);
-                        setRemoveBill(!!savedBill);
-                      }}
-                    />
-                  </Card>
-                ) : (
-                  <View style={{ flexDirection: 'row', gap: space['space-2'] }}>
-                    {Platform.OS !== 'web' && (
-                      <View style={{ flex: 1 }}>
-                        <Button
-                          label={t('mobile.money.expenses.takePhoto')}
-                          variant="secondary"
-                          icon={Camera}
-                          block
-                          onPress={() => pick('camera')}
-                        />
-                      </View>
-                    )}
-                    <View style={{ flex: 1 }}>
-                      <Button
-                        label={t('mobile.money.expenses.pickPhoto')}
-                        variant="secondary"
-                        icon={ImageIcon}
-                        block
-                        onPress={() => pick('library')}
-                      />
-                    </View>
-                  </View>
-                )}
-                <Text variant="caption" muted style={{ paddingHorizontal: space['space-1'] }}>
-                  {t(`${f}.billHint`)}
-                </Text>
-              </View>
-            )}
-
-            {shows(2) && (
-              <View style={{ gap: space['space-2'] }}>
-                {sectionTitle(t(`${f}.paidWith`))}
-                <Segmented
-                  label={t(`${f}.paidWith`)}
-                  value={mode}
-                  onChange={setMode}
-                  options={MODES.map((m) => ({ value: m, label: modes[m] ?? m }))}
-                />
-              </View>
-            )}
-            {adding && step === 2 && (
-              <View style={{ gap: space['space-2'] }}>
-                {sectionTitle(t(`${f}.date`))}
-                <DayStepper value={date} onChange={setDate} max={today} />
-              </View>
-            )}
-
-            {shows(3) && (
-              <Field
-                label={t(`${f}.note`)}
-                value={note}
-                onChange={setNote}
-                placeholder={t(`${f}.notePlaceholder`)}
+            ) : (
+              <Button
+                label={busy ? t(`${f}.saving`) : t(`${f}.save`)}
+                icon={Check}
+                busy={busy && !confirmDelete}
+                block
+                onPress={save}
               />
             )}
-            {adding && step === 3 && (
-              <Card style={{ padding: space['space-4'], gap: 2 }}>
-                <Text variant="caption" muted>
-                  {t(`${f}.steps.summary`)}
-                </Text>
-                <Text variant="title-md">
-                  {`${parseRupees(amount) ? formatINR(parseRupees(amount)!) : '—'} · ${
-                    cats.find((x) => x.id === categoryId)?.name ?? '—'
-                  }`}
-                </Text>
-                <Text variant="caption" muted>
-                  {summary}
-                </Text>
-              </Card>
-            )}
-
-            {id && can('expenses.edit') && (
-              <View style={{ gap: space['space-2'] }}>
-                <Button
-                  label={confirmDelete ? t(`${f}.deleteConfirm`) : t(`${f}.delete`)}
-                  variant={confirmDelete ? 'secondary' : 'quiet'}
-                  icon={Trash2}
-                  busy={busy && confirmDelete}
-                  onPress={() => (confirmDelete ? remove() : setConfirmDelete(true))}
-                />
-                {confirmDelete && (
-                  <Text variant="caption" muted>
-                    {t(`${f}.deleteHint`)}
-                  </Text>
-                )}
-              </View>
-            )}
-          </>
+          </BottomBar>
         )}
-
-        {!editable && billShown && (
-          <Image
-            source={{ uri: billShown }}
-            accessibilityLabel={t('expenses.hasBill')}
-            resizeMode="contain"
-            style={{ width: '100%', height: 320, borderRadius: radius['radius-md'] }}
-          />
-        )}
-      </ScrollView>
-
-      {data && editable && (!id || data.expense) && (
-        <BottomBar>
-          {error && <FormMessage ok={false} text={error} />}
-          {savedNote ? (
-            <>
-              <FormMessage ok={false} text={savedNote} />
-              <Button label={t(`${f}.close`)} icon={Check} block onPress={back} />
-            </>
-          ) : adding ? (
-            <View style={{ flexDirection: 'row', gap: space['space-2'] }}>
-              {step > 1 && (
-                <Button
-                  label={t(`${f}.steps.back`)}
-                  variant="quiet"
-                  onPress={() => {
-                    setError(null);
-                    setStep(step - 1);
-                  }}
-                />
-              )}
-              {step < 3 && (
-                <View style={{ flex: 1 }}>
-                  <Button
-                    label={busy ? t(`${f}.saving`) : t(`${f}.steps.saveNow`)}
-                    variant="secondary"
-                    busy={busy}
-                    block
-                    onPress={save}
-                  />
-                </View>
-              )}
-              <View style={{ flex: 1.3 }}>
-                {step < 3 ? (
-                  <Button
-                    label={t(`${f}.steps.next`)}
-                    icon={ChevronRight}
-                    block
-                    disabled={busy}
-                    onPress={goNext}
-                  />
-                ) : (
-                  <Button
-                    label={busy ? t(`${f}.saving`) : t(`${f}.save`)}
-                    icon={Check}
-                    busy={busy}
-                    block
-                    onPress={save}
-                  />
-                )}
-              </View>
-            </View>
-          ) : (
-            <Button
-              label={busy ? t(`${f}.saving`) : t(`${f}.save`)}
-              icon={Check}
-              busy={busy && !confirmDelete}
-              block
-              onPress={save}
-            />
-          )}
-        </BottomBar>
-      )}
+      </KeyboardAvoidingView>
 
       <Sheet
         open={!!picking}
