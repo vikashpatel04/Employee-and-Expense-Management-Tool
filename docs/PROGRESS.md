@@ -22,7 +22,7 @@ whatever you touch._
   (Overview, Attendance, Ledger with Undo, Pay with Change pay / Advance rules, **Docs**), Money
   (expenses with bill photo, salary run with part payments and WhatsApp payslips, advances),
   attendance code, requests, choose-your-password for helpers. Linked to Expo (`eas init` done);
-  **not built yet** — the owner builds the APK with `docs/BUILDS.md`.
+  APK built 29/10/2026 but the owner's phone said "invalid package" (`docs/BUILDS.md`).
 - **Staffora** (`apps/staffora-mobile`, `docs/features/staffora.md`): **complete**; the owner
   checked it on 2026-10-26. Phone number + PIN sign-in, fingerprint, check-in by code / QR,
   attendance, money, payslips + share, requests, change PIN. Linked to Expo; ready to build
@@ -44,19 +44,19 @@ page needs the owner's sign-in.
 
 **Left, by flow (2026-10-29)** — W = website, A = FinCrew app, S = Staffora
 
-| Flow             | Done                                     | Left                                                                                 |
-| ---------------- | ---------------------------------------- | ------------------------------------------------------------------------------------ |
-| Staff setup      | W all; A change pay, advance rules, docs | A: add staff, allowances / deductions, leave template, own rules                     |
-| Attendance       | W, A, S (code / QR)                      | S: new APK for the QR fix; push reminders (all)                                      |
-| Requests         | W, A, S                                  | push notification when one comes in                                                  |
-| Advances         | W, A, S                                  | —                                                                                    |
-| Expenses         | W, A (redesigned)                        | check the new pages and Pay back now with data                                       |
-| Salary           | W, A (redesigned), S payslips            | check with data; owner re-runs October                                               |
-| Reports          | W                                        | A: reports                                                                           |
-| Settings         | W                                        | A: opens the website instead; other W settings pages in the new rows style if wanted |
-| Audit / activity | —                                        | W audit log viewer, dashboard "recent activity"                                      |
-| Backup           | —                                        | import / export (Phase 8)                                                            |
-| Install          | —                                        | build FinCrew APK; rebuild Staffora APK                                              |
+| Flow             | Done                                     | Left                                                                                    |
+| ---------------- | ---------------------------------------- | --------------------------------------------------------------------------------------- |
+| Staff setup      | W all; A change pay, advance rules, docs | A: add staff, allowances / deductions, leave template, own rules                        |
+| Attendance       | W, A, S (code / QR)                      | S: new APK for the QR fix; push reminders (all)                                         |
+| Requests         | W, A, S                                  | push notification when one comes in                                                     |
+| Advances         | W, A, S                                  | —                                                                                       |
+| Expenses         | W, A (redesigned)                        | check the new pages and Pay back now with data                                          |
+| Salary           | W, A (redesigned), S payslips            | check with data; owner re-runs October                                                  |
+| Reports          | W                                        | A: reports                                                                              |
+| Settings         | W                                        | A: opens the website instead; other W settings pages in the new rows style if wanted    |
+| Audit / activity | —                                        | W audit log viewer, dashboard "recent activity"                                         |
+| Backup           | —                                        | import / export (Phase 8)                                                               |
+| Install          | APKs built 29/10 (before the backup fix) | rebuild both with the 30/10 fix; FinCrew "invalid package" on the phone (see BUILDS.md) |
 
 Designs still missing: Advance rules dialog, Pay back now, settings pages (leave templates,
 holidays, rules, roles).
@@ -270,6 +270,14 @@ Tables still to add (with the phase that uses them, each with RLS tests): `push_
 notifications).
 
 ## Session log
+
+- **2026-10-30** — Owner: Staffora kept the old sign-in after a reinstall with no sign-out, and
+  the FinCrew APK said "invalid package". Staffora: **Not <name>? Sign out** on the PIN screen,
+  Me's button renamed **Sign out** (checked in the browser preview with a made-up profile: back
+  to Welcome, stored profile gone). Both apps `allowBackup: false` (Android restored the old
+  sign-in). FinCrew APK of 29/10 downloaded and checked: complete, signed, all ABIs, minSdk 24, so
+  the problem is on the phone (download, older install, storage); steps in BUILDS.md. Needs new
+  APKs for both.
 
 - **2026-10-29** — **Salary and expenses redesign built** (owner: "Build it"). Data:
   `salaryGroup` / `salaryOverview`, `finalizeSalary` `payslipIds`, `expenseSummary`,

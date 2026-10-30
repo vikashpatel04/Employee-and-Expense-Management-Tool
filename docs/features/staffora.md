@@ -54,6 +54,8 @@ Changed 2026-10-25 from invite links to **phone number + PIN** (owner's decision
   wrong PIN (tries left), a wait (until when), locked, another phone, left the shop, no sign-in.
   **Use fingerprint** (and an automatic prompt) when it's on. After the shop resets the PIN
   (`no_pin`) the same screen asks for a new one twice (`setUp` with the saved phone number).
+  **Not <name>? Sign out** under the pad (2026-10-30) forgets this phone's sign-in (`forget`) and
+  goes back to Welcome, for when someone else's sign-in is on the phone.
 - **CodePad** (`components/code-pad.tsx`): digit boxes + big number pad, Clear / Delete, dots for
   PINs; used for the PIN and the 6-digit code.
 - **Home** (`(tabs)/index.tsx`, design "Home"): greeting, today (status, in / out, minutes late,
@@ -70,7 +72,7 @@ Changed 2026-10-25 from invite links to **phone number + PIN** (owner's decision
   in-view camera. While checking, the screen shows the code it read.
 - **Checked in / out** (`checked-in.tsx`): the time large, present + minutes late, day, shop, how,
   and from when check-out works (the shop's minimum gap).
-- **Me**: name and shop, **Change PIN**, Lock Staffora, Remove from this phone; a "PIN
+- **Me**: name and shop, **Change PIN**, Lock Staffora, **Sign out** (was "Remove from this phone"; `forget`); a "PIN
   changed" note after changing it (`?changed=1`).
 - **Change PIN** (`change-pin.tsx`, 2026-10-25): the same pad and steps as choosing the PIN in
   "Join · first run" (no new artboard): current PIN, new PIN, new PIN again (mismatch caught on

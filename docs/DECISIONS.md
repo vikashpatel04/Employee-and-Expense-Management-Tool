@@ -2,6 +2,17 @@
 
 Choices made during the build that PLAN.md doesn't spell out. Newest first.
 
+## 2026-10-30 — Android backup off; sign out from the PIN screen
+
+- Owner: after uninstalling and reinstalling, Staffora still opened on the old account with no
+  way out. Cause: Android Auto Backup restored the app's storage (profile, session, phone id).
+  Both apps now set `allowBackup: false`; a reinstall starts clean.
+- The phone id is still a random id kept in app storage (not the Android id), so a reinstall
+  counts as a new phone: the shop taps **New phone** (as for a changed phone). Kept on purpose,
+  so a reinstall can't skip the shop's say.
+- The PIN screen gets **Not <name>? Sign out** (it was only in Me, which needs the PIN), and the
+  Me button is called **Sign out**.
+
 ## 2026-10-29 — Salary and expenses redesign (owner)
 
 - **Most important first** (owner: "design in the thought of what is priority"): salary leads with

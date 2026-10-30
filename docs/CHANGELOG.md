@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Fixed — 2026-10-30 (installs and sign-out)
+
+- **Staffora**: **Not <name>? Sign out** on the PIN screen, and "Remove from this phone" in Me is
+  now called **Sign out**, so another person's sign-in can be cleared without opening it.
+- **Both apps**: Android backup is off, so uninstalling and reinstalling no longer brings back the
+  old sign-in. Needs new APKs.
+
 ### Changed — 2026-10-29 (salary and expenses redesign)
 
 - **Salary in steps** (website and app): Attendance → Work out → Check & finalize → Pay, with

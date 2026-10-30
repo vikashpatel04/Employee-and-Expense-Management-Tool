@@ -55,6 +55,18 @@ pnpm build:store   # production: an .aab for the Play Store, version code goes u
 The build runs on Expo's servers (10–20 min); the link it prints opens the build page with a QR
 code / download for the APK. Install it on Android (allow "install from this source").
 
+**If the phone says "invalid package" / "App not installed"**: the APK on Expo is usually fine
+(the 29/10/2026 FinCrew APK was checked: complete, signed, all phone types, Android 7 and up).
+Check, in order: the download finished (FinCrew is about 96 MB; download again and wait, or
+open the build link on the phone and tap Install); an older FinCrew on the phone (uninstall it
+first); free storage (needs a few hundred MB); then the exact message and phone model.
+
+**Backup is off** (`"allowBackup": false` in both `app.json`, 2026-10-30): Android used to copy the
+app's stored sign-in to Google backup and put it back after a reinstall, so Staffora came back
+signed in as the old person. Now uninstalling really forgets the sign-in. A Staffora reinstall
+gets a new phone id, so the staff member needs **New phone** on the staff page before signing in
+again (same as changing phones).
+
 ## Profiles (`eas.json`)
 
 - `base`: Node 22.20.0, pnpm 10.34.7 (the repo's versions).

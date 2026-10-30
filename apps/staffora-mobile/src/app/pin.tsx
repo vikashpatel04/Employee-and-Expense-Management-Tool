@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { Fingerprint } from 'lucide-react-native';
+import { Fingerprint, LogOut } from 'lucide-react-native';
 import { CodePad } from '@/components/code-pad';
 import { Avatar, Button, Text } from '@/components/ui';
 import { useAuth } from '@/lib/auth';
@@ -17,10 +17,10 @@ type Message = { text: string; banner: boolean };
  * PIN to open (design: "PIN to open"): every time Staffora opens, the 4-digit PIN signs in again
  * through `staff-auth` (wrong PINs count; a wait, then a lock the shop lifts), or the fingerprint
  * when the person turned it on. After the shop resets the PIN (`no_pin`), the same screen asks
- * for a new one twice.
+ * for a new one twice. "Not <name>? Sign out" forgets this phone's sign-in (back to Welcome).
  */
 export default function Pin() {
-  const { profile, unlock, unlockWithBiometric, biometricOn, setUp } = useAuth();
+  const { profile, unlock, unlockWithBiometric, biometricOn, setUp, forget } = useAuth();
   const { c } = useTheme();
   const [step, setStep] = useState<Step>('enter');
   const [first, setFirst] = useState('');
@@ -139,10 +139,17 @@ export default function Pin() {
         )}
       </View>
       {!choosing && (
-        <View style={{ padding: space['space-4'], paddingTop: 0 }}>
+        <View style={{ padding: space['space-4'], paddingTop: 0, alignItems: 'center' }}>
           <Text variant="caption" muted style={{ textAlign: 'center' }}>
             {t('staffora.pin.forgot')}
           </Text>
+          {/* Someone else's sign-in on this phone (or one Android restored): forget it here. */}
+          <Button
+            label={t('staffora.pin.notYou', { name: profile?.name ?? '' })}
+            variant="quiet"
+            icon={LogOut}
+            onPress={() => void forget()}
+          />
         </View>
       )}
     </SafeAreaView>
