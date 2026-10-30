@@ -26,16 +26,17 @@ out of every committed file._
   attendance code, requests, choose-your-password for helpers; salary and expenses redesigned
   (2026-10-29); text boxes stay above the keyboard (2026-10-30). APKs are built with EAS
   (`docs/BUILDS.md`); the 29/10 APK said "invalid package" on the owner's phone (the file was
-  checked and is fine; see BUILDS.md). **Needs a new APK** for the 30/10 fixes.
+  checked and is fine; see BUILDS.md). APK with the 30/10 fixes built 30/10 (EAS
+  `971da16f`, commit `50d7c91`); not yet installed and checked by the owner.
 - **Staffora** (`apps/staffora-mobile`, `docs/features/staffora.md`): **complete**; the owner
   checked it on 2026-10-26. Phone number + PIN sign-in, fingerprint, check-in by code / QR,
   attendance, money, payslips + share, requests, change PIN, **Sign out** on the PIN screen and
   in Me (2026-10-30). Android backup is off in both apps, so a reinstall starts clean (the
-  staff member then needs **New phone**). **Needs a new APK** for the 30/10 fixes (sign out,
-  backup, keyboard, QR scanner). Fingerprint and QR scan only testable on a real phone.
-- **Database / server**: all migrations up to `20261029000002_reimbursement_paid.sql` are live;
-  `20261030000001_requests_reject_later_no_duplicates.sql` applies on the next push (dry-run on
-  live OK);
+  staff member then needs **New phone**). APK with the 30/10 fixes (sign out, backup,
+  keyboard, QR scanner, months ahead, money now) built 30/10 (EAS `c2de2ed8`, commit `50d7c91`);
+  not yet installed and checked. Fingerprint and QR scan only testable on a real phone.
+- **Database / server**: all migrations up to
+  `20261030000001_requests_reject_later_no_duplicates.sql` are live;
   edge functions `staff-auth` and `helper-auth` deployed by CI. **Clear all data** existed briefly
   (20261026000003–5), was used once on 2026-10-26 to clear the owner's test data on live, then
   **removed** (`…000006` restores the original append-only guards; the owner never wants it again).
@@ -52,19 +53,19 @@ page needs the owner's sign-in.
 
 **Left, by flow (2026-10-29)** — W = website, A = FinCrew app, S = Staffora
 
-| Flow             | Done                                                       | Left                                                                                                                |
-| ---------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| Staff setup      | W all; A change pay, advance rules, docs                   | A: add staff, allowances / deductions, leave template, own rules                                                    |
-| Attendance       | W, A, S (code / QR; S months ahead 30/10)                  | S: new APK for the QR fix (Play Store query); push reminders (all)                                                  |
-| Requests         | W, A, S (no duplicate leave; reject after approving 30/10) | push notification when one comes in                                                                                 |
-| Advances         | W, A, S                                                    | —                                                                                                                   |
-| Expenses         | W, A (redesigned)                                          | check the new pages and Pay back now with data                                                                      |
-| Salary           | W, A (live until finalized 30/10), S payslips + money now  | check with data signed in; owner finalizes October                                                                  |
-| Reports          | W                                                          | A: reports                                                                                                          |
-| Settings         | W                                                          | A: opens the website instead; other W settings pages in the new rows style if wanted                                |
-| Audit / activity | —                                                          | W audit log viewer, dashboard "recent activity"                                                                     |
-| Backup           | —                                                          | import / export (Phase 8)                                                                                           |
-| Install          | APKs built 29/10 (before the 30/10 fixes)                  | rebuild both: backup off, sign out, keyboard, QR, salary / money changes; FinCrew "invalid package" (see BUILDS.md) |
+| Flow             | Done                                                       | Left                                                                                                                                     |
+| ---------------- | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| Staff setup      | W all; A change pay, advance rules, docs                   | A: add staff, allowances / deductions, leave template, own rules                                                                         |
+| Attendance       | W, A, S (code / QR; S months ahead 30/10)                  | S: new APK for the QR fix (Play Store query); push reminders (all)                                                                       |
+| Requests         | W, A, S (no duplicate leave; reject after approving 30/10) | push notification when one comes in                                                                                                      |
+| Advances         | W, A, S                                                    | —                                                                                                                                        |
+| Expenses         | W, A (redesigned)                                          | check the new pages and Pay back now with data                                                                                           |
+| Salary           | W, A (live until finalized 30/10), S payslips + money now  | check with data signed in; owner finalizes October                                                                                       |
+| Reports          | W                                                          | A: reports                                                                                                                               |
+| Settings         | W                                                          | A: opens the website instead; other W settings pages in the new rows style if wanted                                                     |
+| Audit / activity | —                                                          | W audit log viewer, dashboard "recent activity"                                                                                          |
+| Backup           | —                                                          | import / export (Phase 8)                                                                                                                |
+| Install          | APKs built 30/10 with all 30/10 fixes (commit `50d7c91`)   | owner installs both and checks QR, attendance months, Money, Salary, Reject now; FinCrew "invalid package" seen on 29/10 (see BUILDS.md) |
 
 Designs still missing: Advance rules dialog, Pay back now, settings pages (leave templates,
 holidays, rules, roles).
@@ -291,7 +292,8 @@ notifications).
   `plugins/play-store-query.js` adds the Play Store `<queries>` entry (expo-camera's check
   failed on Android 11+), plus fallback to the in-view camera. Typecheck 9/9, tests core 246 /
   db 205, web build OK, migration dry-run on live OK. Not seen signed in (website preview
-  signed out; Staffora needs a staff PIN). Not pushed. Needs new APKs.
+  signed out; Staffora needs a staff PIN). Pushed on the owner's word: CI and migrate passed,
+  Vercel deployed, both APKs built on EAS (FinCrew `971da16f`, Staffora `c2de2ed8`).
 - **2026-10-30** — Docs brought up to date for the public repo: README rewritten (what it does,
   layout, run locally, contributing), `.gitignore` extended (native folders, keystores and
   service-account files, caches, `.claude/*` except `launch.json`), real people's names removed
