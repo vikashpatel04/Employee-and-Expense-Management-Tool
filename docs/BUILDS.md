@@ -83,3 +83,11 @@ again (same as changing phones).
 - Push notifications need a free Firebase project (Android FCM key uploaded with
   `eas credentials`) — comes with the push notification work.
 - Play Store: a Google Play developer account (one-time fee), then `eas submit`.
+
+## Staffora QR scan needs the Play Store query (30/10/2026)
+
+Google's QR scanner (expo-camera `launchScanner`) is only opened when the app can see the Play
+Store package, and Android 11+ hides other apps unless the manifest lists them. The config plugin
+`apps/staffora-mobile/plugins/play-store-query.js` adds that entry at build time, so only APKs
+built after 30/10/2026 have it. Check with `npx expo config --type introspect` (look for
+`com.android.vending` under `queries`).

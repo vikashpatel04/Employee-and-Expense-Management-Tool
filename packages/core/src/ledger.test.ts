@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   advanceLine,
+  moneyNow,
   checkAdvance,
   ledgerBalance,
   outstandingAdvance,
@@ -158,5 +159,58 @@ describe('advances', () => {
   it('rejects zero or negative amounts', () => {
     expect(() => advanceLine(0, '2026-10-01')).toThrow();
     expect(() => checkAdvance({ outstanding: 0, amount: -1 })).toThrow();
+  });
+});
+
+describe('moneyNow (Staffora Money, owner 30/10/2026)', () => {
+  it('salary so far, less the advance, plus expenses to get back, less expenses charged', () => {
+    // Ledger: advance 3,000 given, 500 reimbursement, 200 charged → balance −2,700.
+    const m = moneyNow({
+      balance: -270000,
+      advance: 300000,
+      expenseOwed: 50000,
+      expenseCharged: 20000,
+      unfinalized: [1500000],
+    });
+    expect(m).toEqual({
+      total: 1230000,
+      salarySoFar: 1500000,
+      finalizedDue: 0,
+      advance: 300000,
+      expenseOwed: 50000,
+      expenseCharged: 20000,
+    });
+  });
+
+  it('finalized salary not paid yet is what the ledger holds beyond advances and expenses', () => {
+    // October finalized: 15,000 net before advance; 3,000 advance outstanding; nothing paid.
+    const m = moneyNow({
+      balance: 1200000,
+      advance: 300000,
+      expenseOwed: 0,
+      expenseCharged: 0,
+      unfinalized: [100000],
+    });
+    expect(m.finalizedDue).toBe(1500000);
+    expect(m.total).toBe(1300000);
+  });
+
+  it('paid in full with nothing running shows 0', () => {
+    expect(
+      moneyNow({ balance: 0, advance: 0, expenseOwed: 0, expenseCharged: 0, unfinalized: [] })
+        .total,
+    ).toBe(0);
+  });
+
+  it('several months not finalized add up', () => {
+    const m = moneyNow({
+      balance: 0,
+      advance: 0,
+      expenseOwed: 0,
+      expenseCharged: 0,
+      unfinalized: [1000000, 200000],
+    });
+    expect(m.salarySoFar).toBe(1200000);
+    expect(m.total).toBe(1200000);
   });
 });

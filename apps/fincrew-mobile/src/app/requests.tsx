@@ -16,6 +16,7 @@ import {
   decideRequest,
   loadRequestContext,
   loadRequests,
+  rejectApprovedRequest,
   requestDays,
   type DecideResult,
   type RequestContext,
@@ -30,6 +31,7 @@ import { supabase } from '@/lib/supabase';
 import { radius, space, useTheme } from '@/lib/theme';
 
 type Show = 'pending' | 'decided';
+type Decision = 'approve' | 'reject' | 'rejectLater';
 const MODES = ['cash', 'upi', 'bank', 'card'] as const;
 const time = (iso: string) => formatTimeOfDay(minutesOfDayIST(new Date(iso)));
 
@@ -61,6 +63,28 @@ function contextText(c: RequestContext | undefined) {
   ].join(' · ');
 }
 
+function rejectLaterError(
+  r: Exclude<Awaited<ReturnType<typeof rejectApprovedRequest>>, { ok: true }>,
+): string {
+  const e = 'requests.errors';
+  switch (r.reason) {
+    case 'no_permission':
+      return t(`${e}.noPermission`);
+    case 'not_approved':
+      return t(`${e}.notApproved`);
+    case 'past':
+      return t(`${e}.past`);
+    case 'attendance':
+      return t(`${e}.attendance`);
+    case 'undo':
+      return t(`${e}.undo`);
+    case 'recovered':
+      return t(`${e}.recovered`);
+    default:
+      return t(`${e}.failed`, { reason: r.message });
+  }
+}
+
 function decideError(r: Exclude<DecideResult, { ok: true }>, name: string): string {
   const e = 'requests.errors';
   switch (r.reason) {
@@ -84,7 +108,9 @@ function decideError(r: Exclude<DecideResult, { ok: true }>, name: string): stri
 /**
  * Requests (design: "Requests"): leave and advances staff asked for in Staffora. Approve (leave:
  * mark the days paid / unpaid; advance: give it today, confirming past the limit) or reject,
- * through `decideRequest` in `@fincrew/data` like the website. Needs requests.decide.
+ * through `decideRequest` in `@fincrew/data` like the website. An approved one can still be
+ * rejected ("Reject now", `rejectApprovedRequest`: leave marks cleared, advance undone). Needs
+ * requests.decide.
  */
 export default function RequestsScreen() {
   const { me, can } = useSession();
@@ -94,10 +120,7 @@ export default function RequestsScreen() {
   const [pendingCount, setPendingCount] = useState(0);
   const [context, setContext] = useState<Map<string, RequestContext>>(new Map());
   const [loading, setLoading] = useState(false);
-  const [picked, setPicked] = useState<{
-    item: RequestItem;
-    decision: 'approve' | 'reject';
-  } | null>(null);
+  const [picked, setPicked] = useState<{ item: RequestItem; decision: Decision } | null>(null);
   const [leaveStatus, setLeaveStatus] = useState<'paid_leave' | 'unpaid_leave'>('paid_leave');
   const [mode, setMode] = useState<string>('cash');
   const [note, setNote] = useState('');
@@ -124,7 +147,7 @@ export default function RequestsScreen() {
     }, [load]),
   );
 
-  const open = (item: RequestItem, decision: 'approve' | 'reject') => {
+  const open = (item: RequestItem, decision: Decision) => {
     const ctx = context.get(item.id);
     setLeaveStatus(ctx?.kind === 'leave' && ctx.paidLeft !== null ? 'unpaid_leave' : 'paid_leave');
     setMode('cash');
@@ -138,6 +161,20 @@ export default function RequestsScreen() {
     if (!me || !picked) return;
     setBusy(true);
     setError(null);
+    if (picked.decision === 'rejectLater') {
+      const u = await rejectApprovedRequest(supabase, {
+        shopId: me.shopId,
+        permissions: me.permissions,
+        today: businessDateOf(new Date()),
+        requestId: picked.item.id,
+        note,
+      });
+      setBusy(false);
+      if (!u.ok) return setError(rejectLaterError(u));
+      setDone(t('requests.done.rejectedLater'));
+      setPicked(null);
+      return load();
+    }
     const r = await decideRequest(supabase, {
       shopId: me.shopId,
       permissions: me.permissions,
@@ -312,6 +349,15 @@ export default function RequestsScreen() {
                       {`“${r.decisionNote}”`}
                     </Text>
                   ) : null}
+                  {r.status === 'approved' && (
+                    <View style={{ marginTop: space['space-2'] }}>
+                      <Button
+                        label={t('requests.rejectLater')}
+                        variant="secondary"
+                        onPress={() => open(r, 'rejectLater')}
+                      />
+                    </View>
+                  )}
                 </View>
               )}
             </Card>
@@ -325,8 +371,24 @@ export default function RequestsScreen() {
       <Sheet
         open={!!picked}
         onClose={() => setPicked(null)}
-        title={picked ? `${t(`requests.${picked.decision}`)} · ${picked.item.name}` : ''}
-        subtitle={picked ? what(picked.item) : undefined}
+        title={
+          !picked
+            ? ''
+            : picked.decision === 'rejectLater'
+              ? t('requests.rejectLaterTitle', { name: picked.item.name })
+              : `${t(`requests.${picked.decision}`)} · ${picked.item.name}`
+        }
+        subtitle={
+          !picked
+            ? undefined
+            : picked.decision === 'rejectLater'
+              ? `${what(picked.item)} · ${t(
+                  picked.item.kind === 'leave'
+                    ? 'requests.rejectLaterLeave'
+                    : 'requests.rejectLaterAdvance',
+                )}`
+              : what(picked.item)
+        }
       >
         {picked?.decision === 'approve' && picked.item.kind === 'leave' && (
           <View style={{ gap: space['space-2'] }}>
@@ -372,11 +434,13 @@ export default function RequestsScreen() {
               label={
                 busy
                   ? t('requests.working')
-                  : picked?.decision === 'reject'
-                    ? t('requests.reject')
-                    : confirm
-                      ? t('requests.approveAnyway')
-                      : t('requests.approve')
+                  : picked?.decision === 'rejectLater'
+                    ? t('requests.rejectLater')
+                    : picked?.decision === 'reject'
+                      ? t('requests.reject')
+                      : confirm
+                        ? t('requests.approveAnyway')
+                        : t('requests.approve')
               }
               icon={picked?.decision === 'approve' ? Check : undefined}
               busy={busy}

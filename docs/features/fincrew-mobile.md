@@ -97,25 +97,26 @@ is a placeholder until the first store build.
     JPEG with `expo-image-manipulator`, `src/lib/bill-photo.ts`; shows the saved photo through a
     signed link), Paid with, note, delete (two taps). Read-only without edit permission. Saves
     through `saveExpense` / `deleteExpense` (`@fincrew/data`), ids from `expo-crypto`.
-  - **Salary** (`salary.tsx`): this month and the 3 before with state (Not worked out / Draft /
-    Finalized / Paid), net and what's still to pay; tap → the run.
+  - **Salary** (`salary.tsx`): this month and the 3 before with state (No salary / Not
+    finalized yet / Finalized / Paid), net and what's still to pay; tap → the run.
   - **Salary run** (`src/app/salary/[month].tsx`; redesign 29/10/2026, design "Salary · in
-    steps": step dots Attendance / Work out / Finalize / Pay, the big amount with a paid bar and
+    steps"; no work out step since 30/10/2026, figures are live until finalized): step dots
+    Attendance / Finalize / Pay, the big amount with a paid bar and
     the next step in words, people grouped Needs a look / Ready to finalize / Still to pay / Paid
     via `salaryOverview`; Finalize n ready (only the drafts without a warning) or Finalize
     everyone; earlier design "Salary run"): month switcher, state
     pill, net (or still to pay), gross / deductions / advance cuts, "Check before finalizing"
     warnings, people (days, advance cut or first warning, net, Paid / Due); tap a person for the
-    payslip lines, **Send payslip** and **Pay ₹…** for them. Bottom: Work out salary / Finalize
-    salary while it's a draft; once finalized **Share payslips** + **Pay all due**, and Run
-    again as a quiet button. Finalize and pay ask first in a sheet (permanent ledger lines). The
+    payslip lines, **Finalize <name>** while not finalized, **Send payslip** and **Pay ₹…** once
+    finalized. Bottom: Finalize n ready / Finalize everyone while not finalized; once finalized
+    **Share payslips** + **Pay all due**. Finalize and pay ask first in a sheet (permanent ledger lines). The
     pay sheet for one person (design "Salary run · pay one") has the **amount** (prefilled with
     what's due; less pays part, the rest stays due — `paySalary` `amount`, the database refuses
     more than net pay), the mode, and **Send the payslip on WhatsApp** (on by default). **Share
     payslips** lists every finalized person with Send payslip. Sending (`src/lib/share-payslip.ts`)
     loads the payslip fresh and opens `wa.me/91<number>?text=…` with `payslipShareText` (the
     same text Staffora shares); without a saved phone number it opens the phone's share sheet.
-    Uses `loadSalaryRun` (now with each person's phone), `runSalary`, `finalizeSalary`,
+    Uses `loadSalaryRun` (now with each person's phone), `finalizeSalary`,
     `paySalary`, `loadPayslipView`. (2026-10-25)
   - **Advances** (`advances.tsx`): total to recover, who owes (cut each month or decided at the
     run, limit); tap a person or **Give advance** (pick a person) → advance sheet.

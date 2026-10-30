@@ -30,6 +30,8 @@ import {
 export type ComputedPayslip = {
   staffId: string;
   name: string;
+  phone: string | null;
+  leavingDate: BusinessDate | null;
   result: SalaryResult;
   /** The month's leave roll; null with no template (no paid leave) or when marks exceed the balance. */
   leave: LeaveMonth | null;
@@ -60,7 +62,7 @@ export async function computeMonth(
       supabase
         .from('staff')
         .select(
-          'person_id, joining_date, leaving_date, advance_cut_paise, advance_cut_mode, expense_payback, expense_recover, people!inner(name)',
+          'person_id, joining_date, leaving_date, advance_cut_paise, advance_cut_mode, expense_payback, expense_recover, people!inner(name, phone)',
         )
         .eq('shop_id', shopId)
         .lte('joining_date', end)
@@ -199,6 +201,8 @@ export async function computeMonth(
       return {
         staffId,
         name: s.people.name,
+        phone: s.people.phone,
+        leavingDate: s.leaving_date,
         result,
         leave: version ? leave : null,
         leaveOverBalance,

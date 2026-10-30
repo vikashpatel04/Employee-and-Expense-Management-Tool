@@ -2,6 +2,59 @@
 
 Choices made during the build that PLAN.md doesn't spell out. Newest first.
 
+## 2026-10-30 — Salary is live until finalized (no "work out" step)
+
+- Owner: "work-out from admin is simply useless… attendance = pay − advance and expense. With
+  Not Finalized Yet tag it can be changed, once finalized it gets the Finalized tag and next
+  month begins, once marked paid it's paid and staff see 0."
+- `loadSalaryRun` now works out everyone without a finalized payslip live (`computeMonth`, the
+  same rules as before) every time the page opens; they are `draft` = **Not finalized yet**.
+  Nothing is written until **Finalize**: `finalizeSalary(year, month, staffIds)` saves their
+  draft (created or updated in place) and finalizes it in one step. `runSalary` is gone.
+- **Finalized is final**: a person with a finalized payslip is never worked out again, so the
+  "new revision after finalizing" path (re-run adjustments) is no longer reachable from the
+  apps. The database and core still support revisions if a correction flow is wanted later.
+- A live row's `id` is the staff id until finalized, then the payslip id; screens key and link
+  people by `staffId` (`?person=<staff id>` on the website).
+- `month_running` warning (screen hint, not saved): the month isn't over and the person hasn't
+  left, so they sit in "Needs a look" and Finalize-ready skips them; one person can still be
+  finalized from their row. It's a fact (days still to come), not a shop rule, so no setting.
+- A month with no salary run and no attendance marked (before the shop used FinCrew) shows
+  nobody ("No salary"), so the app's last-4-months list doesn't invent figures from weekly offs.
+- Live data on 30/10/2026: October had 3 drafts and nothing finalized, so nothing changes for
+  it: the drafts are overwritten when October is finalized.
+
+## 2026-10-30 — Staffora Money: money now
+
+- Total = ledger balance + salary so far (gross − deductions) of each month not finalized yet:
+  advances and expenses are already on the ledger, so they count once (core `moneyNow`, tested).
+  Finalized salary not paid yet = balance + advance − expenses to get back + expenses charged.
+- Months counted live: this month, and last month while it has marked days and no finalized
+  payslip of mine (staff can't see drafts or other people's runs; "has marked days" keeps
+  months from before the shop used FinCrew out).
+- Not a new screen (the Money card gains rows), so no new artboard; it follows the card's
+  existing pattern.
+
+## 2026-10-30 — Requests: no duplicate leave; reject after approving
+
+- Leave on a day that is already in a waiting or approved leave request, or already marked as
+  leave, is refused (`askRequest` → `duplicate`, and `private.guard_request` on insert,
+  `unique_violation`). The owner asked for it; it is a fact about the days, not a setting.
+- Approved → rejected is allowed for `requests.decide` (`rejectApprovedRequest`): leave days
+  still marked with the approved status are cleared (others changed since are left alone); the
+  advance is undone with an exact reversal (needs `salary.undo_payment`), refused once the
+  outstanding advance is less than it (part already cut from salary). The database refuses to
+  reject an approved advance request whose advance isn't undone. Rejected stays final.
+- Migration `20261030000001_requests_reject_later_no_duplicates.sql`.
+
+## 2026-10-30 — Staffora QR: Play Store query
+
+- expo-camera 58 decides "Google Play Services is not available" by looking up the Play Store
+  package (`com.android.vending`). Since Android 11 that lookup fails unless the manifest lists
+  the package under `<queries>`, so Google's scanner never opened (owner's Samsung S21 FE).
+  `plugins/play-store-query.js` adds the entry at build time. If the scanner still fails, the
+  screen falls back to the in-view camera (with the camera permission).
+
 ## 2026-10-30 — Keyboard: react-native-keyboard-controller
 
 - Owner: "the keyboard itself overlaps text box when the content is below… happens everywhere".

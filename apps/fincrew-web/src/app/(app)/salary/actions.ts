@@ -4,7 +4,6 @@ import { revalidatePath } from 'next/cache';
 import {
   finalizeSalary as finalizeShared,
   paySalary as payShared,
-  runSalary as runShared,
   type SalaryWriteResult,
 } from '@fincrew/data';
 import { todayIST } from '@/lib/format';
@@ -37,25 +36,17 @@ async function withRunner(
   return { ok: true, message: done(r) };
 }
 
-/** Work out (or again) every payslip of a month; see `runSalary` in `@fincrew/data`. */
-export async function runSalary(year: number, month: number): Promise<ActionResult> {
-  return withRunner(
-    (supabase, me) => runShared(supabase, { ...me, year, month }),
-    (r) => t('salary.done.run', { created: r.created ?? 0, updated: r.updated ?? 0 }),
-  );
-}
-
 /**
- * Finalize one draft, some (`payslipIds`: the ready ones), or every draft of the run: posts each
- * payslip to the ledger.
+ * Finalize these people's salary for the month (live figures saved and locked; see
+ * `finalizeSalary` in `@fincrew/data`): posts each payslip to the ledger.
  */
 export async function finalizeSalary(
-  runId: string,
-  payslipId?: string,
-  payslipIds?: string[],
+  year: number,
+  month: number,
+  staffIds: string[],
 ): Promise<ActionResult> {
   return withRunner(
-    (supabase, me) => finalizeShared(supabase, { ...me, runId, payslipId, payslipIds }),
+    (supabase, me) => finalizeShared(supabase, { ...me, year, month, staffIds }),
     (r) => t('salary.done.finalized', { count: r.count }),
   );
 }

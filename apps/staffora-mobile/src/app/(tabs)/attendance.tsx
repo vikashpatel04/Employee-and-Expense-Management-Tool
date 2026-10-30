@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useFocusEffect } from 'expo-router';
@@ -21,27 +21,47 @@ import { radius, space, useTheme } from '@/lib/theme';
 
 /** Monday first, like the design's calendar. */
 const column = (wd: number) => (wd + 6) % 7;
+/** How many months ahead the calendar goes (leave can be asked for up to a year ahead). */
+const AHEAD_MONTHS = 12;
+const key = (y: { year: number; month: number }) => y.year * 12 + y.month;
 
 /**
  * Attendance (design: "Attendance", PLAN §6.3): my month as a calendar (status colour + icon,
  * late dot), the chosen day's status, minutes late and times, the month's counts, and "Ask for
  * leave". Worked out by the same shared code as FinCrew (`loadAttendanceMonth`); read-only here.
+ * Months ahead show leave already marked, weekly offs and holidays (`upcoming`). The loaded row
+ * is kept with its month, so switching months never draws one month's days from another's data.
  */
 export default function Attendance() {
   const { profile } = useAuth();
   const { c } = useTheme();
   const today = businessDateOf(new Date());
   const [ym, setYm] = useState(monthOf(today));
-  const [row, setRow] = useState<GridRow | null | undefined>(undefined);
+  const [loaded, setLoaded] = useState<{ key: number; row: GridRow | null } | null>(null);
   const [day, setDay] = useState(today);
   const [loading, setLoading] = useState(false);
+  const latest = useRef(0);
+  const row = loaded?.key === key(ym) ? loaded.row : undefined;
 
   const load = useCallback(async () => {
     if (!profile) return;
+    const asked = key(ym);
+    latest.current = asked;
     setLoading(true);
-    const { rows } = await loadAttendanceMonth(supabase, profile.shopId, ym.year, ym.month, today);
-    setRow(rows.find((r) => r.staffId === profile.personId) ?? null);
-    setLoading(false);
+    try {
+      const { rows } = await loadAttendanceMonth(
+        supabase,
+        profile.shopId,
+        ym.year,
+        ym.month,
+        today,
+        { upcoming: true },
+      );
+      if (latest.current !== asked) return; // the person moved on to another month
+      setLoaded({ key: asked, row: rows.find((r) => r.staffId === profile.personId) ?? null });
+    } finally {
+      if (latest.current === asked) setLoading(false);
+    }
   }, [profile, ym, today]);
 
   useFocusEffect(
@@ -54,11 +74,12 @@ export default function Attendance() {
     const d = new Date(Date.UTC(ym.year, ym.month - 1 + by, 1));
     const next = { year: d.getUTCFullYear(), month: d.getUTCMonth() + 1 };
     setYm(next);
-    const dates = monthDates(next.year, next.month).filter((x) => x <= today);
-    setDay(dates.includes(today) ? today : (dates.at(-1) ?? today));
+    const all = monthDates(next.year, next.month);
+    const dates = all.filter((x) => x <= today);
+    setDay(dates.includes(today) ? today : (dates.at(-1) ?? all[0]!));
   };
   const current = monthOf(today);
-  const hasNext = ym.year * 12 + ym.month < current.year * 12 + current.month;
+  const hasNext = key(ym) < key(current) + AHEAD_MONTHS;
 
   const months = t('months.long', { returnObjects: true }) as unknown as string[];
   const tiny = t('weekdays.tiny', { returnObjects: true }) as unknown as string[];
@@ -66,21 +87,28 @@ export default function Attendance() {
   const status = t('status', { returnObjects: true }) as unknown as Record<string, string>;
   const dates = monthDates(ym.year, ym.month);
   const cell = row?.cells.find((x) => x.date === day);
+  const sofar = row?.cells.filter((x) => !x.upcoming) ?? [];
+  const n = (s: string) => sofar.filter((x) => x.status === s).length;
   const counts = row
     ? (
         [
-          ['present', row.cells.filter((x) => x.status === 'present').length],
+          ['present', n('present')],
           ['late', row.lateDays],
-          ['half_day', row.cells.filter((x) => x.status === 'half_day').length],
-          ['absent', row.cells.filter((x) => x.status === 'absent').length],
-          ['paid_leave', row.cells.filter((x) => x.status === 'paid_leave').length],
-          ['unpaid_leave', row.cells.filter((x) => x.status === 'unpaid_leave').length],
-          ['weekly_off', row.cells.filter((x) => x.status === 'weekly_off').length],
-          ['holiday', row.cells.filter((x) => x.status === 'holiday').length],
-          ['unmarked', row.cells.filter((x) => x.status === 'unmarked').length],
+          ['half_day', n('half_day')],
+          ['absent', n('absent')],
+          ['paid_leave', n('paid_leave')],
+          ['unpaid_leave', n('unpaid_leave')],
+          ['weekly_off', n('weekly_off')],
+          ['holiday', n('holiday')],
+          ['unmarked', n('unmarked')],
         ] as const
-      ).filter(([, n]) => n > 0)
+      ).filter(([, x]) => x > 0)
     : [];
+  const leaveAhead =
+    row?.cells.filter(
+      (x) => x.upcoming && (x.status === 'paid_leave' || x.status === 'unpaid_leave'),
+    ).length ?? 0;
+  const started = monthDates(ym.year, ym.month)[0]! <= today;
 
   return (
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: c.canvas }}>
@@ -131,7 +159,8 @@ export default function Attendance() {
                   <View key={`pad-${i}`} style={{ width: `${100 / 7}%` }} />
                 ))}
                 {dates.map((d) => {
-                  const x = row.cells.find((cc) => cc.date === d)!;
+                  const x = row.cells.find((cc) => cc.date === d);
+                  if (!x) return <View key={d} style={{ width: `${100 / 7}%` }} />;
                   const future = x.status === 'future' || x.status === 'not_employed';
                   const tok =
                     future || x.status === 'unmarked' ? null : statusTokens(x.status as StatusKey);
@@ -151,6 +180,7 @@ export default function Attendance() {
                           justifyContent: 'center',
                           gap: 2,
                           borderRadius: radius['radius-sm'],
+                          opacity: x.upcoming && !selected ? 0.7 : 1,
                           backgroundColor: tok?.bg ? c[tok.bg] : 'transparent',
                           borderWidth: selected
                             ? 2
@@ -201,7 +231,7 @@ export default function Attendance() {
               </View>
             </Card>
 
-            {cell && (
+            {cell && cell.status !== 'future' && (
               <Card style={{ padding: space['space-4'], gap: space['space-2'] }}>
                 <View
                   style={{
@@ -227,21 +257,35 @@ export default function Attendance() {
                     {t('mobile.today.lateMin', { minutes: cell.lateMinutes ?? 0 })}
                   </Text>
                 )}
-                {!cell.marked && cell.status !== 'unmarked' && (
+                {cell.upcoming ? (
                   <Text variant="caption" muted>
-                    {t('mobile.staff.fromRules')}
+                    {t('staffora.attendance.planned')}
                   </Text>
+                ) : (
+                  !cell.marked &&
+                  cell.status !== 'unmarked' && (
+                    <Text variant="caption" muted>
+                      {t('mobile.staff.fromRules')}
+                    </Text>
+                  )
                 )}
               </Card>
             )}
 
             <View style={{ gap: space['space-2'] }}>
-              <Text variant="label-sm">{t('mobile.staff.payable', { days: row.payableDays })}</Text>
+              {started && (
+                <Text variant="label-sm">
+                  {t('mobile.staff.payable', { days: row.payableDays })}
+                </Text>
+              )}
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
-                {counts.map(([s, n]) => (
-                  <StatusPill key={s} status={s} label={`${n} ${status[s]}`} />
+                {counts.map(([s, x]) => (
+                  <StatusPill key={s} status={s} label={`${x} ${status[s]}`} />
                 ))}
               </View>
+              {leaveAhead > 0 && (
+                <Text muted>{t('staffora.attendance.leaveAhead', { count: leaveAhead })}</Text>
+              )}
             </View>
           </>
         )}

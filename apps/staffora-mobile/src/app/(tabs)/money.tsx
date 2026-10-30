@@ -3,33 +3,31 @@ import { Pressable, RefreshControl, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useFocusEffect } from 'expo-router';
 import { ArrowUpRight, ChevronRight, CircleCheck, Hourglass, Receipt } from 'lucide-react-native';
-import { formatDisplayDate, formatINR } from '@fincrew/core';
-import {
-  loadLedger,
-  loadMyPayslips,
-  loadStaffOverview,
-  type LedgerEntry,
-  type StaffOverview,
-} from '@fincrew/data';
+import { businessDateOf, formatDisplayDate, formatINR } from '@fincrew/core';
+import { loadLedger, loadMyMoney, loadMyPayslips, type LedgerEntry } from '@fincrew/data';
 import { Button, Card, Segmented, Text } from '@/components/ui';
 import { useAuth } from '@/lib/auth';
 import { t } from '@/lib/i18n';
 import { supabase } from '@/lib/supabase';
-import { space, useTheme } from '@/lib/theme';
+import { radius, space, useTheme } from '@/lib/theme';
 
 type Tab = 'ledger' | 'payslips';
 type Payslips = Awaited<ReturnType<typeof loadMyPayslips>>;
+type Money = NonNullable<Awaited<ReturnType<typeof loadMyMoney>>>;
 
 /**
- * Money (design: "Money · ledger / payslips", PLAN §6.3): what the shop owes me (or I owe), the
- * advance to repay and its cut, then my ledger by month or my payslips; "Ask for an advance".
- * Same shared loaders as FinCrew's staff detail; RLS returns only my rows.
+ * Money (design: "Money · ledger / payslips", PLAN §6.3): where my money stands now (owner
+ * 30/10/2026: salary so far − advance ± expenses, `loadMyMoney`): each month not finalized yet
+ * with its salary so far and a "Not finalized yet" tag, finalized salary not paid yet, the
+ * advance to repay and its cut, expenses to get back or charged; once paid it shows 0 (plus the
+ * new month so far). Then my ledger by month or my payslips; "Ask for an advance". Same shared
+ * loaders as FinCrew; RLS returns only my rows.
  */
 export default function Money() {
   const { profile } = useAuth();
   const { c } = useTheme();
   const [tab, setTab] = useState<Tab>('ledger');
-  const [info, setInfo] = useState<StaffOverview | null>(null);
+  const [money, setMoney] = useState<Money | null>(null);
   const [lines, setLines] = useState<LedgerEntry[] | null>(null);
   const [slips, setSlips] = useState<Payslips | null>(null);
   const [loading, setLoading] = useState(false);
@@ -39,11 +37,11 @@ export default function Money() {
     if (!profile) return;
     setLoading(true);
     const [o, l, p] = await Promise.all([
-      loadStaffOverview(supabase, profile.shopId, profile.personId, true),
+      loadMyMoney(supabase, profile.shopId, profile.personId, businessDateOf(new Date())),
       loadLedger(supabase, profile.personId),
       loadMyPayslips(supabase, profile.personId),
     ]);
-    setInfo(o);
+    setMoney(o);
     setLines(l);
     setSlips(p);
     setLoading(false);
@@ -57,8 +55,17 @@ export default function Money() {
 
   const months = t('months.long', { returnObjects: true }) as unknown as string[];
   const monthName = (y: number, mo: number) => `${months[mo - 1]} ${y}`;
-  const balance = info?.balance ?? 0;
+  const info = money?.overview;
+  const now = money?.now;
+  const balance = now?.total ?? 0;
   const tone = balance > 0 ? c['money-owed'] : balance < 0 ? c['money-advance'] : c['ink-muted'];
+  const rowStyle = {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: space['space-3'],
+    paddingVertical: 4,
+  } as const;
   const newest = [...(lines ?? [])].reverse();
   const byMonth = new Map<string, LedgerEntry[]>();
   for (const l of newest)
@@ -75,7 +82,7 @@ export default function Money() {
           <Text muted>{t(`${m}.subtitle`, { shop: profile?.shopName ?? '' })}</Text>
         </View>
 
-        {info && (
+        {info && now && money && (
           <Card style={{ padding: space['space-5'], gap: space['space-2'] }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
               <Hourglass size={20} color={tone} />
@@ -87,34 +94,96 @@ export default function Money() {
             <View
               style={{ height: 1, backgroundColor: c.line, marginVertical: space['space-2'] }}
             />
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-              }}
-            >
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            {money.months.map((x) => (
+              <View key={`${x.year}-${x.month}`} style={{ gap: 2 }}>
+                <View style={rowStyle}>
+                  <View style={{ flex: 1, minWidth: 0 }}>
+                    <Text variant="label-sm">
+                      {t(`${m}.soFar`, { month: monthName(x.year, x.month) })}
+                    </Text>
+                    <Text variant="caption" muted>
+                      {t(`${m}.soFarDays`, { payable: x.payableDays, employed: x.employedDays })}
+                    </Text>
+                  </View>
+                  <Text variant="money-md" color={c['money-owed']}>
+                    {formatINR(x.amount)}
+                  </Text>
+                </View>
+                <View
+                  style={{
+                    alignSelf: 'flex-start',
+                    paddingHorizontal: 10,
+                    paddingVertical: 2,
+                    borderRadius: radius['radius-pill'],
+                    backgroundColor: c['status-late-soft'],
+                  }}
+                >
+                  <Text variant="caption">{t(`${m}.notFinalized`)}</Text>
+                </View>
+              </View>
+            ))}
+            {now.finalizedDue !== 0 && (
+              <View style={rowStyle}>
+                <Text variant="label-sm" style={{ flex: 1 }}>
+                  {now.finalizedDue > 0 ? t(`${m}.finalizedDue`) : t(`${m}.other`)}
+                </Text>
+                <Text
+                  variant="money-md"
+                  color={now.finalizedDue > 0 ? c['money-owed'] : c['money-deduction']}
+                >
+                  {now.finalizedDue < 0 ? '−' : ''}
+                  {formatINR(Math.abs(now.finalizedDue))}
+                </Text>
+              </View>
+            )}
+            <View style={rowStyle}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
                 <ArrowUpRight size={20} color={c['money-advance']} />
                 <Text variant="label-sm" color={c['money-advance']}>
                   {t(`${m}.advance`)}
                 </Text>
               </View>
               <Text variant="money-md" color={c['money-advance']}>
-                {formatINR(info.advance ?? 0)}
+                {now.advance > 0 ? '−' : ''}
+                {formatINR(now.advance)}
               </Text>
             </View>
-            {(info.advance ?? 0) > 0 && (
+            {now.advance > 0 && (
               <Text muted>
                 {info.advanceMode === 'none'
                   ? t(`${m}.cutAtRun`)
                   : t(`${m}.cut`, {
                       amount: formatINR(
                         info.advanceMode === 'all'
-                          ? (info.advance ?? 0)
-                          : Math.min(info.advanceCut ?? 0, info.advance ?? 0),
+                          ? now.advance
+                          : Math.min(info.advanceCut ?? 0, now.advance),
                       ),
                     })}
+              </Text>
+            )}
+            {now.expenseOwed > 0 && (
+              <View style={rowStyle}>
+                <Text variant="label-sm" style={{ flex: 1 }}>
+                  {t(`${m}.expenseOwed`)}
+                </Text>
+                <Text variant="money-md" color={c['money-owed']}>
+                  {formatINR(now.expenseOwed)}
+                </Text>
+              </View>
+            )}
+            {now.expenseCharged > 0 && (
+              <View style={rowStyle}>
+                <Text variant="label-sm" style={{ flex: 1 }}>
+                  {t(`${m}.expenseCharged`)}
+                </Text>
+                <Text variant="money-md" color={c['money-deduction']}>
+                  −{formatINR(now.expenseCharged)}
+                </Text>
+              </View>
+            )}
+            {money.months.length > 0 && (
+              <Text variant="caption" muted>
+                {t(`${m}.changes`)}
               </Text>
             )}
           </Card>

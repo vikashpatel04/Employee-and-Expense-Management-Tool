@@ -16,7 +16,7 @@ import { t } from '@/lib/i18n';
 import { requireMe } from '@/lib/session';
 import { createClient } from '@/lib/supabase/server';
 import { PageHeader, quietButtonClass } from '../../components';
-import { finalizeSalary, paySalary, runSalary } from './actions';
+import { finalizeSalary, paySalary } from './actions';
 import { ActionButton, PayControl } from './controls';
 import { SalaryTable } from './salary-table';
 
@@ -60,11 +60,12 @@ const GROUP_DOT: Record<SalaryGroup, string> = {
 };
 
 /**
- * Salary (redesign, owner 29/10/2026; design "Web · salary in steps"): the month as steps
- * (Attendance → Work out → Check & finalize → Pay) with the next step and its one button first,
- * the big amount (take-home, then still to pay), how it adds up, and people grouped by what they
- * need (needs a look / ready / still to pay / paid). `?person=<payslip>` opens that payslip on
- * the side; `?table=1` shows the old wide table.
+ * Salary (redesign, owner 29/10/2026; design "Web · salary in steps"; no "work out" step since
+ * 30/10/2026): the month as steps (Attendance → Check & finalize → Pay) with the next step and its
+ * one button first, the big amount (take-home so far, then still to pay), how it adds up, and
+ * people grouped by what they need (needs a look / ready / still to pay / paid). Until a person
+ * is finalized their figures are live ("Not finalized yet", `loadSalaryRun`); Finalize locks
+ * them. `?person=<staff id>` opens that person on the side; `?table=1` shows the wide table.
  */
 export default async function SalaryPage({
   searchParams,
@@ -90,7 +91,7 @@ export default async function SalaryPage({
   const table = sp.table === '1';
 
   const supabase = await createClient();
-  const { runId, people, overall } = await loadSalaryRun(supabase, me.shopId, year, month);
+  const { runId, people, overall } = await loadSalaryRun(supabase, me.shopId, year, month, today);
   const run = runId ? { id: runId } : null;
   const { groups, totals, unmarked, dueCount } = salaryOverview(people);
   const look = groups.look.length;
@@ -111,11 +112,6 @@ export default async function SalaryPage({
           : has
             ? t(`${s}.sub.marked`)
             : t(`${s}.sub.markFirst`),
-    },
-    {
-      key: 'workOut',
-      kind: has ? 'done' : 'current',
-      sub: has ? t(`${s}.sub.workedOut`) : t(`${s}.sub.notYet`),
     },
     {
       key: 'finalize',
@@ -155,24 +151,15 @@ export default async function SalaryPage({
             }
           : { title: t(`${s}.next.paidTitle`, { month: mName }), body: t(`${s}.next.paidBody`) };
 
-  const workAgain = canRun && (
-    <ActionButton
-      action={runSalary.bind(null, year, month)}
-      label={has ? t(`${s}.workOutAgain`) : t('salary.run')}
-      working={t('salary.working')}
-      variant={has ? 'secondary' : 'primary'}
-    />
-  );
   const nextActions = canRun && (
     <>
-      {workAgain}
-      {stage === 'draft' && run && ready > 0 && (
+      {stage === 'draft' && ready > 0 && (
         <ActionButton
           action={finalizeSalary.bind(
             null,
-            run.id,
-            undefined,
-            look > 0 ? groups.ready.map((p) => p.id) : undefined,
+            year,
+            month,
+            groups.ready.map((p) => p.staffId),
           )}
           label={look > 0 ? t(`${s}.finalizeReady`, { count: ready }) : t(`${s}.finalizeAll`)}
           working={t('salary.working')}
@@ -237,7 +224,7 @@ export default async function SalaryPage({
     muted: 'text-[var(--ink-muted)]',
   };
 
-  const selected = sp.person ? people.find((p) => p.id === sp.person) : undefined;
+  const selected = sp.person ? people.find((p) => p.staffId === sp.person) : undefined;
   const lineLabel = (l: PayslipLine, p: SalaryPerson) =>
     t(`salary.lines.${l.kind}`, { name: l.name ?? '', days: p.summary.payableDays });
 
@@ -306,13 +293,17 @@ export default async function SalaryPage({
       </div>
 
       {table ? (
-        <SalaryTable people={people} mName={mName} canRun={canRun} run={run} />
+        <SalaryTable
+          people={people}
+          mName={mName}
+          canRun={canRun}
+          run={run}
+          year={year}
+          month={month}
+        />
       ) : (
         <>
-          <ol
-            aria-label={t(`${s}.label`)}
-            className={`${card} grid gap-2 p-3 sm:grid-cols-2 lg:grid-cols-4`}
-          >
+          <ol aria-label={t(`${s}.label`)} className={`${card} grid gap-2 p-3 sm:grid-cols-3`}>
             {steps.map((st, i) => {
               const style = STEP_STYLE[st.kind];
               return (
@@ -366,7 +357,7 @@ export default async function SalaryPage({
             <div className={`${card} p-6`}>
               <h2 className="text-title-md">{t('salary.empty.title', { month: mName })}</h2>
               <p className="text-body-lg mt-1 max-w-prose text-[var(--ink-muted)]">
-                {canRun ? t('salary.empty.body') : t('salary.empty.noPermission')}
+                {t('salary.empty.body', { month: mName })}
               </p>
             </div>
           ) : (
@@ -452,13 +443,13 @@ export default async function SalaryPage({
                           const st = stateLabel(p);
                           return (
                             <li
-                              key={p.id}
+                              key={p.staffId}
                               className={`flex items-center gap-3 border-b border-[var(--line)] px-4 py-2.5 last:border-b-0 ${
-                                selected?.id === p.id ? 'bg-[var(--accent-soft)]' : ''
+                                selected?.staffId === p.staffId ? 'bg-[var(--accent-soft)]' : ''
                               }`}
                             >
                               <Link
-                                href={`${base}&person=${p.id}`}
+                                href={`${base}&person=${p.staffId}`}
                                 scroll={false}
                                 aria-label={t(`${s}.open`, { name: p.name })}
                                 className="flex min-w-0 flex-1 items-center gap-3"
@@ -613,9 +604,9 @@ export default async function SalaryPage({
                           : t(`${s}.nothingPaid`)}
                     </span>
                     <div className="flex flex-wrap gap-2">
-                      {canRun && run && selected.state === 'draft' && (
+                      {canRun && selected.state === 'draft' && (
                         <ActionButton
-                          action={finalizeSalary.bind(null, run.id, selected.id)}
+                          action={finalizeSalary.bind(null, year, month, [selected.staffId])}
                           label={t('salary.finalizeOne')}
                           working={t('salary.working')}
                           variant="primary"
@@ -639,15 +630,17 @@ export default async function SalaryPage({
                           body={t('salary.confirm.payBody')}
                         />
                       )}
-                      <Link
-                        href={`/payslips/${selected.id}`}
-                        target="_blank"
-                        aria-label={t('payslip.openLabel', { name: selected.name })}
-                        className={`${quietButtonClass} inline-flex items-center gap-2`}
-                      >
-                        <FileText size={18} aria-hidden="true" />
-                        {t('payslip.open')}
-                      </Link>
+                      {selected.state !== 'draft' && (
+                        <Link
+                          href={`/payslips/${selected.id}`}
+                          target="_blank"
+                          aria-label={t('payslip.openLabel', { name: selected.name })}
+                          className={`${quietButtonClass} inline-flex items-center gap-2`}
+                        >
+                          <FileText size={18} aria-hidden="true" />
+                          {t('payslip.open')}
+                        </Link>
+                      )}
                     </div>
                   </aside>
                 )}

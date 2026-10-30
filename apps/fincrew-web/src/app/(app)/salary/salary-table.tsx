@@ -19,11 +19,15 @@ export function SalaryTable({
   mName,
   canRun,
   run,
+  year,
+  month,
 }: {
   people: SalaryPerson[];
   mName: string;
   canRun: boolean;
   run: { id: string } | null;
+  year: number;
+  month: number;
 }) {
   const total = (
     k: 'earned' | 'overtime' | 'allowances' | 'gross' | 'deductions' | 'cut' | 'net',
@@ -65,7 +69,7 @@ export function SalaryTable({
           </div>
 
           {people.map((p) => (
-            <details key={p.id} className="group border-b border-[var(--line)]">
+            <details key={p.staffId} className="group border-b border-[var(--line)]">
               <summary
                 role="row"
                 aria-label={t('salary.showDetails', { name: p.name })}
@@ -207,15 +211,17 @@ export function SalaryTable({
                     {p.leave &&
                       ` ${t('salary.days.leaveLeft', { month: mName, left: p.leave.carried ?? 0 })}`}
                   </span>
-                  <Link
-                    href={`/payslips/${p.id}`}
-                    target="_blank"
-                    aria-label={t('payslip.openLabel', { name: p.name })}
-                    className={`${quietButtonClass} inline-flex w-fit items-center gap-2`}
-                  >
-                    <FileText size={20} aria-hidden="true" />
-                    {t('payslip.open')}
-                  </Link>
+                  {p.state !== 'draft' && (
+                    <Link
+                      href={`/payslips/${p.id}`}
+                      target="_blank"
+                      aria-label={t('payslip.openLabel', { name: p.name })}
+                      className={`${quietButtonClass} inline-flex w-fit items-center gap-2`}
+                    >
+                      <FileText size={20} aria-hidden="true" />
+                      {t('payslip.open')}
+                    </Link>
+                  )}
                   {canRun && run && p.state === 'finalized' && (
                     <PayControl
                       pay={paySalary.bind(null, run.id, p.id)}
@@ -228,9 +234,9 @@ export function SalaryTable({
                       variant="secondary"
                     />
                   )}
-                  {canRun && run && p.state === 'draft' && (
+                  {canRun && p.state === 'draft' && (
                     <ActionButton
-                      action={finalizeSalary.bind(null, run.id, p.id)}
+                      action={finalizeSalary.bind(null, year, month, [p.staffId])}
                       label={t('salary.finalizeOne')}
                       working={t('salary.working')}
                       confirm={{

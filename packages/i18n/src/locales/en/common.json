@@ -525,23 +525,20 @@
   "salary": {
     "title": "Salary",
     "status": {
-      "none": "Not worked out",
-      "draft": "Draft",
+      "none": "No salary",
+      "draft": "Not finalized yet",
       "finalized": "Finalized",
       "paid": "Paid"
     },
     "subtitle_one": "{{month}} · {{count}} person",
     "subtitle_other": "{{month}} · {{count}} people",
-    "workedOut": "worked out {{when}}",
     "prevMonth": "Previous month",
     "nextMonth": "Next month",
     "empty": {
-      "title": "Salary for {{month}} isn't worked out yet",
-      "body": "Work it out from attendance, pay settings and leave rules. You can check every payslip before finalizing.",
-      "noPermission": "Nobody has worked out salary for this month yet."
+      "title": "No salary for {{month}}",
+      "body": "Nobody was on the staff, or no attendance was marked, in {{month}}.",
+      "noPermission": "No salary for this month."
     },
-    "run": "Work out salary",
-    "runAgain": "Run again",
     "finalize": "Finalize salary",
     "finalizeOne": "Finalize",
     "pay": "Pay",
@@ -576,7 +573,7 @@
     "total_one": "Total · {{count}} person",
     "total_other": "Total · {{count}} people",
     "rowStatus": {
-      "draft": "Draft",
+      "draft": "Not finalized yet",
       "finalized": "To pay",
       "paid": "Paid",
       "partly": "{{paid}} paid"
@@ -611,16 +608,16 @@
       "missing_check_out_other": "{{name}}: {{count}} days without check-out (not paid).",
       "negative_net_pay": "{{name}}: deductions are more than earnings.",
       "paid_leave_over_balance": "{{name}}: more paid leave marked than the balance allows.",
-      "openAttendance": "Open attendance"
+      "openAttendance": "Open attendance",
+      "month_running": "{{name}}: the month isn’t over yet."
     },
     "done": {
-      "run": "Worked out: {{created}} new, {{updated}} updated.",
       "finalized_one": "Finalized {{count}} payslip.",
       "finalized_other": "Finalized {{count}} payslips.",
       "paid_one": "Paid {{count}} person.",
       "paid_other": "Paid {{count}} people."
     },
-    "footnote": "Finalizing posts each payslip to the staff ledger. Running again after finalizing creates a new run for anyone whose pay changed; finalizing it posts only the difference.",
+    "footnote": "Until you finalize, everyone’s salary is worked out live from attendance, pay, advances and expenses, and changes as they change. Finalizing locks a payslip, posts it to the staff ledger and shows it in Staffora; the next month carries on from there.",
     "errors": {
       "noPermission": "You can see salary but not run or pay it.",
       "failed": "Couldn't finish: {{reason}}"
@@ -628,7 +625,7 @@
     "confirm": {
       "finalizeTitle": "Finalize {{month}} salary?",
       "finalizeOneTitle": "Finalize {{name}}'s payslip?",
-      "finalizeBody": "Each payslip is posted to the staff ledger and staff can see it. This can't be undone; running again later adds only the differences.",
+      "finalizeBody": "Each payslip is locked, posted to the staff ledger and shown in Staffora. This can’t be undone.",
       "payAllTitle": "Pay everyone still due for {{month}}",
       "payTitle": "Pay {{name}} for {{month}}",
       "payBody": "Adds a salary payment dated today for what is still due. If it was a mistake, undo it from the staff Ledger."
@@ -636,16 +633,13 @@
     "steps": {
       "label": "Salary steps",
       "attendance": "Attendance",
-      "workOut": "Work out",
       "finalize": "Check & finalize",
       "pay": "Pay",
       "sub": {
         "unmarked_one": "{{count}} day not marked",
         "unmarked_other": "{{count}} days not marked",
         "marked": "Days marked",
-        "markFirst": "Mark the month first",
-        "workedOut": "Worked out",
-        "notYet": "Not yet",
+        "markFirst": "Mark the month",
         "ready": "{{ready}} of {{count}} ready",
         "finalized_one": "{{count}} finalized",
         "finalized_other": "{{count}} finalized",
@@ -657,11 +651,11 @@
       "next": {
         "kicker": "Next step",
         "doneKicker": "Done",
-        "noneTitle": "Work out {{month}}",
-        "noneBody": "Salary is worked out from attendance, pay settings and leave rules. Staff see nothing until you finalize.",
+        "noneTitle": "No salary for {{month}}",
+        "noneBody": "Nobody was on the staff, or no attendance was marked, this month.",
         "draftTitle": "Finalize {{month}}",
-        "lookBody_one": "{{count}} person needs a look first. Fix it (usually marking the days) and work out again, or finalize the {{ready}} who are ready now. Finalizing locks a payslip and adds it to the staff ledger.",
-        "lookBody_other": "{{count}} people need a look first. Fix it (usually marking the days) and work out again, or finalize the {{ready}} who are ready now. Finalizing locks a payslip and adds it to the staff ledger.",
+        "lookBody_one": "{{count}} person needs a look first (usually days to mark, or the month isn’t over). The figures update by themselves; finalize the {{ready}} who are ready now, or open a person to finalize them anyway. Finalizing locks a payslip.",
+        "lookBody_other": "{{count}} people need a look first (usually days to mark, or the month isn’t over). The figures update by themselves; finalize the {{ready}} who are ready now, or open a person to finalize them anyway. Finalizing locks a payslip.",
         "readyBody": "Everyone looks right. Finalizing locks each payslip and adds it to the staff ledger; staff see it in Staffora.",
         "payTitle": "Pay {{month}} salaries",
         "payBody_one": "{{amount}} still to pay to {{count}} person. Pay at once, or one by one; a part payment is fine.",
@@ -672,12 +666,11 @@
       "finalizeReady_one": "Finalize {{count}} ready",
       "finalizeReady_other": "Finalize {{count}} ready",
       "finalizeAll": "Finalize everyone",
-      "workOutAgain": "Work out again",
       "confirmReadyTitle_one": "Finalize {{count}} payslip?",
       "confirmReadyTitle_other": "Finalize {{count}} payslips?",
-      "confirmReadyBody": "The ones that need a look stay as drafts. Finalized payslips are posted to the staff ledger and staff can see them; running again later adds only the differences.",
+      "confirmReadyBody": "The ones that need a look stay not finalized. Finalized payslips are locked, posted to the staff ledger and shown in Staffora.",
       "hero": {
-        "draft": "Take-home this month",
+        "draft": "Take-home so far",
         "due": "Still to pay",
         "paid": "Paid for {{month}}",
         "draftSub_one": "{{count}} person · nothing paid yet",
@@ -719,7 +712,7 @@
       "close": "Close",
       "takeHome": "Take-home",
       "paidSoFar": "Paid so far: {{amount}}",
-      "draftNote": "Draft: finalize to pay it.",
+      "draftNote": "Not finalized yet: the figures change with attendance, advances and expenses until you finalize.",
       "nothingPaid": "Nothing paid yet."
     }
   },
@@ -1624,10 +1617,10 @@
       },
       "salary": {
         "byMonth": "Salary by month",
-        "hint": "Open a month to work out salary, check each payslip, finalize and pay.",
+        "hint": "Open a month to check each person, finalize and pay.",
         "meta": {
-          "draft_one": "{{count}} person · draft, not finalized",
-          "draft_other": "{{count}} people · draft, not finalized",
+          "draft_one": "{{count}} person · not finalized yet",
+          "draft_other": "{{count}} people · not finalized yet",
           "paid_one": "{{count}} person · all paid",
           "paid_other": "{{count}} people · all paid"
         },
@@ -1643,11 +1636,11 @@
         "cut": "advance cut {{amount}}",
         "due": "Due",
         "tapHint": "Tap a name to see the working.",
-        "finalizeHint": "Staff see their payslips after you finalize. Later fixes are added as adjustments.",
+        "finalizeHint": "Staff see their payslips after you finalize. Until then the figures follow attendance.",
         "payAll": "Pay all due",
         "payOne": "Pay {{amount}}",
         "confirmFinalize": "Finalize {{month}} salary?",
-        "confirmFinalizeBody": "Each payslip is posted to the staff ledger. This can't be undone; running again later adds only the differences.",
+        "confirmFinalizeBody": "Each payslip is locked and posted to the staff ledger. This can’t be undone.",
         "payTitle": "Pay {{name}}",
         "payAllTitle_one": "Pay {{count}} person",
         "payAllTitle_other": "Pay {{count}} people",
@@ -1660,7 +1653,8 @@
           "missing_check_out_one": "{{count}} day without check-out",
           "missing_check_out_other": "{{count}} days without check-out",
           "negative_net_pay": "Deductions are more than earnings",
-          "paid_leave_over_balance": "More paid leave than the balance"
+          "paid_leave_over_balance": "More paid leave than the balance",
+          "month_running": "Month not over yet"
         },
         "amount": "Amount",
         "amountHint": "Pay all of it, or type less to pay part now; the rest stays due.",
@@ -1671,7 +1665,9 @@
         "shareSub": "{{month}} · opens WhatsApp with each person's payslip",
         "sendOne": "Send payslip",
         "noPhone": "No phone number · share another way",
-        "shareFailed": "Couldn't open the payslip."
+        "shareFailed": "Couldn't open the payslip.",
+        "finalizeOne": "Finalize {{name}}",
+        "confirmFinalizeOne": "Finalize {{name}}’s payslip?"
       },
       "advances": {
         "total_one": "Advances outstanding · {{count}} person",
@@ -1784,7 +1780,8 @@
     "overLimit": "This advance goes past {{name}}'s limit. Approve anyway to confirm.",
     "done": {
       "approved": "Approved.",
-      "rejected": "Rejected."
+      "rejected": "Rejected.",
+      "rejectedLater": "Rejected. What the approval did is undone."
     },
     "empty": {
       "pending": "No requests waiting.",
@@ -1796,7 +1793,7 @@
       "cancelled": "Cancelled by {{name}} · {{date}}"
     },
     "approvedAs": "Marked as {{status}}",
-    "footnote": "Approving leave marks the days (paid leave only within the balance). Approving an advance gives it today and puts it on their ledger; past the limit you're asked to confirm.",
+    "footnote": "Approving leave marks the days (paid leave only within the balance). Approving an advance gives it today and puts it on their ledger; past the limit you’re asked to confirm. An approved request can still be rejected: the leave marks are cleared and the advance is undone.",
     "banner_one": "{{count}} request waiting",
     "banner_other": "{{count}} requests waiting",
     "review": "Review",
@@ -1807,8 +1804,15 @@
       "past": "Some of these days are in the past, and you can't change past days.",
       "attendance": "You can't mark attendance, so you can't approve leave.",
       "advances": "You can't give advances, so you can't approve this one.",
-      "failed": "Couldn't save: {{reason}}"
-    }
+      "failed": "Couldn't save: {{reason}}",
+      "notApproved": "This request isn’t approved any more.",
+      "undo": "You can’t undo payments, so you can’t undo this advance.",
+      "recovered": "Part of this advance has already been cut from salary, so it can’t be undone."
+    },
+    "rejectLater": "Reject now",
+    "rejectLaterTitle": "Reject {{name}}’s request?",
+    "rejectLaterLeave": "The leave days marked for it are cleared (days changed since stay as they are).",
+    "rejectLaterAdvance": "The advance it gave is undone on their ledger."
   },
   "signin": {
     "title": "Staffora sign-in",
@@ -2007,7 +2011,15 @@
       "paidSoFar": "Paid so far",
       "stillDue": "Still to pay",
       "notFound": "This payslip isn't available.",
-      "share": "Share payslip"
+      "share": "Share payslip",
+      "soFar": "{{month}} salary so far",
+      "soFarDays": "{{payable}} of {{employed}} days paid so far",
+      "notFinalized": "Not finalized yet",
+      "finalizedDue": "Finalized salary, not paid yet",
+      "other": "Paid more than finalized",
+      "expenseOwed": "Expenses to get back",
+      "expenseCharged": "Expenses charged to you",
+      "changes": "Salary so far follows your attendance until the shop finalizes it."
     },
     "ask": {
       "back": "Back",
@@ -2041,7 +2053,8 @@
         "approved": "Approved",
         "rejected": "Not approved",
         "cancelled": "Cancelled"
-      }
+      },
+      "duplicate": "You already asked for leave on one of these days, or it’s already marked as leave."
     },
     "changePin": {
       "back": "Back",
@@ -2079,6 +2092,11 @@
       "badPin": "Use exactly 4 digits.",
       "hasPin": "A PIN is already set for this number. Enter it to sign in.",
       "enterTitle": "Enter your PIN"
+    },
+    "attendance": {
+      "planned": "Planned",
+      "leaveAhead_one": "{{count}} day of leave coming up this month.",
+      "leaveAhead_other": "{{count}} days of leave coming up this month."
     }
   },
   "password": {

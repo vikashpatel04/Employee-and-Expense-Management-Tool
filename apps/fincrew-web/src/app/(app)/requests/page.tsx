@@ -14,7 +14,7 @@ import { t } from '@/lib/i18n';
 import { requireMe } from '@/lib/session';
 import { createClient } from '@/lib/supabase/server';
 import { Avatar, PageHeader } from '../../components';
-import { DecideForm, type DecideLabels } from './decide-form';
+import { DecideForm, RejectLater, type DecideLabels } from './decide-form';
 
 const card = 'rounded-lg border bg-card p-5 shadow-xs';
 const time = (iso: string) => formatTimeOfDay(minutesOfDayIST(new Date(iso)));
@@ -187,6 +187,22 @@ export default async function RequestsPage({
                       <span className="text-caption text-[var(--ink-muted)]">
                         “{r.decisionNote}”
                       </span>
+                    )}
+                    {r.status === 'approved' && (
+                      <div className="mt-2">
+                        <RejectLater
+                          requestId={r.id}
+                          label={t('requests.rejectLater')}
+                          title={t('requests.rejectLaterTitle', { name: r.name })}
+                          body={t(
+                            r.kind === 'leave'
+                              ? 'requests.rejectLaterLeave'
+                              : 'requests.rejectLaterAdvance',
+                          )}
+                          working={t('requests.working')}
+                          cancel={t('common.cancel')}
+                        />
+                      </div>
                     )}
                   </div>
                 )}

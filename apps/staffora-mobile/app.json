@@ -40,7 +40,8 @@
           "cameraPermission": "Staffora uses the camera to read the shop's attendance QR code.",
           "recordAudioAndroid": false
         }
-      ]
+      ],
+      "./plugins/play-store-query"
     ],
     "experiments": {
       "typedRoutes": true,

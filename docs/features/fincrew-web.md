@@ -219,36 +219,42 @@ Staffora sign-in card (phone number + PIN; the `/join` page was removed 2026-10-
 
 ## Salary run — `(app)/salary`
 
+**No work out step (owner, 30/10/2026)**: everyone not finalized shows live figures, tagged
+**Not finalized yet**, worked out each time the page opens (`loadSalaryRun` → `computeMonth`);
+**Finalize** (`finalizeSalary(year, month, staffIds)`) saves and locks them in one step, then
+**Finalized** and **Paid**. During the month people get "Month not over yet" (Needs a look).
+See DECISIONS 2026-10-30.
+
 **Redesign (owner, 29/10/2026; design "Web · salary in steps")**: the page opens on the month as
-steps — Attendance (days not marked) → Work out → Check & finalize (n of m ready) → Pay (still to
-pay) — with a **Next step** card and its one button (Work out / Finalize n ready or Finalize
-everyone / Pay everyone; Work out again beside it), the big amount (take-home, then still to pay,
+steps — Attendance (days not marked) → Check & finalize (n of m ready) → Pay (still to
+pay) — with a **Next step** card and its one button (Finalize n ready or Finalize
+everyone / Pay everyone), the big amount (take-home so far, then still to pay,
 with a paid bar), **How it adds up** (earned + allowances and overtime + expenses paid back −
 advances cut − expenses charged − deductions = take-home), and people grouped **Needs a look**
 (draft with a warning; Mark days → attendance) / **Ready to finalize** / **Still to pay** (Pay or
-Pay rest) / **Paid**. A person opens their payslip on the side (`?person=<payslip id>`: days,
-lines, take-home, Finalize / Pay / Print). Grouping and totals: `salaryGroup` / `salaryOverview`
-in `packages/data/src/salary-run.ts` (shared with the app); `finalizeSalary` takes `payslipIds`
-(the ready ones). **Full table** (`?table=1`, `salary/salary-table.tsx`) keeps the old wide table
+Pay rest) / **Paid**. A person opens on the side (`?person=<staff id>`: days, lines,
+take-home, Finalize / Pay / Print once finalized). Grouping and totals: `salaryGroup` /
+`salaryOverview` in `packages/data/src/salary-run.ts` (shared with the app); `finalizeSalary`
+takes the staff ids (the ready ones, or one person). **Full table** (`?table=1`, `salary/salary-table.tsx`) keeps the old wide table
 described below.
 
 - `salary.view` sees it; `salary.run` works out, finalizes and pays. Month switcher (no future
-  months); status chip Not worked out / Draft / Finalized / Paid; totals (net, gross, deductions,
+  months); status chip No salary / Not finalized yet / Finalized / Paid; totals (net, gross, deductions,
   advance cuts); "Check before finalizing" lists payslip warnings (unmarked days, no pay set,
   missing check-out, negative net, paid leave over balance) with a link to attendance.
 - Full table per person (design: "Web · salary run review"): days, earned, overtime, allowances
   (incl. leave payout), gross, deductions, advance cut, net, payslip status. A row expands to the
   payslip lines, the month's days and Finalize / Pay for that person.
-- **Work out / Run again** (`runSalary`): `packages/data/src/salary-month.ts` `computeMonth` runs
-  `calculateSalary` and the leave roll (opening = last month's carried; payout days fed back in)
-  for everyone employed that month. A draft is updated in place; after finalizing, a new revision
-  is created only if lines or the advance cut changed (key-order-safe compare, jsonb reorders).
-- **Finalize** (`finalizeSalary`, all drafts or one): `finalize_payslip` posts the ledger lines
-  and the leave month. **Pay** (`paySalary`, one or everyone, with mode): a `salary_payment` for
+- **Live figures**: `packages/data/src/salary-month.ts` `computeMonth` runs `calculateSalary`
+  and the leave roll (opening = last month's carried; payout days fed back in) for everyone
+  employed that month; `loadSalaryRun` shows it for anyone without a finalized payslip.
+- **Finalize** (`finalizeSalary`, the ready ones or one person): saves each person's draft
+  (updated in place) and `finalize_payslip` posts the ledger lines and the leave month. A
+  finalized person is not worked out again (finalized is final). **Pay** (`paySalary`, one or everyone, with mode): a `salary_payment` for
   what's left of net pay (payments minus their reversals; `paidByPayslip`). The website always
   pays in full; `paySalary` also takes an `amount` for one payslip (the app's part payment).
 - Since 2026-10-24 the steps and the page's data live in `packages/data/src/salary-run.ts`
-  (`loadSalaryRun`, `runSalary`, `finalizeSalary`, `paySalary`), shared with the Android app;
+  (`loadSalaryRun`, `finalizeSalary`, `paySalary`), shared with the Android app;
   `salary/actions.ts` only checks the session, adds the messages and refreshes the page.
 
 Checked in the browser on 2026-10-23 with Test Staff, **drafts only**: 0.5 days → ₹355 (22,000 ÷

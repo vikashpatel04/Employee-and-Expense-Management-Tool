@@ -72,7 +72,11 @@ Changed 2026-10-25 from invite links to **phone number + PIN** (owner's decision
   (`CameraView.launchScanner`, Play services; opens on entering the screen, "Scan again" after a
   refusal, no camera permission needed): expo-camera 58's in-view reader analyses full-size frames
   on the main thread and never reported the code on the owner's phone (29/10/2026). iOS keeps the
-  in-view camera. While checking, the screen shows the code it read.
+  in-view camera. While checking, the screen shows the code it read. **30/10/2026**: the owner's
+  S21 FE said "Google Play Services is not available": expo-camera checks for the Play Store
+  package, which Android 11+ hides unless the manifest lists it. `plugins/play-store-query.js`
+  (in `app.json` plugins) adds `<queries><package android:name="com.android.vending"/>`; if the
+  scanner still can't open, the screen switches to the in-view camera.
 - **Checked in / out** (`checked-in.tsx`): the time large, present + minutes late, day, shop, how,
   and from when check-out works (the shop's minimum gap).
 - **Me**: name and shop, **Change PIN**, Lock Staffora, **Sign out** (was "Remove from this phone"; `forget`); a "PIN
@@ -85,8 +89,16 @@ Changed 2026-10-25 from invite links to **phone number + PIN** (owner's decision
 - **Attendance** (`(tabs)/attendance.tsx`, design "Attendance"): month switcher, Monday-first
   calendar (status colour + icon, late dot), the chosen day's status / times / minutes late, the
   month's counts and payable days, **Ask for leave**. Read-only; `loadAttendanceMonth`.
+  **30/10/2026**: goes up to 12 months ahead; coming days show leave already marked, weekly offs
+  and holidays (`loadAttendanceMonth(..., { upcoming: true })`, cells `upcoming`, "Planned"),
+  with "n days of leave coming up"; counts stay up to today. Fixed a crash on changing month
+  (the calendar used the old month's data while the new one loaded; the row is now kept with
+  its month and late answers are dropped).
 - **Money** (`(tabs)/money.tsx`, design "Money · ledger / payslips"): due to me / I owe / settled,
-  advance to repay and the next cut; Ledger (by month, newest first, running balance, undone
+  now (30/10/2026, `loadMyMoney` + core `moneyNow`) = ledger balance + salary so far of each
+  month not finalized ("<month> salary so far", days, **Not finalized yet** tag), with rows for
+  finalized salary not paid yet, advance to repay and the next cut, expenses to get back /
+  charged; Ledger (by month, newest first, running balance, undone
   marks; `loadLedger`) or Payslips (finalized months, net, paid or still due; new shared
   `loadMyPayslips`); **Ask for an advance**. Tap a payslip → `payslip/[id].tsx` (lines, net, paid
   so far, still to pay; new shared `loadPayslipView`).
@@ -99,7 +111,8 @@ payslip-text.ts`: shop, name, month, period, payable days, each line, net, paid,
   pay). FinCrew can use the same text for its WhatsApp share.
 - **Ask** (`ask.tsx`, design "Ask for leave / advance, my requests"): leave = From / To day
   steppers (today to a year ahead, at most 62 days), or advance = amount with quick amounts and
-  what I owe now; a note; **Send to the shop** (`askRequest`). Below: my requests with Waiting /
+  what I owe now; a note; **Send to the shop** (`askRequest`; leave on a day already asked for
+  or marked as leave is refused, 30/10/2026). Below: my requests with Waiting /
   Approved / Not approved / Cancelled, the shop's reply, and **Cancel** while waiting
   (`cancelRequest`). Shared form pieces copied from FinCrew (`components/form.tsx`; the day
   stepper gains `min` and a spoken label).
@@ -141,6 +154,7 @@ Not tried yet: sending a request or checking in (both leave permanent rows), Loc
 ## Next
 
 Push notifications (reminders, request answers). On a real phone with the new APK: Sign out on
-the PIN screen, keyboard on Ask and Welcome, QR scan, fingerprint. Live checks with the owner:
+the PIN screen, keyboard on Ask and Welcome, QR scan (Play Store query / camera fallback),
+attendance month switching and months ahead, the Money card, fingerprint. Live checks with the owner:
 change PIN, the Home payslip card and Share, sending a request and checking in (permanent rows,
 ask first). Test Staff was cleared on 2026-10-26, so these use a real staff member's phone.

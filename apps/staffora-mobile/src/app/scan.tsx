@@ -16,7 +16,9 @@ import { radius, space, useTheme } from '@/lib/theme';
  * Android reads the QR with Google's code scanner (Play services): it opens full screen, reads
  * and closes, and needs no camera permission. expo-camera's in-view reader analyses full-size
  * frames on the main thread and often never reports a code on Android phones (owner, 29/10/2026).
- * Elsewhere (iOS) the in-view camera is used.
+ * Elsewhere (iOS) the in-view camera is used. If Google's scanner can't open (owner's S21 FE,
+ * 30/10/2026: "Google Play Services is not available", fixed by plugins/play-store-query.js), the
+ * screen falls back to the in-view camera instead of stopping at the error.
  */
 const GOOGLE_SCANNER = Platform.OS === 'android' && CameraView.isModernBarcodeScannerAvailable;
 
@@ -30,6 +32,7 @@ export default function Scan() {
   const [permission, requestPermission] = useCameraPermissions();
   const [error, setError] = useState<string | null>(null);
   const [reading, setReading] = useState<string | null>(null);
+  const [google, setGoogle] = useState(GOOGLE_SCANNER);
   // The camera reports the same QR many times a second: handle one at a time.
   const handling = useRef(false);
   const s = 'staffora.scan';
@@ -69,16 +72,20 @@ export default function Scan() {
 
   const openScanner = useCallback(() => {
     setError(null);
-    void CameraView.launchScanner({ barcodeTypes: ['qr'] }).catch((e: unknown) =>
-      setError(t(`${s}.failed`, { reason: e instanceof Error ? e.message : String(e) })),
-    );
+    void CameraView.launchScanner({ barcodeTypes: ['qr'] }).catch((e: unknown) => {
+      const reason = e instanceof Error ? e.message : String(e);
+      // Closed by the person: just offer "Scan the QR" again.
+      if (/cancel/i.test(reason)) return;
+      // Google's scanner can't open here: use the camera on this screen instead.
+      setGoogle(false);
+    });
   }, []);
 
   useEffect(() => {
-    if (!GOOGLE_SCANNER) return;
+    if (!google) return;
     const sub = CameraView.onModernBarcodeScanned((r) => void onScan(r.data));
     return () => sub.remove();
-  }, [onScan]);
+  }, [onScan, google]);
 
   // Open the scanner straight away; "Scan again" reopens it.
   useEffect(() => {
@@ -132,7 +139,7 @@ export default function Scan() {
                 {reading}
               </Text>
             </View>
-          ) : GOOGLE_SCANNER ? (
+          ) : google ? (
             <View style={{ alignItems: 'center', gap: space['space-3'] }}>
               <QrCode size={96} color={c['ink-muted']} />
               <Button label={t(error ? `${s}.again` : `${s}.open`)} center onPress={openScanner} />

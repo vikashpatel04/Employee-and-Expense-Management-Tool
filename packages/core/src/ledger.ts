@@ -161,3 +161,29 @@ export function checkAdvance(input: { outstanding: Paise; amount: Paise; limit?:
     crossesLimit: input.limit !== undefined && newOutstanding > input.limit,
   };
 }
+
+/**
+ * What a staff member's money stands at right now (Staffora Money; owner 30/10/2026: "current
+ * salary − advance and expense"). `balance` is their ledger balance: finalized salary, advances,
+ * expenses and payments. `unfinalized` is each month not finalized yet: its salary so far before
+ * advance and expenses (gross − deductions), which isn't on the ledger until it's finalized.
+ * Total = balance + salary so far. Finalized salary not paid yet is what the balance holds beyond
+ * the advance still owed and the expenses still open.
+ */
+export function moneyNow(input: {
+  balance: Paise;
+  advance: Paise;
+  expenseOwed: Paise;
+  expenseCharged: Paise;
+  unfinalized: readonly Paise[];
+}) {
+  const salarySoFar = input.unfinalized.reduce((a, x) => a + x, 0);
+  return {
+    total: input.balance + salarySoFar,
+    salarySoFar,
+    finalizedDue: input.balance + input.advance - input.expenseOwed + input.expenseCharged,
+    advance: input.advance,
+    expenseOwed: input.expenseOwed,
+    expenseCharged: input.expenseCharged,
+  };
+}

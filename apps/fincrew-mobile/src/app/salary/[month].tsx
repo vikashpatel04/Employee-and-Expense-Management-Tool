@@ -11,7 +11,6 @@ import {
   Hourglass,
   IndianRupee,
   MessageCircle,
-  RefreshCw,
 } from 'lucide-react-native';
 import {
   businessDateOf,
@@ -27,7 +26,6 @@ import {
   loadSalaryRun,
   PAYSLIP_MINUS_LINES,
   paySalary,
-  runSalary,
   SALARY_GROUPS,
   salaryOverview,
   type SalaryPerson,
@@ -45,17 +43,18 @@ import { supabase } from '@/lib/supabase';
 import { radius, space, useTheme } from '@/lib/theme';
 
 type Run = Awaited<ReturnType<typeof loadSalaryRun>>;
-type Confirm = { kind: 'finalize' } | { kind: 'pay'; person: SalaryPerson | null };
+type Confirm =
+  { kind: 'finalize'; person: SalaryPerson | null } | { kind: 'pay'; person: SalaryPerson | null };
 const MODES = ['cash', 'upi', 'bank', 'card'] as const;
 const MINUS = PAYSLIP_MINUS_LINES;
 
 /**
- * Salary run (redesign, owner 29/10/2026; design "Salary · in steps"): the month as steps
- * (Attendance → Work out → Finalize → Pay), the big amount with what to do next, and people
- * grouped by what they need (needs a look / ready / still to pay / paid); tap a name for the
- * working. Work out a month with the shared rules, finalize the ready ones (or everyone), then
- * pay everyone or one person. Every step
- * goes through `@fincrew/data` (runSalary / finalizeSalary / paySalary), like the website;
+ * Salary run (redesign, owner 29/10/2026; design "Salary · in steps"; no "work out" step since
+ * 30/10/2026): the month as steps (Attendance → Finalize → Pay), the big amount with what to do
+ * next, and people grouped by what they need (needs a look / ready / still to pay / paid); tap a
+ * name for the working. Until finalized, figures are live ("Not finalized yet"); finalize the
+ * ready ones, or one person from their row, then pay everyone or one person. Every step
+ * goes through `@fincrew/data` (loadSalaryRun / finalizeSalary / paySalary), like the website;
  * finalizing and paying write permanent ledger lines, so each asks first. Paying one person can
  * be part of what's due, and can send them the payslip on WhatsApp; "Share payslips" sends each
  * finalized payslip (`sharePayslip`, same text as Staffora).
@@ -90,9 +89,9 @@ export default function SalaryRun() {
   const load = useCallback(async () => {
     if (!me) return;
     setLoading(true);
-    setRun(await loadSalaryRun(supabase, me.shopId, year, month));
+    setRun(await loadSalaryRun(supabase, me.shopId, year, month, today));
     setLoading(false);
-  }, [me, year, month]);
+  }, [me, year, month, today]);
 
   useEffect(() => {
     setMessage(null);
@@ -125,21 +124,15 @@ export default function SalaryRun() {
     }
   };
 
-  const work = () =>
+  const finalize = (person: SalaryPerson | null) =>
     me &&
-    act(
-      () => runSalary(supabase, { ...me, year, month }),
-      (r) => t('salary.done.run', { created: r.created ?? 0, updated: r.updated ?? 0 }),
-    );
-  const finalize = () =>
-    me &&
-    run?.runId &&
     act(
       () =>
         finalizeSalary(supabase, {
           ...me,
-          runId: run.runId!,
-          payslipIds: look > 0 ? groups.ready.map((p) => p.id) : undefined,
+          year,
+          month,
+          staffIds: person ? [person.staffId] : groups.ready.map((p) => p.staffId),
         }),
       (r) => t('salary.done.finalized', { count: r.count }),
     );
@@ -194,7 +187,6 @@ export default function SalaryRun() {
   type Kind = 'done' | 'warn' | 'current' | 'todo';
   const steps: { key: string; kind: Kind }[] = [
     { key: 'attendance', kind: unmarked > 0 ? 'warn' : people.length ? 'done' : 'todo' },
-    { key: 'workOut', kind: people.length ? 'done' : 'current' },
     { key: 'finalize', kind: drafts > 0 ? 'current' : people.length ? 'done' : 'todo' },
     { key: 'pay', kind: stage === 'paid' ? 'done' : stage === 'pay' ? 'current' : 'todo' },
   ];
@@ -407,7 +399,7 @@ export default function SalaryRun() {
             </View>
             <Card>
               {groups[g].map((p) => {
-                const isOpen = open === p.id;
+                const isOpen = open === p.staffId;
                 const left = due(p);
                 const meta = [
                   t(`${s}.payableDays`, { days: p.summary.payableDays }),
@@ -416,12 +408,12 @@ export default function SalaryRun() {
                   .filter(Boolean)
                   .join(' · ');
                 return (
-                  <View key={p.id} style={{ borderBottomWidth: 1, borderBottomColor: c.line }}>
+                  <View key={p.staffId} style={{ borderBottomWidth: 1, borderBottomColor: c.line }}>
                     <Pressable
                       accessibilityRole="button"
                       accessibilityState={{ expanded: isOpen }}
                       accessibilityLabel={`${p.name}, ${formatINR(p.net)}, ${t(`salary.rowStatus.${p.state}`)}`}
-                      onPress={() => setOpen(isOpen ? null : p.id)}
+                      onPress={() => setOpen(isOpen ? null : p.staffId)}
                       style={({ pressed }) => ({
                         flexDirection: 'row',
                         alignItems: 'center',
@@ -523,6 +515,18 @@ export default function SalaryRun() {
                           <Text variant="label-sm">{t('salary.lines.net')}</Text>
                           <Text variant="money-md">{formatINR(p.net)}</Text>
                         </View>
+                        {canRun && p.state === 'draft' && (
+                          <View style={{ marginTop: space['space-2'] }}>
+                            <Button
+                              label={t(`${s}.finalizeOne`, { name: p.name })}
+                              icon={Check}
+                              variant="secondary"
+                              block
+                              disabled={busy}
+                              onPress={() => setConfirm({ kind: 'finalize', person: p })}
+                            />
+                          </View>
+                        )}
                         {p.state !== 'draft' && (
                           <View
                             style={{
@@ -600,51 +604,13 @@ export default function SalaryRun() {
               )}
             </View>
           )}
-          {canRun && overall !== 'finalized' && overall !== 'paid' && (
-            <View style={{ flexDirection: 'row', gap: space['space-2'] }}>
-              {people.length > 0 && (
-                <View style={{ flex: 1 }}>
-                  <Button
-                    label={t('salary.runAgain')}
-                    icon={RefreshCw}
-                    variant="secondary"
-                    busy={busy && !confirm}
-                    block
-                    onPress={work}
-                  />
-                </View>
-              )}
-              <View style={{ flex: 1.4 }}>
-                {overall === 'none' ? (
-                  <Button
-                    label={busy ? t('salary.working') : t('salary.run')}
-                    icon={Check}
-                    busy={busy}
-                    block
-                    onPress={work}
-                  />
-                ) : (
-                  <Button
-                    label={
-                      look > 0 ? t(`${st}.finalizeReady`, { count: ready }) : t(`${st}.finalizeAll`)
-                    }
-                    icon={Check}
-                    block
-                    disabled={busy || ready === 0}
-                    onPress={() => setConfirm({ kind: 'finalize' })}
-                  />
-                )}
-              </View>
-            </View>
-          )}
-          {canRun && (overall === 'finalized' || overall === 'paid') && (
+          {canRun && overall === 'draft' && (
             <Button
-              label={t('salary.runAgain')}
-              icon={RefreshCw}
-              variant="quiet"
-              busy={busy && !confirm}
+              label={look > 0 ? t(`${st}.finalizeReady`, { count: ready }) : t(`${st}.finalizeAll`)}
+              icon={Check}
               block
-              onPress={work}
+              disabled={busy || ready === 0}
+              onPress={() => setConfirm({ kind: 'finalize', person: null })}
             />
           )}
         </BottomBar>
@@ -655,16 +621,18 @@ export default function SalaryRun() {
         onClose={() => setConfirm(null)}
         title={
           confirm?.kind === 'finalize'
-            ? look > 0
-              ? t(`${st}.confirmReadyTitle`, { count: ready })
-              : t(`${s}.confirmFinalize`, { month: mName })
+            ? confirm.person
+              ? t(`${s}.confirmFinalizeOne`, { name: confirm.person.name })
+              : look > 0
+                ? t(`${st}.confirmReadyTitle`, { count: ready })
+                : t(`${s}.confirmFinalize`, { month: mName })
             : confirm?.person
               ? t(`${s}.payTitle`, { name: confirm.person.name })
               : t(`${s}.payAllTitle`, { count: dueCount })
         }
         subtitle={
           confirm?.kind === 'finalize'
-            ? look > 0
+            ? look > 0 && !confirm.person
               ? t(`${st}.confirmReadyBody`)
               : t(`${s}.confirmFinalizeBody`)
             : t(`${s}.paySub`, {
@@ -724,12 +692,16 @@ export default function SalaryRun() {
             {confirm?.kind === 'finalize' ? (
               <Button
                 label={
-                  look > 0 ? t(`${st}.finalizeReady`, { count: ready }) : t(`${st}.finalizeAll`)
+                  confirm.person
+                    ? t('salary.finalizeOne')
+                    : look > 0
+                      ? t(`${st}.finalizeReady`, { count: ready })
+                      : t(`${st}.finalizeAll`)
                 }
                 icon={Check}
                 busy={busy}
                 block
-                onPress={finalize}
+                onPress={() => finalize(confirm.person)}
               />
             ) : (
               <Button

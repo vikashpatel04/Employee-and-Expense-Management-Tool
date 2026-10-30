@@ -95,7 +95,12 @@ export default function Ask() {
             note,
           });
     setBusy(false);
-    if (!r.ok) return setMessage({ ok: false, text: t(`${a}.failed`, { reason: r.message }) });
+    if (!r.ok)
+      return setMessage({
+        ok: false,
+        text:
+          r.reason === 'duplicate' ? t(`${a}.duplicate`) : t(`${a}.failed`, { reason: r.message }),
+      });
     setMessage({ ok: true, text: t(`${a}.sent`) });
     setNote('');
     setAmount('');

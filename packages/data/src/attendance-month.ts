@@ -39,6 +39,11 @@ export type GridCell = {
   checkOut?: number;
   /** Minutes late (as counted by the late policy), when late. */
   lateMinutes?: number;
+  /**
+   * A day after today shown with what is planned (`upcoming` option): leave marked ahead,
+   * weekly off or holiday. Not counted in the month's numbers.
+   */
+  upcoming?: boolean;
 };
 
 export type GridRow = {
@@ -57,7 +62,8 @@ export type GridRow = {
 /**
  * One month of attendance for every staff member employed in it, worked out by packages/core:
  * weekly offs and holidays from templates, sandwich rule, extra working days, lateness from
- * shifts. Counts run up to today.
+ * shifts. Counts run up to today. With `upcoming`, days after today show what is planned
+ * (leave marked ahead, weekly offs, holidays) instead of `future` (Staffora's calendar).
  */
 export async function loadAttendanceMonth(
   supabase: Supabase,
@@ -65,6 +71,7 @@ export async function loadAttendanceMonth(
   year: number,
   month: number,
   today: BusinessDate,
+  options: { upcoming?: boolean } = {},
 ): Promise<{ days: { date: BusinessDate; weekday: number }[]; rows: GridRow[] }> {
   const start = monthStart(year, month);
   const end = monthEnd(year, month);
@@ -132,10 +139,37 @@ export async function loadAttendanceMonth(
         })
       : [];
     const byDate = new Map(evaluated.map((d) => [d.date, d]));
+    // Days after today, worked out to month end only for what they show (not for the counts).
+    const ahead =
+      options.upcoming && compareDates(end, today) > 0
+        ? new Map(
+            evaluateDays({
+              from: start,
+              to: end,
+              joiningDate: s.joining_date,
+              leavingDate: s.leaving_date ?? undefined,
+              templateOn,
+              holidays,
+              records: records.get(staffId) ?? [],
+              rules: payRules,
+            })
+              .filter((d) => compareDates(d.date, today) > 0)
+              .map((d) => [d.date, d]),
+          )
+        : null;
 
     let lateDays = 0;
     const cells: GridCell[] = dates.map((date) => {
       const day = byDate.get(date);
+      const planned = ahead?.get(date);
+      if (!day && planned && planned.status !== 'unmarked' && planned.status !== 'not_employed')
+        return {
+          date,
+          status: planned.status,
+          late: false,
+          marked: planned.source === 'record',
+          upcoming: true,
+        };
       if (!day) return { date, status: 'future', late: false, marked: false };
       const shift = effectiveOn(staffPays, date)?.shift;
       const rec = day.record;

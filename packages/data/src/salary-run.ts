@@ -1,8 +1,16 @@
-import type { BusinessDate, DaySummary, PayslipLine } from '@fincrew/core';
+import {
+  businessDateOf,
+  compareDates,
+  monthEnd,
+  monthStart,
+  type BusinessDate,
+  type DaySummary,
+  type PayslipLine,
+} from '@fincrew/core';
 import type { Json } from '@fincrew/db';
 import type { Supabase } from './client';
 import { PAYMENT_MODES } from './expense-write';
-import { computeMonth, paidByPayslip, sameJson } from './salary-month';
+import { computeMonth, paidByPayslip, type ComputedPayslip } from './salary-month';
 
 export type SalaryWriteResult =
   | { ok: true; count: number; created?: number; updated?: number }
@@ -15,6 +23,7 @@ const failed = (message: string) => ({ ok: false, reason: 'failed', message }) a
 
 export type PayslipWarning = { code: string; count?: number };
 export type SalaryPerson = {
+  /** The payslip once finalized; until then (live figures) the staff member's id. */
   id: string;
   staffId: string;
   name: string;
@@ -38,15 +47,30 @@ export type SalaryPerson = {
   state: 'draft' | 'finalized' | 'paid';
 };
 
+/** Warnings on a payslip that isn't finalized yet (core's, plus the leave roll and the month). */
+function draftWarnings(p: ComputedPayslip, monthOver: boolean): PayslipWarning[] {
+  return [
+    ...p.result.warnings,
+    ...(p.leaveOverBalance ? [{ code: 'paid_leave_over_balance' }] : []),
+    ...(monthOver ? [] : [{ code: 'month_running' }]),
+  ];
+}
+
 /**
- * A month's salary run as the salary screens show it: the latest revision of each person's
- * payslip, how much of it is paid, and the run's overall state.
+ * A month's salary as the salary screens show it (owner 30/10/2026: no "work out" step).
+ * Anyone without a finalized payslip shows live figures, worked out now from attendance, pay,
+ * advances and expenses (`computeMonth`), state `draft` ("Not finalized yet"): they change as
+ * the month changes. A finalized payslip shows as saved, with what's been paid (`finalized`,
+ * then `paid`). Also the run's overall state. During the month (and for anyone still working
+ * at its end) the live figures carry the `month_running` warning. A month with no run and no
+ * attendance marked (before the shop used FinCrew) shows nobody.
  */
 export async function loadSalaryRun(
   supabase: Supabase,
   shopId: string,
   year: number,
   month: number,
+  today: BusinessDate = businessDateOf(new Date()),
 ) {
   const { data: run } = await supabase
     .from('salary_runs')
@@ -65,15 +89,61 @@ export async function loadSalaryRun(
 
   const latest = new Map<string, NonNullable<typeof slips>[number]>();
   for (const s of slips ?? []) if (!latest.has(s.staff_id)) latest.set(s.staff_id, s);
-  const rows = [...latest.values()].sort((a, b) =>
-    a.staff.people.name.localeCompare(b.staff.people.name),
-  );
-  const paid = await paidByPayslip(
-    supabase,
-    rows.map((r) => r.id),
-  );
+  const rows = [...latest.values()].filter((r) => r.status === 'finalized');
+  const finalized = new Set(rows.map((r) => r.staff_id));
+  // A month with no run and nothing marked (before the shop used FinCrew) has nothing to show.
+  const used =
+    !!run ||
+    ((
+      await supabase
+        .from('attendance')
+        .select('date', { count: 'exact', head: true })
+        .eq('shop_id', shopId)
+        .gte('date', monthStart(year, month))
+        .lte('date', monthEnd(year, month))
+    ).count ?? 0) > 0;
+  const [paid, computed] = await Promise.all([
+    paidByPayslip(
+      supabase,
+      rows.map((r) => r.id),
+    ),
+    used ? computeMonth(supabase, shopId, year, month) : [],
+  ]);
 
-  const people: SalaryPerson[] = rows.map((r) => {
+  const live: SalaryPerson[] = computed
+    .filter((p) => !finalized.has(p.staffId))
+    .map((p) => {
+      const r = p.result;
+      const sum = (kinds: string[]) =>
+        r.lines.filter((l) => kinds.includes(l.kind)).reduce((a, l) => a + l.amount, 0);
+      const monthOver =
+        compareDates(monthEnd(year, month), today) <= 0 ||
+        (!!p.leavingDate && compareDates(p.leavingDate, today) <= 0);
+      return {
+        id: p.staffId,
+        staffId: p.staffId,
+        name: p.name,
+        phone: p.phone,
+        revision: 0,
+        lines: r.lines,
+        summary: r.summary,
+        warnings: draftWarnings(p, monthOver),
+        leave: p.leave,
+        earned: sum(['earned']),
+        overtime: sum(['overtime']),
+        allowances: sum(['allowance', 'leave_payout']),
+        gross: r.gross,
+        deductions: r.deductions,
+        cut: r.advanceCut,
+        payback: r.expensePayback,
+        expenseCut: r.expenseCut,
+        net: r.netPay,
+        paidAmount: 0,
+        state: 'draft',
+      };
+    });
+
+  const saved: SalaryPerson[] = rows.map((r) => {
     const lines = r.lines as unknown as PayslipLine[];
     const sum = (kinds: string[]) =>
       lines.filter((l) => kinds.includes(l.kind)).reduce((a, l) => a + l.amount, 0);
@@ -99,9 +169,10 @@ export async function loadSalaryRun(
       expenseCut: Number(r.expense_cut_paise),
       net,
       paidAmount,
-      state: r.status === 'draft' ? 'draft' : paidAmount >= net ? 'paid' : 'finalized',
+      state: paidAmount >= net ? 'paid' : 'finalized',
     };
   });
+  const people = [...saved, ...live].sort((a, b) => a.name.localeCompare(b.name));
   const overall: 'none' | 'draft' | 'finalized' | 'paid' =
     people.length === 0
       ? 'none'
@@ -160,17 +231,15 @@ export function salaryOverview(people: readonly SalaryPerson[]) {
 }
 
 /**
- * Work out (or work out again) every payslip of a month with packages/core (needs salary.run).
- * A draft is updated in place; a finalized payslip gets a new revision only when something
- * changed (finalizing that posts just the differences to the ledger).
+ * Save the live figures of these people as draft payslips (updated in place), creating the
+ * month's run if needed, and return each one's draft id. People with a finalized payslip this
+ * month are left alone: finalized is final.
  */
-export async function runSalary(
+async function saveDrafts(
   supabase: Supabase,
-  input: Ctx & { personId: string; year: number; month: number },
-): Promise<SalaryWriteResult> {
+  input: Ctx & { personId: string; year: number; month: number; staffIds: readonly string[] },
+): Promise<{ ok: true; drafts: string[] } | ReturnType<typeof failed>> {
   const { shopId, year, month } = input;
-  if (!input.permissions.includes('salary.run')) return noPermission;
-
   let { data: run } = await supabase
     .from('salary_runs')
     .select('id')
@@ -188,31 +257,31 @@ export async function runSalary(
     run = data;
   }
 
+  const wanted = new Set(input.staffIds);
   const [people, { data: existing }] = await Promise.all([
     computeMonth(supabase, shopId, year, month),
     supabase
       .from('payslips')
-      .select('id, staff_id, revision, status, lines')
+      .select('id, staff_id, revision, status')
       .eq('run_id', run.id)
       .order('revision', { ascending: false }),
   ]);
   const latest = new Map<string, NonNullable<typeof existing>[number]>();
   for (const p of existing ?? []) if (!latest.has(p.staff_id)) latest.set(p.staff_id, p);
 
-  let created = 0;
-  let updated = 0;
+  const drafts: string[] = [];
   for (const p of people) {
+    if (!wanted.has(p.staffId)) continue;
+    const prev = latest.get(p.staffId);
+    if (prev?.status === 'finalized') continue;
     const r = p.result;
-    const warnings = [
-      ...r.warnings,
-      ...(p.leaveOverBalance ? [{ code: 'paid_leave_over_balance' }] : []),
-    ];
-    // Core results are plain JSON; jsonb columns store them as-is.
+    // Core results are plain JSON; jsonb columns store them as-is. The month-running warning
+    // is a screen hint, not part of the payslip.
     const json = (v: unknown) => v as Json;
     const row = {
       lines: json(r.lines),
       summary: json(r.summary),
-      warnings: json(warnings),
+      warnings: json(draftWarnings(p, true)),
       leave: json(p.leave),
       gross_paise: r.gross,
       deductions_paise: r.deductions,
@@ -222,45 +291,42 @@ export async function runSalary(
       expense_cut_paise: r.expenseCut,
       net_pay_paise: r.netPay,
     };
-    const prev = latest.get(p.staffId);
-    if (prev?.status === 'draft') {
+    if (prev) {
       const { error } = await supabase.from('payslips').update(row).eq('id', prev.id);
       if (error) return failed(error.message);
-      updated++;
-    } else if (!prev || !sameJson(prev.lines, r.lines)) {
-      // The lines include the advance and expense cuts, so any money change shows here.
-      const { error } = await supabase
+      drafts.push(prev.id);
+    } else {
+      const { data, error } = await supabase
         .from('payslips')
-        .insert({ ...row, shop_id: shopId, run_id: run.id, staff_id: p.staffId });
+        .insert({ ...row, shop_id: shopId, run_id: run.id, staff_id: p.staffId })
+        .select('id')
+        .single();
       if (error) return failed(error.message);
-      created++;
+      drafts.push(data.id);
     }
   }
-  return { ok: true, count: created + updated, created, updated };
+  return { ok: true, drafts };
 }
 
 /**
- * Finalize one draft, some (`payslipIds`: the ones ready, without warnings), or every draft of
- * the run (needs salary.run): posts each to the ledger.
+ * Finalize these people's salary for the month (needs salary.run): their live figures are
+ * worked out once more, saved and finalized, which posts each payslip to the ledger and shows it
+ * to them in Staffora. Anyone already finalized is skipped. Finalized is final; the next month's
+ * figures carry on from there.
  */
 export async function finalizeSalary(
   supabase: Supabase,
-  input: Ctx & { runId: string; payslipId?: string | null; payslipIds?: readonly string[] },
+  input: Ctx & { personId: string; year: number; month: number; staffIds: readonly string[] },
 ): Promise<SalaryWriteResult> {
   if (!input.permissions.includes('salary.run')) return noPermission;
-  let query = supabase
-    .from('payslips')
-    .select('id')
-    .eq('run_id', input.runId)
-    .eq('status', 'draft');
-  if (input.payslipId) query = query.eq('id', input.payslipId);
-  else if (input.payslipIds) query = query.in('id', [...input.payslipIds]);
-  const { data: drafts } = await query;
-  for (const d of drafts ?? []) {
-    const { error } = await supabase.rpc('finalize_payslip', { p_payslip: d.id });
+  if (input.staffIds.length === 0) return { ok: true, count: 0 };
+  const saved = await saveDrafts(supabase, input);
+  if (!saved.ok) return saved;
+  for (const id of saved.drafts) {
+    const { error } = await supabase.rpc('finalize_payslip', { p_payslip: id });
     if (error) return failed(error.message);
   }
-  return { ok: true, count: drafts?.length ?? 0 };
+  return { ok: true, count: saved.drafts.length };
 }
 
 /**

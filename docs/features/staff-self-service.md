@@ -42,7 +42,11 @@ Status: **live** (pushed 2026-10-24, CI run 40098230155 applied the 3 migrations
   note, `status` pending → approved / rejected / cancelled, `decided_by` / `decided_at` /
   `decision_note`, and for approvals `leave_status` (paid / unpaid leave) or `advance_id`.
 - Staff ask for themselves only (and only while active); new requests always start pending.
-  They can cancel their own pending one. `requests.decide` approves or rejects. A decided
+  They can cancel their own pending one. `requests.decide` approves or rejects. Since
+  20261030000001: leave on days already in a waiting / approved leave request or marked as
+  leave is refused on insert, and an approved request can be rejected later (an approved
+  advance only once its advance is undone; `rejectApprovedRequest`, "Reject now" on the
+  website's and app's Decided cards). A decided
   request is final; the request fields never change; nothing is deleted. An `advance_id` must
   be a "given" advance for the same person.
 - Approving does the work in the apps' shared code (next step): mark the leave days, or give the

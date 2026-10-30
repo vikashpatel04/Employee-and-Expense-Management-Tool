@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { decideRequest, type DecideResult } from '@fincrew/data';
+import { decideRequest, rejectApprovedRequest, type DecideResult } from '@fincrew/data';
 import { todayIST } from '@/lib/format';
 import { t } from '@/lib/i18n';
 import { requireMe } from '@/lib/session';
@@ -80,4 +80,41 @@ export async function decideAction(input: {
   return {
     done: t(input.decision === 'approve' ? 'requests.done.approved' : 'requests.done.rejected'),
   };
+}
+
+/**
+ * Reject a request that was approved earlier (`rejectApprovedRequest` in `@fincrew/data`): the
+ * leave marks are cleared or the advance is undone first.
+ */
+export async function rejectLaterAction(requestId: string): Promise<DecideState> {
+  const me = await requireMe();
+  if (!me) return { error: t('requests.errors.noPermission') };
+  const r = await rejectApprovedRequest(await createClient(), {
+    shopId: me.shopId,
+    permissions: me.permissions,
+    today: todayIST(),
+    requestId,
+  });
+  const e = 'requests.errors';
+  if (!r.ok) {
+    switch (r.reason) {
+      case 'no_permission':
+        return { error: t(`${e}.noPermission`) };
+      case 'not_approved':
+        return { error: t(`${e}.notApproved`) };
+      case 'past':
+        return { error: t(`${e}.past`) };
+      case 'attendance':
+        return { error: t(`${e}.attendance`) };
+      case 'undo':
+        return { error: t(`${e}.undo`) };
+      case 'recovered':
+        return { error: t(`${e}.recovered`) };
+      default:
+        return { error: t(`${e}.failed`, { reason: r.message }) };
+    }
+  }
+  revalidatePath('/requests');
+  revalidatePath('/', 'layout');
+  return { done: t('requests.done.rejectedLater') };
 }

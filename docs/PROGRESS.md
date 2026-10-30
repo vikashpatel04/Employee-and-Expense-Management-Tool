@@ -15,7 +15,8 @@ out of every committed file._
   in the feature doc): fixed sidebar, loading on every click, tasks in dialogs, toasts for every
   confirmation, one page grid (`src/components/app/layout.tsx`: StatGrid / Bento / Panel).
   Attendance opens on a **PagarBook-style day roster** (one tap P / A / HD / PL / UL, Undo in the
-  toast); Month keeps the grid. **Salary** runs in steps and **Expenses** opens on the day with
+  toast); Month keeps the grid. **Salary** runs in steps (no Work out since 30/10: live figures "Not finalized yet" until
+  Finalize) and **Expenses** opens on the day with
   Day | Month × List | By category (redesign 2026-10-29). The staff list filters Active / Left /
   All at once. Staff page has a **Documents** tab. Settings has a **grouped left menu** and the rules page is rows (label left,
   control right). Helpers get **email + first password sign-ins** (Settings → Roles → Helpers).
@@ -32,7 +33,9 @@ out of every committed file._
   in Me (2026-10-30). Android backup is off in both apps, so a reinstall starts clean (the
   staff member then needs **New phone**). **Needs a new APK** for the 30/10 fixes (sign out,
   backup, keyboard, QR scanner). Fingerprint and QR scan only testable on a real phone.
-- **Database / server**: all migrations up to `20261026000006_remove_clear_data.sql` are live;
+- **Database / server**: all migrations up to `20261029000002_reimbursement_paid.sql` are live;
+  `20261030000001_requests_reject_later_no_duplicates.sql` applies on the next push (dry-run on
+  live OK);
   edge functions `staff-auth` and `helper-auth` deployed by CI. **Clear all data** existed briefly
   (20261026000003–5), was used once on 2026-10-26 to clear the owner's test data on live, then
   **removed** (`…000006` restores the original append-only guards; the owner never wants it again).
@@ -49,19 +52,19 @@ page needs the owner's sign-in.
 
 **Left, by flow (2026-10-29)** — W = website, A = FinCrew app, S = Staffora
 
-| Flow             | Done                                      | Left                                                                                                 |
-| ---------------- | ----------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| Staff setup      | W all; A change pay, advance rules, docs  | A: add staff, allowances / deductions, leave template, own rules                                     |
-| Attendance       | W, A, S (code / QR)                       | S: new APK for the QR fix; push reminders (all)                                                      |
-| Requests         | W, A, S                                   | push notification when one comes in                                                                  |
-| Advances         | W, A, S                                   | —                                                                                                    |
-| Expenses         | W, A (redesigned)                         | check the new pages and Pay back now with data                                                       |
-| Salary           | W, A (redesigned), S payslips             | check with data; owner re-runs October                                                               |
-| Reports          | W                                         | A: reports                                                                                           |
-| Settings         | W                                         | A: opens the website instead; other W settings pages in the new rows style if wanted                 |
-| Audit / activity | —                                         | W audit log viewer, dashboard "recent activity"                                                      |
-| Backup           | —                                         | import / export (Phase 8)                                                                            |
-| Install          | APKs built 29/10 (before the 30/10 fixes) | rebuild both: backup off, sign out, keyboard; FinCrew "invalid package" on the phone (see BUILDS.md) |
+| Flow             | Done                                                       | Left                                                                                                                |
+| ---------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Staff setup      | W all; A change pay, advance rules, docs                   | A: add staff, allowances / deductions, leave template, own rules                                                    |
+| Attendance       | W, A, S (code / QR; S months ahead 30/10)                  | S: new APK for the QR fix (Play Store query); push reminders (all)                                                  |
+| Requests         | W, A, S (no duplicate leave; reject after approving 30/10) | push notification when one comes in                                                                                 |
+| Advances         | W, A, S                                                    | —                                                                                                                   |
+| Expenses         | W, A (redesigned)                                          | check the new pages and Pay back now with data                                                                      |
+| Salary           | W, A (live until finalized 30/10), S payslips + money now  | check with data signed in; owner finalizes October                                                                  |
+| Reports          | W                                                          | A: reports                                                                                                          |
+| Settings         | W                                                          | A: opens the website instead; other W settings pages in the new rows style if wanted                                |
+| Audit / activity | —                                                          | W audit log viewer, dashboard "recent activity"                                                                     |
+| Backup           | —                                                          | import / export (Phase 8)                                                                                           |
+| Install          | APKs built 29/10 (before the 30/10 fixes)                  | rebuild both: backup off, sign out, keyboard, QR, salary / money changes; FinCrew "invalid package" (see BUILDS.md) |
 
 Designs still missing: Advance rules dialog, Pay back now, settings pages (leave templates,
 holidays, rules, roles).
@@ -104,7 +107,7 @@ their OK.
 
 **How to check work**
 
-- `pnpm typecheck` (9 tasks incl. both apps), `pnpm test` (core 237, ui 6, i18n 1, db 187 —
+- `pnpm typecheck` (9 tasks incl. both apps), `pnpm test` (core 246, ui 6, i18n 1, db 205 —
   PGlite, no Docker), `pnpm build`, `pnpm ui:tokens --check`,
   `bash scripts/check-migrations.sh origin/main HEAD`.
 - Live DB (CLI logged in): `pnpm exec supabase db query --linked --project-ref
@@ -275,6 +278,20 @@ notifications).
 
 ## Session log
 
+- **2026-10-30** — Owner: Staffora attendance crashed on changing month; leave could be asked
+  twice; deciders couldn't reject after approving; staff couldn't see upcoming leave; Money
+  should show salary so far − advance ± expenses; the salary "work out" step was useless (live
+  "Not finalized yet" → Finalized → Paid); QR scan said "Google Play Services is not available"
+  on a Samsung S21 FE. Done: crash fixed (row kept with its month); attendance 12 months ahead
+  with planned days (`loadAttendanceMonth` `upcoming`); duplicate leave refused (`askRequest` +
+  migration `20261030000001`); "Reject now" on approved requests (`rejectApprovedRequest`, web
+  and app); Staffora Money card (`loadMyMoney`, core `moneyNow` with tests); salary live until
+  finalized (`loadSalaryRun` computes, `finalizeSalary(year, month, staffIds)` saves + finalizes,
+  `runSalary` removed, steps Attendance → Check & finalize → Pay, `month_running` warning); QR:
+  `plugins/play-store-query.js` adds the Play Store `<queries>` entry (expo-camera's check
+  failed on Android 11+), plus fallback to the in-view camera. Typecheck 9/9, tests core 246 /
+  db 205, web build OK, migration dry-run on live OK. Not seen signed in (website preview
+  signed out; Staffora needs a staff PIN). Not pushed. Needs new APKs.
 - **2026-10-30** — Docs brought up to date for the public repo: README rewritten (what it does,
   layout, run locally, contributing), `.gitignore` extended (native folders, keystores and
   service-account files, caches, `.claude/*` except `launch.json`), real people's names removed

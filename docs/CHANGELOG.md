@@ -2,6 +2,36 @@
 
 ## Unreleased
 
+### Changed — 2026-10-30 (salary without "work out"; Staffora money, attendance, requests)
+
+- **Salary has no Work out step** (website and FinCrew app): until a person is finalized their
+  salary is worked out live from attendance, pay, advances and expenses and tagged **Not
+  finalized yet**; it changes as those change. **Finalize** (ready ones, everyone, or one person)
+  saves and locks it (**Finalized**, posted to the ledger, shown in Staffora); **Pay** marks it
+  **Paid**. Steps are now Attendance → Check & finalize → Pay. During the month (and for anyone
+  still working at its end) people show "Month not over yet" and need a look before finalizing.
+- **Staffora Money** shows where your money stands now: this month's (and last month's, until
+  finalized) salary so far with a **Not finalized yet** tag, finalized salary not paid yet, the
+  advance to repay, expenses to get back or charged; the total is what you would get today. Once
+  paid it shows ₹0 plus the new month so far.
+- **Staffora Attendance** goes up to 12 months ahead and shows leave already marked, weekly offs
+  and holidays on coming days ("Planned"), with "n days of leave coming up".
+- **Requests**: an approved leave or advance can still be **rejected** (website and app,
+  "Reject now"): the leave marks are cleared, the advance is undone on the ledger (not once part
+  of it has been cut from salary).
+
+### Fixed — 2026-10-30 (Staffora)
+
+- **Attendance crashed when changing month**: the calendar drew the new month's days from the
+  old month's data while loading. The loaded month is now kept with its data.
+- **Duplicate leave**: asking for leave on a day already in a waiting or approved leave request,
+  or already marked as leave, is refused ("You already asked for leave on one of these days").
+  The database refuses it too.
+- **QR scan said "Google Play Services is not available"** on phones with Play services: since
+  Android 11 an app must list the Play Store in its manifest to see it, and expo-camera's check
+  looks for it. A small config plugin adds it (`apps/staffora-mobile/plugins/play-store-query.js`);
+  if Google's scanner still can't open, the screen uses its own camera instead. Needs a new APK.
+
 ### Changed — 2026-10-30 (open source tidy-up)
 
 - **README** rewritten for people finding the project on GitHub: what it does, how it is laid

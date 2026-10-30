@@ -2,9 +2,20 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { Check } from 'lucide-react';
+import { Check, X } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { buttonClass, inputClass, quietButtonClass } from '../../components';
-import { decideAction, type DecideState } from './actions';
+import { decideAction, rejectLaterAction, type DecideState } from './actions';
 import { toast } from 'sonner';
 
 export type DecideLabels = {
@@ -115,5 +126,67 @@ export function DecideForm({
         </div>
       )}
     </div>
+  );
+}
+
+/**
+ * "Reject now" on an approved request (owner 30/10/2026): asks first, then undoes what the
+ * approval did (leave marks cleared, advance undone) and rejects it.
+ */
+export function RejectLater({
+  requestId,
+  label,
+  title,
+  body,
+  working,
+  cancel,
+}: {
+  requestId: string;
+  label: string;
+  title: string;
+  body: string;
+  working: string;
+  cancel: string;
+}) {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [pending, start] = useTransition();
+  const reject = () =>
+    start(async () => {
+      const r = await rejectLaterAction(requestId);
+      if (r.done) {
+        toast.success(r.done);
+        setOpen(false);
+        router.refresh();
+      } else if (r.error) toast.error(r.error);
+    });
+  return (
+    <AlertDialog open={open} onOpenChange={setOpen}>
+      <AlertDialogTrigger asChild>
+        <button type="button" className={`${quietButtonClass} w-fit`}>
+          <X aria-hidden="true" size={16} />
+          {label}
+        </button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{title}</AlertDialogTitle>
+          <AlertDialogDescription>{body}</AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={pending}>{cancel}</AlertDialogCancel>
+          <AlertDialogAction
+            disabled={pending}
+            aria-busy={pending}
+            onClick={(e) => {
+              e.preventDefault();
+              reject();
+            }}
+          >
+            {pending ? working : label}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }

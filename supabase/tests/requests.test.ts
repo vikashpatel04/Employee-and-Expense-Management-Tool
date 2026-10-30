@@ -170,9 +170,13 @@ describe('deciding', () => {
     expect(r[0]!.decided_by).not.toBeNull();
   });
 
-  it('a decided request is final', async () => {
+  it('an approved request can only be rejected later, not cancelled or approved again', async () => {
     await rejects(
-      q(asha, `update requests set status = 'rejected' where id = $1`, [leave]),
+      q(asha, `update requests set status = 'approved' where id = $1`, [leave]),
+      /already approved/,
+    );
+    await rejects(
+      q(meena, `update requests set status = 'cancelled' where id = $1`, [leave]),
       /already approved/,
     );
   });
@@ -240,6 +244,17 @@ describe('deciding', () => {
     expect(r[0]).toEqual({ status: 'rejected', leave_status: null });
   });
 
+  it('a rejected request is final', async () => {
+    const id = (
+      await ask(selvi, shop1, selviP, { kind: 'leave', from: '2030-04-10', to: '2030-04-10' })
+    )[0]!.id;
+    await q(ravi, `update requests set status = 'rejected' where id = $1`, [id]);
+    await rejects(
+      q(ravi, `update requests set status = 'approved' where id = $1`, [id]),
+      /already rejected/,
+    );
+  });
+
   it('requests are never deleted', async () => {
     await rejects(q(asha, 'delete from requests where id = $1', [leave]), /permission denied/);
   });
@@ -250,5 +265,101 @@ describe('deciding', () => {
       id,
     ]);
     expect(r).toEqual([]);
+  });
+});
+
+describe('no duplicate leave (20261030000001)', () => {
+  it('leave overlapping a waiting or approved leave request is refused', async () => {
+    // Meena's approved leave is 02/02/2030 – 03/02/2030.
+    await rejects(
+      ask(meena, shop1, meenaP, { kind: 'leave', from: '2030-02-03', to: '2030-02-04' }),
+      /already asked/,
+    );
+    const waiting = (
+      await ask(meena, shop1, meenaP, { kind: 'leave', from: '2030-05-01', to: '2030-05-03' })
+    )[0]!.id;
+    await rejects(
+      ask(meena, shop1, meenaP, { kind: 'leave', from: '2030-04-30', to: '2030-05-01' }),
+      /already asked/,
+    );
+    await q(meena, `update requests set status = 'cancelled' where id = $1`, [waiting]);
+    const again = await ask(meena, shop1, meenaP, {
+      kind: 'leave',
+      from: '2030-05-01',
+      to: '2030-05-01',
+    });
+    expect(again[0]!.status).toBe('pending');
+  });
+
+  it('leave on a day already marked as leave is refused; other people are not affected', async () => {
+    await q(
+      asha,
+      `insert into attendance (shop_id, staff_id, date, status) values ($1, $2, '2030-06-10', 'unpaid_leave')`,
+      [shop1, selviP],
+    );
+    await rejects(
+      ask(selvi, shop1, selviP, { kind: 'leave', from: '2030-06-09', to: '2030-06-11' }),
+      /already asked/,
+    );
+    const other = await ask(meena, shop1, meenaP, {
+      kind: 'leave',
+      from: '2030-06-10',
+      to: '2030-06-10',
+    });
+    expect(other[0]!.status).toBe('pending');
+  });
+});
+
+describe('rejecting an approved request (20261030000001)', () => {
+  it('a decider rejects approved leave later; it keeps no leave status', async () => {
+    const r = await q<{ status: string; leave_status: string | null }>(
+      ravi,
+      `update requests set status = 'rejected', decision_note = 'shop is busy' where id = $1
+       returning status, leave_status`,
+      [leave],
+    );
+    expect(r[0]).toEqual({ status: 'rejected', leave_status: null });
+  });
+
+  it('staff cannot reject their own approved request', async () => {
+    const id = (
+      await ask(selvi, shop1, selviP, { kind: 'leave', from: '2030-07-01', to: '2030-07-01' })
+    )[0]!.id;
+    await q(
+      ravi,
+      `update requests set status = 'approved', leave_status = 'paid_leave' where id = $1`,
+      [id],
+    );
+    await rejects(
+      q(selvi, `update requests set status = 'rejected' where id = $1`, [id]),
+      /Not allowed to decide/,
+    );
+  });
+
+  it('an approved advance request is rejected only after its advance is undone', async () => {
+    const line = (
+      await q<{ id: string }>(
+        asha,
+        `select l.id from ledger_entries l join requests r on r.advance_id = l.ref_id
+         where r.id = $1 and l.ref_table = 'advances'`,
+        [advance],
+      )
+    )[0]!.id;
+    await rejects(
+      q(ravi, `update requests set status = 'rejected' where id = $1`, [advance]),
+      /Undo the advance/,
+    );
+    await q(
+      asha,
+      `insert into ledger_entries (shop_id, staff_id, date, type, amount_paise, reverses_id)
+       values ($1, $2, '2030-01-11', 'reversal', 200000, $3)`,
+      [shop1, meenaP, line],
+    );
+    const r = await q<{ status: string; advance_id: string | null }>(
+      ravi,
+      `update requests set status = 'rejected' where id = $1 returning status, advance_id`,
+      [advance],
+    );
+    expect(r[0]).toEqual({ status: 'rejected', advance_id: null });
   });
 });

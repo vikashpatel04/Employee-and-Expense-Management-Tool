@@ -64,7 +64,7 @@ export async function loadStaffOverview(
             .maybeSingle(),
           supabase
             .from('expense_balances')
-            .select('payback_paise')
+            .select('payback_paise, charge_paise')
             .eq('staff_id', staffId)
             .maybeSingle(),
         ])
@@ -87,6 +87,8 @@ export async function loadStaffOverview(
     advance: money ? Number(money[1].data?.outstanding_paise ?? 0) : null,
     /** What the shop owes them for expenses they paid (Pay back now / the salary). */
     expenseOwed: money ? Number(money[2].data?.payback_paise ?? 0) : null,
+    /** What is charged to them for expenses and not recovered yet. */
+    expenseCharged: money ? Number(money[2].data?.charge_paise ?? 0) : null,
   };
 }
 
