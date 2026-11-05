@@ -8,13 +8,13 @@ _Handover updated 2026-11-05. Read this section first, then `CLAUDE.md`, then th
 whatever you touch. The repo is public (MIT): keep real people's names, phone numbers and keys
 out of every committed file._
 
-**Latest (05/11/2026, commit not pushed yet)**: Add or less, the We owe tag, View statement and
-Historical are built on the website and in FinCrew (`docs/features/statements.md`), and Staffora's
-QR scan has a reader that needs no Google services (DECISIONS). Needs from the owner, in order:
-say push (migration `20261105000002`, dry-run on live passed), then build both APKs, then check on
-a phone. **Nothing signed in was seen**: the website pop-up, drop-downs and statement page were
-checked on a temporary page and with sample figures; the two apps only compile and bundle. The QR
-reader's speed on a real phone is unknown.
+**Latest (05/11/2026, pushed, commit `c488b08`)**: Add or less, the We owe tag, View statement and
+Historical are on the website and in FinCrew (`docs/features/statements.md`), and Staffora's QR scan
+has a reader that needs no Google services (DECISIONS). Migration `20261105000002` is live. Both
+APKs were started on EAS the same day (FinCrew `73770c24`, Staffora `8f080e21`); the owner installs
+them from the Expo portal and checks the website and a phone. **Nothing signed in was seen**: the
+website pop-up, drop-downs and statement page were checked on a temporary page and with sample
+figures; the two apps only compile and bundle. The QR reader's speed on a real phone is unknown.
 
 **Where we are**
 
@@ -42,8 +42,7 @@ reader's speed on a real phone is unknown.
   in Me (2026-10-30). Android backup is off in both apps, so a reinstall starts clean (the
   staff member then needs **New phone**). APK with the 30/10 fixes and pay days built
   05/11 (EAS `a2b1b36d`, commit `a7e8768`); not yet installed and checked. Fingerprint and QR scan only testable on a real phone.
-- **Database / server**: all migrations up to `20261105000001_payslip_period.sql` are live
-  (`20261105000002_salary_adjustments.sql` goes live on the next push);
+- **Database / server**: all migrations up to `20261105000002_salary_adjustments.sql` are live;
   edge functions `staff-auth` and `helper-auth` deployed by CI. **Clear all data** existed briefly
   (20261026000003–5), was used once on 2026-10-26 to clear the owner's test data on live, then
   **removed** (`…000006` restores the original append-only guards; the owner never wants it again).
@@ -60,19 +59,19 @@ page needs the owner's sign-in.
 
 **Left, by flow (2026-10-29)** — W = website, A = FinCrew app, S = Staffora
 
-| Flow             | Done                                                                                               | Left                                                                                                                                                                            |
-| ---------------- | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Staff setup      | W all; A change pay, advance rules, docs                                                           | A: add staff, allowances / deductions, leave template, own rules                                                                                                                |
-| Attendance       | W, A, S (code / QR; S months ahead 30/10)                                                          | S: new APK for the QR reader (05/11), check on a phone; push reminders (all)                                                                                                    |
-| Requests         | W, A, S (no duplicate leave; reject after approving 30/10)                                         | push notification when one comes in                                                                                                                                             |
-| Advances         | W, A, S                                                                                            | —                                                                                                                                                                               |
-| Expenses         | W, A (redesigned)                                                                                  | check the new pages and Pay back now with data                                                                                                                                  |
-| Salary           | W, A (live until finalized 30/10; pay days, add or less, statements 05/11), S payslips + money now | check with data signed in; owner finalizes October (16/09–15/10) for the two 16/09 joiners                                                                                      |
-| Reports          | W                                                                                                  | A: reports                                                                                                                                                                      |
-| Settings         | W                                                                                                  | A: opens the website instead; other W settings pages in the new rows style if wanted                                                                                            |
-| Audit / activity | —                                                                                                  | W audit log viewer, dashboard "recent activity"                                                                                                                                 |
-| Backup           | —                                                                                                  | import / export (Phase 8)                                                                                                                                                       |
-| Install          | APKs built 05/11 with pay days (commit `a7e8768`)                                                  | owner installs both before finalizing from FinCrew, and checks Salary, Money, the payslip PDF and the pay day settings; FinCrew "invalid package" seen on 29/10 (see BUILDS.md) |
+| Flow             | Done                                                                                               | Left                                                                                                                                                                                   |
+| ---------------- | -------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Staff setup      | W all; A change pay, advance rules, docs                                                           | A: add staff, allowances / deductions, leave template, own rules                                                                                                                       |
+| Attendance       | W, A, S (code / QR; S months ahead 30/10)                                                          | S: new APK for the QR reader (05/11), check on a phone; push reminders (all)                                                                                                           |
+| Requests         | W, A, S (no duplicate leave; reject after approving 30/10)                                         | push notification when one comes in                                                                                                                                                    |
+| Advances         | W, A, S                                                                                            | —                                                                                                                                                                                      |
+| Expenses         | W, A (redesigned)                                                                                  | check the new pages and Pay back now with data                                                                                                                                         |
+| Salary           | W, A (live until finalized 30/10; pay days, add or less, statements 05/11), S payslips + money now | check with data signed in; owner finalizes October (16/09–15/10) for the two 16/09 joiners                                                                                             |
+| Reports          | W                                                                                                  | A: reports                                                                                                                                                                             |
+| Settings         | W                                                                                                  | A: opens the website instead; other W settings pages in the new rows style if wanted                                                                                                   |
+| Audit / activity | —                                                                                                  | W audit log viewer, dashboard "recent activity"                                                                                                                                        |
+| Backup           | —                                                                                                  | import / export (Phase 8)                                                                                                                                                              |
+| Install          | APKs started 05/11 with add or less, statements, QR reader (commit `c488b08`)                      | owner installs both before finalizing from FinCrew, and checks Salary, Money, the payslip PDF, the statements and the QR scan; FinCrew "invalid package" seen on 29/10 (see BUILDS.md) |
 
 Designs still missing: Advance rules dialog, Pay back now, settings pages (leave templates,
 holidays, rules, roles).
