@@ -1005,6 +1005,8 @@ export type Database = {
           net_before_advance_paise: number
           net_pay_paise: number
           pdf_path: string | null
+          period_from: string | null
+          period_to: string | null
           revision: number
           run_id: string
           shop_id: string
@@ -1028,6 +1030,8 @@ export type Database = {
           net_before_advance_paise?: number
           net_pay_paise?: number
           pdf_path?: string | null
+          period_from?: string | null
+          period_to?: string | null
           revision?: number
           run_id: string
           shop_id: string
@@ -1051,6 +1055,8 @@ export type Database = {
           net_before_advance_paise?: number
           net_pay_paise?: number
           pdf_path?: string | null
+          period_from?: string | null
+          period_to?: string | null
           revision?: number
           run_id?: string
           shop_id?: string

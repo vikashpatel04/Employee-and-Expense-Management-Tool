@@ -2,6 +2,55 @@
 
 Choices made during the build that PLAN.md doesn't spell out. Newest first.
 
+## 2026-11-05 — Salary runs from each person's pay day
+
+- Owner: "pay date is not always on first, it's usually the day they join, or we can change that
+  in settings later"; then "paydate is based on date not days". New pay rule `payDay`
+  (`joining_day` by default, or `fixed` 1–31), shop-wide or per person through the existing
+  `pay_rules_override` (dated). Core: `pay-period.ts`.
+- **A period runs from the pay day to the day before the next one.** Date 1 = the calendar month,
+  paid on the 1st of the next, so today's behaviour is one setting away. Dates 29–31 fall on the
+  last day of a shorter month. A monthly salary is shared over the period's own days, so a full
+  period pays the whole salary at 28 or 31 days (`dayRateBasis` `fixed_days` still divides by its
+  own number and never moves the pay date).
+- **A salary is named after the month its period ends in**, so `salary_runs` (shop, year, month),
+  payslips, `leave_balances` and every screen's month keep working with no key change: one salary
+  per person per month name. The run for a month holds people with different dates.
+- **Payslips remember their days** (`period_from`, `period_to`, 20261105000001): the next salary
+  starts the day after the previous month's finalized one ended, and `finalize_payslip` dates the
+  ledger lines on `period_to`. No dates (older rows, or an older app) = the calendar month.
+- **Changing a pay day never loses a day or pays one twice**, but because a person has one salary
+  per month name, that one salary can be shorter or longer than a month. Moving the pay day
+  earlier in the month gives a short one (16th → 10th: 16/12–09/01). Moving it later, or to the 1st,
+  adds the leftover days to the next salary (16th → 1st: 16/12–31/01, 47 days, ₹22,742 on ₹15,000).
+  The owner was first told 16th → 1st would be a short salary then full months; two salaries
+  ending in one month don't fit the one-per-month key, so it is one longer salary, same total.
+  A monthly salary still divides by a normal period (`cycleDays`). Fixed allowances are not
+  scaled for that one salary (they already aren't for part periods).
+- Leave and late go with the salary: free late days and `paidLeavesPerMonth` count per pay period,
+  `resetMonth` means the salary month, and `paidLeaveShortfall` checks the period's balance
+  (normal period, ignoring a one-off change). The attendance grid stays by calendar month: it is a
+  record of days. Its counts and "payable" are that calendar month's, not a salary's.
+- Salary screens go one month ahead (a period running today can end next month); people whose
+  period hasn't started aren't shown. The website opens on last month while anyone in it isn't paid.
+- Home's card moved from the stored run (`loadSalary`, removed) to live figures (`loadSalaryNow`),
+  which also ends the leftover "Work out" wording from before 30/10.
+- Live data on 05/11/2026: nothing finalized or paid, no leave balances, so no row moves. The
+  October drafts are overwritten at Finalize; the one for the person who joined 20/10 stays unused
+  (nothing reads drafts). 16/09 joiners: October = 16/09–15/10, already past its 16/10 pay date.
+- Advances are not tied to a period: finalizing a late salary cuts whatever is outstanding that
+  day under the person's advance rule, including advances given after that period ended.
+
+## 2026-11-05 — Payslip PDF stays the browser's print, redesigned
+
+- Still "Save as PDF" from `/payslips/[id]`, no PDF library (decision of 2026-10-24). The page is
+  now `payslip-document.tsx`: `@page { size: A4; margin: 0 }` removes the browser's URL and date
+  lines, `print-color-adjust: exact` keeps the fills, and `document.title` is set while printing
+  so the file is named "Payslip <name> <month> <year>".
+- Restyle of an existing page, so no new artboard; it uses the design system's tokens, the Money
+  rule (paise at half size on the hero, deductions muted with a minus) and `numberInWords` in core
+  (Indian grouping; the words live in i18n `payslip.words`).
+
 ## 2026-10-30 — Salary is live until finalized (no "work out" step)
 
 - Owner: "work-out from admin is simply useless… attendance = pay − advance and expense. With

@@ -2,19 +2,23 @@ import {
   addDays,
   businessDateOf,
   calculateSalary,
+  compareDates,
   daysBetween,
-  maxDate,
-  minDate,
+  employedPart,
   monthEnd,
   monthStart,
   paidLeaveUsed,
+  payPeriod,
+  personPayDay,
   rollLeaveMonth,
   scheduledAdvanceCut,
+  shiftMonth,
   templateVersionOn,
   type AdvanceCutMode,
   type BusinessDate,
   type LeaveMonth,
   type LeaveTemplateVersion,
+  type PayPeriod,
   type SalaryResult,
 } from '@fincrew/core';
 import type { Supabase } from './client';
@@ -31,7 +35,10 @@ export type ComputedPayslip = {
   staffId: string;
   name: string;
   phone: string | null;
+  joiningDate: BusinessDate;
   leavingDate: BusinessDate | null;
+  /** The days this salary covers (their pay day; packages/core pay-period.ts). */
+  period: PayPeriod;
   result: SalaryResult;
   /** The month's leave roll; null with no template (no paid leave) or when marks exceed the balance. */
   leave: LeaveMonth | null;
@@ -40,10 +47,11 @@ export type ComputedPayslip = {
 };
 
 /**
- * Work out every payslip for one month with packages/core, from the same inputs as the
- * attendance grid (src/lib/mappers.ts), plus allowances, deductions, advances, expenses to settle
- * (each person's advance cut mode and expense switches) and last month's carried leave. Nothing
- * is written here.
+ * Work out every salary named after this month with packages/core, each over that person's own
+ * pay period, from the same inputs as the attendance grid (src/lib/mappers.ts), plus allowances,
+ * deductions, advances, expenses to settle (each person's advance cut mode and expense switches)
+ * and last month's carried leave. Someone not employed in their period is left out. Nothing is
+ * written here.
  */
 export async function computeMonth(
   supabase: Supabase,
@@ -51,53 +59,69 @@ export async function computeMonth(
   year: number,
   month: number,
 ): Promise<ComputedPayslip[]> {
-  const start = monthStart(year, month);
   const end = monthEnd(year, month);
-  const lookFrom = addDays(start, -31);
+  const prev = shiftMonth(year, month, -1);
+  // A period named after this month starts in the month before at the earliest.
+  const earliest = monthStart(prev.year, prev.month);
+  const lookFrom = addDays(earliest, -31);
   const lookTo = addDays(end, 31);
-  const prev = month === 1 ? { y: year - 1, m: 12 } : { y: year, m: month - 1 };
 
-  const [staffQ, attQ, holQ, asgQ, verQ, payQ, allowQ, dedQ, advQ, balQ, shopQ, expQ, settled] =
-    await Promise.all([
-      supabase
-        .from('staff')
-        .select(
-          'person_id, joining_date, leaving_date, advance_cut_paise, advance_cut_mode, expense_payback, expense_recover, people!inner(name, phone)',
-        )
-        .eq('shop_id', shopId)
-        .lte('joining_date', end)
-        .or(`leaving_date.is.null,leaving_date.gte.${start}`),
-      supabase
-        .from('attendance')
-        .select('*')
-        .eq('shop_id', shopId)
-        .gte('date', lookFrom)
-        .lte('date', lookTo),
-      supabase
-        .from('holidays')
-        .select('date, name, paid')
-        .eq('shop_id', shopId)
-        .gte('date', lookFrom)
-        .lte('date', lookTo),
-      supabase.from('staff_leave_templates').select('*').eq('shop_id', shopId),
-      supabase.from('leave_template_versions').select('*').eq('shop_id', shopId),
-      supabase.from('pay_settings').select('*').eq('shop_id', shopId),
-      supabase.from('allowances').select('*').eq('shop_id', shopId),
-      supabase.from('fixed_deductions').select('*').eq('shop_id', shopId),
-      supabase.from('advance_balances').select('staff_id, outstanding_paise').eq('shop_id', shopId),
-      supabase
-        .from('leave_balances')
-        .select('staff_id, carried')
-        .eq('shop_id', shopId)
-        .eq('year', prev.y)
-        .eq('month', prev.m),
-      supabase.from('shops').select('settings').eq('id', shopId).single(),
-      supabase
-        .from('expense_balances')
-        .select('staff_id, payback_paise, charge_paise')
-        .eq('shop_id', shopId),
-      settledThisMonth(supabase, shopId, year, month),
-    ]);
+  const [
+    staffQ,
+    attQ,
+    holQ,
+    asgQ,
+    verQ,
+    payQ,
+    allowQ,
+    dedQ,
+    advQ,
+    balQ,
+    shopQ,
+    expQ,
+    settled,
+    ended,
+  ] = await Promise.all([
+    supabase
+      .from('staff')
+      .select(
+        'person_id, joining_date, leaving_date, advance_cut_paise, advance_cut_mode, expense_payback, expense_recover, people!inner(name, phone)',
+      )
+      .eq('shop_id', shopId)
+      .lte('joining_date', end)
+      .or(`leaving_date.is.null,leaving_date.gte.${earliest}`),
+    supabase
+      .from('attendance')
+      .select('*')
+      .eq('shop_id', shopId)
+      .gte('date', lookFrom)
+      .lte('date', lookTo),
+    supabase
+      .from('holidays')
+      .select('date, name, paid')
+      .eq('shop_id', shopId)
+      .gte('date', lookFrom)
+      .lte('date', lookTo),
+    supabase.from('staff_leave_templates').select('*').eq('shop_id', shopId),
+    supabase.from('leave_template_versions').select('*').eq('shop_id', shopId),
+    supabase.from('pay_settings').select('*').eq('shop_id', shopId),
+    supabase.from('allowances').select('*').eq('shop_id', shopId),
+    supabase.from('fixed_deductions').select('*').eq('shop_id', shopId),
+    supabase.from('advance_balances').select('staff_id, outstanding_paise').eq('shop_id', shopId),
+    supabase
+      .from('leave_balances')
+      .select('staff_id, carried')
+      .eq('shop_id', shopId)
+      .eq('year', prev.year)
+      .eq('month', prev.month),
+    supabase.from('shops').select('settings').eq('id', shopId).single(),
+    supabase
+      .from('expense_balances')
+      .select('staff_id, payback_paise, charge_paise')
+      .eq('shop_id', shopId),
+    settledThisMonth(supabase, shopId, year, month),
+    finalizedEnds(supabase, shopId, prev.year, prev.month),
+  ]);
 
   const rules = toShopRules(shopQ.data?.settings);
   const holidays = (holQ.data ?? []).map((h) => ({ date: h.date, name: h.name, paid: h.paid }));
@@ -121,18 +145,30 @@ export async function computeMonth(
   );
 
   return (staffQ.data ?? [])
-    .map((s): ComputedPayslip => {
+    .flatMap((s): ComputedPayslip[] => {
       const staffId = s.person_id;
+      const paySettings = pays.get(staffId) ?? [];
+      const period = payPeriod(
+        year,
+        month,
+        personPayDay(rules.pay, s.joining_date, paySettings, end),
+        ended.get(staffId),
+      );
+      const { from: employedFrom, to: closingDay } = employedPart(
+        period,
+        s.joining_date,
+        s.leaving_date,
+      );
+      if (compareDates(employedFrom, closingDay) > 0) return [];
       const templateOn = (d: BusinessDate) =>
         templateVersionOn(assignments.get(staffId) ?? [], versionsByTemplate, d);
-      const closingDay = s.leaving_date ? minDate(s.leaving_date, end) : end;
-      const employedFrom = maxDate(start, s.joining_date);
       const input = {
         year,
         month,
+        period,
         joiningDate: s.joining_date,
         leavingDate: s.leaving_date ?? undefined,
-        paySettings: pays.get(staffId) ?? [],
+        paySettings,
         templateOn,
         holidays,
         records: records.get(staffId) ?? [],
@@ -190,6 +226,7 @@ export async function computeMonth(
           used: paidLeaveUsed(first.days),
           version,
           employedDays: Math.max(0, daysBetween(employedFrom, closingDay) + 1),
+          periodDays: period.cycleDays,
         });
       } catch {
         leaveOverBalance = true;
@@ -198,15 +235,19 @@ export async function computeMonth(
         leave && leave.paidOut > 0
           ? calculateSalary({ ...input, leavePayoutDays: leave.paidOut })
           : first;
-      return {
-        staffId,
-        name: s.people.name,
-        phone: s.people.phone,
-        leavingDate: s.leaving_date,
-        result,
-        leave: version ? leave : null,
-        leaveOverBalance,
-      };
+      return [
+        {
+          staffId,
+          name: s.people.name,
+          phone: s.people.phone,
+          joiningDate: s.joining_date,
+          leavingDate: s.leaving_date,
+          period,
+          result,
+          leave: version ? leave : null,
+          leaveOverBalance,
+        },
+      ];
     })
     .sort((a, b) => a.name.localeCompare(b.name));
 }
@@ -238,6 +279,31 @@ async function settledThisMonth(supabase: Supabase, shopId: string, year: number
         payback: Number(p.expense_payback_paise),
         expenseCut: Number(p.expense_cut_paise),
       });
+  return out;
+}
+
+/**
+ * Where each person's finalized salary for this month ended: the next one starts the day after,
+ * even if their pay day has changed since. Older payslips (no dates) covered the calendar month.
+ */
+async function finalizedEnds(supabase: Supabase, shopId: string, year: number, month: number) {
+  const out = new Map<string, BusinessDate>();
+  const { data: run } = await supabase
+    .from('salary_runs')
+    .select('id')
+    .eq('shop_id', shopId)
+    .eq('year', year)
+    .eq('month', month)
+    .maybeSingle();
+  if (!run) return out;
+  const { data } = await supabase
+    .from('payslips')
+    .select('staff_id, period_to')
+    .eq('run_id', run.id)
+    .eq('status', 'finalized')
+    .order('revision', { ascending: false });
+  for (const p of data ?? [])
+    if (!out.has(p.staff_id)) out.set(p.staff_id, p.period_to ?? monthEnd(year, month));
   return out;
 }
 

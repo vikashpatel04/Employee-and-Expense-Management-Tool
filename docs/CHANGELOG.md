@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+### Changed — 2026-11-05 (pay day; payslip PDF)
+
+- **Salary runs from each person's pay day**, not from the 1st to month end. The pay day is the
+  date they joined by default, and can be set for the whole shop (Settings → Rules) or for one
+  person (their page → Own rules). It is a date, not a count of days: pay day 16 pays on the 16th
+  of every month, and a full period pays the whole salary whether it has 28 or 31 days. A salary
+  is named after the month it ends in (16/09–15/10 is October); date 1 is the calendar month.
+- **Salary screens** (website and app) show each person's dates and pay date, and go one month
+  ahead. The website opens on last month while anyone in it is still to finalize or pay.
+- **Staffora Money** shows each pay period's dates and pay day.
+- **Website home**: the salary card follows the live figures, and "Coming up" lists each pay date
+  still open (or late). The last "work out" wording is gone.
+- Free late days and monthly paid leave now count per pay period; the ledger dates a salary on the
+  last day of its period. The attendance grid stays by calendar month.
+- **Payslip PDF redesigned**: a clean A4 page with net pay in figures and words, pay date, days at
+  a glance, earnings beside deductions and how it adds up; no browser header or footer, colours
+  kept on paper, and the file is named after the person and month.
+
 ### Changed — 2026-10-30 (salary without "work out"; Staffora money, attendance, requests)
 
 - **Salary has no Work out step** (website and FinCrew app): until a person is finalized their

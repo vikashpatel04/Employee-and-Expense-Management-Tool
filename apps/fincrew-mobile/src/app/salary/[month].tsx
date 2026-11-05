@@ -14,6 +14,7 @@ import {
 } from 'lucide-react-native';
 import {
   businessDateOf,
+  formatDisplayDate,
   formatINR,
   monthOf,
   paiseToInput,
@@ -36,7 +37,7 @@ import { useStatePill } from '@/components/money/salary';
 import { Sheet } from '@/components/sheet';
 import { Avatar, Button, Card, IconButton, Segmented, Text } from '@/components/ui';
 import { t } from '@/lib/i18n';
-import { monthLabel, parseYm, ym } from '@/lib/money';
+import { monthLabel, parseYm, shiftMonth, ym } from '@/lib/money';
 import { useSession } from '@/lib/session';
 import { sharePayslip } from '@/lib/share-payslip';
 import { supabase } from '@/lib/supabase';
@@ -52,7 +53,9 @@ const MINUS = PAYSLIP_MINUS_LINES;
  * Salary run (redesign, owner 29/10/2026; design "Salary · in steps"; no "work out" step since
  * 30/10/2026): the month as steps (Attendance → Finalize → Pay), the big amount with what to do
  * next, and people grouped by what they need (needs a look / ready / still to pay / paid); tap a
- * name for the working. Until finalized, figures are live ("Not finalized yet"); finalize the
+ * name for the working. A month holds the salaries whose pay period ends in it, each person with
+ * their own dates (owner 05/11/2026), so it goes one month ahead of today. Until finalized,
+ * figures are live ("Not finalized yet"); finalize the
  * ready ones, or one person from their row, then pay everyone or one person. Every step
  * goes through `@fincrew/data` (loadSalaryRun / finalizeSalary / paySalary), like the website;
  * finalizing and paying write permanent ledger lines, so each asks first. Paying one person can
@@ -66,9 +69,10 @@ export default function SalaryRun() {
   const pill = useStatePill();
   const today = businessDateOf(new Date());
   const current = monthOf(today);
+  const latest = shiftMonth(current.year, current.month, 1);
   const start = parseYm(params.month) ?? current;
   const [{ year, month }, setMonth] = useState(
-    ym(start.year, start.month) > ym(current.year, current.month) ? current : start,
+    ym(start.year, start.month) > ym(latest.year, latest.month) ? latest : start,
   );
   const [run, setRun] = useState<Run | null>(null);
   const [loading, setLoading] = useState(false);
@@ -217,6 +221,12 @@ export default function SalaryRun() {
   const modes = t('salary.modes', { returnObjects: true }) as unknown as Record<string, string>;
   const lineLabel = (l: PayslipLine, p: SalaryPerson) =>
     t(`salary.lines.${l.kind}`, { name: l.name ?? '', days: p.summary.payableDays });
+  const period = (p: SalaryPerson) =>
+    t('salary.period', {
+      from: formatDisplayDate(p.period.from),
+      to: formatDisplayDate(p.period.to),
+      payDate: formatDisplayDate(p.period.payDate),
+    });
   const back = () => (router.canGoBack() ? router.back() : router.replace('/money'));
   const s = 'mobile.money.salary';
 
@@ -267,12 +277,14 @@ export default function SalaryRun() {
             </View>
           )}
         </View>
-        <MonthStepper year={year} month={month} max={current} onChange={setMonth} />
+        <MonthStepper year={year} month={month} max={latest} onChange={setMonth} />
 
         {run && people.length === 0 && (
           <Card style={{ padding: space['space-5'], gap: space['space-2'] }}>
             <Text variant="title-md">{t('salary.empty.title', { month: mName })}</Text>
-            <Text muted>{canRun ? t('salary.empty.body') : t('salary.empty.noPermission')}</Text>
+            <Text muted>
+              {canRun ? t('salary.empty.body', { month: mName }) : t('salary.empty.noPermission')}
+            </Text>
           </Card>
         )}
 
@@ -429,6 +441,9 @@ export default function SalaryRun() {
                       <View style={{ flex: 1, minWidth: 0 }}>
                         <Text variant="label" numberOfLines={1}>
                           {p.name}
+                        </Text>
+                        <Text variant="caption" muted numberOfLines={1}>
+                          {period(p)}
                         </Text>
                         {p.warnings.length > 0 && p.state === 'draft' ? (
                           <Text variant="caption" color={c['status-late']} numberOfLines={1}>

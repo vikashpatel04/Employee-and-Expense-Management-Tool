@@ -1,7 +1,7 @@
 import { PendingLink as Link } from '@/components/app/pending-link';
 import { redirect } from 'next/navigation';
 import { Check, ChevronLeft, ChevronRight, Clock, FileText, X } from 'lucide-react';
-import { formatINR, monthOf, type PayslipLine } from '@fincrew/core';
+import { formatINR, monthOf, shiftMonth, type PayslipLine } from '@fincrew/core';
 import {
   loadSalaryRun,
   PAYSLIP_MINUS_LINES,
@@ -11,7 +11,7 @@ import {
   type SalaryGroup,
   type SalaryPerson,
 } from '@fincrew/data';
-import { todayIST } from '@/lib/format';
+import { formatDate, todayIST } from '@/lib/format';
 import { t } from '@/lib/i18n';
 import { requireMe } from '@/lib/session';
 import { createClient } from '@/lib/supabase/server';
@@ -22,10 +22,6 @@ import { SalaryTable } from './salary-table';
 
 const MONTH = new Intl.DateTimeFormat('en-IN', { month: 'long', year: 'numeric', timeZone: 'UTC' });
 const monthName = (y: number, m: number) => MONTH.format(new Date(Date.UTC(y, m - 1, 1)));
-const shiftMonth = (y: number, m: number, by: number) => {
-  const d = new Date(Date.UTC(y, m - 1 + by, 1));
-  return { year: d.getUTCFullYear(), month: d.getUTCMonth() + 1 };
-};
 const ym = (y: number, m: number) => `${y}-${String(m).padStart(2, '0')}`;
 const card = 'rounded-lg border bg-card shadow-xs';
 
@@ -65,7 +61,10 @@ const GROUP_DOT: Record<SalaryGroup, string> = {
  * one button first, the big amount (take-home so far, then still to pay), how it adds up, and
  * people grouped by what they need (needs a look / ready / still to pay / paid). Until a person
  * is finalized their figures are live ("Not finalized yet", `loadSalaryRun`); Finalize locks
- * them. `?person=<staff id>` opens that person on the side; `?table=1` shows the wide table.
+ * them. A month holds the salaries whose pay period ends in it, each person with their own dates
+ * (owner 05/11/2026), so it goes one month ahead of today; opened without a month it shows last
+ * month while anyone in it is still to finalize or pay. `?person=<staff id>` opens that person on
+ * the side; `?table=1` shows the wide table.
  */
 export default async function SalaryPage({
   searchParams,
@@ -80,17 +79,25 @@ export default async function SalaryPage({
   const today = todayIST();
   const current = monthOf(today);
   const sp = await searchParams;
-  const asked = /^\d{4}-\d{2}$/.test(sp.month ?? '') ? monthOf(`${sp.month}-01`) : current;
+  const supabase = await createClient();
+  const latest = shiftMonth(current.year, current.month, 1);
+  const last = shiftMonth(current.year, current.month, -1);
+  const opening = async () =>
+    (await loadSalaryRun(supabase, me.shopId, last.year, last.month, today)).people.some(
+      (p) => p.state !== 'paid',
+    )
+      ? last
+      : current;
+  const asked = /^\d{4}-\d{2}$/.test(sp.month ?? '') ? monthOf(`${sp.month}-01`) : await opening();
   const { year, month } =
-    ym(asked.year, asked.month) > ym(current.year, current.month) ? current : asked;
+    ym(asked.year, asked.month) > ym(latest.year, latest.month) ? latest : asked;
   const prev = shiftMonth(year, month, -1);
   const next = shiftMonth(year, month, 1);
-  const hasNext = ym(next.year, next.month) <= ym(current.year, current.month);
+  const hasNext = ym(next.year, next.month) <= ym(latest.year, latest.month);
   const mName = monthName(year, month);
   const base = `/salary?month=${ym(year, month)}`;
   const table = sp.table === '1';
 
-  const supabase = await createClient();
   const { runId, people, overall } = await loadSalaryRun(supabase, me.shopId, year, month, today);
   const run = runId ? { id: runId } : null;
   const { groups, totals, unmarked, dueCount } = salaryOverview(people);
@@ -225,6 +232,12 @@ export default async function SalaryPage({
   };
 
   const selected = sp.person ? people.find((p) => p.staffId === sp.person) : undefined;
+  const periodLine = (p: SalaryPerson) =>
+    t('salary.period', {
+      from: formatDate(p.period.from),
+      to: formatDate(p.period.to),
+      payDate: formatDate(p.period.payDate),
+    });
   const lineLabel = (l: PayslipLine, p: SalaryPerson) =>
     t(`salary.lines.${l.kind}`, { name: l.name ?? '', days: p.summary.payableDays });
 
@@ -459,6 +472,9 @@ export default async function SalaryPage({
                                 </span>
                                 <span className="flex min-w-0 flex-1 flex-col">
                                   <span className="text-label-sm truncate">{p.name}</span>
+                                  <span className="truncate text-xs text-[var(--ink-muted)]">
+                                    {periodLine(p)}
+                                  </span>
                                   <span
                                     className={`truncate text-xs ${w.warn ? 'text-[var(--status-late)]' : 'text-[var(--ink-muted)]'}`}
                                   >
@@ -474,7 +490,7 @@ export default async function SalaryPage({
                               </Link>
                               {salaryGroup(p) === 'look' && (
                                 <Link
-                                  href={`/attendance?view=month&month=${ym(year, month)}`}
+                                  href={`/attendance?view=month&month=${p.period.from.slice(0, 7)}`}
                                   className={`${quietButtonClass} inline-flex h-8 items-center text-xs`}
                                 >
                                   {t(`${s}.markDays`)}
@@ -520,6 +536,9 @@ export default async function SalaryPage({
                             payable: selected.summary.payableDays,
                             employed: selected.summary.employedDays,
                           })}
+                        </span>
+                        <span className="text-xs text-[var(--ink-muted)]">
+                          {periodLine(selected)}
                         </span>
                       </span>
                       <Link

@@ -10,12 +10,14 @@ Status: **schema + rules done, not yet live** (applies on the next push; then `p
 1. **Advances** are rows in `advances` (`kind` given / repaid). Each row posts its own ledger line
    (`advance`, negative when given, positive when repaid in cash). Giving past the person's
    `advance_limit_paise` is refused unless `over_limit_confirmed` is set (the app asks first).
-2. **Salary run:** `salary_runs` has one row per shop per month. The app calculates each payslip
+2. **Salary run:** `salary_runs` has one row per shop per month: the salaries whose pay period
+   ends in that month, each person with their own dates (`payslips.period_from` / `period_to`;
+   `packages/core` `pay-period.ts`, docs/DECISIONS.md 2026-11-05). The app calculates each payslip
    with `packages/core` (`calculateSalary`, `rollLeaveMonth`) and saves it as a **draft** in
    `payslips`: lines, day summary, warnings, leave month, totals. The database checks
    `net_before_advance = gross − deductions` and `net_pay = net_before_advance − advance_cut`.
 3. **Finalize:** `finalize_payslip(id)` (needs `salary.run`) makes the payslip final and posts to the
-   ledger **from the payslip**: `salary_earned` (+gross), each `deduction`, `late_deduction`. It
+   ledger, dated on the period's last day, **from the payslip**: `salary_earned` (+gross), each `deduction`, `late_deduction`. It
    also saves the leave month into `leave_balances`. The advance cut is not posted (the advance is
    already on the ledger; paying less recovers it). A finalized payslip can't change or be
    deleted; staff can see it from now on.

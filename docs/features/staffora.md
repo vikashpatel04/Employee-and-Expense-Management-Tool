@@ -96,7 +96,8 @@ Changed 2026-10-25 from invite links to **phone number + PIN** (owner's decision
   its month and late answers are dropped).
 - **Money** (`(tabs)/money.tsx`, design "Money · ledger / payslips"): due to me / I owe / settled,
   now (30/10/2026, `loadMyMoney` + core `moneyNow`) = ledger balance + salary so far of each
-  month not finalized ("<month> salary so far", days, **Not finalized yet** tag), with rows for
+  pay period not finalized ("<month> salary so far", its dates and pay day since 05/11/2026, days,
+  **Not finalized yet** tag), with rows for
   finalized salary not paid yet, advance to repay and the next cut, expenses to get back /
   charged; Ledger (by month, newest first, running balance, undone
   marks; `loadLedger`) or Payslips (finalized months, net, paid or still due; new shared

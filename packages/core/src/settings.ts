@@ -10,9 +10,14 @@ import type { Paise } from './money';
 
 export interface PayRules {
   /**
+   * The date of the month a person's salary period starts and they are paid (pay-period.ts).
+   * `joining_day`: the date they joined. `fixed`: the same date for everyone it applies to.
+   */
+  payDay: { mode: 'joining_day' } | { mode: 'fixed'; day: number };
+  /**
    * Divisor for a monthly salary's day rate.
-   * `calendar_days`: actual days in the month (28–31). `fixed_days`: e.g. 30 or 26, every month.
-   * Either way a fully paid month pays exactly the monthly salary.
+   * `calendar_days`: actual days in the pay period (28–31). `fixed_days`: e.g. 30 or 26, always.
+   * Either way a fully paid period pays exactly the monthly salary.
    */
   dayRateBasis: { mode: 'calendar_days' } | { mode: 'fixed_days'; days: number };
   /**
@@ -35,6 +40,7 @@ export interface PayRules {
 }
 
 export const DEFAULT_PAY_RULES: PayRules = {
+  payDay: { mode: 'joining_day' },
   dayRateBasis: { mode: 'calendar_days' },
   offDayWork: 'extra',
   unmarkedDay: 'unpaid',
@@ -89,6 +95,12 @@ export function withOverride<T extends object>(shop: T, override: Partial<T> | u
 export function validateShopRules(r: ShopRules): string[] {
   const problems: string[] = [];
   const wholeAtLeast = (v: number, min: number) => Number.isInteger(v) && v >= min;
+  if (
+    r.pay.payDay.mode === 'fixed' &&
+    !(wholeAtLeast(r.pay.payDay.day, 1) && r.pay.payDay.day <= 31)
+  ) {
+    problems.push('pay.payDay.day must be a date of the month, 1–31');
+  }
   if (r.pay.dayRateBasis.mode === 'fixed_days' && !wholeAtLeast(r.pay.dayRateBasis.days, 1)) {
     problems.push('pay.dayRateBasis.days must be a whole number, 1 or more');
   }

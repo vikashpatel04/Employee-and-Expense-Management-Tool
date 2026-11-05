@@ -1,10 +1,10 @@
 /**
- * Salary for one staff member and one month (docs/PLAN.md §4.6).
+ * Salary for one staff member and one pay period (docs/PLAN.md §4.6, pay-period.ts).
  *
- *   day_rate           = monthly_salary / B   (B = actual days in the month, or a fixed number:
+ *   day_rate           = monthly_salary / B   (B = actual days in the period, or a fixed number:
  *                                             PayRules.dayRateBasis)
  *   earned             = monthly − unpaid days × day_rate + extra days × day_rate
- *                        (= day_rate × payable_days when B is the month's days;
+ *                        (= day_rate × payable_days when B is the period's days;
  *                         daily: wage × payable days; hourly: hours × rate)
  *   gross              = earned + overtime + allowances + leave payout
  *   net_before_advance = gross − (fixed deductions + late deductions)
@@ -26,7 +26,7 @@ import {
   type DaySummary,
   type Holiday,
 } from './attendance';
-import { compareDates, daysInMonth, monthEnd, monthStart, type BusinessDate } from './dates';
+import { compareDates, type BusinessDate } from './dates';
 import { effectiveOn, type Dated } from './dated';
 import {
   applyLatePolicy,
@@ -40,6 +40,7 @@ import {
 } from './late';
 import type { LeaveTemplateVersion } from './leave';
 import type { Paise } from './money';
+import { payPeriod, type PayPeriod } from './pay-period';
 import { rat, ratAdd, ratCompare, ratMul, ratToRupeePaise, ZERO, type Rat } from './rational';
 import { withOverride, type PayRules } from './settings';
 
@@ -83,12 +84,14 @@ export interface SalaryInput {
   asOf?: BusinessDate;
   year: number;
   month: number;
+  /** The days this salary covers; the calendar month when left out. */
+  period?: PayPeriod;
   joiningDate: BusinessDate;
   leavingDate?: BusinessDate;
   paySettings: readonly PaySettings[];
   templateOn: (date: BusinessDate) => LeaveTemplateVersion | undefined;
   holidays: readonly Holiday[];
-  /** This month's records, plus neighbouring days for the sandwich rule. */
+  /** The period's records, plus neighbouring days for the sandwich rule. */
   records: readonly AttendanceRecord[];
   allowances: readonly Allowance[];
   deductions: readonly FixedDeduction[];
@@ -186,12 +189,10 @@ function inRange(date: BusinessDate, from: BusinessDate, to?: BusinessDate): boo
 }
 
 export function calculateSalary(input: SalaryInput): SalaryResult {
-  const D = daysInMonth(input.year, input.month);
-  const from = monthStart(input.year, input.month);
-  const to = monthEnd(input.year, input.month);
+  const { from, to, cycleDays: D } = input.period ?? payPeriod(input.year, input.month, 1);
 
   const settingsOn = (date: BusinessDate) => effectiveOn(input.paySettings, date);
-  // The month uses the overrides in effect on its last day of employment (or its last day).
+  // The period uses the overrides in effect on its last day of employment (or its last day).
   const closingDate =
     input.leavingDate && compareDates(input.leavingDate, to) < 0 ? input.leavingDate : to;
   const closingSettings = settingsOn(closingDate);
@@ -210,7 +211,7 @@ export function calculateSalary(input: SalaryInput): SalaryResult {
   });
   const employed = days.filter((d) => d.status !== 'not_employed');
 
-  // ---- Late policy: measure, then decide free / charged / half day for the month.
+  // ---- Late policy: measure, then decide free / charged / half day for the period.
   const policy = resolveLatePolicy(input.rules.late, closingSettings?.latePolicyOverride);
   const measured = employed.flatMap((day) => {
     const s = settingsOn(day.date);
@@ -255,7 +256,7 @@ export function calculateSalary(input: SalaryInput): SalaryResult {
           );
       }
     } else if (s.payType === 'monthly') {
-      // The day's share of the month, adjusted by what the day is worth at the day rate:
+      // The day's share of the period, adjusted by what the day is worth at the day rate:
       // a fully paid day (2 units) adds exactly 1/D of the salary whatever the basis.
       const monthly = s.monthlySalary ?? 0;
       const units = day.baseUnits + day.extraUnits;

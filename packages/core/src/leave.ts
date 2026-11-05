@@ -120,9 +120,11 @@ export function rollLeaveMonth(input: {
   version: LeaveTemplateVersion | undefined;
   /** Employed days this month, for prorated accrual; defaults to the whole month. */
   employedDays?: number;
+  /** Days in a normal pay period, for prorated accrual; defaults to the calendar month's. */
+  periodDays?: number;
 }): LeaveMonth {
   const { year, month, opening, used, version } = input;
-  const D = daysInMonth(year, month);
+  const D = input.periodDays ?? daysInMonth(year, month);
   const earned = version ? earnedLeave(version, input.employedDays ?? D, D) : 0;
   const available = opening + earned;
   if (used > available) {
@@ -172,6 +174,7 @@ export function rollLeaveMonths(
     used: number;
     version: LeaveTemplateVersion | undefined;
     employedDays?: number;
+    periodDays?: number;
   }[],
 ): LeaveMonth[] {
   const out: LeaveMonth[] = [];

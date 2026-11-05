@@ -100,6 +100,12 @@ export function monthOf(date: BusinessDate): { year: number; month: number } {
   return { year: y, month: m };
 }
 
+/** The month `by` months after this one (before it when negative). */
+export function shiftMonth(year: number, month: number, by: number) {
+  const d = new Date(Date.UTC(year, month - 1 + by, 1));
+  return { year: d.getUTCFullYear(), month: d.getUTCMonth() + 1 };
+}
+
 /** "09:30" (an HTML time input) → minutes after midnight; null if not a valid HH:MM. */
 export function parseTimeOfDay(value: string): number | null {
   const m = /^(\d{2}):(\d{2})$/.exec(value.trim());

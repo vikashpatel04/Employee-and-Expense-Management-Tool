@@ -69,13 +69,13 @@
       "title": "Salary · {{month}}",
       "steps": "Salary steps",
       "step": {
-        "worked": "Worked out",
+        "attendance": "Attendance",
         "finalized": "Finalized",
         "paid": "Paid"
       },
       "state": {
-        "not_run": "Not worked out",
-        "draft": "Draft",
+        "none": "Nothing yet",
+        "draft": "Not finalized yet",
         "finalized": "Finalized",
         "paid": "Paid"
       },
@@ -83,16 +83,16 @@
       "paid": "Paid",
       "left": "Still to pay",
       "note": {
-        "not_run": "Work out {{month}} once attendance is complete.",
-        "draft": "Review each person, then finalize.",
-        "draftUnmarked_one": "Review each person, then finalize. {{count}} person has days not marked.",
-        "draftUnmarked_other": "Review each person, then finalize. {{count}} people have days not marked.",
+        "none": "Salary for {{month}} shows here once attendance is marked.",
+        "draft": "The figures follow attendance. Check each person, then finalize.",
+        "draftUnmarked_one": "The figures follow attendance. {{count}} person has days not marked.",
+        "draftUnmarked_other": "The figures follow attendance. {{count}} people have days not marked.",
         "finalized": "{{paid}} of {{count}} paid. Pay the rest from the salary screen.",
         "paid": "Everyone is paid for {{month}}."
       },
       "button": {
-        "not_run": "Work out salary",
-        "draft": "Review salary",
+        "none": "Open salary",
+        "draft": "Check and finalize",
         "finalized": "Pay salary",
         "paid": "Open salary"
       }
@@ -105,11 +105,14 @@
       "leaving": "{{name}} leaves",
       "lastDay": "Last day {{date}}",
       "salary": "{{month}} salary",
-      "salaryFrom": "Work it out from {{date}}",
+      "salaryDue_one": "{{count}} person · pay on {{date}}",
+      "salaryDue_other": "{{count}} people · pay on {{date}}",
       "today": "today",
       "tomorrow": "tomorrow",
       "in_one": "in {{count}} day",
-      "in_other": "in {{count}} days"
+      "in_other": "in {{count}} days",
+      "late_one": "{{count}} day late",
+      "late_other": "{{count}} days late"
     }
   },
   "shops": {
@@ -524,6 +527,7 @@
   },
   "salary": {
     "title": "Salary",
+    "period": "{{from}} – {{to}} · pay on {{payDate}}",
     "status": {
       "none": "No salary",
       "draft": "Not finalized yet",
@@ -536,7 +540,7 @@
     "nextMonth": "Next month",
     "empty": {
       "title": "No salary for {{month}}",
-      "body": "Nobody was on the staff, or no attendance was marked, in {{month}}.",
+      "body": "Nobody has a pay period ending in {{month}}, or no attendance was marked.",
       "noPermission": "No salary for this month."
     },
     "finalize": "Finalize salary",
@@ -594,7 +598,7 @@
       "net": "Net pay"
     },
     "days": {
-      "title": "Days in {{month}}",
+      "title": "Days in this pay period",
       "payable": "{{payable}} payable days of {{employed}}.",
       "leaveLeft": "Paid leave left after {{month}}: {{left}}."
     },
@@ -609,7 +613,7 @@
       "negative_net_pay": "{{name}}: deductions are more than earnings.",
       "paid_leave_over_balance": "{{name}}: more paid leave marked than the balance allows.",
       "openAttendance": "Open attendance",
-      "month_running": "{{name}}: the month isn’t over yet."
+      "month_running": "{{name}}: the pay period isn’t over yet."
     },
     "done": {
       "finalized_one": "Finalized {{count}} payslip.",
@@ -617,7 +621,7 @@
       "paid_one": "Paid {{count}} person.",
       "paid_other": "Paid {{count}} people."
     },
-    "footnote": "Until you finalize, everyone’s salary is worked out live from attendance, pay, advances and expenses, and changes as they change. Finalizing locks a payslip, posts it to the staff ledger and shows it in Staffora; the next month carries on from there.",
+    "footnote": "Until you finalize, everyone’s salary is worked out live from attendance, pay, advances and expenses, and changes as they change. Finalizing locks a payslip, posts it to the staff ledger and shows it in Staffora; the next pay period carries on from there.",
     "errors": {
       "noPermission": "You can see salary but not run or pay it.",
       "failed": "Couldn't finish: {{reason}}"
@@ -639,7 +643,7 @@
         "unmarked_one": "{{count}} day not marked",
         "unmarked_other": "{{count}} days not marked",
         "marked": "Days marked",
-        "markFirst": "Mark the month",
+        "markFirst": "Mark the days",
         "ready": "{{ready}} of {{count}} ready",
         "finalized_one": "{{count}} finalized",
         "finalized_other": "{{count}} finalized",
@@ -652,10 +656,10 @@
         "kicker": "Next step",
         "doneKicker": "Done",
         "noneTitle": "No salary for {{month}}",
-        "noneBody": "Nobody was on the staff, or no attendance was marked, this month.",
+        "noneBody": "Nobody has a pay period ending this month, or no attendance was marked.",
         "draftTitle": "Finalize {{month}}",
-        "lookBody_one": "{{count}} person needs a look first (usually days to mark, or the month isn’t over). The figures update by themselves; finalize the {{ready}} who are ready now, or open a person to finalize them anyway. Finalizing locks a payslip.",
-        "lookBody_other": "{{count}} people need a look first (usually days to mark, or the month isn’t over). The figures update by themselves; finalize the {{ready}} who are ready now, or open a person to finalize them anyway. Finalizing locks a payslip.",
+        "lookBody_one": "{{count}} person needs a look first (usually days to mark, or the pay period isn’t over). The figures update by themselves; finalize the {{ready}} who are ready now, or open a person to finalize them anyway. Finalizing locks a payslip.",
+        "lookBody_other": "{{count}} people need a look first (usually days to mark, or the pay period isn’t over). The figures update by themselves; finalize the {{ready}} who are ready now, or open a person to finalize them anyway. Finalizing locks a payslip.",
         "readyBody": "Everyone looks right. Finalizing locks each payslip and adds it to the staff ledger; staff see it in Staffora.",
         "payTitle": "Pay {{month}} salaries",
         "payBody_one": "{{amount}} still to pay to {{count}} person. Pay at once, or one by one; a part payment is fine.",
@@ -958,12 +962,19 @@
       "subtitle": "These apply to everyone in the shop, unless a staff member's pay settings say otherwise.",
       "pay": {
         "title": "Pay",
+        "payDay": "Pay day",
+        "payDayModes": {
+          "joining_day": "The date each person joined",
+          "fixed": "The same date for everyone"
+        },
+        "payDayHint": "Salary runs from the pay day to the day before the next one, and is paid on that date every month. Date 1 is the calendar month.",
+        "payDayDate": "Date of the month (1–31)",
         "dayRate": "Day rate for a monthly salary",
         "dayRateModes": {
-          "calendar_days": "Salary ÷ days in that month",
+          "calendar_days": "Salary ÷ days in that pay period",
           "fixed_days": "Salary ÷ a fixed number of days"
         },
-        "dayRateHint": "A fully paid month always pays exactly the salary.",
+        "dayRateHint": "A fully paid period always pays exactly the salary.",
         "fixedDays": "Fixed number of days",
         "offDayWork": "Working on a weekly off or holiday",
         "offDayWorkModes": {
@@ -1251,7 +1262,8 @@
     "employee": "Employee",
     "joined": "Joined",
     "period": "Pay period",
-    "draft": "Draft: not final. Numbers can change until the month is finalized.",
+    "payDate": "Pay date",
+    "draft": "Draft: not final. Numbers can change until it is finalized.",
     "revision": "Revision {{n}}",
     "days": "Days",
     "extraDays": "Extra working days",
@@ -1262,14 +1274,62 @@
     "totalDeductions": "Total deductions",
     "netBeforeAdvance": "Net before advance",
     "net": "Net pay",
+    "inWords": "Rupees {{rupees}} only",
+    "inWordsPaise": "Rupees {{rupees}} and {{paise}} paise only",
     "paid": "Paid so far",
     "due": "Still to pay",
+    "takeHome": "How it adds up",
+    "status": {
+      "draft": "Draft",
+      "finalized": "Finalized",
+      "paid": "Paid"
+    },
     "print": "Print or save as PDF",
     "back": "Back to salary",
     "open": "Payslip",
     "openLabel": "Open the payslip for {{name}}",
     "generated": "Made on {{date}} with FinCrew",
-    "noDeductions": "No deductions"
+    "noDeductions": "No deductions",
+    "words": {
+      "ones": [
+        "Zero",
+        "One",
+        "Two",
+        "Three",
+        "Four",
+        "Five",
+        "Six",
+        "Seven",
+        "Eight",
+        "Nine",
+        "Ten",
+        "Eleven",
+        "Twelve",
+        "Thirteen",
+        "Fourteen",
+        "Fifteen",
+        "Sixteen",
+        "Seventeen",
+        "Eighteen",
+        "Nineteen"
+      ],
+      "tens": [
+        "",
+        "",
+        "Twenty",
+        "Thirty",
+        "Forty",
+        "Fifty",
+        "Sixty",
+        "Seventy",
+        "Eighty",
+        "Ninety"
+      ],
+      "hundred": "Hundred",
+      "thousand": "Thousand",
+      "lakh": "Lakh",
+      "crore": "Crore"
+    }
   },
   "expenses": {
     "title": "Expenses",
@@ -1654,7 +1714,7 @@
           "missing_check_out_other": "{{count}} days without check-out",
           "negative_net_pay": "Deductions are more than earnings",
           "paid_leave_over_balance": "More paid leave than the balance",
-          "month_running": "Month not over yet"
+          "month_running": "Pay period not over yet"
         },
         "amount": "Amount",
         "amountHint": "Pay all of it, or type less to pay part now; the rest stays due.",
@@ -2014,6 +2074,7 @@
       "share": "Share payslip",
       "soFar": "{{month}} salary so far",
       "soFarDays": "{{payable}} of {{employed}} days paid so far",
+      "soFarPeriod": "{{from}} – {{to}} · pay day {{payDate}}",
       "notFinalized": "Not finalized yet",
       "finalizedDue": "Finalized salary, not paid yet",
       "other": "Paid more than finalized",

@@ -38,8 +38,9 @@ export function useStatePill() {
 }
 
 /**
- * Money · Salary (design: "Money · salary"): the last few months with their run state; open one
- * to work out, check, finalize and pay (`/salary/<YYYY-MM>`).
+ * Money · Salary (design: "Money · salary"): the last few months with their run state, plus next
+ * month once someone's pay period ending then has started; open one to check, finalize and pay
+ * (`/salary/<YYYY-MM>`).
  */
 export function SalarySection() {
   const { me } = useSession();
@@ -52,24 +53,23 @@ export function SalarySection() {
     if (!me) return;
     setLoading(true);
     const current = monthOf(businessDateOf(new Date()));
-    const months = Array.from({ length: MONTHS }, (_, i) =>
-      shiftMonth(current.year, current.month, -i),
+    const months = Array.from({ length: MONTHS + 1 }, (_, i) =>
+      shiftMonth(current.year, current.month, 1 - i),
     );
-    setRows(
-      await Promise.all(
-        months.map(async ({ year, month }) => {
-          const run = await loadSalaryRun(supabase, me.shopId, year, month);
-          return {
-            year,
-            month,
-            overall: run.overall,
-            count: run.people.length,
-            net: run.people.reduce((a, p) => a + p.net, 0),
-            due: run.people.reduce((a, p) => a + Math.max(0, p.net - p.paidAmount), 0),
-          };
-        }),
-      ),
+    const list = await Promise.all(
+      months.map(async ({ year, month }) => {
+        const run = await loadSalaryRun(supabase, me.shopId, year, month);
+        return {
+          year,
+          month,
+          overall: run.overall,
+          count: run.people.length,
+          net: run.people.reduce((a, p) => a + p.net, 0),
+          due: run.people.reduce((a, p) => a + Math.max(0, p.net - p.paidAmount), 0),
+        };
+      }),
     );
+    setRows(list.filter((r, i) => i > 0 || r.count > 0));
     setLoading(false);
   }, [me]);
 

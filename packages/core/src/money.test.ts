@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { formatINR, paiseToInput, parseRupees, roundToRupee, rupeesToPaise } from './money';
+import {
+  formatINR,
+  numberInWords,
+  paiseToInput,
+  parseRupees,
+  roundToRupee,
+  rupeesToPaise,
+} from './money';
 
 describe('formatINR', () => {
   it.each([
@@ -20,6 +27,37 @@ describe('formatINR', () => {
 
   it('rejects non-integer paise', () => {
     expect(() => formatINR(10.5)).toThrow(TypeError);
+  });
+});
+
+describe('numberInWords (Indian grouping)', () => {
+  const w = {
+    ones: 'Zero One Two Three Four Five Six Seven Eight Nine Ten Eleven Twelve Thirteen Fourteen Fifteen Sixteen Seventeen Eighteen Nineteen'.split(
+      ' ',
+    ),
+    tens: ', ,Twenty,Thirty,Forty,Fifty,Sixty,Seventy,Eighty,Ninety'.split(','),
+    hundred: 'Hundred',
+    thousand: 'Thousand',
+    lakh: 'Lakh',
+    crore: 'Crore',
+  };
+
+  it.each([
+    [0, 'Zero'],
+    [7, 'Seven'],
+    [19, 'Nineteen'],
+    [20, 'Twenty'],
+    [45, 'Forty Five'],
+    [100, 'One Hundred'],
+    [105, 'One Hundred Five'],
+    [1_000, 'One Thousand'],
+    [14_516, 'Fourteen Thousand Five Hundred Sixteen'],
+    [1_00_000, 'One Lakh'],
+    [1_25_000, 'One Lakh Twenty Five Thousand'],
+    [1_00_00_000, 'One Crore'],
+    [1_23_45_678, 'One Crore Twenty Three Lakh Forty Five Thousand Six Hundred Seventy Eight'],
+  ])('%i', (n, words) => {
+    expect(numberInWords(n, w)).toBe(words);
   });
 });
 

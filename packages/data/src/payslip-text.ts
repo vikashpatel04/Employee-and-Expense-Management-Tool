@@ -1,8 +1,8 @@
 import {
+  addDays,
+  employedPart,
   formatDisplayDate,
   formatINR,
-  maxDate,
-  minDate,
   monthEnd,
   monthStart,
   type BusinessDate,
@@ -17,12 +17,23 @@ export type Translate = (key: string, options?: Record<string, unknown>) => stri
 /** Lines that take money away (shown with a minus). */
 export const PAYSLIP_MINUS_LINES = ['deduction', 'late_deduction', 'advance_cut', 'expense_cut'];
 
-/** The days a payslip covers: the month, cut to the joining and leaving dates. */
-export function payslipPeriod(slip: PayslipView): { from: BusinessDate; to: BusinessDate } {
-  const end = monthEnd(slip.year, slip.month);
+/**
+ * The days a payslip covers: its pay period (older payslips have no dates: the calendar month),
+ * cut to the joining and leaving dates, and the date it is paid: the day after the period ends.
+ */
+export function payslipPeriod(slip: PayslipView): {
+  from: BusinessDate;
+  to: BusinessDate;
+  payDate: BusinessDate;
+} {
+  const to = slip.periodTo ?? monthEnd(slip.year, slip.month);
   return {
-    from: maxDate(monthStart(slip.year, slip.month), slip.joiningDate),
-    to: slip.leavingDate ? minDate(end, slip.leavingDate) : end,
+    ...employedPart(
+      { from: slip.periodFrom ?? monthStart(slip.year, slip.month), to },
+      slip.joiningDate,
+      slip.leavingDate,
+    ),
+    payDate: addDays(to, 1),
   };
 }
 

@@ -1,7 +1,7 @@
 # Core rules (`packages/core`)
 
 PLAN §4 as code. Pure TypeScript (no Supabase/React), so the website, both apps, edge functions
-and the database tests all use the same rules. 201 tests; each module has a `*.test.ts` beside it.
+and the database tests all use the same rules. 294 tests; each module has a `*.test.ts` beside it.
 
 Status: **done** (Phase 2, 2026-10-23). **No business rule is hard-coded:** every choice is a
 setting the owner (admin) can change, shop-wide or per staff member. The defaults below are what
@@ -16,13 +16,14 @@ template version**, so different staff can have different leave rules.
 
 ### Pay rules (`settings.ts`, `PayRules`)
 
-| Setting              | Options                           | Default         | What it does                                                                                                                                                |
-| -------------------- | --------------------------------- | --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `dayRateBasis`       | `calendar_days` · `fixed_days: N` | `calendar_days` | Monthly salary ÷ days in this month, or ÷ a fixed N (e.g. 30, 26). A fully paid month always pays exactly the salary; each unpaid day costs salary ÷ basis. |
-| `offDayWork`         | `extra` · `replace` · `none`      | `extra`         | Working a weekly off/holiday: off-day pay + an extra day; paid once as a working day; or only the off day's own pay.                                        |
-| `unmarkedDay`        | `unpaid` · `paid`                 | `unpaid`        | A working day nobody marked. The salary run warns either way.                                                                                               |
-| `holidayOnWeeklyOff` | `holiday` · `weekly_off`          | `holiday`       | Which paid flag decides a holiday that falls on a weekly off.                                                                                               |
-| `markOnOffDay`       | `ignore` · `apply`                | `ignore`        | Absent/leave marked on an off day: the off day stands, or the mark replaces it (paid leave then uses balance).                                              |
+| Setting              | Options                           | Default         | What it does                                                                                                                                                      |
+| -------------------- | --------------------------------- | --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `payDay`             | `joining_day` · `fixed: 1–31`     | `joining_day`   | The date of the month a salary period starts and is paid (`pay-period.ts`). Always a date, never a count of days. Date 1 = the calendar month.                    |
+| `dayRateBasis`       | `calendar_days` · `fixed_days: N` | `calendar_days` | Monthly salary ÷ days in this pay period, or ÷ a fixed N (e.g. 30, 26). A fully paid period always pays exactly the salary; each unpaid day costs salary ÷ basis. |
+| `offDayWork`         | `extra` · `replace` · `none`      | `extra`         | Working a weekly off/holiday: off-day pay + an extra day; paid once as a working day; or only the off day's own pay.                                              |
+| `unmarkedDay`        | `unpaid` · `paid`                 | `unpaid`        | A working day nobody marked. The salary run warns either way.                                                                                                     |
+| `holidayOnWeeklyOff` | `holiday` · `weekly_off`          | `holiday`       | Which paid flag decides a holiday that falls on a weekly off.                                                                                                     |
+| `markOnOffDay`       | `ignore` · `apply`                | `ignore`        | Absent/leave marked on an off day: the off day stands, or the mark replaces it (paid leave then uses balance).                                                    |
 
 ### Late policy (`late.ts`, `LatePolicy`)
 

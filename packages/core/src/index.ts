@@ -7,6 +7,7 @@ export * from './leave';
 export * from './attendance';
 export * from './late';
 export * from './salary';
+export * from './pay-period';
 export * from './ledger';
 export * from './expenses';
 export * from './attendance-code';

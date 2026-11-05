@@ -28,6 +28,25 @@ describe('resolveShopRules', () => {
   });
 });
 
+describe('payDay', () => {
+  it('defaults to the date they joined, also for rules stored before it existed', () => {
+    expect(DEFAULT_PAY_RULES.payDay).toEqual({ mode: 'joining_day' });
+    expect(resolveShopRules({ pay: { offDayWork: 'none' } }).pay.payDay).toEqual({
+      mode: 'joining_day',
+    });
+  });
+
+  it.each([1, 16, 31])('a fixed pay day of %i is valid', (day) => {
+    const rules = resolveShopRules({ pay: { payDay: { mode: 'fixed', day } } });
+    expect(validateShopRules(rules)).toEqual([]);
+  });
+
+  it.each([0, 32, 1.5])('a fixed pay day of %d is refused', (day) => {
+    const rules = resolveShopRules({ pay: { payDay: { mode: 'fixed', day } } });
+    expect(validateShopRules(rules)).toEqual(['pay.payDay.day must be a date of the month, 1–31']);
+  });
+});
+
 describe('withOverride', () => {
   it('a staff override replaces only the fields it sets', () => {
     expect(withOverride(DEFAULT_PAY_RULES, { unmarkedDay: 'paid' })).toEqual({

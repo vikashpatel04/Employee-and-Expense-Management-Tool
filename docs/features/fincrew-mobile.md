@@ -97,6 +97,9 @@ is a placeholder until the first store build.
     JPEG with `expo-image-manipulator`, `src/lib/bill-photo.ts`; shows the saved photo through a
     signed link), Paid with, note, delete (two taps). Read-only without edit permission. Saves
     through `saveExpense` / `deleteExpense` (`@fincrew/data`), ids from `expo-crypto`.
+  - **Pay days** (05/11/2026): each person in a run shows their pay period and pay date; the run
+    screen goes one month ahead, and the list adds next month once a period ending then has
+    started. The pay day itself is set on the website.
   - **Salary** (`salary.tsx`): this month and the 3 before with state (No salary / Not
     finalized yet / Finalized / Paid), net and what's still to pay; tap → the run.
   - **Salary run** (`src/app/salary/[month].tsx`; redesign 29/10/2026, design "Salary · in

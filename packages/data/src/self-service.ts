@@ -2,11 +2,14 @@ import {
   addDays,
   businessDateOf,
   compareDates,
+  employedPart,
   formatDisplayDate,
-  monthEnd,
   monthOf,
-  monthStart,
   moneyNow,
+  payPeriod,
+  payPeriodOn,
+  personPayDay,
+  shiftMonth,
   type AdvanceCutMode,
   type BusinessDate,
 } from '@fincrew/core';
@@ -20,6 +23,7 @@ import {
 import { loadAttendanceMonth } from './attendance-month';
 import { writeAttendance, type AttendanceWriteResult } from './attendance-write';
 import { PAYMENT_MODES } from './expense-write';
+import { toPaySettings, toShopRules } from './mappers';
 import { paidLeaveShortfall } from './paid-leave';
 import { loadMyPayslips } from './salary-run';
 import { computeMonth } from './salary-month';
@@ -534,11 +538,11 @@ export const dateOfInstant = (iso: string) => businessDateOf(new Date(iso));
 
 /**
  * Staffora's Money card: where my money stands right now (core `moneyNow`): my ledger balance
- * (finalized salary, advances, expenses, payments) plus the salary so far of each month not
- * finalized yet: this month, and last month while it has marked days and no finalized payslip.
- * Each such month is worked out live with the shared salary rules (`computeMonth`; RLS gives
- * staff only their own rows), so it is "Not finalized yet" and changes until the shop
- * finalizes it. Once paid, the balance is 0 and only the new month's salary so far remains.
+ * (finalized salary, advances, expenses, payments) plus the salary so far of each pay period not
+ * finalized yet: the one running today, and the one before it while it has marked days and no
+ * finalized payslip. Each is worked out live with the shared salary rules (`computeMonth`; RLS
+ * gives staff only their own rows), so it is "Not finalized yet" and changes until the shop
+ * finalizes it. Once paid, the balance is 0 and only the new period's salary so far remains.
  */
 export async function loadMyMoney(
   supabase: Supabase,
@@ -546,23 +550,29 @@ export async function loadMyMoney(
   staffId: string,
   today: BusinessDate,
 ) {
-  const current = monthOf(today);
-  const prev =
-    current.month === 1
-      ? { year: current.year - 1, month: 12 }
-      : { year: current.year, month: current.month - 1 };
-  const [overview, payslips, { data: prevMarked }] = await Promise.all([
+  const [overview, payslips, { data: shop }, { data: pays }] = await Promise.all([
     loadStaffOverview(supabase, shopId, staffId, true),
     loadMyPayslips(supabase, staffId),
-    supabase
-      .from('attendance')
-      .select('date')
-      .eq('staff_id', staffId)
-      .gte('date', monthStart(prev.year, prev.month))
-      .lte('date', monthEnd(prev.year, prev.month))
-      .limit(1),
+    supabase.from('shops').select('settings').eq('id', shopId).single(),
+    supabase.from('pay_settings').select('*').eq('staff_id', staffId),
   ]);
   if (!overview) return null;
+  const payDay = personPayDay(
+    toShopRules(shop?.settings).pay,
+    overview.joiningDate,
+    (pays ?? []).map(toPaySettings),
+    today,
+  );
+  const current = payPeriodOn(today, payDay);
+  const before = shiftMonth(current.year, current.month, -1);
+  const prev = payPeriod(before.year, before.month, payDay);
+  const { data: prevMarked } = await supabase
+    .from('attendance')
+    .select('date')
+    .eq('staff_id', staffId)
+    .gte('date', prev.from)
+    .lte('date', prev.to)
+    .limit(1);
   const finalized = new Set(payslips.map((p) => p.year * 12 + p.month));
   const open = [...(prevMarked?.length ? [prev] : []), current].filter(
     (m) => !finalized.has(m.year * 12 + m.month),
@@ -575,7 +585,10 @@ export async function loadMyMoney(
         );
         return mine
           ? {
-              ...m,
+              year: m.year,
+              month: m.month,
+              ...employedPart(mine.period, mine.joiningDate, mine.leavingDate),
+              payDate: mine.period.payDate,
               amount: mine.result.netBeforeAdvance,
               payableDays: mine.result.summary.payableDays,
               employedDays: mine.result.summary.employedDays,

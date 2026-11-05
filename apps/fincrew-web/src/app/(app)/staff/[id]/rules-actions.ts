@@ -34,6 +34,10 @@ function readOverrides(form: FormData): { pay: Partial<PayRules>; late: Partial<
   const pay: Partial<PayRules> = {};
   const late: Partial<LatePolicy> = {};
 
+  const payDay = choice('payDay', ['joining_day', 'fixed'] as const);
+  if (payDay === 'joining_day') pay.payDay = { mode: 'joining_day' };
+  if (payDay === 'fixed')
+    pay.payDay = { mode: 'fixed', day: whole('payDayDate', `${r}.pay.payDayDate`, 1) };
   const dayRate = choice('dayRate', ['calendar_days', 'fixed_days'] as const);
   if (dayRate === 'calendar_days') pay.dayRateBasis = { mode: 'calendar_days' };
   if (dayRate === 'fixed_days')

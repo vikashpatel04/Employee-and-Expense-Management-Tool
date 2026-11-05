@@ -117,6 +117,7 @@ const keys = (prefix: string, values: readonly string[]) =>
 export function RulesForm({ rules }: { rules: ShopRules }) {
   const [state, onSubmit, pending] = useFormAction<RulesState>(saveRules, {});
   useDialogDone(state);
+  const [payDay, setPayDay] = useState(rules.pay.payDay.mode);
   const [dayRate, setDayRate] = useState(rules.pay.dayRateBasis.mode);
   const [chargeMode, setChargeMode] = useState(rules.late.charge.mode);
   const [rotation, setRotation] = useState(rules.attendanceCode.rotation.mode);
@@ -126,6 +127,21 @@ export function RulesForm({ rules }: { rules: ShopRules }) {
     <form onSubmit={onSubmit} className="flex flex-col gap-4">
       {/* Rows of equal height: Pay | Coming late, then Attendance code | Expenses + Staff sign-in. */}
       <Section title={t(`${r}.pay.title`)}>
+        <Choice
+          name="payDay"
+          label={t(`${r}.pay.payDay`)}
+          options={keys(`${r}.pay.payDayModes`, ['joining_day', 'fixed'])}
+          value={payDay}
+          onChange={(v) => setPayDay(v as typeof payDay)}
+          hint={t(`${r}.pay.payDayHint`)}
+        />
+        {payDay === 'fixed' && (
+          <NumberField
+            name="payDayDate"
+            label={t(`${r}.pay.payDayDate`)}
+            value={pay.payDay.mode === 'fixed' ? pay.payDay.day : 1}
+          />
+        )}
         <Choice
           name="dayRate"
           label={t(`${r}.pay.dayRate`)}

@@ -244,6 +244,19 @@ describe('accrual in a partial month', () => {
     expect(earnedLeave(prorated('down'), 31, 31)).toBe(2);
   });
 
+  it('prorates against the days in the pay period when given', () => {
+    const m = rollLeaveMonth({
+      year: 2026,
+      month: 11,
+      opening: 0,
+      used: 0,
+      version: prorated('down'),
+      employedDays: 30,
+      periodDays: 31,
+    });
+    expect(m.earned).toBe(1); // 2 × 30/31: November has 30 days, but this period has 31
+  });
+
   it('rollLeaveMonth uses employed days', () => {
     const m = rollLeaveMonth({
       year: 2026,

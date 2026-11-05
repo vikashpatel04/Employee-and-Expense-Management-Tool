@@ -6,7 +6,6 @@ import {
   type BusinessDate,
 } from '@fincrew/core';
 import { loadAttendanceMonth } from './attendance-month';
-import { paidByPayslip } from './salary-month';
 import type { Supabase } from './client';
 
 /** Today's attendance for everyone working today (dashboard "Today's attendance"). */
@@ -69,60 +68,10 @@ export async function loadMoney(supabase: Supabase, shopId: string) {
   };
 }
 
-export type SalaryState = 'not_run' | 'draft' | 'finalized' | 'paid';
-
-/** This month's salary run: where it stands and the money in it (latest revision per person). */
-export async function loadSalary(supabase: Supabase, shopId: string, year: number, month: number) {
-  const { data: run } = await supabase
-    .from('salary_runs')
-    .select('id')
-    .eq('shop_id', shopId)
-    .eq('year', year)
-    .eq('month', month)
-    .maybeSingle();
-  if (!run)
-    return {
-      state: 'not_run' as SalaryState,
-      people: 0,
-      net: 0,
-      paid: 0,
-      paidPeople: 0,
-      unmarkedPeople: 0,
-    };
-
-  const { data: slips } = await supabase
-    .from('payslips')
-    .select('id, staff_id, status, net_pay_paise, warnings')
-    .eq('run_id', run.id)
-    .order('revision', { ascending: false });
-  const latest = new Map<string, NonNullable<typeof slips>[number]>();
-  for (const s of slips ?? []) if (!latest.has(s.staff_id)) latest.set(s.staff_id, s);
-  const rows = [...latest.values()];
-  const paidBy = await paidByPayslip(
-    supabase,
-    rows.map((r) => r.id),
-  );
-  const net = rows.reduce((a, r) => a + Number(r.net_pay_paise), 0);
-  const paid = rows.reduce(
-    (a, r) => a + Math.min(paidBy.get(r.id) ?? 0, Number(r.net_pay_paise)),
-    0,
-  );
-  const paidPeople = rows.filter((r) => (paidBy.get(r.id) ?? 0) >= Number(r.net_pay_paise)).length;
-  const state: SalaryState = rows.some((r) => r.status === 'draft')
-    ? 'draft'
-    : rows.length > 0 && paidPeople === rows.length
-      ? 'paid'
-      : 'finalized';
-  const unmarkedPeople = rows.filter((r) =>
-    ((r.warnings as { code: string }[] | null) ?? []).some((w) => w.code === 'unmarked_days'),
-  ).length;
-  return { state, people: rows.length, net, paid, paidPeople, unmarkedPeople };
-}
-
 export type SoonItem =
   | { kind: 'holiday'; date: BusinessDate; name: string; paid: boolean }
   | { kind: 'leaving'; date: BusinessDate; name: string; staffId: string }
-  | { kind: 'salary'; date: BusinessDate };
+  | { kind: 'salary'; date: BusinessDate; year: number; month: number; count: number };
 
 /** Holidays and last working days in the next 30 days (leaving dates need `staff.view`). */
 export async function loadSoon(

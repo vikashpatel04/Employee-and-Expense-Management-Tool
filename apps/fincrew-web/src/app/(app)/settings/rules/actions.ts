@@ -25,6 +25,7 @@ function readRules(form: FormData): ShopRules {
   };
   const r = 'settings.rules';
 
+  const payDay = pick('payDay', ['joining_day', 'fixed'] as const);
   const dayRate = pick('dayRate', ['calendar_days', 'fixed_days'] as const);
   const chargeMode = pick('chargeMode', ['per_minute', 'per_late_day'] as const);
   let chargeAmount = 0;
@@ -52,6 +53,10 @@ function readRules(form: FormData): ShopRules {
 
   const rules: ShopRules = {
     pay: {
+      payDay:
+        payDay === 'fixed'
+          ? { mode: 'fixed', day: whole('payDayDate', `${r}.pay.payDayDate`) }
+          : { mode: 'joining_day' },
       dayRateBasis:
         dayRate === 'fixed_days'
           ? { mode: 'fixed_days', days: whole('fixedDays', `${r}.pay.fixedDays`) }

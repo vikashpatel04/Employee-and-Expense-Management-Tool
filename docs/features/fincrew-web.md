@@ -6,7 +6,7 @@ the design's text styles and Lucide icons (24px, 2px stroke, the design system's
 ## Dashboard — `(app)/page.tsx`
 
 Design: "Web · dashboard" (FinCrew key screens canvas). Data: `packages/data/src/dashboard.ts`
-(`loadToday`, `loadMoney`, `loadSalary`, `loadSoon`).
+(`loadToday`, `loadMoney`, `loadSalaryNow`, `loadSoon`).
 
 - Greeting by IST time of day, shop · weekday date · staff working today; **Mark today
   present** (`mark-today-button.tsx`, same `setAttendance` as the grid) for everyone not marked.
@@ -317,6 +317,14 @@ checked at each step (left with no roles).
 
 ## Payslip, CSV, clearing marks
 
+- **Payslip PDF** (redesign 05/11/2026) — `payslip-document.tsx`: a designed A4 page (net pay in
+  figures and words, pay period and pay date, days, earnings beside deductions, how it adds up);
+  printing drops the browser's header and footer, keeps colours and names the file after the
+  person and month.
+- **Salary and pay days** (05/11/2026): a month holds the salaries ending in it, each row with its
+  dates and pay date; the page goes one month ahead and opens on last month while anyone in it
+  isn't paid. Pay day: Settings → Rules, or a person's Own rules. Home shows the salary to act on
+  (`loadSalaryNow`) and each open pay date in Coming up.
 - **Payslip** — `app/payslips/[id]` (outside the shell): shop, month, employee, joined, pay
   period (DD/MM/YYYY, cut to joining/leaving), days, earnings and deductions lines (labels from
   `salary.lines.*`), gross, total deductions, net before advance, advance cut, net pay; for

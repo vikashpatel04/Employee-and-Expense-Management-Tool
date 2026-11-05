@@ -2,13 +2,14 @@ import { PendingLink as Link } from '@/components/app/pending-link';
 import { ChevronDown, FileText } from 'lucide-react';
 import { formatINR, type PayslipLine } from '@fincrew/core';
 import { PAYSLIP_MINUS_LINES, type SalaryPerson } from '@fincrew/data';
+import { formatDate } from '@/lib/format';
 import { t } from '@/lib/i18n';
 import { quietButtonClass } from '../../components';
 import { finalizeSalary, paySalary } from './actions';
 import { ActionButton, PayControl } from './controls';
 
 const cols =
-  'grid-cols-[minmax(200px,1.6fr)_56px_repeat(6,minmax(96px,1fr))_minmax(112px,1fr)_minmax(150px,1.2fr)_40px]';
+  'grid-cols-[minmax(260px,1.8fr)_56px_repeat(6,minmax(96px,1fr))_minmax(112px,1fr)_minmax(150px,1.2fr)_40px]';
 
 /**
  * The salary run as one wide table (every column, open a row for the payslip): the accountant's
@@ -40,7 +41,7 @@ export function SalaryTable({
   return (
     <>
       <div className="overflow-x-auto rounded-lg border bg-card shadow-xs">
-        <div role="table" aria-label={t('salary.title')} className="min-w-[1180px] tabular-nums">
+        <div role="table" aria-label={t('salary.title')} className="min-w-[1240px] tabular-nums">
           <div
             role="row"
             className={`text-caption grid ${cols} items-end gap-2 border-b border-[var(--line)] px-4 py-3 font-semibold text-[var(--ink-muted)]`}
@@ -77,6 +78,13 @@ export function SalaryTable({
               >
                 <span role="rowheader" className="flex min-w-0 flex-col">
                   <span className="text-label-sm truncate">{p.name}</span>
+                  <span className="text-caption text-[var(--ink-muted)]">
+                    {t('salary.period', {
+                      from: formatDate(p.period.from),
+                      to: formatDate(p.period.to),
+                      payDate: formatDate(p.period.payDate),
+                    })}
+                  </span>
                   {p.revision > 1 && (
                     <span className="text-caption text-[var(--ink-muted)]">
                       {t('salary.revision', { n: p.revision })}

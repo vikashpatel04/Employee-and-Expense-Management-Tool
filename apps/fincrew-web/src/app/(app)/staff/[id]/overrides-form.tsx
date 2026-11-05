@@ -93,6 +93,7 @@ export function OverridesForm({
   useDialogDone(state);
   const bool = (v: boolean | undefined) => (v === undefined ? '' : v ? 'yes' : 'no');
   const [v, setV] = useState<Record<string, string>>({
+    payDay: pay.payDay?.mode ?? '',
     dayRate: pay.dayRateBasis?.mode ?? '',
     offDayWork: pay.offDayWork ?? '',
     unmarkedDay: pay.unmarkedDay ?? '',
@@ -132,6 +133,23 @@ export function OverridesForm({
       </label>
 
       <h4 className="text-label mt-2">{t(`${r}.pay.title`)}</h4>
+      <Override
+        {...field('payDay')}
+        label={t(`${r}.pay.payDay`)}
+        shopValue={
+          s.pay.payDay.mode === 'fixed'
+            ? `${t(`${r}.pay.payDayModes.fixed`)}: ${s.pay.payDay.day}`
+            : t(`${r}.pay.payDayModes.joining_day`)
+        }
+        options={labels(`${r}.pay.payDayModes`, ['joining_day', 'fixed'])}
+      />
+      {v.payDay === 'fixed' && (
+        <NumberInput
+          name="payDayDate"
+          label={t(`${r}.pay.payDayDate`)}
+          value={String(pay.payDay?.mode === 'fixed' ? pay.payDay.day : 1)}
+        />
+      )}
       <Override
         {...field('dayRate')}
         label={t(`${r}.pay.dayRate`)}

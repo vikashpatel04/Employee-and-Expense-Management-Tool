@@ -1,8 +1,12 @@
 import {
+  addDays,
   businessDateOf,
   compareDates,
+  employedPart,
   monthEnd,
+  monthOf,
   monthStart,
+  shiftMonth,
   type BusinessDate,
   type DaySummary,
   type PayslipLine,
@@ -29,6 +33,8 @@ export type SalaryPerson = {
   name: string;
   phone: string | null;
   revision: number;
+  /** The days this salary covers (cut to joining and leaving) and the date it is paid. */
+  period: { from: BusinessDate; to: BusinessDate; payDate: BusinessDate };
   lines: PayslipLine[];
   summary: DaySummary;
   warnings: PayslipWarning[];
@@ -47,23 +53,24 @@ export type SalaryPerson = {
   state: 'draft' | 'finalized' | 'paid';
 };
 
-/** Warnings on a payslip that isn't finalized yet (core's, plus the leave roll and the month). */
-function draftWarnings(p: ComputedPayslip, monthOver: boolean): PayslipWarning[] {
+/** Warnings on a payslip that isn't finalized yet (core's, plus the leave roll and the period). */
+function draftWarnings(p: ComputedPayslip, periodOver: boolean): PayslipWarning[] {
   return [
     ...p.result.warnings,
     ...(p.leaveOverBalance ? [{ code: 'paid_leave_over_balance' }] : []),
-    ...(monthOver ? [] : [{ code: 'month_running' }]),
+    ...(periodOver ? [] : [{ code: 'month_running' }]),
   ];
 }
 
 /**
- * A month's salary as the salary screens show it (owner 30/10/2026: no "work out" step).
- * Anyone without a finalized payslip shows live figures, worked out now from attendance, pay,
- * advances and expenses (`computeMonth`), state `draft` ("Not finalized yet"): they change as
- * the month changes. A finalized payslip shows as saved, with what's been paid (`finalized`,
- * then `paid`). Also the run's overall state. During the month (and for anyone still working
- * at its end) the live figures carry the `month_running` warning. A month with no run and no
- * attendance marked (before the shop used FinCrew) shows nobody.
+ * The salaries named after a month as the salary screens show them (owner 30/10/2026: no "work
+ * out" step; 05/11/2026: each person over their own pay period). Anyone without a finalized
+ * payslip shows live figures, worked out now from attendance, pay, advances and expenses
+ * (`computeMonth`), state `draft` ("Not finalized yet"): they change as the days go by. A finalized
+ * payslip shows as saved, with what's been paid (`finalized`, then `paid`). Also the run's overall
+ * state. During a person's period (and for anyone still working at its end) the live figures carry
+ * the `month_running` warning; a period that hasn't started yet isn't shown. A month with no run
+ * and no attendance marked (before the shop used FinCrew) shows nobody.
  */
 export async function loadSalaryRun(
   supabase: Supabase,
@@ -82,7 +89,7 @@ export async function loadSalaryRun(
   const { data: slips } = run
     ? await supabase
         .from('payslips')
-        .select('*, staff!inner(people!inner(name, phone))')
+        .select('*, staff!inner(joining_date, leaving_date, people!inner(name, phone))')
         .eq('run_id', run.id)
         .order('revision', { ascending: false })
     : { data: [] };
@@ -92,6 +99,7 @@ export async function loadSalaryRun(
   const rows = [...latest.values()].filter((r) => r.status === 'finalized');
   const finalized = new Set(rows.map((r) => r.staff_id));
   // A month with no run and nothing marked (before the shop used FinCrew) has nothing to show.
+  const before = shiftMonth(year, month, -1);
   const used =
     !!run ||
     ((
@@ -99,7 +107,7 @@ export async function loadSalaryRun(
         .from('attendance')
         .select('date', { count: 'exact', head: true })
         .eq('shop_id', shopId)
-        .gte('date', monthStart(year, month))
+        .gte('date', monthStart(before.year, before.month))
         .lte('date', monthEnd(year, month))
     ).count ?? 0) > 0;
   const [paid, computed] = await Promise.all([
@@ -111,13 +119,13 @@ export async function loadSalaryRun(
   ]);
 
   const live: SalaryPerson[] = computed
-    .filter((p) => !finalized.has(p.staffId))
+    .filter((p) => !finalized.has(p.staffId) && compareDates(p.period.from, today) <= 0)
     .map((p) => {
       const r = p.result;
       const sum = (kinds: string[]) =>
         r.lines.filter((l) => kinds.includes(l.kind)).reduce((a, l) => a + l.amount, 0);
-      const monthOver =
-        compareDates(monthEnd(year, month), today) <= 0 ||
+      const periodOver =
+        compareDates(p.period.to, today) <= 0 ||
         (!!p.leavingDate && compareDates(p.leavingDate, today) <= 0);
       return {
         id: p.staffId,
@@ -125,9 +133,13 @@ export async function loadSalaryRun(
         name: p.name,
         phone: p.phone,
         revision: 0,
+        period: {
+          ...employedPart(p.period, p.joiningDate, p.leavingDate),
+          payDate: p.period.payDate,
+        },
         lines: r.lines,
         summary: r.summary,
-        warnings: draftWarnings(p, monthOver),
+        warnings: draftWarnings(p, periodOver),
         leave: p.leave,
         earned: sum(['earned']),
         overtime: sum(['overtime']),
@@ -149,12 +161,21 @@ export async function loadSalaryRun(
       lines.filter((l) => kinds.includes(l.kind)).reduce((a, l) => a + l.amount, 0);
     const net = Number(r.net_pay_paise);
     const paidAmount = paid.get(r.id) ?? 0;
+    const end = r.period_to ?? monthEnd(year, month);
     return {
       id: r.id,
       staffId: r.staff_id,
       name: r.staff.people.name,
       phone: r.staff.people.phone,
       revision: r.revision,
+      period: {
+        ...employedPart(
+          { from: r.period_from ?? monthStart(year, month), to: end },
+          r.staff.joining_date,
+          r.staff.leaving_date,
+        ),
+        payDate: addDays(end, 1),
+      },
       lines,
       summary: r.summary as unknown as DaySummary,
       warnings: (r.warnings as unknown as PayslipWarning[]) ?? [],
@@ -182,6 +203,52 @@ export async function loadSalaryRun(
           ? 'paid'
           : 'finalized';
   return { runId: run?.id ?? null, people, overall };
+}
+
+/**
+ * The salary to act on now, for the dashboard: last month's while anyone in it is still to finalize
+ * or pay, otherwise this month's. Also every pay date still open, soonest first (a salary from last
+ * month to next month that isn't fully paid), with how many people it covers.
+ */
+export async function loadSalaryNow(supabase: Supabase, shopId: string, today: BusinessDate) {
+  const current = monthOf(today);
+  const last = shiftMonth(current.year, current.month, -1);
+  const next = shiftMonth(current.year, current.month, 1);
+  const [lastRun, currentRun, nextRun] = await Promise.all([
+    loadSalaryRun(supabase, shopId, last.year, last.month, today),
+    loadSalaryRun(supabase, shopId, current.year, current.month, today),
+    loadSalaryRun(supabase, shopId, next.year, next.month, today),
+  ]);
+  const open = (p: SalaryPerson) => p.state !== 'paid';
+  const lastOpen = lastRun.people.some(open);
+  const { people, overall } = lastOpen ? lastRun : currentRun;
+  const dates = new Map<
+    string,
+    { date: BusinessDate; year: number; month: number; count: number }
+  >();
+  for (const [m, run] of [
+    [last, lastRun],
+    [current, currentRun],
+    [next, nextRun],
+  ] as const)
+    for (const p of run.people.filter(open)) {
+      const key = `${m.year}-${m.month}-${p.period.payDate}`;
+      const have = dates.get(key) ?? { date: p.period.payDate, ...m, count: 0 };
+      dates.set(key, { ...have, count: have.count + 1 });
+    }
+  const { totals } = salaryOverview(people);
+  return {
+    ...(lastOpen ? last : current),
+    state: overall,
+    people: people.length,
+    net: totals.net,
+    paid: totals.paid,
+    paidPeople: people.filter((p) => p.state === 'paid').length,
+    unmarkedPeople: people.filter(
+      (p) => p.state === 'draft' && p.warnings.some((w) => w.code === 'unmarked_days'),
+    ).length,
+    payDates: [...dates.values()].sort((a, b) => a.date.localeCompare(b.date)),
+  };
 }
 
 /**
@@ -275,10 +342,12 @@ async function saveDrafts(
     const prev = latest.get(p.staffId);
     if (prev?.status === 'finalized') continue;
     const r = p.result;
-    // Core results are plain JSON; jsonb columns store them as-is. The month-running warning
+    // Core results are plain JSON; jsonb columns store them as-is. The period-running warning
     // is a screen hint, not part of the payslip.
     const json = (v: unknown) => v as Json;
     const row = {
+      period_from: p.period.from,
+      period_to: p.period.to,
       lines: json(r.lines),
       summary: json(r.summary),
       warnings: json(draftWarnings(p, true)),
@@ -468,8 +537,11 @@ export async function loadPayslipView(supabase: Supabase, payslipId: string) {
     name: slip.staff.people.name,
     year,
     month,
+    periodFrom: slip.period_from,
+    periodTo: slip.period_to,
     joiningDate: slip.staff.joining_date,
     leavingDate: slip.staff.leaving_date,
+    revision: slip.revision,
     status: slip.status as 'draft' | 'finalized',
     lines: slip.lines as unknown as PayslipLine[],
     summary: slip.summary as unknown as DaySummary,

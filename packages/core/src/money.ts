@@ -23,6 +23,39 @@ export function roundToRupee(paise: Paise): Paise {
   return sign * Math.floor((abs + 50) / 100) * 100;
 }
 
+/** The words a number is spelled with (packages/i18n `payslip.words`). */
+export interface NumberWords {
+  /** 0–19. */
+  ones: readonly string[];
+  /** By tens digit: index 2 is 20, 9 is 90. */
+  tens: readonly string[];
+  hundred: string;
+  thousand: string;
+  lakh: string;
+  crore: string;
+}
+
+/** A whole number in words with Indian grouping: 125000 → "One Lakh Twenty Five Thousand". */
+export function numberInWords(n: number, w: NumberWords): string {
+  if (n === 0) return w.ones[0]!;
+  const small = (x: number) =>
+    x < 20
+      ? w.ones[x]!
+      : [w.tens[Math.floor(x / 10)]!, ...(x % 10 ? [w.ones[x % 10]!] : [])].join(' ');
+  const crore = Math.floor(n / 10_000_000);
+  const lakh = Math.floor((n % 10_000_000) / 100_000);
+  const thousand = Math.floor((n % 100_000) / 1_000);
+  const hundred = Math.floor((n % 1_000) / 100);
+  const rest = n % 100;
+  return [
+    ...(crore ? [`${numberInWords(crore, w)} ${w.crore}`] : []),
+    ...(lakh ? [`${small(lakh)} ${w.lakh}`] : []),
+    ...(thousand ? [`${small(thousand)} ${w.thousand}`] : []),
+    ...(hundred ? [`${w.ones[hundred]!} ${w.hundred}`] : []),
+    ...(rest ? [small(rest)] : []),
+  ].join(' ');
+}
+
 /** Format paise as ₹ with Indian digit grouping, e.g. 12500000 → "₹1,25,000.00". */
 export function formatINR(
   paise: Paise,

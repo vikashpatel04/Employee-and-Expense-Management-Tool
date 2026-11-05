@@ -6,19 +6,23 @@ import { Printer } from 'lucide-react';
 /**
  * Opens the browser's print dialog; "Save as PDF" there gives the PDF. While printing (this
  * button or Ctrl+P) the page switches to the light theme, so dark mode never prints light text
- * on white paper.
+ * on white paper, and the page title becomes `fileName`, which browsers offer as the PDF's name.
  */
-export function PrintButton({ label }: { label: string }) {
+export function PrintButton({ label, fileName }: { label: string; fileName: string }) {
   useEffect(() => {
     const root = document.documentElement;
     let before: string | undefined;
+    let title = document.title;
     const onBefore = () => {
       before = root.dataset.theme;
       root.dataset.theme = 'light';
+      title = document.title;
+      document.title = fileName;
     };
     const onAfter = () => {
       if (before === undefined) delete root.dataset.theme;
       else root.dataset.theme = before;
+      document.title = title;
     };
     window.addEventListener('beforeprint', onBefore);
     window.addEventListener('afterprint', onAfter);
@@ -26,7 +30,7 @@ export function PrintButton({ label }: { label: string }) {
       window.removeEventListener('beforeprint', onBefore);
       window.removeEventListener('afterprint', onAfter);
     };
-  }, []);
+  }, [fileName]);
 
   return (
     <button

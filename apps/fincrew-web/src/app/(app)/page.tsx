@@ -19,7 +19,6 @@ import {
   formatINR,
   formatTimeOfDay,
   minutesOfDayIST,
-  monthEnd,
   monthOf,
   weekday,
 } from '@fincrew/core';
@@ -27,10 +26,9 @@ import {
   countPendingRequests,
   loadExpenseMonth,
   loadMoney,
-  loadSalary,
+  loadSalaryNow,
   loadSoon,
   loadToday,
-  type SalaryState,
   type SoonItem,
 } from '@fincrew/data';
 import { formatDate, todayIST } from '@/lib/format';
@@ -42,8 +40,10 @@ import { Avatar, buttonClass, PageHeader, quietButtonClass } from '../components
 import { MarkTodayButton } from './mark-today-button';
 
 const MONTH = new Intl.DateTimeFormat('en-IN', { month: 'long', year: 'numeric', timeZone: 'UTC' });
-const STEPS = ['worked', 'finalized', 'paid'] as const;
-const REACHED: Record<SalaryState, number> = { not_run: 0, draft: 1, finalized: 2, paid: 3 };
+const monthLabel = (year: number, month: number) =>
+  MONTH.format(new Date(Date.UTC(year, month - 1, 1)));
+const STEPS = ['attendance', 'finalized', 'paid'] as const;
+const REACHED = { none: 0, draft: 1, finalized: 2, paid: 3 } as const;
 
 /**
  * Dashboard (design: "Web · dashboard"): today's attendance, money due to staff, advances,
@@ -54,7 +54,6 @@ export default async function DashboardPage() {
   const can = (k: string) => me.permissions.includes(k);
   const today = todayIST();
   const { year, month } = monthOf(today);
-  const monthName = MONTH.format(new Date(Date.UTC(year, month - 1, 1)));
   const days = t('weekdays.short', { returnObjects: true }) as unknown as string[];
   const dayLabel = (d: string) => `${days[weekday(d)]} ${formatDate(d)}`;
 
@@ -66,18 +65,19 @@ export default async function DashboardPage() {
   const [todayData, money, salary, soon, spent, waiting] = await Promise.all([
     showToday ? loadToday(supabase, me.shopId, today) : null,
     showAdvances ? loadMoney(supabase, me.shopId) : null,
-    showMoney ? loadSalary(supabase, me.shopId, year, month) : null,
+    showMoney ? loadSalaryNow(supabase, me.shopId, today) : null,
     loadSoon(supabase, me.shopId, today, can('staff.view')),
     showExpenses ? loadExpenseMonth(supabase, me.shopId, year, month) : null,
     can('requests.decide') ? countPendingRequests(supabase, me.shopId) : 0,
   ]);
-  // Until it's finalized, this month's salary is something coming up.
+  // Pay dates still open are coming up too (or late).
   const soonItems: SoonItem[] = [
     ...soon,
-    ...(salary && (salary.state === 'not_run' || salary.state === 'draft')
-      ? [{ kind: 'salary' as const, date: monthEnd(year, month) }]
-      : []),
+    ...(salary?.payDates ?? [])
+      .filter((p) => daysBetween(today, p.date) <= 30)
+      .map((p) => ({ kind: 'salary' as const, ...p })),
   ].sort((a, b) => a.date.localeCompare(b.date));
+  const salaryMonth = salary ? monthLabel(salary.year, salary.month) : '';
 
   const minutes = minutesOfDayIST(new Date());
   const greeting = minutes < 12 * 60 ? 'morning' : minutes < 17 * 60 ? 'afternoon' : 'evening';
@@ -247,7 +247,7 @@ export default async function DashboardPage() {
         <div className={`flex flex-col gap-4 ${todayData ? 'lg:col-span-5' : 'lg:col-span-12'}`}>
           {salary && (
             <Panel
-              title={t('home.salary.title', { month: monthName })}
+              title={t('home.salary.title', { month: salaryMonth })}
               actions={
                 <span
                   className={`text-caption rounded-[var(--radius-pill)] px-2.5 py-1 font-semibold ${
@@ -280,7 +280,7 @@ export default async function DashboardPage() {
                   );
                 })}
               </ol>
-              {salary.state !== 'not_run' && (
+              {salary.state !== 'none' && (
                 <dl className="grid grid-cols-3 gap-3">
                   {(
                     [
@@ -304,13 +304,13 @@ export default async function DashboardPage() {
                     ? t('home.salary.note.draftUnmarked', { count: salary.unmarkedPeople })
                     : t('home.salary.note.draft')
                   : t(`home.salary.note.${salary.state}`, {
-                      month: monthName,
+                      month: salaryMonth,
                       paid: salary.paidPeople,
                       count: salary.people,
                     })}
               </p>
               <Link
-                href="/salary"
+                href={`/salary?month=${salary.year}-${String(salary.month).padStart(2, '0')}`}
                 className={`mt-auto ${salary.state === 'paid' ? quietButtonClass : buttonClass} w-fit`}
               >
                 {t(`home.salary.button.${salary.state}`)}
@@ -327,11 +327,13 @@ export default async function DashboardPage() {
                 {soonItems.map((x) => {
                   const away = daysBetween(today, x.date);
                   const when =
-                    away === 0
-                      ? t('home.soon.today')
-                      : away === 1
-                        ? t('home.soon.tomorrow')
-                        : t('home.soon.in', { count: away });
+                    away < 0
+                      ? t('home.soon.late', { count: -away })
+                      : away === 0
+                        ? t('home.soon.today')
+                        : away === 1
+                          ? t('home.soon.tomorrow')
+                          : t('home.soon.in', { count: away });
                   const [Icon, bg, fg, title, meta] =
                     x.kind === 'holiday'
                       ? ([
@@ -355,12 +357,12 @@ export default async function DashboardPage() {
                             IndianRupee,
                             'var(--accent-soft)',
                             'var(--accent-ink)',
-                            t('home.soon.salary', { month: monthName }),
-                            t('home.soon.salaryFrom', { date: dayLabel(x.date) }),
+                            t('home.soon.salary', { month: monthLabel(x.year, x.month) }),
+                            `${t('home.soon.salaryDue', { count: x.count, date: dayLabel(x.date) })} · ${when}`,
                           ] as const);
                   return (
                     <li
-                      key={`${x.kind}-${x.date}-${'name' in x ? x.name : ''}`}
+                      key={`${x.kind}-${x.date}-${'name' in x ? x.name : `${x.year}-${x.month}`}`}
                       className="flex min-h-12 items-center gap-3 border-b border-[var(--line)] py-2 last:border-0"
                     >
                       <span

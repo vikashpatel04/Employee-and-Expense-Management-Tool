@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import type { AttendanceRecord } from './attendance';
 import { DEFAULT_LATE_POLICY } from './late';
 import { DEFAULT_SANDWICH_RULE, type LeaveTemplateVersion } from './leave';
+import { eachDay } from './dates';
+import { payPeriod } from './pay-period';
 import { DEFAULT_PAY_RULES } from './settings';
 import { calculateSalary, scheduledAdvanceCut, type PaySettings, type SalaryInput } from './salary';
 
@@ -571,5 +573,153 @@ describe('staff with no leave template', () => {
     const r = calculateSalary(input({ templateOn: () => undefined, records: all }));
     expect(r.summary).toMatchObject({ present: 31, paidWeeklyOff: 0, extraWorkingDays: 0 });
     expect(r.earned).toBe(3_000_000);
+  });
+});
+
+describe('pay periods (salary runs from the pay day, not the 1st)', () => {
+  const noLeave = () => undefined;
+  const pay = (effectiveFrom: string): PaySettings => ({
+    effectiveFrom,
+    payType: 'monthly',
+    monthlySalary: 1_500_000,
+  });
+  const everyDay = (from: string, to: string): AttendanceRecord[] =>
+    eachDay(from, to).map((date) => ({ date, status: 'present' }));
+  const staff = (over: Partial<SalaryInput> = {}) =>
+    input({
+      joiningDate: '2026-09-16',
+      paySettings: [pay('2026-09-16')],
+      templateOn: noLeave,
+      ...over,
+    });
+  const oneAbsent = () =>
+    everyDay('2026-10-16', '2026-11-15').map((x) =>
+      x.date === '2026-11-02' ? { ...x, status: 'absent' as const } : x,
+    );
+
+  it('a full first period pays the whole salary, not a part month', () => {
+    const r = calculateSalary(
+      staff({ period: payPeriod(2026, 10, 16), records: everyDay('2026-09-16', '2026-10-15') }),
+    );
+    expect(r.earned).toBe(1_500_000);
+    expect(r.summary.employedDays).toBe(30);
+    expect(r.warnings).toEqual([]);
+  });
+
+  it.each([
+    [2026, 11, '2026-10-16', '2026-11-15', 31],
+    [2026, 12, '2026-11-16', '2026-12-15', 30],
+    [2027, 3, '2027-02-16', '2027-03-15', 28],
+  ])('a full %i-%i period pays the same salary whatever its length', (y, m, from, to, days) => {
+    const r = calculateSalary(
+      staff({ year: y, month: m, period: payPeriod(y, m, 16), records: everyDay(from, to) }),
+    );
+    expect(r.summary.employedDays).toBe(days);
+    expect(r.earned).toBe(1_500_000);
+  });
+
+  it('one unpaid day costs the salary ÷ the days in the period', () => {
+    const r = calculateSalary(
+      staff({ month: 11, period: payPeriod(2026, 11, 16), records: oneAbsent() }),
+    );
+    expect(r.earned).toBe(1_451_600); // ₹15,000 × 30/31 = ₹14,516
+  });
+
+  it('a fixed day rate basis still divides by its own number', () => {
+    const rules = {
+      pay: { ...DEFAULT_PAY_RULES, dayRateBasis: { mode: 'fixed_days' as const, days: 30 } },
+      late: DEFAULT_LATE_POLICY,
+    };
+    const r = calculateSalary(
+      staff({ month: 11, period: payPeriod(2026, 11, 16), records: oneAbsent(), rules }),
+    );
+    expect(r.earned).toBe(1_450_000); // one day = ₹15,000 ÷ 30 = ₹500
+  });
+
+  it('days outside the period are left out', () => {
+    const r = calculateSalary(
+      staff({
+        month: 11,
+        period: payPeriod(2026, 11, 16),
+        records: everyDay('2026-10-01', '2026-11-30'),
+      }),
+    );
+    expect(r.days[0]!.date).toBe('2026-10-16');
+    expect(r.days.at(-1)!.date).toBe('2026-11-15');
+  });
+
+  it('joining after a fixed pay day: the first period is a part one', () => {
+    const r = calculateSalary(
+      staff({
+        joiningDate: '2026-10-20',
+        paySettings: [pay('2026-10-20')],
+        period: payPeriod(2026, 10, 1),
+        records: everyDay('2026-10-20', '2026-10-31'),
+      }),
+    );
+    expect(r.summary.employedDays).toBe(12);
+    expect(r.earned).toBe(580_600); // ₹15,000 × 12/31 = ₹5,806
+  });
+
+  it('leaving mid-period: pay stops at the leaving date', () => {
+    const r = calculateSalary(
+      staff({
+        month: 11,
+        leavingDate: '2026-10-31',
+        period: payPeriod(2026, 11, 16),
+        records: everyDay('2026-10-16', '2026-10-31'),
+      }),
+    );
+    expect(r.summary.employedDays).toBe(16);
+    expect(r.earned).toBe(774_200); // ₹15,000 × 16/31 = ₹7,742
+  });
+
+  it('after a pay day change a shorter salary pays its share of the normal period', () => {
+    const r = calculateSalary(
+      staff({
+        year: 2027,
+        month: 1,
+        period: payPeriod(2027, 1, 10, '2026-12-15'),
+        records: everyDay('2026-12-16', '2027-01-09'),
+      }),
+    );
+    expect(r.summary.employedDays).toBe(25);
+    expect(r.earned).toBe(1_209_700); // ₹15,000 × 25/31 = ₹12,097
+  });
+
+  it('after a pay day change a longer salary pays the leftover days on top', () => {
+    const r = calculateSalary(
+      staff({
+        year: 2027,
+        month: 1,
+        period: payPeriod(2027, 1, 1, '2026-12-15'),
+        records: everyDay('2026-12-16', '2027-01-31'),
+      }),
+    );
+    expect(r.summary.employedDays).toBe(47);
+    expect(r.earned).toBe(2_274_200); // ₹15,000 × 47/31 = ₹22,742
+  });
+
+  it('free late days are counted per pay period', () => {
+    const lateOn = ['2026-10-14', '2026-10-15', '2026-10-16', '2026-10-17'];
+    const records = everyDay('2026-09-16', '2026-11-15').map((x): AttendanceRecord => ({
+      ...x,
+      checkIn: shift.start + (lateOn.includes(x.date) ? 30 : 0),
+      checkOut: shift.end,
+    }));
+    const deduct = { ...DEFAULT_LATE_POLICY, mode: 'deduct' as const, freeLateDays: 1 };
+    const outcomes = (month: number) =>
+      calculateSalary(
+        staff({
+          month,
+          paySettings: [monthly(1_500_000, '2026-09-16')],
+          rules: { pay: DEFAULT_PAY_RULES, late: deduct },
+          period: payPeriod(2026, month, 16),
+          records,
+        }),
+      ).late.map((l) => l.outcome);
+    // Two late days each side of the pay day: one free in each period, one charged.
+    expect(outcomes(10)).toEqual(['free', 'charged']);
+    expect(outcomes(11)).toEqual(['free', 'charged']);
   });
 });

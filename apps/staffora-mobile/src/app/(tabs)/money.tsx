@@ -17,8 +17,8 @@ type Money = NonNullable<Awaited<ReturnType<typeof loadMyMoney>>>;
 
 /**
  * Money (design: "Money · ledger / payslips", PLAN §6.3): where my money stands now (owner
- * 30/10/2026: salary so far − advance ± expenses, `loadMyMoney`): each month not finalized yet
- * with its salary so far and a "Not finalized yet" tag, finalized salary not paid yet, the
+ * 30/10/2026: salary so far − advance ± expenses, `loadMyMoney`): each pay period not finalized
+ * yet with its dates, salary so far and a "Not finalized yet" tag, finalized salary not paid yet, the
  * advance to repay and its cut, expenses to get back or charged; once paid it shows 0 (plus the
  * new month so far). Then my ledger by month or my payslips; "Ask for an advance". Same shared
  * loaders as FinCrew; RLS returns only my rows.
@@ -100,6 +100,13 @@ export default function Money() {
                   <View style={{ flex: 1, minWidth: 0 }}>
                     <Text variant="label-sm">
                       {t(`${m}.soFar`, { month: monthName(x.year, x.month) })}
+                    </Text>
+                    <Text variant="caption" muted>
+                      {t(`${m}.soFarPeriod`, {
+                        from: formatDisplayDate(x.from),
+                        to: formatDisplayDate(x.to),
+                        payDate: formatDisplayDate(x.payDate),
+                      })}
                     </Text>
                     <Text variant="caption" muted>
                       {t(`${m}.soFarDays`, { payable: x.payableDays, employed: x.employedDays })}
