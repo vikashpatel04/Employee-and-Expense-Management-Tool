@@ -4,8 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import {
   Check,
-  ChevronDown,
   ChevronLeft,
+  ChevronRight,
   CircleCheck,
   Clock,
   Hourglass,
@@ -23,16 +23,20 @@ import {
   type PayslipLine,
 } from '@fincrew/core';
 import {
+  addSalaryEntry,
   finalizeSalary,
   loadSalaryRun,
   PAYSLIP_MINUS_LINES,
   paySalary,
+  removeSalaryEntry,
   SALARY_GROUPS,
   salaryOverview,
+  type SalaryEntry,
   type SalaryPerson,
   type SalaryWriteResult,
 } from '@fincrew/data';
 import { AmountField, BottomBar, Checkbox, FormMessage, MonthStepper } from '@/components/form';
+import { AddLess } from '@/components/money/add-less';
 import { useStatePill } from '@/components/money/salary';
 import { Sheet } from '@/components/sheet';
 import { Avatar, Button, Card, IconButton, Segmented, Text } from '@/components/ui';
@@ -53,7 +57,8 @@ const MINUS = PAYSLIP_MINUS_LINES;
  * Salary run (redesign, owner 29/10/2026; design "Salary · in steps"; no "work out" step since
  * 30/10/2026): the month as steps (Attendance → Finalize → Pay), the big amount with what to do
  * next, and people grouped by what they need (needs a look / ready / still to pay / paid); tap a
- * name for the working. A month holds the salaries whose pay period ends in it, each person with
+ * name to open a sheet with the working, Add or less (bonus or deduction for this month, 05/11/2026)
+ * and Finalize or Pay. A month holds the salaries whose pay period ends in it, each person with
  * their own dates (owner 05/11/2026), so it goes one month ahead of today. Until finalized,
  * figures are live ("Not finalized yet"); finalize the
  * ready ones, or one person from their row, then pay everyone or one person. Every step
@@ -140,6 +145,32 @@ export default function SalaryRun() {
         }),
       (r) => t('salary.done.finalized', { count: r.count }),
     );
+  const writeError = (r: SalaryWriteResult) =>
+    r.ok
+      ? null
+      : r.reason === 'no_permission'
+        ? t('salary.errors.noPermission')
+        : t('salary.errors.failed', { reason: r.message });
+  const addEntry = async (kind: SalaryEntry['kind'], name: string, value: number) => {
+    if (!me || !open) return null;
+    const r = await addSalaryEntry(supabase, {
+      ...me,
+      staffId: open,
+      year,
+      month,
+      kind,
+      name,
+      amount: value,
+    });
+    if (r.ok) await load();
+    return writeError(r);
+  };
+  const removeEntry = async (id: string) => {
+    if (!me) return null;
+    const r = await removeSalaryEntry(supabase, { ...me, id });
+    if (r.ok) await load();
+    return writeError(r);
+  };
   const askPay = (person: SalaryPerson | null) => {
     setAmount(person ? paiseToInput(due(person)) : '');
     setSendWa(true);
@@ -228,6 +259,7 @@ export default function SalaryRun() {
       payDate: formatDisplayDate(p.period.payDate),
     });
   const back = () => (router.canGoBack() ? router.back() : router.replace('/money'));
+  const selected = people.find((p) => p.staffId === open) ?? null;
   const s = 'mobile.money.salary';
 
   return (
@@ -411,8 +443,6 @@ export default function SalaryRun() {
             </View>
             <Card>
               {groups[g].map((p) => {
-                const isOpen = open === p.staffId;
-                const left = due(p);
                 const meta = [
                   t(`${s}.payableDays`, { days: p.summary.payableDays }),
                   p.cut ? t(`${s}.cut`, { amount: formatINR(p.cut) }) : null,
@@ -423,9 +453,8 @@ export default function SalaryRun() {
                   <View key={p.staffId} style={{ borderBottomWidth: 1, borderBottomColor: c.line }}>
                     <Pressable
                       accessibilityRole="button"
-                      accessibilityState={{ expanded: isOpen }}
                       accessibilityLabel={`${p.name}, ${formatINR(p.net)}, ${t(`salary.rowStatus.${p.state}`)}`}
-                      onPress={() => setOpen(isOpen ? null : p.staffId)}
+                      onPress={() => setOpen(p.staffId)}
                       style={({ pressed }) => ({
                         flexDirection: 'row',
                         alignItems: 'center',
@@ -478,102 +507,8 @@ export default function SalaryRun() {
                           </View>
                         )}
                       </View>
-                      <View style={{ transform: [{ rotate: isOpen ? '180deg' : '0deg' }] }}>
-                        <ChevronDown size={20} color={c['ink-muted']} />
-                      </View>
+                      <ChevronRight size={20} color={c['ink-muted']} />
                     </Pressable>
-
-                    {isOpen && (
-                      <View
-                        style={{
-                          paddingHorizontal: space['space-4'],
-                          paddingBottom: space['space-4'],
-                          gap: 2,
-                        }}
-                      >
-                        <Text variant="caption" muted style={{ paddingBottom: 4 }}>
-                          {t('salary.days.payable', {
-                            payable: p.summary.payableDays,
-                            employed: p.summary.employedDays,
-                          })}
-                        </Text>
-                        {p.lines.map((l, i) => {
-                          const minus = MINUS.includes(l.kind);
-                          return (
-                            <View
-                              key={i}
-                              style={{
-                                flexDirection: 'row',
-                                justifyContent: 'space-between',
-                                gap: space['space-3'],
-                                paddingVertical: 6,
-                              }}
-                            >
-                              <Text style={{ flex: 1 }}>{lineLabel(l, p)}</Text>
-                              <Text variant="money-sm" color={minus ? c['money-deduction'] : c.ink}>
-                                {minus ? '−' : ''}
-                                {formatINR(l.amount)}
-                              </Text>
-                            </View>
-                          );
-                        })}
-                        <View
-                          style={{
-                            flexDirection: 'row',
-                            justifyContent: 'space-between',
-                            paddingTop: space['space-2'],
-                            marginTop: 4,
-                            borderTopWidth: 1,
-                            borderTopColor: c.line,
-                          }}
-                        >
-                          <Text variant="label-sm">{t('salary.lines.net')}</Text>
-                          <Text variant="money-md">{formatINR(p.net)}</Text>
-                        </View>
-                        {canRun && p.state === 'draft' && (
-                          <View style={{ marginTop: space['space-2'] }}>
-                            <Button
-                              label={t(`${s}.finalizeOne`, { name: p.name })}
-                              icon={Check}
-                              variant="secondary"
-                              block
-                              disabled={busy}
-                              onPress={() => setConfirm({ kind: 'finalize', person: p })}
-                            />
-                          </View>
-                        )}
-                        {p.state !== 'draft' && (
-                          <View
-                            style={{
-                              flexDirection: 'row',
-                              gap: space['space-2'],
-                              marginTop: space['space-2'],
-                            }}
-                          >
-                            <View style={{ flex: 1 }}>
-                              <Button
-                                label={t(`${s}.sendOne`)}
-                                icon={MessageCircle}
-                                variant="secondary"
-                                busy={sharing === p.id}
-                                block
-                                onPress={() => void send(p)}
-                              />
-                            </View>
-                            {canRun && p.state === 'finalized' && left > 0 && (
-                              <View style={{ flex: 1.2 }}>
-                                <Button
-                                  label={t(`${s}.payOne`, { amount: formatINR(left) })}
-                                  icon={IndianRupee}
-                                  block
-                                  onPress={() => askPay(p)}
-                                />
-                              </View>
-                            )}
-                          </View>
-                        )}
-                      </View>
-                    )}
                   </View>
                 );
               })}
@@ -632,6 +567,121 @@ export default function SalaryRun() {
       )}
 
       <Sheet
+        open={!!selected}
+        onClose={() => setOpen(null)}
+        title={selected?.name ?? ''}
+        subtitle={selected ? `${mName} · ${period(selected)}` : undefined}
+      >
+        {selected && (
+          <View style={{ gap: space['space-3'] }}>
+            <Text variant="caption" muted>
+              {t('salary.days.payable', {
+                payable: selected.summary.payableDays,
+                employed: selected.summary.employedDays,
+              })}
+            </Text>
+            <View>
+              {selected.lines
+                .filter((l) => !l.oneOff)
+                .map((l, i) => {
+                  const minus = MINUS.includes(l.kind);
+                  return (
+                    <View
+                      key={i}
+                      style={{
+                        flexDirection: 'row',
+                        justifyContent: 'space-between',
+                        gap: space['space-3'],
+                        paddingVertical: 6,
+                      }}
+                    >
+                      <Text style={{ flex: 1 }}>{lineLabel(l, selected)}</Text>
+                      <Text variant="money-sm" color={minus ? c['money-deduction'] : c.ink}>
+                        {minus ? '−' : ''}
+                        {formatINR(l.amount)}
+                      </Text>
+                    </View>
+                  );
+                })}
+            </View>
+            <AddLess
+              canEdit={canRun && selected.state === 'draft'}
+              entries={
+                selected.state === 'draft'
+                  ? selected.entries
+                  : selected.lines
+                      .filter((l) => l.oneOff)
+                      .map((l) => ({
+                        kind: l.kind === 'deduction' ? ('less' as const) : ('add' as const),
+                        name: l.name ?? '',
+                        amount: l.amount,
+                      }))
+              }
+              onAdd={addEntry}
+              onRemove={removeEntry}
+            />
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'baseline',
+                paddingTop: space['space-2'],
+                borderTopWidth: 1,
+                borderTopColor: c.line,
+              }}
+            >
+              <Text variant="label-sm">{t('salary.steps.takeHome')}</Text>
+              <Text variant="money-md">{formatINR(selected.net)}</Text>
+            </View>
+            {selected.state !== 'draft' && (
+              <Text variant="caption" muted>
+                {t('salary.addLess.locked')}
+              </Text>
+            )}
+            {canRun && selected.state === 'draft' && (
+              <Button
+                label={t(`${s}.finalizeOne`, { name: selected.name })}
+                icon={Check}
+                block
+                disabled={busy}
+                onPress={() => {
+                  setOpen(null);
+                  setConfirm({ kind: 'finalize', person: selected });
+                }}
+              />
+            )}
+            {selected.state !== 'draft' && (
+              <View style={{ flexDirection: 'row', gap: space['space-2'] }}>
+                <View style={{ flex: 1 }}>
+                  <Button
+                    label={t(`${s}.sendOne`)}
+                    icon={MessageCircle}
+                    variant="secondary"
+                    busy={sharing === selected.id}
+                    block
+                    onPress={() => void send(selected)}
+                  />
+                </View>
+                {canRun && selected.state === 'finalized' && due(selected) > 0 && (
+                  <View style={{ flex: 1.2 }}>
+                    <Button
+                      label={t(`${s}.payOne`, { amount: formatINR(due(selected)) })}
+                      icon={IndianRupee}
+                      block
+                      onPress={() => {
+                        setOpen(null);
+                        askPay(selected);
+                      }}
+                    />
+                  </View>
+                )}
+              </View>
+            )}
+          </View>
+        )}
+      </Sheet>
+
+      <Sheet
         open={!!confirm}
         onClose={() => setConfirm(null)}
         title={
@@ -647,9 +697,14 @@ export default function SalaryRun() {
         }
         subtitle={
           confirm?.kind === 'finalize'
-            ? look > 0 && !confirm.person
-              ? t(`${st}.confirmReadyBody`)
-              : t(`${s}.confirmFinalizeBody`)
+            ? confirm.person
+              ? t('salary.confirm.finalizeOneBody', {
+                  amount: formatINR(confirm.person.net),
+                  name: confirm.person.name,
+                })
+              : look > 0
+                ? t(`${st}.confirmReadyBody`)
+                : t(`${s}.confirmFinalizeBody`)
             : t(`${s}.paySub`, {
                 month: mName,
                 amount: formatINR(

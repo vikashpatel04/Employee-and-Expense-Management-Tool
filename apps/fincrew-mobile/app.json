@@ -40,7 +40,8 @@
           "photosPermission": "FinCrew lets you pick a bill photo for an expense.",
           "microphonePermission": false
         }
-      ]
+      ],
+      "expo-sharing"
     ],
     "experiments": {
       "typedRoutes": true,

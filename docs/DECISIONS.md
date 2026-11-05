@@ -2,6 +2,43 @@
 
 Choices made during the build that PLAN.md doesn't spell out. Newest first.
 
+## 2026-11-05 — Staffora QR: a reader that needs no Google services
+
+- Owner, after the 05/11 APK: "QR scanning is opening camera but not working". **The 30/10
+  diagnosis was incomplete.** expo-camera's JS only calls the native scanner when
+  `isModernBarcodeScannerAvailable` is true, which already needs the Play Store lookup to pass, so
+  the 30/10 message "Google Play Services is not available" most likely came from the `catch` around
+  `GmsBarcodeScanning`, which reports any failure with that text. The in-view reader also goes
+  through ML Kit, and `createImageAnalyzer` only logs when it can't start it, which leaves a working
+  preview that never reads: exactly what the owner sees. So ML Kit failing on that phone explains
+  both. **Not confirmed**: nothing here can run on the phone.
+- Fix doesn't depend on the cause: on the in-view camera a quiet photo is taken about every second
+  and read by `scanFromURLAsync`, then by jsQR (plain JavaScript, with jpeg-js): no ML Kit, no Play
+  services (`src/lib/read-qr.ts`). Checked on made-up photos in Node (tilted, sideways, soft focus),
+  not on Hermes or a phone, so the speed on a phone is unknown.
+- Google's scanner stays first, but if it brings nothing back the camera takes over, and **Use the
+  camera here** goes there by hand. `plugins/play-store-query.js` stays: `scanFromURLAsync` needs it.
+
+## 2026-11-05 — Add or less, what we owe, statements
+
+- **Own table, not draft payslips**: salary is live until finalized and has no stored draft, so
+  `salary_adjustments` holds the entries and `computeMonth` reads them. Saved at once, added and
+  removed but never edited, locked by a trigger once that person's month is finalized.
+- **Add is an `allowance` line and less a `deduction` line, with `oneOff: true`**, not new line
+  kinds: ledger postings, payslips and the APKs already installed all read them as they are.
+- **It's an entry, not a rule**: the person finalizing types it each month, so there's no setting.
+- **Total = ledger balance + each month not finalized**, the same as Staffora's `moneyNow`, with the
+  running month up to today. A month not finalized counts before advance and expenses, so the
+  advance comes off once.
+- **Every month not finalized counts**, from their first marked day; Staffora used to look at the
+  last two only, which could leave out older months.
+- **The Overview card shows the same total**: it was ledger only, which would have clashed with the
+  tag. The Ledger tab's figure stays ledger only and says so.
+- **Open advances and expenses are the newest ones**: recovery works from the oldest.
+- **One document for website and app** (`statement-document.ts`, plain HTML with its own paper
+  colours) so the two can't drift; everything typed is escaped because the website places it as HTML.
+- **No public link** for statements: PDF and WhatsApp text only, because it's private money data.
+
 ## 2026-11-05 — Salary runs from each person's pay day
 
 - Owner: "pay date is not always on first, it's usually the day they join, or we can change that

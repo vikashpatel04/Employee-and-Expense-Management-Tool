@@ -14,7 +14,12 @@ import {
 import type { Json } from '@fincrew/db';
 import type { Supabase } from './client';
 import { PAYMENT_MODES } from './expense-write';
-import { computeMonth, paidByPayslip, type ComputedPayslip } from './salary-month';
+import {
+  computeMonth,
+  paidByPayslip,
+  type ComputedPayslip,
+  type SalaryEntry,
+} from './salary-month';
 
 export type SalaryWriteResult =
   | { ok: true; count: number; created?: number; updated?: number }
@@ -51,6 +56,8 @@ export type SalaryPerson = {
   net: number;
   paidAmount: number;
   state: 'draft' | 'finalized' | 'paid';
+  /** Add or less entries that can still be removed; once finalized they are payslip lines. */
+  entries: SalaryEntry[];
 };
 
 /** Warnings on a payslip that isn't finalized yet (core's, plus the leave roll and the period). */
@@ -152,6 +159,7 @@ export async function loadSalaryRun(
         net: r.netPay,
         paidAmount: 0,
         state: 'draft',
+        entries: p.entries,
       };
     });
 
@@ -191,6 +199,7 @@ export async function loadSalaryRun(
       net,
       paidAmount,
       state: paidAmount >= net ? 'paid' : 'finalized',
+      entries: [],
     };
   });
   const people = [...saved, ...live].sort((a, b) => a.name.localeCompare(b.name));
@@ -396,6 +405,53 @@ export async function finalizeSalary(
     if (error) return failed(error.message);
   }
   return { ok: true, count: saved.drafts.length };
+}
+
+/** The longest name an add or less entry can have (the table refuses more). */
+export const SALARY_ENTRY_NAME_MAX = 60;
+
+/**
+ * Add a named amount to one month's salary, or take one off (Check and finalize; needs
+ * salary.run): it changes that month's figures straight away and stays until it is removed or the
+ * salary is finalized, when it becomes a line on the payslip. `amount` is in paise.
+ */
+export async function addSalaryEntry(
+  supabase: Supabase,
+  input: Ctx & {
+    personId: string;
+    staffId: string;
+    year: number;
+    month: number;
+    kind: SalaryEntry['kind'];
+    name: string;
+    amount: number;
+  },
+): Promise<SalaryWriteResult> {
+  if (!input.permissions.includes('salary.run')) return noPermission;
+  const name = input.name.trim();
+  if (!name || name.length > SALARY_ENTRY_NAME_MAX) return failed('name');
+  if (!Number.isInteger(input.amount) || input.amount <= 0) return failed('amount');
+  const { error } = await supabase.from('salary_adjustments').insert({
+    shop_id: input.shopId,
+    staff_id: input.staffId,
+    year: input.year,
+    month: input.month,
+    kind: input.kind,
+    name,
+    amount_paise: input.amount,
+    created_by: input.personId,
+  });
+  return error ? failed(error.message) : { ok: true, count: 1 };
+}
+
+/** Remove an add or less entry (needs salary.run). The database refuses once it is finalized. */
+export async function removeSalaryEntry(
+  supabase: Supabase,
+  input: Ctx & { id: string },
+): Promise<SalaryWriteResult> {
+  if (!input.permissions.includes('salary.run')) return noPermission;
+  const { error } = await supabase.from('salary_adjustments').delete().eq('id', input.id);
+  return error ? failed(error.message) : { ok: true, count: 1 };
 }
 
 /**

@@ -84,6 +84,12 @@ again (same as changing phones).
   `eas credentials`) — comes with the push notification work.
 - Play Store: a Google Play developer account (one-time fee), then `eas submit`.
 
+## New native modules (05/11/2026)
+
+Both apps need a new APK for the 05/11 work: FinCrew gained `expo-print`, `expo-sharing` and
+`expo-file-system` (Share PDF), Staffora `expo-image-manipulator` and `expo-file-system` (QR reader).
+An older FinCrew APK keeps working on the live data but has none of the new screens.
+
 ## Staffora QR scan needs the Play Store query (30/10/2026)
 
 Google's QR scanner (expo-camera `launchScanner`) is only opened when the app can see the Play

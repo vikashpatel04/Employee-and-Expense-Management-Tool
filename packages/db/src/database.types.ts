@@ -1423,6 +1423,67 @@ export type Database = {
           },
         ]
       }
+      salary_adjustments: {
+        Row: {
+          amount_paise: number
+          created_at: string
+          created_by: string | null
+          id: string
+          kind: string
+          month: number
+          name: string
+          shop_id: string
+          staff_id: string
+          year: number
+        }
+        Insert: {
+          amount_paise: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind: string
+          month: number
+          name: string
+          shop_id: string
+          staff_id: string
+          year: number
+        }
+        Update: {
+          amount_paise?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind?: string
+          month?: number
+          name?: string
+          shop_id?: string
+          staff_id?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "salary_adjustments_shop_id_created_by_fkey"
+            columns: ["shop_id", "created_by"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["shop_id", "id"]
+          },
+          {
+            foreignKeyName: "salary_adjustments_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "salary_adjustments_shop_id_staff_id_fkey"
+            columns: ["shop_id", "staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["shop_id", "person_id"]
+          },
+        ]
+      }
       salary_runs: {
         Row: {
           created_at: string

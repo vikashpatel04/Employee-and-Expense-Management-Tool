@@ -218,7 +218,7 @@
       "whatsapp": "WhatsApp"
     },
     "ledger": {
-      "balance": "Balance",
+      "balance": "Balance on the ledger (finalized only)",
       "empty": "No ledger lines yet. Salary, payments and advances will show here.",
       "runningBalance": "Balance {{amount}}",
       "lines_one": "{{count}} line",
@@ -632,7 +632,8 @@
       "finalizeBody": "Each payslip is locked, posted to the staff ledger and shown in Staffora. This can’t be undone.",
       "payAllTitle": "Pay everyone still due for {{month}}",
       "payTitle": "Pay {{name}} for {{month}}",
-      "payBody": "Adds a salary payment dated today for what is still due. If it was a mistake, undo it from the staff Ledger."
+      "payBody": "Adds a salary payment dated today for what is still due. If it was a mistake, undo it from the staff Ledger.",
+      "finalizeOneBody": "Take-home {{amount}}. This can't be changed afterwards, and {{name}} will see the payslip in Staffora."
     },
     "steps": {
       "label": "Salary steps",
@@ -660,7 +661,7 @@
         "draftTitle": "Finalize {{month}}",
         "lookBody_one": "{{count}} person needs a look first (usually days to mark, or the pay period isn’t over). The figures update by themselves; finalize the {{ready}} who are ready now, or open a person to finalize them anyway. Finalizing locks a payslip.",
         "lookBody_other": "{{count}} people need a look first (usually days to mark, or the pay period isn’t over). The figures update by themselves; finalize the {{ready}} who are ready now, or open a person to finalize them anyway. Finalizing locks a payslip.",
-        "readyBody": "Everyone looks right. Finalizing locks each payslip and adds it to the staff ledger; staff see it in Staffora.",
+        "readyBody": "Open a person to check their salary, add a bonus or take something off, then finalize. Finalizing locks each payslip and adds it to the staff ledger; staff see it in Staffora.",
         "payTitle": "Pay {{month}} salaries",
         "payBody_one": "{{amount}} still to pay to {{count}} person. Pay at once, or one by one; a part payment is fine.",
         "payBody_other": "{{amount}} still to pay to {{count}} people. Pay everyone at once, or one by one; a part payment is fine.",
@@ -718,6 +719,28 @@
       "paidSoFar": "Paid so far: {{amount}}",
       "draftNote": "Not finalized yet: the figures change with attendance, advances and expenses until you finalize.",
       "nothingPaid": "Nothing paid yet."
+    },
+    "addLess": {
+      "title": "Add or less",
+      "hint": "Only this month's salary changes",
+      "button": "Add or less",
+      "add": "Add to salary",
+      "addHint": "Bonus or anything extra",
+      "less": "Less from salary",
+      "lessHint": "Deduction or anything to take off",
+      "name": "Name",
+      "amount": "Amount",
+      "save": "Save",
+      "cancel": "Cancel",
+      "needName": "Give it a name.",
+      "nameTooLong": "Keep the name under {{max}} letters.",
+      "needAmount": "Enter an amount above zero.",
+      "remove": "Remove {{name}}",
+      "added": "{{name}} added to the salary.",
+      "taken": "{{name}} taken off the salary.",
+      "removed": "{{name}} removed.",
+      "none": "Nothing added or taken off.",
+      "locked": "Finalized: this salary is locked."
     }
   },
   "advances": {
@@ -2006,6 +2029,8 @@
       "noCamera": "No camera here. Enter the code instead.",
       "open": "Scan the QR",
       "again": "Scan again",
+      "useCamera": "Use the camera here",
+      "hint": "Not reading yet? Fill the box with the QR and hold still, or enter the code instead.",
       "checking": "Read {{code}}. Checking you in…",
       "failed": "Couldn't check in: {{reason}}"
     },
@@ -2210,5 +2235,87 @@
     "takePhoto": "Camera",
     "choosePhoto": "Photo",
     "choosePdf": "PDF"
+  },
+  "statement": {
+    "title": "Statement",
+    "historicalFile": "Historical statement",
+    "whatWeOwe": "Statement · what we owe now",
+    "historicalTitle": "Statement · Historical · {{from}} to {{to}}",
+    "view": "View statement",
+    "more": "More statements",
+    "historical": "Historical",
+    "historicalHint": "Everything since {{date}}",
+    "current": "What we owe now",
+    "tagOwe": "We owe {{amount}}",
+    "tagOwes": "Owes the shop {{amount}}",
+    "tagSettled": "Settled",
+    "tagHint": "Salary not paid, less advance, plus expenses. The running month counts up to today.",
+    "weOwe": "We owe {{name}}",
+    "weOweSoFar": "So far, we owe {{name}}",
+    "owesShop": "{{name}} owes the shop",
+    "owesShopSoFar": "So far, {{name}} owes the shop",
+    "settled": "All settled with {{name}}",
+    "employee": "Employee",
+    "joined": "Joined",
+    "payDay": "Pay day",
+    "payDayValue": "Date {{day}} of each month",
+    "asOn": "As on",
+    "asOnDate": "as on {{date}}",
+    "salaryLeft": "Salary still to pay",
+    "cols": {
+      "month": "Month",
+      "amount": "Amount",
+      "paid": "Paid",
+      "left": "Left to pay",
+      "date": "Date",
+      "details": "Details",
+      "added": "Added",
+      "takenOff": "Taken off",
+      "balance": "Balance"
+    },
+    "state": {
+      "finalized": "Finalized",
+      "draft": "Not finalized yet",
+      "running": "Still running"
+    },
+    "days": "{{payable}} of {{employed}} days",
+    "daysSoFar": "{{payable}} of {{employed}} days so far",
+    "advanceLeft": "Advance to recover",
+    "advanceGiven": "Advance given",
+    "expensesOwed": "Expenses we owe {{name}}",
+    "expensesOwedShort": "Expenses we owe",
+    "expensesCharged": "Expenses charged to {{name}}",
+    "expensesChargedShort": "Expenses charged",
+    "other": "Opening balance and corrections",
+    "addsUp": "How it adds up",
+    "footStatement": "Salary not finalized yet can still change. Advance comes off once, here, not from each month.",
+    "footHistorical": "Salary not finalized yet can still change. Advance cut from a salary shows as a smaller Salary paid.",
+    "madeOn": "Made on {{date}} with FinCrew",
+    "everything": "Everything so far",
+    "lineByLine": "Line by line, from the day {{name}} joined",
+    "summary": {
+      "earned": "Salary earned",
+      "additions": "Bonus and additions",
+      "expenses": "Expenses",
+      "deductions": "Deductions",
+      "paid": "Salary paid",
+      "advances": "Advance given",
+      "other": "Opening balance and corrections"
+    },
+    "rows": {
+      "salary": "{{month}} salary",
+      "salarySoFar": "{{month}} salary so far",
+      "added": "Added in Check and finalize",
+      "takenOff": "Taken off in Check and finalize",
+      "expense": "Expense {{name}} paid",
+      "charge": "Charged to {{name}}",
+      "undone": "Undone: {{what}}"
+    },
+    "print": "Print or save as PDF",
+    "whatsapp": "Send on WhatsApp",
+    "sharePdf": "Share PDF",
+    "back": "Back to staff page",
+    "unavailable": "Couldn't make the statement. Try again.",
+    "loading": "Getting the statement…"
   }
 }

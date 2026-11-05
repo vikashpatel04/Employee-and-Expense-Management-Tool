@@ -3,24 +3,33 @@ import { ActivityIndicator, Platform, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { CameraView, useCameraPermissions } from 'expo-camera';
-import { ChevronLeft, KeyRound, QrCode } from 'lucide-react-native';
+import { Camera, ChevronLeft, KeyRound, QrCode } from 'lucide-react-native';
 import { parseScannedCode } from '@fincrew/core';
 import { Button, IconButton, Text } from '@/components/ui';
 import { useAuth } from '@/lib/auth';
 import { checkError } from '@/lib/check-text';
 import { t } from '@/lib/i18n';
 import { checkIn } from '@/lib/my-day';
+import { readQrFromPhoto } from '@/lib/read-qr';
 import { radius, space, useTheme } from '@/lib/theme';
 
 /**
  * Android reads the QR with Google's code scanner (Play services): it opens full screen, reads
  * and closes, and needs no camera permission. expo-camera's in-view reader analyses full-size
  * frames on the main thread and often never reports a code on Android phones (owner, 29/10/2026).
- * Elsewhere (iOS) the in-view camera is used. If Google's scanner can't open (owner's S21 FE,
- * 30/10/2026: "Google Play Services is not available", fixed by plugins/play-store-query.js), the
- * screen falls back to the in-view camera instead of stopping at the error.
+ * Elsewhere (iOS) the in-view camera is used. If Google's scanner can't open or brings nothing
+ * back, the screen falls back to the in-view camera instead of stopping at the error.
+ *
+ * The in-view camera never reported a code on the owner's S21 FE, even with Google's scanner out
+ * of the way (05/11/2026: "opening camera but not working"). So it also takes a quiet photo every
+ * moment and reads that (`readQrFromPhoto`), which works without ML Kit or Play services.
  */
 const GOOGLE_SCANNER = Platform.OS === 'android' && CameraView.isModernBarcodeScannerAvailable;
+
+/** Rest between photos, so the phone stays responsive and cool. */
+const PHOTO_GAP_MS = 400;
+/** How long before suggesting another way, when nothing has been read. */
+const HINT_AFTER_MS = 20_000;
 
 /**
  * Scan QR (design: "Scan QR"): reads any QR whose content is the plain 6-digit code (core
@@ -33,6 +42,9 @@ export default function Scan() {
   const [error, setError] = useState<string | null>(null);
   const [reading, setReading] = useState<string | null>(null);
   const [google, setGoogle] = useState(GOOGLE_SCANNER);
+  const [cameraReady, setCameraReady] = useState(false);
+  const [hint, setHint] = useState(false);
+  const camera = useRef<CameraView>(null);
   // The camera reports the same QR many times a second: handle one at a time.
   const handling = useRef(false);
   const s = 'staffora.scan';
@@ -46,6 +58,7 @@ export default function Scan() {
         return;
       }
       handling.current = true;
+      setCameraReady(false);
       setReading(code);
       setError(null);
       try {
@@ -72,13 +85,20 @@ export default function Scan() {
 
   const openScanner = useCallback(() => {
     setError(null);
-    void CameraView.launchScanner({ barcodeTypes: ['qr'] }).catch((e: unknown) => {
-      const reason = e instanceof Error ? e.message : String(e);
-      // Closed by the person: just offer "Scan the QR" again.
-      if (/cancel/i.test(reason)) return;
-      // Google's scanner can't open here: use the camera on this screen instead.
-      setGoogle(false);
-    });
+    void CameraView.launchScanner({ barcodeTypes: ['qr'] })
+      .then(() => {
+        // It read something, but if nothing reached this screen the camera here takes over.
+        setTimeout(() => {
+          if (!handling.current) setGoogle(false);
+        }, 1500);
+      })
+      .catch((e: unknown) => {
+        const reason = e instanceof Error ? e.message : String(e);
+        // Closed by the person: just offer "Scan the QR" again.
+        if (/cancel/i.test(reason)) return;
+        // Google's scanner can't open here: use the camera on this screen instead.
+        setGoogle(false);
+      });
   }, []);
 
   useEffect(() => {
@@ -91,6 +111,34 @@ export default function Scan() {
   useEffect(() => {
     if (GOOGLE_SCANNER && profile) openScanner();
   }, [openScanner, profile]);
+
+  // The camera on this screen: a photo at a time, until one reads or the screen closes.
+  useEffect(() => {
+    if (google || !cameraReady) return;
+    let stopped = false;
+    const hintTimer = setTimeout(() => setHint(true), HINT_AFTER_MS);
+    void (async () => {
+      while (!stopped) {
+        await new Promise((done) => setTimeout(done, PHOTO_GAP_MS));
+        if (stopped || handling.current || !camera.current) continue;
+        try {
+          const photo = await camera.current.takePictureAsync({
+            quality: 0.7,
+            skipProcessing: true,
+            shutterSound: false,
+          });
+          const data = await readQrFromPhoto(photo.uri);
+          if (data && !stopped) await onScan(data);
+        } catch {
+          // The camera was busy or the app went to the background: the next photo tries again.
+        }
+      }
+    })();
+    return () => {
+      stopped = true;
+      clearTimeout(hintTimer);
+    };
+  }, [google, cameraReady, onScan]);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: c.canvas }}>
@@ -143,13 +191,22 @@ export default function Scan() {
             <View style={{ alignItems: 'center', gap: space['space-3'] }}>
               <QrCode size={96} color={c['ink-muted']} />
               <Button label={t(error ? `${s}.again` : `${s}.open`)} center onPress={openScanner} />
+              <Button
+                label={t(`${s}.useCamera`)}
+                variant="secondary"
+                icon={Camera}
+                center
+                onPress={() => setGoogle(false)}
+              />
             </View>
           ) : permission?.granted ? (
             <CameraView
+              ref={camera}
               style={{ width: 300, height: 300 }}
               facing="back"
               barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
               onBarcodeScanned={(r) => void onScan(r.data)}
+              onCameraReady={() => setCameraReady(true)}
             />
           ) : (
             <View
@@ -172,7 +229,11 @@ export default function Scan() {
           </View>
         ) : (
           <Text muted style={{ textAlign: 'center' }}>
-            {reading ? t(`${s}.checking`, { code: reading }) : t(`${s}.any`)}
+            {reading
+              ? t(`${s}.checking`, { code: reading })
+              : hint
+                ? t(`${s}.hint`)
+                : t(`${s}.any`)}
           </Text>
         )}
       </View>

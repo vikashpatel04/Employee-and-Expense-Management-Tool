@@ -723,3 +723,81 @@ describe('pay periods (salary runs from the pay day, not the 1st)', () => {
     expect(outcomes(11)).toEqual(['free', 'charged']);
   });
 });
+
+describe('add or less on a month (Check and finalize)', () => {
+  const base = (): SalaryInput => ({
+    year: 2026,
+    month: 10,
+    joiningDate: '2026-01-01',
+    paySettings: [monthly(3_100_000)],
+    templateOn: () => sundayPaid,
+    holidays: [],
+    records: [],
+    allowances: [],
+    deductions: [],
+    rules: { pay: DEFAULT_PAY_RULES, late: DEFAULT_LATE_POLICY },
+  });
+
+  it('an addition goes into gross with its name, a less into deductions', () => {
+    const before = calculateSalary(base());
+    const after = calculateSalary({
+      ...base(),
+      adjustments: [
+        { kind: 'add', name: 'Festival bonus', amount: 100_000 },
+        { kind: 'less', name: 'Uniform', amount: 25_000 },
+      ],
+    });
+    expect(after.gross).toBe(before.gross + 100_000);
+    expect(after.deductions).toBe(before.deductions + 25_000);
+    expect(after.netPay).toBe(before.netPay + 75_000);
+    expect(after.lines).toContainEqual({
+      kind: 'allowance',
+      name: 'Festival bonus',
+      amount: 100_000,
+      oneOff: true,
+    });
+    expect(after.lines).toContainEqual({
+      kind: 'deduction',
+      name: 'Uniform',
+      amount: 25_000,
+      oneOff: true,
+    });
+  });
+
+  it('takes several, keeps exact paise and the order typed', () => {
+    const r = calculateSalary({
+      ...base(),
+      adjustments: [
+        { kind: 'add', name: 'A', amount: 10_050 },
+        { kind: 'add', name: 'B', amount: 20_000 },
+      ],
+    });
+    expect(r.lines.filter((l) => l.oneOff).map((l) => [l.name, l.amount])).toEqual([
+      ['A', 10_050],
+      ['B', 20_000],
+    ]);
+  });
+
+  it('a bonus gives an advance more to be cut from', () => {
+    const r = calculateSalary({
+      ...base(),
+      records: Array.from({ length: 3 }, (_, i) => ({
+        date: d(i + 1),
+        status: 'present' as const,
+      })),
+      adjustments: [{ kind: 'add', name: 'Bonus', amount: 100_000 }],
+      advance: { scheduledCut: 9_000_000, outstanding: 9_000_000 },
+    });
+    expect(r.advanceCut).toBe(r.netBeforeAdvance);
+    expect(r.netPay).toBe(0);
+  });
+
+  it('a less bigger than the salary warns of negative pay', () => {
+    const r = calculateSalary({
+      ...base(),
+      adjustments: [{ kind: 'less', name: 'Breakage', amount: 9_000_000 }],
+    });
+    expect(r.netPay).toBeLessThan(0);
+    expect(r.warnings).toContainEqual({ code: 'negative_net_pay' });
+  });
+});

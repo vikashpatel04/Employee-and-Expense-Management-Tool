@@ -36,6 +36,10 @@ is a placeholder until the first store build.
 - **Sign in** (`src/app/sign-in.tsx`): email + password; signed-out users are kept here by the
   root layout's guard (`Stack.Protected`).
 - **Tabs** (`src/app/(tabs)`): Today · Staff · Money · More (PLAN §6.1).
+- **Add or less, statements (05/11/2026)**: tapping a name in the salary run opens a sheet with Add
+  or less (`src/components/money/add-less.tsx`) instead of opening the row. Staff detail has the We
+  owe tag and View statement ▾ Historical; `src/app/statement/[id].tsx` shows both, with Share PDF
+  and WhatsApp (`src/lib/share-statement.ts`). See `docs/features/statements.md`.
 - **Today** (`(tabs)/index.tsx`, design "Today"): shop header, day switcher (no future days),
   chips present / absent / late / not marked (tap to filter), "Not marked" and "Marked" lists
   (avatar, name, check-in or weekly offs, status pill, minutes late), tap a person → status

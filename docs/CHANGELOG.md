@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+### Added — 2026-11-05 (add or less, what we owe, statements; Staffora QR)
+
+- **Add or less**: Check and finalize now opens a person in a pop-up (website) or sheet (FinCrew
+  app) with an Add or less drop-down: add a bonus or take something off that month's salary, each
+  with a name, as many as needed. They can be removed until the salary is finalized, then they lock.
+- **What we owe**: a small tag beside the name on every staff page tab, and the Overview card shows
+  the same total with its breakdown.
+- **View statement** with **Historical** in the same button: what's open today, or every line since
+  joining with a running balance. Both end on the same total, and go out as a PDF or on WhatsApp.
+- **Staffora Money** now counts every month not finalized, not just the last two.
+- **Staffora QR**: when Google's scanner can't read or open, the camera on the screen now also reads
+  a quiet photo every moment with a reader that needs no Google services. A button opens that camera
+  straight away, and a hint shows if nothing reads in 20 seconds.
+
 ### Changed — 2026-11-05 (pay day; payslip PDF)
 
 - **Salary runs from each person's pay day**, not from the 1st to month end. The pay day is the

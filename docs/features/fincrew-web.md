@@ -219,6 +219,11 @@ Staffora sign-in card (phone number + PIN; the `/join` page was removed 2026-10-
 
 ## Salary run — `(app)/salary`
 
+**Pop-up and Add or less (owner, 05/11/2026)**: clicking a person opens a pop-up (`?person=`,
+`add-less.tsx`) with their days, lines, Add or less, take-home and Finalize or Pay; it replaced the
+side panel. The staff page has the We owe tag and View statement, and `/statements/[staffId]` is the
+printable page. See `docs/features/statements.md`.
+
 **No work out step (owner, 30/10/2026)**: everyone not finalized shows live figures, tagged
 **Not finalized yet**, worked out each time the page opens (`loadSalaryRun` → `computeMonth`);
 **Finalize** (`finalizeSalary(year, month, staffIds)`) saves and locks them in one step, then

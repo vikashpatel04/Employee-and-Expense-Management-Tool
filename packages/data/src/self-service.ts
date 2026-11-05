@@ -6,10 +6,6 @@ import {
   formatDisplayDate,
   monthOf,
   moneyNow,
-  payPeriod,
-  payPeriodOn,
-  personPayDay,
-  shiftMonth,
   type AdvanceCutMode,
   type BusinessDate,
 } from '@fincrew/core';
@@ -23,10 +19,9 @@ import {
 import { loadAttendanceMonth } from './attendance-month';
 import { writeAttendance, type AttendanceWriteResult } from './attendance-write';
 import { PAYMENT_MODES } from './expense-write';
-import { toPaySettings, toShopRules } from './mappers';
 import { paidLeaveShortfall } from './paid-leave';
 import { loadMyPayslips } from './salary-run';
-import { computeMonth } from './salary-month';
+import { loadOpenMonths } from './statement';
 import { loadStaffOverview } from './staff';
 
 // ---------------------------------------------------------------------------
@@ -550,53 +545,29 @@ export async function loadMyMoney(
   staffId: string,
   today: BusinessDate,
 ) {
-  const [overview, payslips, { data: shop }, { data: pays }] = await Promise.all([
+  const [overview, payslips] = await Promise.all([
     loadStaffOverview(supabase, shopId, staffId, true),
     loadMyPayslips(supabase, staffId),
-    supabase.from('shops').select('settings').eq('id', shopId).single(),
-    supabase.from('pay_settings').select('*').eq('staff_id', staffId),
   ]);
   if (!overview) return null;
-  const payDay = personPayDay(
-    toShopRules(shop?.settings).pay,
+  const open = await loadOpenMonths(
+    supabase,
+    shopId,
+    staffId,
     overview.joiningDate,
-    (pays ?? []).map(toPaySettings),
+    new Set(payslips.map((p) => p.year * 12 + p.month)),
     today,
   );
-  const current = payPeriodOn(today, payDay);
-  const before = shiftMonth(current.year, current.month, -1);
-  const prev = payPeriod(before.year, before.month, payDay);
-  const { data: prevMarked } = await supabase
-    .from('attendance')
-    .select('date')
-    .eq('staff_id', staffId)
-    .gte('date', prev.from)
-    .lte('date', prev.to)
-    .limit(1);
-  const finalized = new Set(payslips.map((p) => p.year * 12 + p.month));
-  const open = [...(prevMarked?.length ? [prev] : []), current].filter(
-    (m) => !finalized.has(m.year * 12 + m.month),
-  );
-  const months = (
-    await Promise.all(
-      open.map(async (m) => {
-        const mine = (await computeMonth(supabase, shopId, m.year, m.month)).find(
-          (p) => p.staffId === staffId,
-        );
-        return mine
-          ? {
-              year: m.year,
-              month: m.month,
-              ...employedPart(mine.period, mine.joiningDate, mine.leavingDate),
-              payDate: mine.period.payDate,
-              amount: mine.result.netBeforeAdvance,
-              payableDays: mine.result.summary.payableDays,
-              employedDays: mine.result.summary.employedDays,
-            }
-          : null;
-      }),
-    )
-  ).filter((m) => m !== null);
+  const months = open.map((m) => ({
+    year: m.year,
+    month: m.month,
+    from: m.from,
+    to: m.to,
+    payDate: m.payDate,
+    amount: m.amount,
+    payableDays: m.payableDays,
+    employedDays: m.employedDays,
+  }));
   return {
     overview,
     months,

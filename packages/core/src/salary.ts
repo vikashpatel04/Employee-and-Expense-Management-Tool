@@ -6,15 +6,16 @@
  *   earned             = monthly − unpaid days × day_rate + extra days × day_rate
  *                        (= day_rate × payable_days when B is the period's days;
  *                         daily: wage × payable days; hourly: hours × rate)
- *   gross              = earned + overtime + allowances + leave payout
- *   net_before_advance = gross − (fixed deductions + late deductions)
+ *   gross              = earned + overtime + allowances + leave payout + this month's additions
+ *   net_before_advance = gross − (fixed deductions + this month's lesses + late deductions)
  *   expense_payback    = what the shop owes them for expenses they paid (when settled in salary)
  *   advance_cut        = scheduled cut, capped at what's outstanding and at
  *                        net_before_advance + expense_payback
  *   expense_cut        = expenses charged to them, capped at what is left
  *   net_pay            = net_before_advance + expense_payback − advance_cut − expense_cut
  *
- * Every payslip line is computed exactly (fractions) and rounded to the rupee ONCE.
+ * Every payslip line is computed exactly (fractions) and rounded to the rupee ONCE. Add or less
+ * entries stay exactly as typed.
  * Lines carry kinds and names, never display text: the apps translate them.
  * Every rule choice comes from `rules` (shop) and the staff member's pay-settings overrides.
  */
@@ -79,6 +80,16 @@ export interface FixedDeduction {
   effectiveTo?: BusinessDate;
 }
 
+/**
+ * A one-off entry on one month's salary, named by whoever finalizes it (Check and finalize → Add
+ * or less): a bonus to add, or something to take off. Any number of them.
+ */
+export interface SalaryAdjustment {
+  kind: 'add' | 'less';
+  name: string;
+  amount: Paise;
+}
+
 export interface SalaryInput {
   /** Today: unmarked days after it are not warned about (they haven't happened yet). */
   asOf?: BusinessDate;
@@ -95,6 +106,8 @@ export interface SalaryInput {
   records: readonly AttendanceRecord[];
   allowances: readonly Allowance[];
   deductions: readonly FixedDeduction[];
+  /** This month's add or less entries. */
+  adjustments?: readonly SalaryAdjustment[];
   /** The shop's rules; the staff member's overrides are applied on top. */
   rules: { pay: PayRules; late: LatePolicy };
   /** Unused paid leave paid out this month (from the leave balance roll). */
@@ -138,6 +151,8 @@ export interface PayslipLine {
   name?: string;
   /** Always positive; `kind` says whether it adds or subtracts. */
   amount: Paise;
+  /** An add or less entry for this month only (shows apart from regular allowances). */
+  oneOff?: true;
 }
 
 export type SalaryWarning =
@@ -309,6 +324,12 @@ export function calculateSalary(input: SalaryInput): SalaryResult {
   if (input.leavePayoutDays && closingSettings) {
     push('leave_payout', ratMul(dayRate(closingSettings, basis), rat(input.leavePayoutDays)));
   }
+  const oneOff = (from: SalaryAdjustment['kind'], kind: PayslipLineKind) => {
+    for (const a of input.adjustments ?? [])
+      if (a.kind === from && a.amount !== 0)
+        lines.push({ kind, name: a.name, amount: a.amount, oneOff: true });
+  };
+  oneOff('add', 'allowance');
   if (eligible > 0) {
     for (const x of input.deductions) {
       const { activeDays } = coverage(x);
@@ -316,6 +337,7 @@ export function calculateSalary(input: SalaryInput): SalaryResult {
         push('deduction', ratMul(rat(x.amount), rat(activeDays, eligible)), x.name);
     }
   }
+  oneOff('less', 'deduction');
   push('late_deduction', lateCharge);
 
   const total = (kinds: PayslipLineKind[]) =>

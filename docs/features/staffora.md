@@ -70,13 +70,16 @@ Changed 2026-10-25 from invite links to **phone number + PIN** (owner's decision
   `parseScannedCode`), both calling `check_in` with this phone's id; refusals explained with the
   time to try again (`src/lib/check-text.ts`). On Android the scan uses **Google's code scanner**
   (`CameraView.launchScanner`, Play services; opens on entering the screen, "Scan again" after a
-  refusal, no camera permission needed): expo-camera 58's in-view reader analyses full-size frames
-  on the main thread and never reported the code on the owner's phone (29/10/2026). iOS keeps the
-  in-view camera. While checking, the screen shows the code it read. **30/10/2026**: the owner's
-  S21 FE said "Google Play Services is not available": expo-camera checks for the Play Store
-  package, which Android 11+ hides unless the manifest lists it. `plugins/play-store-query.js`
-  (in `app.json` plugins) adds `<queries><package android:name="com.android.vending"/>`; if the
-  scanner still can't open, the screen switches to the in-view camera.
+  refusal, no camera permission needed): expo-camera 58's in-view reader never reported the code on
+  the owner's phone (29/10/2026). iOS keeps the in-view camera. While checking, the screen shows the
+  code it read. **30/10/2026**: the owner's S21 FE said "Google Play Services is not available".
+  `plugins/play-store-query.js` (in `app.json` plugins) adds
+  `<queries><package android:name="com.android.vending"/>`, which expo-camera's checks need.
+  **05/11/2026**: "opening camera but not working" (DECISIONS). If Google's scanner can't open or
+  brings nothing back, the in-view camera takes over; **Use the camera here** goes there by hand.
+  That camera also takes a quiet photo about every second and reads it
+  (`src/lib/read-qr.ts`: ML Kit if it works, then jsQR, which needs no Google services), and after
+  20 seconds suggests filling the box or entering the code.
 - **Checked in / out** (`checked-in.tsx`): the time large, present + minutes late, day, shop, how,
   and from when check-out works (the shop's minimum gap).
 - **Me**: name and shop, **Change PIN**, Lock Staffora, **Sign out** (was "Remove from this phone"; `forget`); a "PIN

@@ -1,5 +1,5 @@
 import { PendingLink as Link } from '@/components/app/pending-link';
-import { Suspense, type ReactNode } from 'react';
+import { cache, Suspense, type ReactNode } from 'react';
 import { notFound, redirect } from 'next/navigation';
 import {
   ArrowUpRight,
@@ -25,7 +25,7 @@ import {
   type LedgerType,
   type PayRules,
 } from '@fincrew/core';
-import { loadExpenseOwed, toShopRules } from '@fincrew/data';
+import { loadMoneyNow, toShopRules } from '@fincrew/data';
 import { formatDate, todayIST } from '@/lib/format';
 import { t } from '@/lib/i18n';
 import { requireMe } from '@/lib/session';
@@ -35,6 +35,7 @@ import { Bento, Panel, PanelEmpty, StatCard } from '@/components/app/layout';
 import { PanelSkeleton } from '@/components/app/skeletons';
 import { TabLinks } from '@/components/app/tab-links';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Avatar } from '../../../components';
 import { AttendanceTab } from './attendance-tab';
 import { payBackLabels } from './payback-labels';
@@ -50,6 +51,7 @@ import { OverridesForm } from './overrides-form';
 import { PayForm } from './pay-form';
 import { SignInSection } from './signin-section';
 import { DocumentsTab } from './documents-tab';
+import { StatementButton } from './statement-button';
 import { UrlToast } from '@/components/app/url-toast';
 
 type Tab = 'overview' | 'attendance' | 'ledger' | 'pay' | 'documents';
@@ -75,6 +77,36 @@ function advanceLabels() {
   };
 }
 const MONTH = new Intl.DateTimeFormat('en-IN', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+
+/** What the shop owes them now; once per page, for the tag and the Overview card. */
+const moneyNowOf = cache(async (shopId: string, staffId: string) =>
+  loadMoneyNow(await createClient(), shopId, staffId, todayIST()),
+);
+
+/** A small "We owe ₹…" beside the name, on every tab (owner 05/11/2026). */
+async function OwedTag({ shopId, staffId }: { shopId: string; staffId: string }) {
+  const now = await moneyNowOf(shopId, staffId);
+  if (!now) return null;
+  const { total } = now;
+  return (
+    <span
+      title={t('statement.tagHint')}
+      className={`w-fit rounded-full px-2.5 py-0.5 text-xs font-semibold tabular-nums ${
+        total > 0
+          ? 'bg-[var(--status-late-soft)] text-[var(--money-owed)]'
+          : total < 0
+            ? 'bg-[var(--status-paid-leave-soft)] text-[var(--money-advance)]'
+            : 'bg-[var(--surface-muted)] text-[var(--ink-muted)]'
+      }`}
+    >
+      {total > 0
+        ? t('statement.tagOwe', { amount: formatINR(total) })
+        : total < 0
+          ? t('statement.tagOwes', { amount: formatINR(-total) })
+          : t('statement.tagSettled')}
+    </span>
+  );
+}
 
 export default async function StaffDetailPage({
   params,
@@ -131,7 +163,14 @@ export default async function StaffDetailPage({
           <div className="flex min-w-0 items-center gap-3">
             <Avatar name={name} size={44} />
             <div className="flex min-w-0 flex-col">
-              <h1 className="truncate text-xl font-semibold tracking-tight">{name}</h1>
+              <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+                <h1 className="truncate text-xl font-semibold tracking-tight">{name}</h1>
+                {canLedger && (
+                  <Suspense fallback={<Skeleton className="h-5 w-28 rounded-full" />}>
+                    <OwedTag shopId={me.shopId} staffId={id} />
+                  </Suspense>
+                )}
+              </div>
               <p className="text-muted-foreground text-sm">
                 {t('staffDetail.joined', { date: formatDate(s.joining_date) })}
                 {s.leaving_date &&
@@ -141,6 +180,17 @@ export default async function StaffDetailPage({
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
+            {canLedger && (
+              <StatementButton
+                staffId={id}
+                label={t('statement.view')}
+                moreLabel={t('statement.more')}
+                historical={t('statement.historical')}
+                historicalHint={t('statement.historicalHint', {
+                  date: formatDate(s.joining_date),
+                })}
+              />
+            )}
             {phone && (
               <>
                 <Button asChild variant="outline">
@@ -209,6 +259,7 @@ export default async function StaffDetailPage({
       <Suspense key={tab} fallback={<PanelSkeleton />}>
         {tab === 'overview' && (
           <Overview
+            shopId={me.shopId}
             staffId={id}
             name={name}
             phone={phone}
@@ -266,6 +317,7 @@ export default async function StaffDetailPage({
 }
 
 async function Overview(props: {
+  shopId: string;
   staffId: string;
   name: string;
   phone: string | null;
@@ -304,23 +356,11 @@ async function Overview(props: {
   const openingNow = opening
     ? Number(opening.amount_paise) + (fixes ?? []).reduce((a, f) => a + Number(f.amount_paise), 0)
     : 0;
-  const [{ data: bal }, { data: adv }, owed] = props.canMoney
-    ? await Promise.all([
-        supabase
-          .from('ledger_balances')
-          .select('balance_paise')
-          .eq('staff_id', props.staffId)
-          .maybeSingle(),
-        supabase
-          .from('advance_balances')
-          .select('outstanding_paise')
-          .eq('staff_id', props.staffId)
-          .maybeSingle(),
-        loadExpenseOwed(supabase, props.staffId),
-      ])
-    : [{ data: null }, { data: null }, 0];
-  const balance = Number(bal?.balance_paise ?? 0);
-  const outstanding = Number(adv?.outstanding_paise ?? 0);
+  const now = props.canMoney ? await moneyNowOf(props.shopId, props.staffId) : null;
+  // The same total as the tag and the statements: finalized and not finalized salary together.
+  const balance = now?.total ?? 0;
+  const outstanding = now?.advance ?? 0;
+  const owed = now?.expenseOwed ?? 0;
 
   return (
     <Bento>
@@ -344,6 +384,12 @@ async function Overview(props: {
           </span>
           <span className="text-money-hero">{formatINR(Math.abs(balance))}</span>
           <div className="my-2 h-px bg-[var(--line)]" />
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-sm font-medium">{t('statement.salaryLeft')}</span>
+            <span className="text-money-md">
+              {formatINR((now?.finalizedDue ?? 0) + (now?.salarySoFar ?? 0))}
+            </span>
+          </div>
           <div className="flex items-center justify-between gap-3">
             <span className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--money-advance)]">
               <ArrowUpRight className="size-4" aria-hidden="true" />

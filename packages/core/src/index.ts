@@ -9,6 +9,7 @@ export * from './late';
 export * from './salary';
 export * from './pay-period';
 export * from './ledger';
+export * from './statement';
 export * from './expenses';
 export * from './attendance-code';
 export * from './staff-login';

@@ -1,6 +1,6 @@
 import { PendingLink as Link } from '@/components/app/pending-link';
 import { redirect } from 'next/navigation';
-import { Check, ChevronLeft, ChevronRight, Clock, FileText, X } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, Clock, FileText } from 'lucide-react';
 import { formatINR, monthOf, shiftMonth, type PayslipLine } from '@fincrew/core';
 import {
   loadSalaryRun,
@@ -17,6 +17,7 @@ import { requireMe } from '@/lib/session';
 import { createClient } from '@/lib/supabase/server';
 import { PageHeader, quietButtonClass } from '../../components';
 import { finalizeSalary, paySalary } from './actions';
+import { AddLess, PersonDialog } from './add-less';
 import { ActionButton, PayControl } from './controls';
 import { SalaryTable } from './salary-table';
 
@@ -63,8 +64,8 @@ const GROUP_DOT: Record<SalaryGroup, string> = {
  * is finalized their figures are live ("Not finalized yet", `loadSalaryRun`); Finalize locks
  * them. A month holds the salaries whose pay period ends in it, each person with their own dates
  * (owner 05/11/2026), so it goes one month ahead of today; opened without a month it shows last
- * month while anyone in it is still to finalize or pay. `?person=<staff id>` opens that person on
- * the side; `?table=1` shows the wide table.
+ * month while anyone in it is still to finalize or pay. `?person=<staff id>` opens that person in a
+ * pop-up to check, add or take off amounts and finalize (05/11/2026); `?table=1` shows the wide table.
  */
 export default async function SalaryPage({
   searchParams,
@@ -520,11 +521,12 @@ export default async function SalaryPage({
                 </div>
 
                 {selected && (
-                  <aside
-                    aria-label={t(`${s}.panelLabel`, { name: selected.name })}
-                    className={`${card} flex max-w-[400px] min-w-0 flex-[1_1_340px] flex-col gap-3 p-4 shadow-[var(--elevation-2)]`}
+                  <PersonDialog
+                    key={selected.staffId}
+                    label={t(`${s}.panelLabel`, { name: selected.name })}
+                    closeHref={base}
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 pr-8">
                       <span className="grid size-11 shrink-0 place-items-center rounded-full bg-[var(--surface-muted)] text-sm font-semibold">
                         {initials(selected.name)}
                       </span>
@@ -541,14 +543,11 @@ export default async function SalaryPage({
                           {periodLine(selected)}
                         </span>
                       </span>
-                      <Link
-                        href={base}
-                        scroll={false}
-                        aria-label={t(`${s}.close`)}
-                        className="grid size-8 place-items-center rounded-md hover:bg-[var(--surface-muted)]"
-                      >
-                        <X size={18} aria-hidden="true" />
-                      </Link>
+                      {selected.state !== 'draft' && (
+                        <span className="rounded-full bg-[var(--accent-soft)] px-2.5 py-0.5 text-xs font-semibold text-[var(--accent-ink)]">
+                          {t('salary.rowStatus.finalized')}
+                        </span>
+                      )}
                     </div>
                     <ul className="flex flex-wrap gap-1.5">
                       {(
@@ -593,36 +592,57 @@ export default async function SalaryPage({
                         ))}
                     </ul>
                     <ul className="flex flex-col border-t border-[var(--line)]">
-                      {selected.lines.map((l, i) => {
-                        const minus = PAYSLIP_MINUS_LINES.includes(l.kind);
-                        return (
-                          <li
-                            key={i}
-                            className="flex justify-between gap-3 border-b border-[var(--line)] py-2 text-sm"
-                          >
-                            <span>{lineLabel(l, selected)}</span>
-                            <span
-                              className={`tabular-nums ${minus ? 'text-[var(--money-deduction)]' : l.kind === 'expense_payback' ? 'text-[var(--money-owed)]' : ''}`}
+                      {selected.lines
+                        .filter((l) => !l.oneOff)
+                        .map((l, i) => {
+                          const minus = PAYSLIP_MINUS_LINES.includes(l.kind);
+                          return (
+                            <li
+                              key={i}
+                              className="flex justify-between gap-3 border-b border-[var(--line)] py-2 text-sm"
                             >
-                              {minus ? '−' : ''}
-                              {formatINR(l.amount)}
-                            </span>
-                          </li>
-                        );
-                      })}
-                      <li className="flex items-baseline justify-between pt-2.5 font-semibold">
-                        <span className="text-sm">{t(`${s}.takeHome`)}</span>
-                        <span className="text-money-md">{formatINR(selected.net)}</span>
-                      </li>
+                              <span>{lineLabel(l, selected)}</span>
+                              <span
+                                className={`tabular-nums ${minus ? 'text-[var(--money-deduction)]' : l.kind === 'expense_payback' ? 'text-[var(--money-owed)]' : ''}`}
+                              >
+                                {minus ? '−' : ''}
+                                {formatINR(l.amount)}
+                              </span>
+                            </li>
+                          );
+                        })}
                     </ul>
+                    <AddLess
+                      year={year}
+                      month={month}
+                      staffId={selected.staffId}
+                      canEdit={canRun && selected.state === 'draft'}
+                      entries={
+                        selected.state === 'draft'
+                          ? selected.entries
+                          : selected.lines
+                              .filter((l) => l.oneOff)
+                              .map((l) => ({
+                                kind: l.kind === 'deduction' ? ('less' as const) : ('add' as const),
+                                name: l.name ?? '',
+                                amount: l.amount,
+                              }))
+                      }
+                    />
+                    <div className="flex items-baseline justify-between gap-3 font-semibold">
+                      <span className="text-sm">{t(`${s}.takeHome`)}</span>
+                      <span className="text-money-md">{formatINR(selected.net)}</span>
+                    </div>
                     <span className="text-xs text-[var(--ink-muted)]">
                       {selected.state === 'draft'
                         ? t(`${s}.draftNote`)
-                        : selected.paidAmount > 0
-                          ? t(`${s}.paidSoFar`, { amount: formatINR(selected.paidAmount) })
-                          : t(`${s}.nothingPaid`)}
+                        : selected.state === 'finalized' && selected.paidAmount === 0
+                          ? `${t('salary.addLess.locked')} ${t(`${s}.nothingPaid`)}`
+                          : selected.paidAmount > 0
+                            ? t(`${s}.paidSoFar`, { amount: formatINR(selected.paidAmount) })
+                            : t(`${s}.nothingPaid`)}
                     </span>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap justify-end gap-2">
                       {canRun && selected.state === 'draft' && (
                         <ActionButton
                           action={finalizeSalary.bind(null, year, month, [selected.staffId])}
@@ -631,7 +651,10 @@ export default async function SalaryPage({
                           variant="primary"
                           confirm={{
                             title: t('salary.confirm.finalizeOneTitle', { name: selected.name }),
-                            body: t('salary.confirm.finalizeBody'),
+                            body: t('salary.confirm.finalizeOneBody', {
+                              amount: formatINR(selected.net),
+                              name: selected.name,
+                            }),
                           }}
                         />
                       )}
@@ -661,7 +684,7 @@ export default async function SalaryPage({
                         </Link>
                       )}
                     </div>
-                  </aside>
+                  </PersonDialog>
                 )}
               </div>
             </>

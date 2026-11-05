@@ -81,6 +81,11 @@ table/grid cell/bulk toolbar, camera viewfinder, sheet header/footer); limits (C
 code card itself; Button as link,
 LedgerLine kinds, tappable MonthCalendar days, display-only SummaryChip, CodePad states).
 
+**Add or less, statements (05/11/2026)**: FinCrew key screens, page "Add or less, statements":
+Web · check and finalize, add or less; Web · staff page, what we owe; Web · statement; Web ·
+statement, historical; Salary · add or less; Staff · statement. Built:
+`docs/features/statements.md`.
+
 ## packages/ui
 
 `packages/ui/design/tokens.json` is a snapshot of the system's `project/tokens.json`. To refresh:

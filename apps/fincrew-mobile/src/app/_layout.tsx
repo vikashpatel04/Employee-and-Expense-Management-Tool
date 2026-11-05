@@ -51,6 +51,7 @@ function Gate({ fontsLoaded }: { fontsLoaded: boolean }) {
         <Stack.Protected guard={!!session && !mustChange}>
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="staff/[id]" />
+          <Stack.Screen name="statement/[id]" />
           <Stack.Screen name="expense" />
           <Stack.Screen name="salary/[month]" />
           <Stack.Screen name="pay-change" />

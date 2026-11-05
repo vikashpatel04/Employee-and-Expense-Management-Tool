@@ -2,8 +2,11 @@
 
 import { revalidatePath } from 'next/cache';
 import {
+  addSalaryEntry as addEntryShared,
   finalizeSalary as finalizeShared,
   paySalary as payShared,
+  removeSalaryEntry as removeEntryShared,
+  type SalaryEntry,
   type SalaryWriteResult,
 } from '@fincrew/data';
 import { todayIST } from '@/lib/format';
@@ -48,6 +51,29 @@ export async function finalizeSalary(
   return withRunner(
     (supabase, me) => finalizeShared(supabase, { ...me, year, month, staffIds }),
     (r) => t('salary.done.finalized', { count: r.count }),
+  );
+}
+
+/** Add a named amount to one month's salary, or take one off. `amount` is in paise. */
+export async function addSalaryEntry(
+  year: number,
+  month: number,
+  staffId: string,
+  kind: SalaryEntry['kind'],
+  name: string,
+  amount: number,
+): Promise<ActionResult> {
+  return withRunner(
+    (supabase, me) => addEntryShared(supabase, { ...me, year, month, staffId, kind, name, amount }),
+    () => t(`salary.addLess.${kind === 'add' ? 'added' : 'taken'}`, { name: name.trim() }),
+  );
+}
+
+/** Remove an add or less entry, until the salary is finalized. */
+export async function removeSalaryEntry(id: string, name: string): Promise<ActionResult> {
+  return withRunner(
+    (supabase, me) => removeEntryShared(supabase, { ...me, id }),
+    () => t('salary.addLess.removed', { name }),
   );
 }
 

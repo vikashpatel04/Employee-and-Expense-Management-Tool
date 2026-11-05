@@ -15,6 +15,7 @@ import {
   paySalary,
   type GridRow,
   type StaffOverview,
+  type WeOwe,
 } from '@fincrew/data';
 import { AdvanceSheet } from '@/components/advance-sheet';
 import { PayBackSheet } from '@/components/payback-sheet';
@@ -37,9 +38,12 @@ const MODES = ['cash', 'upi', 'bank', 'card'] as const;
  */
 export function OverviewSection({
   info,
+  now,
   onChanged,
 }: {
   info: StaffOverview;
+  /** What the shop owes them now (the same total as the tag and the statements). */
+  now: WeOwe | null;
   onChanged: () => void;
 }) {
   const { me, can } = useSession();
@@ -107,7 +111,7 @@ export function OverviewSection({
   const digits = (info.phone ?? '').replace(/\D/g, '');
   const wa = digits.length === 10 ? `91${digits}` : digits;
   const count = (s: string) => row?.cells.filter((x) => x.status === s).length ?? 0;
-  const balance = info.balance;
+  const balance = now ? now.total : info.balance;
   const tone =
     balance == null || balance === 0
       ? c['ink-muted']
@@ -131,6 +135,18 @@ export function OverviewSection({
           </View>
           <Text variant="money-hero">{formatINR(Math.abs(balance))}</Text>
           <View style={{ height: 1, backgroundColor: c.line, marginVertical: space['space-2'] }} />
+          {now && (
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}
+            >
+              <Text variant="label-sm">{t('statement.salaryLeft')}</Text>
+              <Text variant="money-md">{formatINR(now.finalizedDue + now.salarySoFar)}</Text>
+            </View>
+          )}
           <View
             style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
           >

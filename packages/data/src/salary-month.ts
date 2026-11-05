@@ -31,6 +31,9 @@ import {
   toTemplateVersion,
 } from './mappers';
 
+/** An add or less entry on a month's salary (Check and finalize). */
+export type SalaryEntry = { id: string; kind: 'add' | 'less'; name: string; amount: number };
+
 export type ComputedPayslip = {
   staffId: string;
   name: string;
@@ -44,13 +47,15 @@ export type ComputedPayslip = {
   leave: LeaveMonth | null;
   /** Paid leave marked beyond the balance (the leave roll couldn't close the month). */
   leaveOverBalance: boolean;
+  /** This month's add or less entries, already in `result`. */
+  entries: SalaryEntry[];
 };
 
 /**
  * Work out every salary named after this month with packages/core, each over that person's own
  * pay period, from the same inputs as the attendance grid (src/lib/mappers.ts), plus allowances,
- * deductions, advances, expenses to settle (each person's advance cut mode and expense switches)
- * and last month's carried leave. Someone not employed in their period is left out. Nothing is
+ * deductions, this month's add or less entries, advances, expenses to settle (each person's
+ * advance cut mode and expense switches) and last month's carried leave. Someone not employed in their period is left out. Nothing is
  * written here.
  */
 export async function computeMonth(
@@ -79,6 +84,7 @@ export async function computeMonth(
     balQ,
     shopQ,
     expQ,
+    adjQ,
     settled,
     ended,
   ] = await Promise.all([
@@ -119,6 +125,13 @@ export async function computeMonth(
       .from('expense_balances')
       .select('staff_id, payback_paise, charge_paise')
       .eq('shop_id', shopId),
+    supabase
+      .from('salary_adjustments')
+      .select('id, staff_id, kind, name, amount_paise')
+      .eq('shop_id', shopId)
+      .eq('year', year)
+      .eq('month', month)
+      .order('created_at'),
     settledThisMonth(supabase, shopId, year, month),
     finalizedEnds(supabase, shopId, prev.year, prev.month),
   ]);
@@ -137,6 +150,7 @@ export async function computeMonth(
     (advQ.data ?? []).map((a) => [a.staff_id, Number(a.outstanding_paise ?? 0)]),
   );
   const carried = new Map((balQ.data ?? []).map((b) => [b.staff_id, Number(b.carried)]));
+  const entries = groupBy(adjQ.data ?? [], (a) => a.staff_id);
   const dues = new Map(
     (expQ.data ?? []).map((e) => [
       e.staff_id,
@@ -162,6 +176,12 @@ export async function computeMonth(
       if (compareDates(employedFrom, closingDay) > 0) return [];
       const templateOn = (d: BusinessDate) =>
         templateVersionOn(assignments.get(staffId) ?? [], versionsByTemplate, d);
+      const mine: SalaryEntry[] = (entries.get(staffId) ?? []).map((a) => ({
+        id: a.id,
+        kind: a.kind as SalaryEntry['kind'],
+        name: a.name,
+        amount: Number(a.amount_paise),
+      }));
       const input = {
         year,
         month,
@@ -185,6 +205,7 @@ export async function computeMonth(
           effectiveFrom: d.effective_from,
           effectiveTo: d.effective_to ?? undefined,
         })),
+        adjustments: mine,
         rules: { pay: rules.pay, late: rules.late },
         asOf: businessDateOf(new Date()),
         ...(() => {
@@ -246,6 +267,7 @@ export async function computeMonth(
           result,
           leave: version ? leave : null,
           leaveOverBalance,
+          entries: mine,
         },
       ];
     })

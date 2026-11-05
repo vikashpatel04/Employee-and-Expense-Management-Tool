@@ -21,6 +21,8 @@ export * from './salary-run';
 export * from './advances';
 export * from './self-service';
 export * from './payslip-text';
+export * from './statement';
+export * from './statement-document';
 export * from './pay-write';
 export * from './helper-login';
 export * from './staff-documents';

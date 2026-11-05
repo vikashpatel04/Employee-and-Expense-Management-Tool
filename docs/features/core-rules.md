@@ -25,6 +25,9 @@ template version**, so different staff can have different leave rules.
 | `holidayOnWeeklyOff` | `holiday` · `weekly_off`          | `holiday`       | Which paid flag decides a holiday that falls on a weekly off.                                                                                                     |
 | `markOnOffDay`       | `ignore` · `apply`                | `ignore`        | Absent/leave marked on an off day: the off day stands, or the mark replaces it (paid leave then uses balance).                                                    |
 
+Add or less entries on a month's salary are amounts typed at Check and finalize, not rules: see
+`docs/features/statements.md`.
+
 ### Late policy (`late.ts`, `LatePolicy`)
 
 | Setting                   | Options                                                     | Default                                                |
