@@ -8,10 +8,11 @@ _Handover updated 2026-11-09. Read this section first, then `CLAUDE.md`, then th
 whatever you touch. The repo is public (MIT): keep real people's names, phone numbers and keys
 out of every committed file._
 
-**Latest (09/11/2026, fix, committed, not pushed yet)**: Pay now's new cycle has a **Salary up to** date (the last day paid
+**Latest (09/11/2026, fix, pushed, commit `0d00a40`)**: Pay now's new cycle has a **Salary up to** date (the last day paid
 for, following Paid on); the new cycle starts the day after. Found on the first real use (Diwali):
-salary given on the evening of 08/11 covered 08/11. Migration `20261109000002` (dry-run on live
-passed). Nothing had been paid with Pay now before the fix.
+salary given on the evening of 08/11 covered 08/11. Migration `20261109000002` is live. Both APKs
+started on EAS with it (FinCrew `5e54d670`, Staffora `89d0b995`). Nothing had been paid with Pay
+now before the fix.
 
 **Pay early (09/11/2026, pushed, `b0af944`)**: on the website and in FinCrew
 (`docs/features/pay-early.md`): a Paid on date on every salary payment, and Pay now while a month
@@ -49,8 +50,7 @@ Both APKs were started on EAS that day (FinCrew `73770c24`, Staffora `8f080e21`)
   in Me (2026-10-30). Android backup is off in both apps, so a reinstall starts clean (the
   staff member then needs **New phone**). APK with the 30/10 fixes and pay days built
   05/11 (EAS `a2b1b36d`, commit `a7e8768`); not yet installed and checked. Fingerprint and QR scan only testable on a real phone.
-- **Database / server**: all migrations up to `20261109000001_pay_early_new_cycle.sql` are live
-  (`20261109000002_new_cycle_up_to_today.sql` goes live on the next push);
+- **Database / server**: all migrations up to `20261109000002_new_cycle_up_to_today.sql` are live;
   edge functions `staff-auth` and `helper-auth` deployed by CI. **Clear all data** existed briefly
   (20261026000003–5), was used once on 2026-10-26 to clear the owner's test data on live, then
   **removed** (`…000006` restores the original append-only guards; the owner never wants it again).
