@@ -8,13 +8,16 @@ _Handover updated 2026-11-09. Read this section first, then `CLAUDE.md`, then th
 whatever you touch. The repo is public (MIT): keep real people's names, phone numbers and keys
 out of every committed file._
 
-**Latest (09/11/2026, pushed, commit `b0af944`)**: **Pay early** is on the website and in FinCrew
+**Latest (09/11/2026, fix, committed, not pushed yet)**: Pay now's new cycle has a **Salary up to** date (the last day paid
+for, following Paid on); the new cycle starts the day after. Found on the first real use (Diwali):
+salary given on the evening of 08/11 covered 08/11. Migration `20261109000002` (dry-run on live
+passed). Nothing had been paid with Pay now before the fix.
+
+**Pay early (09/11/2026, pushed, `b0af944`)**: on the website and in FinCrew
 (`docs/features/pay-early.md`): a Paid on date on every salary payment, and Pay now while a month
-runs, keeping the pay day or starting a new cycle from the date paid. Migration `20261109000001` is
-live. Both APKs were started on EAS the same day (FinCrew `ea210172`, Staffora `e098dc33`); the
-owner installs them and checks the website and a phone. **Not seen signed in**: the website's Pay
-now and Pay forms were clicked through on a temporary page (the new-cycle figures need a sign-in, so
-that part wasn't seen); the apps only compile and bundle.
+runs, keeping the pay day or starting a new cycle. Migration `20261109000001` is live. **Not seen
+signed in**: the website's Pay now and Pay forms were clicked through on a temporary page (the
+new-cycle figures need a sign-in); the apps only compile and bundle.
 
 **Before that (05/11/2026, pushed, `c488b08`)**: Add or less, the We owe tag, View statement and
 Historical (`docs/features/statements.md`), and Staffora's QR reader that needs no Google services.
@@ -46,7 +49,8 @@ Both APKs were started on EAS that day (FinCrew `73770c24`, Staffora `8f080e21`)
   in Me (2026-10-30). Android backup is off in both apps, so a reinstall starts clean (the
   staff member then needs **New phone**). APK with the 30/10 fixes and pay days built
   05/11 (EAS `a2b1b36d`, commit `a7e8768`); not yet installed and checked. Fingerprint and QR scan only testable on a real phone.
-- **Database / server**: all migrations up to `20261109000001_pay_early_new_cycle.sql` are live;
+- **Database / server**: all migrations up to `20261109000001_pay_early_new_cycle.sql` are live
+  (`20261109000002_new_cycle_up_to_today.sql` goes live on the next push);
   edge functions `staff-auth` and `helper-auth` deployed by CI. **Clear all data** existed briefly
   (20261026000003–5), was used once on 2026-10-26 to clear the owner's test data on live, then
   **removed** (`…000006` restores the original append-only guards; the owner never wants it again).
@@ -118,7 +122,7 @@ their OK.
 
 **How to check work**
 
-- `pnpm typecheck` (9 tasks incl. both apps), `pnpm test` (core 327, ui 6, i18n 1, db 245 —
+- `pnpm typecheck` (9 tasks incl. both apps), `pnpm test` (core 327, ui 6, i18n 1, db 246 —
   PGlite, no Docker), `pnpm build`, `pnpm ui:tokens --check`,
   `bash scripts/check-migrations.sh origin/main HEAD`.
 - Live DB (CLI logged in): `pnpm exec supabase db query --linked --project-ref

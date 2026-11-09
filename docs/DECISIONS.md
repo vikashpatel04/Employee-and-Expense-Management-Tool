@@ -2,6 +2,19 @@
 
 Choices made during the build that PLAN.md doesn't spell out. Newest first.
 
+## 2026-11-09 — New cycle: the salary pays up to a chosen last day (corrects the entry below)
+
+- Owner, first real use (Divya, Diwali): salary given on the evening of 08/11 covered work up to
+  08/11, and the next cycle starts on 09/11. With "the day paid starts the new cycle", Paid on 08/11
+  paid only up to 07/11 (one day less) and Paid on 09/11 dated the payment a day late and made the
+  pay day the 9th by accident. ₹4,438 was the right figure for salary up to 08/11.
+- Now the new-cycle choice has **Salary up to**, the last day this salary pays for. It follows Paid
+  on unless changed, so the usual case is one date. The new cycle starts the day after it, which
+  becomes the pay day. Core `newCycleCheck(period, lastDay, today)`: the last day can be today
+  (new cycle from tomorrow; `20261109000002` lets `finalize_new_cycle` allow that), must be in the
+  month the salary is named after (from its 1st) and before the period's own last day.
+- The payment keeps its own date (Paid on), so it can differ from the last day paid for.
+
 ## 2026-11-09 — Pay early: keep the pay day or a new cycle; Paid on
 
 - Owner: "next cycle can't be starting from 16th, it should be on the date they get the salary";
@@ -16,10 +29,11 @@ Choices made during the build that PLAN.md doesn't spell out. Newest first.
   allowances and deductions counting their share of the full period (a leaver's fixed allowance is
   unchanged). The pay day moves for good, written into the pay setting from the date paid (and any
   later one), so it shows under Own rules and can be changed back from a date.
-- **The new start must be in the month the salary is named after (from its 2nd).** One salary per
+- **The new start must be in the month the salary is named after (from its 2nd).** (Now: the last
+  day paid for must be in that month, from its 1st; see the entry above.) One salary per
   person per month name: an earlier start would make the closed salary end in the month before,
   which already has one. The form explains and suggests keeping the pay day.
-- **The day paid starts the new cycle**, like a pay day does today (pay day 16 starts on the 16th).
+- ~~The day paid starts the new cycle~~: replaced the same day by Salary up to (entry above).
 - **Early payments come off the month not finalized** in every total (`moneyNow` `paidEarly`), so
   the staff page, statements and Staffora don't show them as an odd negative.
 - **Pay day words**: "the 8th" comes from `salary.payNow.dayOfMonth`, with the English suffix

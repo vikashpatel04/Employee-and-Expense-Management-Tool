@@ -288,3 +288,45 @@ describe('new cycle', () => {
     await rejects(q(asha, 'select public.finalize_new_cycle($1)', [early]), /named after/);
   });
 });
+
+describe('a salary paid up to today (20261109000002)', () => {
+  it('starts the new cycle tomorrow, and can’t pay up to a later day', async () => {
+    const shop = (
+      await q<{ id: string }>(asha, `select public.create_shop('Fourth', 'Asha') as id`)
+    )[0]!.id;
+    const p = (
+      await q<{ id: string }>(
+        asha,
+        'insert into people (shop_id, name) values ($1, $2) returning id',
+        [shop, 'Lakshmi'],
+      )
+    )[0]!.id;
+    await q(
+      asha,
+      `insert into staff (shop_id, person_id, joining_date) values ($1, $2, '2026-01-16')`,
+      [shop, p],
+    );
+    await q(
+      asha,
+      `insert into pay_settings (shop_id, staff_id, effective_from, pay_type, monthly_salary_paise)
+       values ($1, $2, '2026-01-16', 'monthly', 800000)`,
+      [shop, p],
+    );
+    const later = await draft(shop, p, shift(today, -20), tomorrow, shift(today, 2));
+    await rejects(q(asha, 'select public.finalize_new_cycle($1)', [later]), /after today/);
+    await q(asha, `delete from payslips where id = $1`, [later]);
+    const upToToday = await draft(shop, p, shift(today, -20), today, tomorrow);
+    await q(asha, 'select public.finalize_new_cycle($1)', [upToToday]);
+    expect(
+      await q(
+        asha,
+        `select to_char(effective_from, 'YYYY-MM-DD') as f, pay_rules_override as o
+         from pay_settings where staff_id = $1 order by effective_from`,
+        [p],
+      ),
+    ).toEqual([
+      { f: '2026-01-16', o: {} },
+      { f: tomorrow, o: { payDay: { mode: 'fixed', day: Number(tomorrow.slice(8, 10)) } } },
+    ]);
+  });
+});

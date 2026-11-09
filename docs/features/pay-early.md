@@ -22,16 +22,20 @@ of Finalize. It asks Paid on, how it was paid, and what happens to the pay day:
   rest is paid on the usual pay date. More than the salary so far is allowed (the extra comes off
   the next salary). Quick amounts: each Add or less addition (a bonus) and the salary so far. A draft
   with payments can't be deleted.
-- **New cycle from the date paid** (`startNewCycle`): the salary closes the day before, is finalized
-  and what's left of it is paid that day. From then on the person's pay day is that date of the
-  month: `finalize_new_cycle` writes it into their pay setting from that day (and any later one).
-  The next salary runs from the date paid to the day before the same date next month.
+- **New cycle** (`startNewCycle`): the salary pays up to **Salary up to** (the last day it pays
+  for; it follows Paid on unless changed, 09/11/2026), is finalized and what's left of it is paid,
+  dated Paid on. The new cycle starts the day after Salary up to, and from then on that date of the
+  month is the person's pay day: `finalize_new_cycle` writes it into their pay setting from that
+  day (and any later one). Example: paid on the evening of 08/11 for work up to 08/11 → salary up to
+  08/11, new cycle from 09/11, pay day the 9th, next salary 09/11 – 08/12.
 
 The closed salary pays its days at the full period's day rate (core `closesOn`): 23 days of a
 31-day period is 23/31 of the salary, never a full month; allowances and deductions count their
 share of the full period too. Days after the close belong to the next salary, so nothing is lost or
-paid twice. A new cycle must start in the month the salary is named after, from its 2nd, no later
-than today (core `newCycleCheck`); otherwise the form says why and suggests keeping the pay day.
+paid twice. Salary up to must be in the month the salary is named after (from its 1st), before the
+period's own last day and no later than today (core `newCycleCheck`; up to today means the new
+cycle starts tomorrow, `20261109000002`); otherwise the form says why and suggests keeping the pay
+day.
 
 `previewNewCycle` works the figures out before paying (the form shows them as you change the date).
 

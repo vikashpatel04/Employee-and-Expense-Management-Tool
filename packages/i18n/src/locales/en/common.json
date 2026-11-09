@@ -755,9 +755,9 @@
       "chipSoFar": "Salary so far",
       "over": "More than the salary so far ({{amount}}): the extra comes off the next salary.",
       "cycleTitle": "New cycle from {{date}}",
-      "cycleTitleAny": "New cycle from the date paid",
-      "cycleBody": "{{month}} closes on {{closes}} ({{days}} of {{cycle}} days) and is finalized and paid now. From then on the pay day is the {{day}}.",
-      "cycleHint": "Closes this salary the day before the date paid and starts a new cycle from it.",
+      "cycleTitleAny": "New cycle after the last day paid for",
+      "cycleBody": "{{month}} pays up to {{closes}} ({{days}} of {{cycle}} days) and is finalized and paid now. From then on the pay day is the {{day}}.",
+      "cycleHint": "Pays this salary up to the day you choose and starts a new cycle the day after.",
       "loading": "Working it out…",
       "paidAlready": "Paid already",
       "takeHome": "Take-home",
@@ -770,10 +770,10 @@
       "yes": "Yes, pay",
       "askKeep": "Pay {{amount}} on {{date}} towards {{month}}'s salary?",
       "askKeepBody": "{{month}} stays open until {{to}}. When you finalize it, {{amount}} comes off and the rest is paid on {{payDate}}.",
-      "askCycle": "Close {{month}} on {{closes}} and pay {{amount}}?",
-      "askCycleBody": "{{month}} is finalized for {{days}} of {{cycle}} days and paid on {{date}}. {{name}}'s pay day becomes the {{day}}: next salary {{from}} – {{to}}, paid on {{payDate}}. This can't be changed afterwards, and {{name}} sees it in Staffora.",
+      "askCycle": "Finalize {{month}} up to {{closes}} and pay {{amount}}?",
+      "askCycleBody": "{{month}} is finalized for {{days}} of {{cycle}} days, up to {{closes}}, and paid on {{date}}. {{name}}'s pay day becomes the {{day}}: next salary {{from}} – {{to}}, paid on {{payDate}}. This can't be changed afterwards, and {{name}} sees it in Staffora.",
       "doneKeep": "Paid {{amount}} on {{date}} towards {{month}}'s salary.",
-      "doneCycle": "{{month}} closed on {{closes}} and paid. The pay day is now the {{day}}.",
+      "doneCycle": "{{month}} paid up to {{closes}}. The pay day is now the {{day}}.",
       "paidSoFar": "Paid so far",
       "stillToPaySoFar": "Still to pay so far",
       "runningNote": "Not finalized yet: the month runs until {{to}}. Pay now, or finalize after that.",
@@ -787,12 +787,16 @@
         "date": "Enter the date as DD/MM/YYYY, for example 08/11/2026.",
         "future": "Paid on can't be after today ({{today}}).",
         "before_period": "That's before {{month}}'s salary started ({{from}}).",
-        "too_early": "A new cycle can start on {{date}} at the earliest: an earlier date falls in last month's salary. Keep the {{day}} instead.",
-        "period_over": "The period is over: finalize and pay as usual.",
+        "too_early": "For a new cycle the salary has to go up to {{date}} or later: an earlier day falls in last month's salary. Keep the {{day}} instead.",
+        "period_over": "That's the last day of the period anyway: finalize and pay as usual.",
         "not_found": "Couldn't work it out. Try again.",
         "amount": "Enter an amount above zero.",
-        "payAmount": "Enter an amount above zero and no more than {{amount}}."
-      }
+        "payAmount": "Enter an amount above zero and no more than {{amount}}.",
+        "upToDate": "Enter Salary up to as DD/MM/YYYY, for example 08/11/2026.",
+        "upToFuture": "Salary up to can't be after today ({{today}})."
+      },
+      "upTo": "Salary up to",
+      "upToHint": "The last day this salary pays for. It follows Paid on unless you change it."
     }
   },
   "advances": {

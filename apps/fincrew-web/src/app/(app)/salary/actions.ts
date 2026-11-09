@@ -125,11 +125,12 @@ export async function payEarly(
   );
 }
 
-/** Pay now with a new cycle from the date paid: close, finalize, move the pay day, pay. */
+/** Pay now with a new cycle: pay up to `upTo`, finalize, move the pay day to the day after, pay. */
 export async function startNewCycle(
   year: number,
   month: number,
   staffId: string,
+  upTo: BusinessDate,
   paidOn: BusinessDate,
   mode: string,
 ): Promise<ActionResult> {
@@ -140,6 +141,7 @@ export async function startNewCycle(
         staffId,
         year,
         month,
+        upTo,
         paidOn,
         mode,
         today: todayIST(),
@@ -148,15 +150,15 @@ export async function startNewCycle(
   );
 }
 
-/** What a new cycle from `paidOn` would mean, for the Pay now form (reads only). */
+/** What paying up to `upTo` with a new cycle after would mean, for the Pay now form (reads only). */
 export async function previewCycle(
   year: number,
   month: number,
   staffId: string,
-  paidOn: BusinessDate,
+  upTo: BusinessDate,
 ): Promise<NewCyclePreview> {
   const me = await requireMe();
   if (!me || !me.permissions.includes('salary.run'))
     return { ok: false, reason: 'not_found' } as NewCyclePreview;
-  return previewNewCycle(await createClient(), me.shopId, staffId, year, month, paidOn, todayIST());
+  return previewNewCycle(await createClient(), me.shopId, staffId, year, month, upTo, todayIST());
 }

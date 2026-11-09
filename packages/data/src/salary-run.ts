@@ -576,9 +576,9 @@ export async function payEarly(
 export type NewCyclePreview = Awaited<ReturnType<typeof previewNewCycle>>;
 
 /**
- * What a new cycle from `paidOn` would mean for one person's salary (Pay now): where it closes, the
- * figures for those days, what's already paid towards it, and the next salary's dates. Or why
- * that date can't start one (core `newCycleCheck`).
+ * What paying a salary up to `upTo` and starting a new cycle the day after would mean for one
+ * person (Pay now): the figures for those days, what's already paid towards it, and the next
+ * salary's dates. Or why that day can't end it (core `newCycleCheck`).
  */
 export async function previewNewCycle(
   supabase: Supabase,
@@ -586,14 +586,14 @@ export async function previewNewCycle(
   staffId: string,
   year: number,
   month: number,
-  paidOn: BusinessDate,
+  upTo: BusinessDate,
   today: BusinessDate,
 ) {
   const now = (await computeMonth(supabase, shopId, year, month)).find(
     (p) => p.staffId === staffId,
   );
   if (!now) return { ok: false as const, reason: 'not_found' as const };
-  const check = newCycleCheck(now.period, paidOn, today);
+  const check = newCycleCheck(now.period, upTo, today);
   if (!check.ok) return check;
   const [cut, run] = await Promise.all([
     computeMonth(supabase, shopId, year, month, {
@@ -621,6 +621,7 @@ export async function previewNewCycle(
   return {
     ok: true as const,
     closesOn: check.closesOn,
+    newCycleFrom: check.newCycleFrom,
     payDay: check.payDay,
     next: check.next,
     from: employedPart(now.period, now.joiningDate, now.leavingDate).from,
@@ -633,9 +634,9 @@ export async function previewNewCycle(
 }
 
 /**
- * Pay now with a new cycle (owner 09/11/2026; needs salary.run): the salary closes the day before
- * `paidOn`, is finalized (`finalize_new_cycle`, which also makes `paidOn`'s date their pay day
- * from then on) and what's left of it is paid, dated `paidOn`.
+ * Pay now with a new cycle (owner 09/11/2026; needs salary.run): the salary pays up to `upTo` and
+ * is finalized (`finalize_new_cycle`, which also makes the day after `upTo` their pay day from
+ * then on), and what's left of it is paid, dated `paidOn`.
  */
 export async function startNewCycle(
   supabase: Supabase,
@@ -644,6 +645,9 @@ export async function startNewCycle(
     staffId: string;
     year: number;
     month: number;
+    /** The last day this salary pays for. */
+    upTo: BusinessDate;
+    /** The day it was paid. */
     paidOn: BusinessDate;
     mode: string;
     today: BusinessDate;
@@ -652,13 +656,14 @@ export async function startNewCycle(
   if (!input.permissions.includes('salary.run')) return noPermission;
   const mode = PAYMENT_MODES.find((m) => m === input.mode);
   if (!mode) return failed(input.mode);
+  if (compareDates(input.paidOn, input.today) > 0) return failed('date');
   const preview = await previewNewCycle(
     supabase,
     input.shopId,
     input.staffId,
     input.year,
     input.month,
-    input.paidOn,
+    input.upTo,
     input.today,
   );
   if (!preview.ok) return failed(preview.reason);

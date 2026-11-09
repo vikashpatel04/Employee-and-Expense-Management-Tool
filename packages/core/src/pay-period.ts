@@ -104,30 +104,44 @@ export function payPeriodOn(date: BusinessDate, payDay: number): PayPeriod {
 export type NewCycleProblem = 'future' | 'before_period' | 'too_early' | 'period_over';
 
 /**
- * Paying a salary before its period ends and starting a new cycle from the date paid (Pay now,
- * owner 09/11/2026). The salary closes the day before, and from then on the person's pay day is
- * the date paid. It must be a day of this period after its first, no later than today, and in the
- * month the salary is named after (from its 2nd), so the closed salary keeps its month and the
- * next one is named after the month that follows.
+ * Paying a salary before its period ends and starting a new cycle (Pay now, owner 09/11/2026): the
+ * salary pays up to `lastDay` (by default the day it was paid: paid in the evening for that day's
+ * work), and the new cycle starts the day after, which becomes the person's pay day from then on.
+ * `lastDay` must be in this period before its last day, no later than today, and in the month the
+ * salary is named after, so the closed salary keeps its month and the next one is named after the
+ * month that follows.
  */
 export function newCycleCheck(
   period: PayPeriod,
-  paidOn: BusinessDate,
+  lastDay: BusinessDate,
   today: BusinessDate,
 ):
-  | { ok: true; closesOn: BusinessDate; payDay: number; next: PayPeriod }
+  | {
+      ok: true;
+      closesOn: BusinessDate;
+      newCycleFrom: BusinessDate;
+      payDay: number;
+      next: PayPeriod;
+    }
   | { ok: false; reason: NewCycleProblem; earliest: BusinessDate } {
   const earliest = newCycleEarliest(period);
   const fail = (reason: NewCycleProblem) => ({ ok: false as const, reason, earliest });
-  if (compareDates(paidOn, today) > 0) return fail('future');
-  if (compareDates(paidOn, period.from) <= 0) return fail('before_period');
-  if (compareDates(paidOn, period.to) > 0) return fail('period_over');
-  if (compareDates(paidOn, earliest) < 0) return fail('too_early');
-  const payDay = Number(paidOn.slice(8, 10));
-  return { ok: true, closesOn: addDays(paidOn, -1), payDay, next: payPeriodOn(paidOn, payDay) };
+  if (compareDates(lastDay, today) > 0) return fail('future');
+  if (compareDates(lastDay, period.from) < 0) return fail('before_period');
+  if (compareDates(lastDay, period.to) >= 0) return fail('period_over');
+  if (compareDates(lastDay, earliest) < 0) return fail('too_early');
+  const newCycleFrom = addDays(lastDay, 1);
+  const payDay = Number(newCycleFrom.slice(8, 10));
+  return {
+    ok: true,
+    closesOn: lastDay,
+    newCycleFrom,
+    payDay,
+    next: payPeriodOn(newCycleFrom, payDay),
+  };
 }
 
-/** The first date a new cycle can start from in this period. */
+/** The first day a salary closed early for a new cycle can pay up to. */
 export function newCycleEarliest(period: PayPeriod): BusinessDate {
-  return maxDate(addDays(period.from, 1), addDays(monthStart(period.year, period.month), 1));
+  return maxDate(period.from, monthStart(period.year, period.month));
 }

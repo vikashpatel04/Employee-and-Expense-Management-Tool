@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import {
+  addDays,
   formatDisplayDate,
   formatINR,
   paiseToInput,
@@ -96,6 +97,8 @@ export function PayNowForm(props: {
   const router = useRouter();
   const { closePay } = usePersonDialog();
   const [paidOn, setPaidOn] = useState(formatDisplayDate(props.today));
+  // The last day the new cycle's salary pays for: follows Paid on until it is changed.
+  const [upTo, setUpTo] = useState<string | null>(null);
   const [mode, setMode] = useState<string>('cash');
   const [choice, setChoice] = useState<'keep' | 'cycle'>('keep');
   const [amount, setAmount] = useState('');
@@ -117,24 +120,27 @@ export function PayNowForm(props: {
         : '';
   const typed = parseRupees(amount);
   const keepAmount = typed !== null && typed > 0 ? typed : 0;
-  const cycle = choice === 'cycle' && date && preview?.date === date ? preview.data : null;
+  const upToText = upTo ?? paidOn;
+  const last = parseDisplayDate(upToText);
+  const cycle = choice === 'cycle' && last && preview?.date === last ? preview.data : null;
 
   useEffect(() => {
-    if (choice !== 'cycle' || !date || dateError || preview?.date === date) return;
+    if (choice !== 'cycle' || !last || preview?.date === last) return;
     startLoading(async () => {
-      const data = await previewCycle(props.year, props.month, props.staffId, date);
-      setPreview({ date, data });
+      const data = await previewCycle(props.year, props.month, props.staffId, last);
+      setPreview({ date: last, data });
     });
-  }, [choice, date, dateError, preview?.date, props.year, props.month, props.staffId]);
+  }, [choice, last, preview?.date, props.year, props.month, props.staffId]);
 
-  const cycleProblem =
-    cycle && !cycle.ok
+  const cycleProblem = !last
+    ? t(`${p}.problems.upToDate`)
+    : cycle && !cycle.ok
       ? cycle.reason === 'too_early'
         ? t(`${p}.problems.too_early`, {
             date: fmt(cycle.earliest),
             day: dayOfMonthText(props.payDay, t),
           })
-        : t(`${p}.problems.${cycle.reason}`, {
+        : t(`${p}.problems.${cycle.reason === 'future' ? 'upToFuture' : cycle.reason}`, {
             today: fmt(props.today),
             month: props.monthName,
             from: fmt(props.period.from),
@@ -159,7 +165,7 @@ export function PayNowForm(props: {
       const r =
         choice === 'keep'
           ? await payEarly(props.year, props.month, props.staffId, keepAmount, date, mode)
-          : await startNewCycle(props.year, props.month, props.staffId, date, mode);
+          : await startNewCycle(props.year, props.month, props.staffId, last!, date, mode);
       setAsking(false);
       if (!r.ok) return void toast.error(r.error);
       toast.success(
@@ -294,7 +300,7 @@ export function PayNowForm(props: {
             setAsking(false);
           }}
           title={
-            date && !dateError ? t(`${p}.cycleTitle`, { date: fmt(date) }) : t(`${p}.cycleTitleAny`)
+            last ? t(`${p}.cycleTitle`, { date: fmt(addDays(last, 1)) }) : t(`${p}.cycleTitleAny`)
           }
           body={
             ready
@@ -308,6 +314,20 @@ export function PayNowForm(props: {
               : t(`${p}.cycleHint`)
           }
         >
+          <label className="text-xs font-medium text-[var(--ink-muted)]">
+            {t(`${p}.upTo`)}
+            <input
+              value={upToText}
+              onChange={(e) => {
+                setUpTo(e.target.value);
+                setAsking(false);
+              }}
+              placeholder="DD/MM/YYYY"
+              inputMode="numeric"
+              className={`${inputClass} max-w-[220px] tabular-nums`}
+            />
+            <span className="mt-0.5 block font-normal">{t(`${p}.upToHint`)}</span>
+          </label>
           {loading && !ready && (
             <span className="text-xs text-[var(--ink-muted)]">{t(`${p}.loading`)}</span>
           )}
@@ -384,6 +404,7 @@ export function PayNowForm(props: {
                 })
               : t(`${p}.askCycleBody`, {
                   month: props.monthName,
+                  closes: fmt(ready!.closesOn),
                   days: ready!.payableDays,
                   cycle: ready!.cycleDays,
                   date: fmt(date),

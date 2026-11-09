@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, View } from 'react-native';
 import {
+  addDays,
   businessDateOf,
   formatDisplayDate,
   formatINR,
@@ -56,6 +57,8 @@ export function PayNow({
   const payDay = Number(person.period.payDate.slice(8, 10));
   const soFar = person.net - person.paidAmount;
   const [paidOn, setPaidOn] = useState(fmt(today));
+  // The last day the new cycle's salary pays for: follows Paid on until it is changed.
+  const [upTo, setUpTo] = useState<string | null>(null);
   const [mode, setMode] = useState<string>('cash');
   const [choice, setChoice] = useState<'keep' | 'cycle'>('keep');
   const [amount, setAmount] = useState('');
@@ -78,30 +81,33 @@ export function PayNow({
         : '';
   const typed = parseRupees(amount);
   const keepAmount = typed !== null && typed > 0 ? typed : 0;
-  const cycle = choice === 'cycle' && date && preview?.date === date ? preview.data : null;
+  const upToText = upTo ?? paidOn;
+  const last = parseDisplayDate(upToText);
+  const cycle = choice === 'cycle' && last && preview?.date === last ? preview.data : null;
   const ready = cycle && cycle.ok ? cycle : null;
 
   useEffect(() => {
-    if (!me || choice !== 'cycle' || !date || dateError || preview?.date === date) return;
+    if (!me || choice !== 'cycle' || !last || preview?.date === last) return;
     let live = true;
-    void previewNewCycle(supabase, me.shopId, person.staffId, year, month, date, today).then(
+    void previewNewCycle(supabase, me.shopId, person.staffId, year, month, last, today).then(
       (data) => {
-        if (live) setPreview({ date, data });
+        if (live) setPreview({ date: last, data });
       },
     );
     return () => {
       live = false;
     };
-  }, [me, choice, date, dateError, preview?.date, person.staffId, year, month, today]);
+  }, [me, choice, last, preview?.date, person.staffId, year, month, today]);
 
-  const cycleProblem =
-    cycle && !cycle.ok
+  const cycleProblem = !last
+    ? t(`${p}.problems.upToDate`)
+    : cycle && !cycle.ok
       ? cycle.reason === 'too_early'
         ? t(`${p}.problems.too_early`, {
             date: fmt(cycle.earliest),
             day: dayOfMonthText(payDay, t),
           })
-        : t(`${p}.problems.${cycle.reason}`, {
+        : t(`${p}.problems.${cycle.reason === 'future' ? 'upToFuture' : cycle.reason}`, {
             today: fmt(today),
             month: monthName,
             from: fmt(person.period.from),
@@ -142,6 +148,7 @@ export function PayNow({
             staffId: person.staffId,
             year,
             month,
+            upTo: last!,
             paidOn: date,
             mode,
             today,
@@ -310,8 +317,8 @@ export function PayNow({
             <Radio
               on={choice === 'cycle'}
               title={
-                date && !dateError
-                  ? t(`${p}.cycleTitle`, { date: fmt(date) })
+                last
+                  ? t(`${p}.cycleTitle`, { date: fmt(addDays(last, 1)) })
                   : t(`${p}.cycleTitleAny`)
               }
               body={
@@ -327,7 +334,20 @@ export function PayNow({
               }
             />
           </Pressable>
-          {choice === 'cycle' && !cycle && !dateError && (
+          {choice === 'cycle' && (
+            <Field
+              label={t(`${p}.upTo`)}
+              value={upToText}
+              onChange={(v) => {
+                setUpTo(v);
+                setAsking(false);
+              }}
+              placeholder="DD/MM/YYYY"
+              keyboardType="numbers-and-punctuation"
+              hint={t(`${p}.upToHint`)}
+            />
+          )}
+          {choice === 'cycle' && !cycle && last && (
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: space['space-2'] }}>
               <ActivityIndicator color={c.accent} />
               <Text variant="caption" muted>
@@ -435,6 +455,7 @@ export function PayNow({
                 })
               : t(`${p}.askCycleBody`, {
                   month: monthName,
+                  closes: fmt(ready!.closesOn),
                   days: ready!.payableDays,
                   cycle: ready!.cycleDays,
                   date: fmt(date),

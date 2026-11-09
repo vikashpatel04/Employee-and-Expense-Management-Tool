@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Fixed — 2026-11-09 (new cycle: Salary up to)
+
+- **A new cycle now starts the day after the last day paid for**, set in a new **Salary up to**
+  date that follows Paid on. Salary given on the evening of 08/11 for work up to 08/11: Paid on
+  08/11, the salary pays up to 08/11, and the new cycle starts on 09/11 (pay day the 9th). Before,
+  the day paid was the new cycle's first day, so that couldn't be entered without losing a day or
+  dating the payment a day late.
+
 ### Added — 2026-11-09 (pay early; Paid on)
 
 - **Paid on**: every salary payment can be dated the day it was really paid (today by default, never
