@@ -567,6 +567,8 @@ export async function loadMyMoney(
     amount: m.amount,
     payableDays: m.payableDays,
     employedDays: m.employedDays,
+    /** Paid early towards it (Pay now, keeping the pay day). */
+    payments: m.payments,
   }));
   return {
     overview,
@@ -577,6 +579,7 @@ export async function loadMyMoney(
       expenseOwed: overview.expenseOwed ?? 0,
       expenseCharged: overview.expenseCharged ?? 0,
       unfinalized: months.map((m) => m.amount),
+      paidEarly: months.reduce((a, m) => a + m.payments.reduce((b, x) => b + x.amount, 0), 0),
     }),
   };
 }

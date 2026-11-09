@@ -176,12 +176,17 @@ export function moneyNow(input: {
   expenseOwed: Paise;
   expenseCharged: Paise;
   unfinalized: readonly Paise[];
+  /** Paid early towards months not finalized yet (already in `balance`). */
+  paidEarly?: Paise;
 }) {
-  const salarySoFar = input.unfinalized.reduce((a, x) => a + x, 0);
+  const paidEarly = input.paidEarly ?? 0;
+  const unfinalized = input.unfinalized.reduce((a, x) => a + x, 0);
   return {
-    total: input.balance + salarySoFar,
-    salarySoFar,
-    finalizedDue: input.balance + input.advance - input.expenseOwed + input.expenseCharged,
+    total: input.balance + unfinalized,
+    /** Months not finalized yet, less what was paid towards them early. */
+    salarySoFar: unfinalized - paidEarly,
+    finalizedDue:
+      input.balance + paidEarly + input.advance - input.expenseOwed + input.expenseCharged,
     advance: input.advance,
     expenseOwed: input.expenseOwed,
     expenseCharged: input.expenseCharged,

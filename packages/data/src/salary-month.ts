@@ -49,6 +49,8 @@ export type ComputedPayslip = {
   leaveOverBalance: boolean;
   /** This month's add or less entries, already in `result`. */
   entries: SalaryEntry[];
+  /** Closes early on this date (a new cycle starts the day after; Pay now). */
+  closesOn?: BusinessDate;
 };
 
 /**
@@ -63,6 +65,8 @@ export async function computeMonth(
   shopId: string,
   year: number,
   month: number,
+  /** `closes`: people whose salary closes early, on that date (a new cycle from the day after). */
+  options: { closes?: ReadonlyMap<string, BusinessDate> } = {},
 ): Promise<ComputedPayslip[]> {
   const end = monthEnd(year, month);
   const prev = shiftMonth(year, month, -1);
@@ -168,11 +172,14 @@ export async function computeMonth(
         personPayDay(rules.pay, s.joining_date, paySettings, end),
         ended.get(staffId),
       );
-      const { from: employedFrom, to: closingDay } = employedPart(
+      const { from: employedFrom, to: employedTo } = employedPart(
         period,
         s.joining_date,
         s.leaving_date,
       );
+      const asked = options.closes?.get(staffId);
+      const closesOn = asked && compareDates(asked, employedTo) < 0 ? asked : undefined;
+      const closingDay = closesOn ?? employedTo;
       if (compareDates(employedFrom, closingDay) > 0) return [];
       const templateOn = (d: BusinessDate) =>
         templateVersionOn(assignments.get(staffId) ?? [], versionsByTemplate, d);
@@ -188,6 +195,7 @@ export async function computeMonth(
         period,
         joiningDate: s.joining_date,
         leavingDate: s.leaving_date ?? undefined,
+        ...(closesOn ? { closesOn } : {}),
         paySettings,
         templateOn,
         holidays,
@@ -268,6 +276,7 @@ export async function computeMonth(
           leave: version ? leave : null,
           leaveOverBalance,
           entries: mine,
+          ...(closesOn ? { closesOn } : {}),
         },
       ];
     })

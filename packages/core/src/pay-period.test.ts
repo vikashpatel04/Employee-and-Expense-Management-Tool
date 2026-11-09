@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { addDays, compareDates, shiftMonth } from './dates';
-import { employedPart, payDayOf, payPeriod, payPeriodOn, personPayDay } from './pay-period';
+import {
+  employedPart,
+  payDayOf,
+  payPeriod,
+  payPeriodOn,
+  personPayDay,
+  newCycleCheck,
+  newCycleEarliest,
+} from './pay-period';
 import type { PaySettings } from './salary';
 import { DEFAULT_PAY_RULES } from './settings';
 
@@ -158,5 +166,71 @@ describe('payPeriodOn', () => {
   it('pay day 1: the same month', () => {
     expect(payPeriodOn('2026-11-30', 1)).toMatchObject({ year: 2026, month: 11 });
     expect(payPeriodOn('2026-12-01', 1)).toMatchObject({ year: 2026, month: 12 });
+  });
+});
+
+describe('a new cycle from the date paid', () => {
+  const november = payPeriod(2026, 11, 16); // 16/10/2026 – 15/11/2026
+
+  it('closes the day before and moves the pay day to the date paid', () => {
+    const r = newCycleCheck(november, '2026-11-08', '2026-11-09');
+    expect(r).toEqual({
+      ok: true,
+      closesOn: '2026-11-07',
+      payDay: 8,
+      next: {
+        year: 2026,
+        month: 12,
+        from: '2026-11-08',
+        to: '2026-12-07',
+        payDate: '2026-12-08',
+        cycleDays: 30,
+      },
+    });
+  });
+
+  it('one day later moves it all by a day', () => {
+    const r = newCycleCheck(november, '2026-11-09', '2026-11-09');
+    expect(r.ok && [r.closesOn, r.payDay, r.next.from]).toEqual(['2026-11-08', 9, '2026-11-09']);
+  });
+
+  it('refuses a date after today', () => {
+    expect(newCycleCheck(november, '2026-11-10', '2026-11-09')).toMatchObject({
+      ok: false,
+      reason: 'future',
+    });
+  });
+
+  it('must be in the month the salary is named after, from its 2nd', () => {
+    expect(newCycleCheck(november, '2026-11-01', '2026-11-09')).toEqual({
+      ok: false,
+      reason: 'too_early',
+      earliest: '2026-11-02',
+    });
+    expect(newCycleCheck(november, '2026-11-02', '2026-11-09').ok).toBe(true);
+    expect(newCycleCheck(november, '2026-10-16', '2026-11-09')).toMatchObject({
+      reason: 'before_period',
+    });
+  });
+
+  it('after the period it is just the usual pay date', () => {
+    expect(newCycleCheck(november, '2026-11-16', '2026-11-20')).toMatchObject({
+      reason: 'period_over',
+    });
+  });
+
+  it('works for the calendar month too', () => {
+    const r = newCycleCheck(payPeriod(2026, 11, 1), '2026-11-02', '2026-11-09');
+    expect(r.ok && [r.closesOn, r.next.from, r.next.to]).toEqual([
+      '2026-11-01',
+      '2026-11-02',
+      '2026-12-01',
+    ]);
+  });
+
+  it('the earliest start is the later of the period’s 2nd day and the month’s 2nd', () => {
+    expect(newCycleEarliest(november)).toBe('2026-11-02');
+    expect(newCycleEarliest(payPeriod(2026, 11, 1))).toBe('2026-11-02');
+    expect(newCycleEarliest(payPeriod(2026, 11, 2, '2026-10-20'))).toBe('2026-11-02');
   });
 });

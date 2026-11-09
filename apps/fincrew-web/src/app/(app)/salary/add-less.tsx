@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition, type ReactNode } from 'react';
+import { createContext, useContext, useState, useTransition, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { ChevronDown, Minus, Plus, X } from 'lucide-react';
 import { toast } from 'sonner';
@@ -17,21 +17,32 @@ import { t } from '@/lib/i18n';
 import { inputClass } from '../../components';
 import { addSalaryEntry, removeSalaryEntry } from './actions';
 
+const PersonContext = createContext({ openPay: () => {}, closePay: () => {} });
+
+/** Inside `PersonDialog`: switch between the person's salary and its Pay now form. */
+export function usePersonDialog() {
+  return useContext(PersonContext);
+}
+
 /**
  * One person's salary in a pop-up over the month (`?person=`): it stays open while entries are
- * added and the figures refresh, and closing it goes back to the month.
+ * added and the figures refresh, and closing it goes back to the month. `pay` is the Pay now form
+ * it switches to (`PayNowButton`).
  */
 export function PersonDialog({
   label,
   closeHref,
+  pay,
   children,
 }: {
   label: string;
   closeHref: string;
+  pay?: ReactNode;
   children: ReactNode;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(true);
+  const [paying, setPaying] = useState(false);
   return (
     <Dialog
       open={open}
@@ -46,7 +57,11 @@ export function PersonDialog({
         className="flex max-h-[90svh] flex-col gap-3.5 overflow-y-auto p-5 sm:max-w-[540px]"
       >
         <DialogTitle className="sr-only">{label}</DialogTitle>
-        {children}
+        <PersonContext.Provider
+          value={{ openPay: () => setPaying(true), closePay: () => setPaying(false) }}
+        >
+          {paying && pay ? pay : children}
+        </PersonContext.Provider>
       </DialogContent>
     </Dialog>
   );

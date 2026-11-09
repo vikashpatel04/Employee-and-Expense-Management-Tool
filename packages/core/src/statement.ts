@@ -34,6 +34,8 @@ export interface StatementMonth {
   employedDays: number;
   /** The finalized payslip, which ties its ledger lines to this month. */
   payslipId?: string;
+  /** Closed early: a new cycle started on this date (the day after `to`). */
+  newCycleFrom?: BusinessDate;
 }
 
 export interface StatementLedgerLine {

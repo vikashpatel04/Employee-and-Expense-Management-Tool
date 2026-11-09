@@ -219,6 +219,10 @@ Staffora sign-in card (phone number + PIN; the `/join` page was removed 2026-10-
 
 ## Salary run — `(app)/salary`
 
+**Pay now and Paid on (owner, 09/11/2026)**: while a month is running the pop-up shows Pay now
+(keep the pay day, or a new cycle from the date paid), and Pay has a Paid on date and an amount.
+See `docs/features/pay-early.md`.
+
 **Pop-up and Add or less (owner, 05/11/2026)**: clicking a person opens a pop-up (`?person=`,
 `add-less.tsx`) with their days, lines, Add or less, take-home and Finalize or Pay; it replaced the
 side panel. The staff page has the We owe tag and View statement, and `/statements/[staffId]` is the

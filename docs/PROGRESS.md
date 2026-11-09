@@ -1,20 +1,24 @@
 # Progress
 
-_Last updated: 2026-11-05_
+_Last updated: 2026-11-09_
 
 ## Start here (handover for a new session)
 
-_Handover updated 2026-11-05. Read this section first, then `CLAUDE.md`, then the feature doc for
+_Handover updated 2026-11-09. Read this section first, then `CLAUDE.md`, then the feature doc for
 whatever you touch. The repo is public (MIT): keep real people's names, phone numbers and keys
 out of every committed file._
 
-**Latest (05/11/2026, pushed, commit `c488b08`)**: Add or less, the We owe tag, View statement and
-Historical are on the website and in FinCrew (`docs/features/statements.md`), and Staffora's QR scan
-has a reader that needs no Google services (DECISIONS). Migration `20261105000002` is live. Both
-APKs were started on EAS the same day (FinCrew `73770c24`, Staffora `8f080e21`); the owner installs
-them from the Expo portal and checks the website and a phone. **Nothing signed in was seen**: the
-website pop-up, drop-downs and statement page were checked on a temporary page and with sample
-figures; the two apps only compile and bundle. The QR reader's speed on a real phone is unknown.
+**Latest (09/11/2026, commit not pushed yet)**: **Pay early** is built on the website and in
+FinCrew (`docs/features/pay-early.md`): a Paid on date on every salary payment, and Pay now while a
+month runs, keeping the pay day or starting a new cycle from the date paid. Migration
+`20261109000001` (dry-run on live passed, rolled back). Needs from the owner: say push, then build
+both APKs. **Not seen signed in**: the website's Pay now and Pay forms were clicked through on a
+temporary page (the new-cycle figures need a sign-in, so that part wasn't seen); the apps only
+compile and bundle.
+
+**Before that (05/11/2026, pushed, `c488b08`)**: Add or less, the We owe tag, View statement and
+Historical (`docs/features/statements.md`), and Staffora's QR reader that needs no Google services.
+Both APKs were started on EAS that day (FinCrew `73770c24`, Staffora `8f080e21`).
 
 **Where we are**
 
@@ -42,7 +46,8 @@ figures; the two apps only compile and bundle. The QR reader's speed on a real p
   in Me (2026-10-30). Android backup is off in both apps, so a reinstall starts clean (the
   staff member then needs **New phone**). APK with the 30/10 fixes and pay days built
   05/11 (EAS `a2b1b36d`, commit `a7e8768`); not yet installed and checked. Fingerprint and QR scan only testable on a real phone.
-- **Database / server**: all migrations up to `20261105000002_salary_adjustments.sql` are live;
+- **Database / server**: all migrations up to `20261105000002_salary_adjustments.sql` are live
+  (`20261109000001_pay_early_new_cycle.sql` goes live on the next push);
   edge functions `staff-auth` and `helper-auth` deployed by CI. **Clear all data** existed briefly
   (20261026000003–5), was used once on 2026-10-26 to clear the owner's test data on live, then
   **removed** (`…000006` restores the original append-only guards; the owner never wants it again).
@@ -114,7 +119,7 @@ their OK.
 
 **How to check work**
 
-- `pnpm typecheck` (9 tasks incl. both apps), `pnpm test` (core 314, ui 6, i18n 1, db 232 —
+- `pnpm typecheck` (9 tasks incl. both apps), `pnpm test` (core 327, ui 6, i18n 1, db 245 —
   PGlite, no Docker), `pnpm build`, `pnpm ui:tokens --check`,
   `bash scripts/check-migrations.sh origin/main HEAD`.
 - Live DB (CLI logged in): `pnpm exec supabase db query --linked --project-ref

@@ -72,3 +72,22 @@ export function payslipShareText(slip: PayslipView, t: Translate, monthName: str
       : [t('payslip.draft')]),
   ].join('\n');
 }
+
+/**
+ * A date of the month as words, for pay days ("the 8th" → "8th"). English picks the suffix by the
+ * number; each language keeps its own words under `salary.payNow.dayOfMonth`.
+ */
+export function dayOfMonthText(day: number, t: Translate): string {
+  const tens = day % 100;
+  const key =
+    tens >= 11 && tens <= 13
+      ? 'other'
+      : day % 10 === 1
+        ? 'one'
+        : day % 10 === 2
+          ? 'two'
+          : day % 10 === 3
+            ? 'few'
+            : 'other';
+  return t(`salary.payNow.dayOfMonth.${key}`, { day });
+}

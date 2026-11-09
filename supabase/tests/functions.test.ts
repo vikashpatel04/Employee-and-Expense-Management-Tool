@@ -27,6 +27,7 @@ describe('exposed (public schema) functions', () => {
       'change_pin',
       'check_in',
       'create_shop',
+      'finalize_new_cycle',
       'finalize_payslip',
       'helper_login_link',
       'helper_login_target',

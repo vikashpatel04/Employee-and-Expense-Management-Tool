@@ -4,11 +4,16 @@ import { revalidatePath } from 'next/cache';
 import {
   addSalaryEntry as addEntryShared,
   finalizeSalary as finalizeShared,
+  payEarly as payEarlyShared,
   paySalary as payShared,
+  previewNewCycle,
   removeSalaryEntry as removeEntryShared,
+  startNewCycle as startNewCycleShared,
+  type NewCyclePreview,
   type SalaryEntry,
   type SalaryWriteResult,
 } from '@fincrew/data';
+import type { BusinessDate } from '@fincrew/core';
 import { todayIST } from '@/lib/format';
 import { t } from '@/lib/i18n';
 import { requireMe } from '@/lib/session';
@@ -77,14 +82,81 @@ export async function removeSalaryEntry(id: string, name: string): Promise<Actio
   );
 }
 
-/** Pay what's left of finalized payslips (one, or all in the run when `payslipId` is null). */
+/**
+ * Pay what's left of finalized payslips (one, or all in the run when `payslipId` is null), dated
+ * `date` (Paid on). `amount` (paise, one payslip only) pays part of it.
+ */
 export async function paySalary(
   runId: string,
   payslipId: string | null,
   mode: string,
+  date: BusinessDate,
+  amount: number | null = null,
 ): Promise<ActionResult> {
   return withRunner(
-    (supabase, me) => payShared(supabase, { ...me, runId, payslipId, mode, today: todayIST() }),
+    (supabase, me) =>
+      payShared(supabase, { ...me, runId, payslipId, mode, date, amount, today: todayIST() }),
     (r) => t('salary.done.paid', { count: r.count }),
   );
+}
+
+/** Pay now, keeping the pay day: any amount towards a salary not finalized yet. */
+export async function payEarly(
+  year: number,
+  month: number,
+  staffId: string,
+  amount: number,
+  date: BusinessDate,
+  mode: string,
+): Promise<ActionResult> {
+  return withRunner(
+    (supabase, me) =>
+      payEarlyShared(supabase, {
+        ...me,
+        staffId,
+        year,
+        month,
+        amount,
+        date,
+        mode,
+        today: todayIST(),
+      }),
+    () => t('salary.done.paid', { count: 1 }),
+  );
+}
+
+/** Pay now with a new cycle from the date paid: close, finalize, move the pay day, pay. */
+export async function startNewCycle(
+  year: number,
+  month: number,
+  staffId: string,
+  paidOn: BusinessDate,
+  mode: string,
+): Promise<ActionResult> {
+  return withRunner(
+    (supabase, me) =>
+      startNewCycleShared(supabase, {
+        ...me,
+        staffId,
+        year,
+        month,
+        paidOn,
+        mode,
+        today: todayIST(),
+      }),
+    () => t('salary.done.finalized', { count: 1 }),
+  );
+}
+
+/** What a new cycle from `paidOn` would mean, for the Pay now form (reads only). */
+export async function previewCycle(
+  year: number,
+  month: number,
+  staffId: string,
+  paidOn: BusinessDate,
+): Promise<NewCyclePreview> {
+  const me = await requireMe();
+  if (!me || !me.permissions.includes('salary.run'))
+    return { ok: false, reason: 'not_found' } as NewCyclePreview;
+  return previewNewCycle(await createClient(), me.shopId, staffId, year, month, paidOn, todayIST());
 }

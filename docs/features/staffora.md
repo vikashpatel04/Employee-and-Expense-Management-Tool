@@ -66,6 +66,8 @@ Changed 2026-10-25 from invite links to **phone number + PIN** (owner's decision
   Check out when you leave / done for today, with **Scan QR** and **Enter code**; when the shop
   has self attendance off for this person, a note instead. Data: `src/lib/my-day.ts`
   (`loadAttendanceMonth`, `loadPay`, the person's `self_attendance`, the shop's code settings).
+- **Money** shows salary paid early under its month ("Paid on 08/11/2026", 09/11/2026;
+  `docs/features/pay-early.md`).
 - **Enter code** (`enter-code.tsx`), **Scan QR** (`scan.tsx`, content read with core
   `parseScannedCode`), both calling `check_in` with this phone's id; refusals explained with the
   time to try again (`src/lib/check-text.ts`). On Android the scan uses **Google's code scanner**

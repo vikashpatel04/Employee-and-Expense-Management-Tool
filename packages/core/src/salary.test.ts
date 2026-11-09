@@ -801,3 +801,61 @@ describe('add or less on a month (Check and finalize)', () => {
     expect(r.warnings).toContainEqual({ code: 'negative_net_pay' });
   });
 });
+
+describe('closing a salary early for a new cycle (Pay now)', () => {
+  // November for pay day 16: 16/10/2026 – 15/11/2026, 31 days. Every day paid, to keep it simple.
+  const period = payPeriod(2026, 11, 16);
+  const base = (): SalaryInput => ({
+    year: 2026,
+    month: 11,
+    period,
+    joiningDate: '2026-07-16',
+    paySettings: [{ effectiveFrom: '2026-07-16', payType: 'monthly', monthlySalary: 1_500_000 }],
+    templateOn: () => undefined,
+    holidays: [],
+    records: [],
+    allowances: [],
+    deductions: [],
+    rules: { pay: { ...DEFAULT_PAY_RULES, unmarkedDay: 'paid' }, late: DEFAULT_LATE_POLICY },
+  });
+
+  it('pays the days up to the close at the full period’s day rate', () => {
+    const r = calculateSalary({ ...base(), closesOn: '2026-11-07' });
+    expect(r.summary.employedDays).toBe(23);
+    expect(r.earned).toBe(1_112_900); // 15,000 × 23 ÷ 31 = 11,129.03, to the rupee
+    expect(calculateSalary(base()).earned).toBe(1_500_000);
+  });
+
+  it('counts allowances and deductions for their share of the full period', () => {
+    const r = calculateSalary({
+      ...base(),
+      closesOn: '2026-11-07',
+      allowances: [
+        { name: 'Travel', amount: 310_000, prorated: false, effectiveFrom: '2026-01-01' },
+      ],
+      deductions: [{ name: 'Uniform', amount: 31_000, effectiveFrom: '2026-01-01' }],
+    });
+    expect(r.lines).toContainEqual({ kind: 'allowance', name: 'Travel', amount: 230_000 });
+    expect(r.lines).toContainEqual({ kind: 'deduction', name: 'Uniform', amount: 23_000 });
+  });
+
+  it('days after the close are not marked days to warn about', () => {
+    const r = calculateSalary({
+      ...base(),
+      closesOn: '2026-11-07',
+      asOf: '2026-11-09',
+      rules: { pay: DEFAULT_PAY_RULES, late: DEFAULT_LATE_POLICY },
+    });
+    expect(r.warnings).toContainEqual({ code: 'unmarked_days', count: 23 });
+  });
+
+  it('a close on or after the last day changes nothing', () => {
+    expect(calculateSalary({ ...base(), closesOn: '2026-11-15' }).earned).toBe(1_500_000);
+    expect(calculateSalary({ ...base(), closesOn: '2026-11-30' }).earned).toBe(1_500_000);
+  });
+
+  it('a leaving date before the close still ends it there', () => {
+    const r = calculateSalary({ ...base(), closesOn: '2026-11-07', leavingDate: '2026-10-31' });
+    expect(r.summary.employedDays).toBe(16);
+  });
+});

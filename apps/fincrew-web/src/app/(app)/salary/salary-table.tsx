@@ -22,7 +22,9 @@ export function SalaryTable({
   run,
   year,
   month,
+  today,
 }: {
+  today: string;
   people: SalaryPerson[];
   mName: string;
   canRun: boolean;
@@ -232,6 +234,8 @@ export function SalaryTable({
                   )}
                   {canRun && run && p.state === 'finalized' && (
                     <PayControl
+                      today={today}
+                      due={p.net - p.paidAmount}
                       pay={paySalary.bind(null, run.id, p.id)}
                       label={t('salary.pay')}
                       modeLabel={t('salary.payMode')}

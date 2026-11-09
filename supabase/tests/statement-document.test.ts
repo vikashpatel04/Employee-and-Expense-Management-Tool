@@ -246,3 +246,16 @@ if (out) {
   for (const kind of ['statement', 'historical'] as const)
     writeFileSync(join(out, `${kind}.html`), statementPrintHtml(view(), kind, t, months));
 }
+
+describe('a salary closed early', () => {
+  it('says so, with the new cycle’s first day', () => {
+    const v = view({
+      months: input.months.map((m) =>
+        m.month === 9 ? { ...m, to: '2026-09-07', newCycleFrom: '2026-09-08' } : m,
+      ),
+    });
+    expect(statementDocumentHtml(v, 'statement', t, months)).toContain(
+      '16/08/2026 – 07/09/2026 · 30 of 31 days · closed early, new cycle from 08/09/2026',
+    );
+  });
+});

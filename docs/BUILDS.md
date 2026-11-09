@@ -84,6 +84,11 @@ again (same as changing phones).
   `eas credentials`) — comes with the push notification work.
 - Play Store: a Google Play developer account (one-time fee), then `eas submit`.
 
+## Pay early (09/11/2026)
+
+No new native modules, but both apps need a new APK for Pay now and Paid on (FinCrew) and the early
+payments in Money (Staffora).
+
 ## New native modules (05/11/2026)
 
 Both apps need a new APK for the 05/11 work: FinCrew gained `expo-print`, `expo-sharing` and

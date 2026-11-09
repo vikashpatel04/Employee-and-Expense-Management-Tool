@@ -214,3 +214,19 @@ describe('moneyNow (Staffora Money, owner 30/10/2026)', () => {
     expect(m.total).toBe(1200000);
   });
 });
+
+describe('moneyNow with salary paid early', () => {
+  it('takes it off the month not finalized, not off the finalized salary', () => {
+    const now = moneyNow({
+      balance: -100_000,
+      advance: 0,
+      expenseOwed: 0,
+      expenseCharged: 0,
+      unfinalized: [1_261_300],
+      paidEarly: 100_000,
+    });
+    expect(now.total).toBe(1_161_300);
+    expect(now.salarySoFar).toBe(1_161_300);
+    expect(now.finalizedDue).toBe(0);
+  });
+});

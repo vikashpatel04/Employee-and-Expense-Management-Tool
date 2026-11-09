@@ -36,6 +36,9 @@ is a placeholder until the first store build.
 - **Sign in** (`src/app/sign-in.tsx`): email + password; signed-out users are kept here by the
   root layout's guard (`Stack.Protected`).
 - **Tabs** (`src/app/(tabs)`): Today · Staff · Money · More (PLAN §6.1).
+- **Pay now, Paid on (09/11/2026)**: the salary sheet shows Pay now while a month is running
+  (`src/components/money/pay-now.tsx`); Pay sheets (salary run, staff page) have a Paid on date.
+  See `docs/features/pay-early.md`.
 - **Add or less, statements (05/11/2026)**: tapping a name in the salary run opens a sheet with Add
   or less (`src/components/money/add-less.tsx`) instead of opening the row. Staff detail has the We
   owe tag and View statement ▾ Historical; `src/app/statement/[id].tsx` shows both, with Share PDF

@@ -27,7 +27,7 @@ import {
   type DaySummary,
   type Holiday,
 } from './attendance';
-import { compareDates, type BusinessDate } from './dates';
+import { compareDates, eachDay, type BusinessDate } from './dates';
 import { effectiveOn, type Dated } from './dated';
 import {
   applyLatePolicy,
@@ -99,6 +99,13 @@ export interface SalaryInput {
   period?: PayPeriod;
   joiningDate: BusinessDate;
   leavingDate?: BusinessDate;
+  /**
+   * The salary closes early on this date because a new cycle starts the day after (Pay now → new
+   * cycle, owner 09/11/2026). Later days of the period belong to the next salary; the days up to it
+   * are paid at the full period's day rate, and allowances and deductions count their share of the
+   * full period, so nothing is paid twice.
+   */
+  closesOn?: BusinessDate;
   paySettings: readonly PaySettings[];
   templateOn: (date: BusinessDate) => LeaveTemplateVersion | undefined;
   holidays: readonly Holiday[];
@@ -205,11 +212,26 @@ function inRange(date: BusinessDate, from: BusinessDate, to?: BusinessDate): boo
 
 export function calculateSalary(input: SalaryInput): SalaryResult {
   const { from, to, cycleDays: D } = input.period ?? payPeriod(input.year, input.month, 1);
+  const closesEarly = !!input.closesOn && compareDates(input.closesOn, to) < 0;
+  // Closing early ends the days like a leaving date does; a real leaving date before it still wins.
+  const leavingDate =
+    closesEarly && (!input.leavingDate || compareDates(input.closesOn!, input.leavingDate) < 0)
+      ? input.closesOn
+      : input.leavingDate;
+  // Days after an early close that they would have worked: still part of the full period.
+  const closedDays = closesEarly
+    ? eachDay(input.closesOn!, to)
+        .slice(1)
+        .filter(
+          (d) =>
+            compareDates(d, input.joiningDate) >= 0 &&
+            (!input.leavingDate || compareDates(d, input.leavingDate) <= 0),
+        ).length
+    : 0;
 
   const settingsOn = (date: BusinessDate) => effectiveOn(input.paySettings, date);
   // The period uses the overrides in effect on its last day of employment (or its last day).
-  const closingDate =
-    input.leavingDate && compareDates(input.leavingDate, to) < 0 ? input.leavingDate : to;
+  const closingDate = leavingDate && compareDates(leavingDate, to) < 0 ? leavingDate : to;
   const closingSettings = settingsOn(closingDate);
   const payRules = withOverride(input.rules.pay, closingSettings?.payRulesOverride);
   const basis = payRules.dayRateBasis.mode === 'fixed_days' ? payRules.dayRateBasis.days : D;
@@ -218,7 +240,7 @@ export function calculateSalary(input: SalaryInput): SalaryResult {
     from,
     to,
     joiningDate: input.joiningDate,
-    leavingDate: input.leavingDate,
+    leavingDate,
     templateOn: input.templateOn,
     holidays: input.holidays,
     records: input.records,
@@ -292,7 +314,7 @@ export function calculateSalary(input: SalaryInput): SalaryResult {
   }
 
   // ---- Allowances and fixed deductions: share of the employed days they cover.
-  const eligible = employed.length;
+  const eligible = employed.length + closedDays;
   const unitsByDate = new Map(adjusted.map((d) => [d.date, d.baseUnits + d.extraUnits]));
   const coverage = (x: { effectiveFrom: BusinessDate; effectiveTo?: BusinessDate }) => {
     const active = employed.filter((d) => inRange(d.date, x.effectiveFrom, x.effectiveTo));

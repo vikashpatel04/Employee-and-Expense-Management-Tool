@@ -18,6 +18,7 @@ import { createClient } from '@/lib/supabase/server';
 import { PageHeader, quietButtonClass } from '../../components';
 import { finalizeSalary, paySalary } from './actions';
 import { AddLess, PersonDialog } from './add-less';
+import { PayNowButton, PayNowForm } from './pay-now';
 import { ActionButton, PayControl } from './controls';
 import { SalaryTable } from './salary-table';
 
@@ -183,6 +184,7 @@ export default async function SalaryPage({
       )}
       {stage === 'pay' && run && (
         <PayControl
+          today={today}
           pay={paySalary.bind(null, run.id, null)}
           label={t('salary.payAll')}
           modeLabel={t('salary.payMode')}
@@ -234,11 +236,16 @@ export default async function SalaryPage({
 
   const selected = sp.person ? people.find((p) => p.staffId === sp.person) : undefined;
   const periodLine = (p: SalaryPerson) =>
-    t('salary.period', {
-      from: formatDate(p.period.from),
-      to: formatDate(p.period.to),
-      payDate: formatDate(p.period.payDate),
-    });
+    p.newCycleFrom
+      ? `${formatDate(p.period.from)} – ${formatDate(p.period.to)} · ${t('statement.closedEarly', {
+          date: formatDate(p.newCycleFrom),
+        })}`
+      : t('salary.period', {
+          from: formatDate(p.period.from),
+          to: formatDate(p.period.to),
+          payDate: formatDate(p.period.payDate),
+        });
+  const monthOnly = MONTH.format(new Date(Date.UTC(year, month - 1, 1))).split(' ')[0] ?? mName;
   const lineLabel = (l: PayslipLine, p: SalaryPerson) =>
     t(`salary.lines.${l.kind}`, { name: l.name ?? '', days: p.summary.payableDays });
 
@@ -314,6 +321,7 @@ export default async function SalaryPage({
           run={run}
           year={year}
           month={month}
+          today={today}
         />
       ) : (
         <>
@@ -499,6 +507,8 @@ export default async function SalaryPage({
                               )}
                               {canRun && run && p.state === 'finalized' && (
                                 <PayControl
+                                  today={today}
+                                  due={p.net - p.paidAmount}
                                   pay={paySalary.bind(null, run.id, p.id)}
                                   label={p.paidAmount > 0 ? t(`${s}.payRest`) : t('salary.pay')}
                                   modeLabel={t('salary.payMode')}
@@ -525,6 +535,25 @@ export default async function SalaryPage({
                     key={selected.staffId}
                     label={t(`${s}.panelLabel`, { name: selected.name })}
                     closeHref={base}
+                    pay={
+                      canRun && selected.running ? (
+                        <PayNowForm
+                          year={year}
+                          month={month}
+                          staffId={selected.staffId}
+                          name={selected.name}
+                          monthName={monthOnly}
+                          payDay={Number(selected.period.payDate.slice(8, 10))}
+                          period={selected.period}
+                          today={today}
+                          soFar={selected.net}
+                          paid={selected.paidAmount}
+                          additions={selected.entries
+                            .filter((e) => e.kind === 'add')
+                            .map((e) => ({ name: e.name, amount: e.amount }))}
+                        />
+                      ) : null
+                    }
                   >
                     <div className="flex items-center gap-3 pr-8">
                       <span className="grid size-11 shrink-0 place-items-center rounded-full bg-[var(--surface-muted)] text-sm font-semibold">
@@ -629,21 +658,44 @@ export default async function SalaryPage({
                               }))
                       }
                     />
+                    {selected.state === 'draft' && selected.paidAmount > 0 && (
+                      <div className="flex justify-between gap-3 border-b border-[var(--line)] pb-2 text-sm">
+                        <span>{t('salary.payNow.paidSoFar')}</span>
+                        <span className="text-[var(--money-paid)] tabular-nums">
+                          −{formatINR(selected.paidAmount)}
+                        </span>
+                      </div>
+                    )}
                     <div className="flex items-baseline justify-between gap-3 font-semibold">
-                      <span className="text-sm">{t(`${s}.takeHome`)}</span>
-                      <span className="text-money-md">{formatINR(selected.net)}</span>
+                      <span className="text-sm">
+                        {selected.state === 'draft' && selected.paidAmount > 0
+                          ? t('salary.payNow.stillToPaySoFar')
+                          : t(`${s}.takeHome`)}
+                      </span>
+                      <span className="text-money-md">
+                        {formatINR(
+                          selected.state === 'draft'
+                            ? selected.net - selected.paidAmount
+                            : selected.net,
+                        )}
+                      </span>
                     </div>
                     <span className="text-xs text-[var(--ink-muted)]">
-                      {selected.state === 'draft'
-                        ? t(`${s}.draftNote`)
-                        : selected.state === 'finalized' && selected.paidAmount === 0
-                          ? `${t('salary.addLess.locked')} ${t(`${s}.nothingPaid`)}`
-                          : selected.paidAmount > 0
-                            ? t(`${s}.paidSoFar`, { amount: formatINR(selected.paidAmount) })
-                            : t(`${s}.nothingPaid`)}
+                      {selected.state === 'draft' && selected.running
+                        ? t('salary.payNow.runningNote', {
+                            to: formatDate(selected.period.to),
+                          })
+                        : selected.state === 'draft'
+                          ? t(`${s}.draftNote`)
+                          : selected.state === 'finalized' && selected.paidAmount === 0
+                            ? `${t('salary.addLess.locked')} ${t(`${s}.nothingPaid`)}`
+                            : selected.paidAmount > 0
+                              ? t(`${s}.paidSoFar`, { amount: formatINR(selected.paidAmount) })
+                              : t(`${s}.nothingPaid`)}
                     </span>
                     <div className="flex flex-wrap justify-end gap-2">
-                      {canRun && selected.state === 'draft' && (
+                      {canRun && selected.state === 'draft' && selected.running && <PayNowButton />}
+                      {canRun && selected.state === 'draft' && !selected.running && (
                         <ActionButton
                           action={finalizeSalary.bind(null, year, month, [selected.staffId])}
                           label={t('salary.finalizeOne')}
@@ -660,6 +712,8 @@ export default async function SalaryPage({
                       )}
                       {canRun && run && selected.state === 'finalized' && (
                         <PayControl
+                          today={today}
+                          due={selected.net - selected.paidAmount}
                           pay={paySalary.bind(null, run.id, selected.id)}
                           label={`${t('salary.pay')} ${formatINR(selected.net - selected.paidAmount)}`}
                           modeLabel={t('salary.payMode')}

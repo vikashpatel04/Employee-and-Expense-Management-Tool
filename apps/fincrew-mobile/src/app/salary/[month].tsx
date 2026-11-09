@@ -18,6 +18,7 @@ import {
   formatINR,
   monthOf,
   paiseToInput,
+  parseDisplayDate,
   parseRupees,
   phoneKey,
   type PayslipLine,
@@ -35,8 +36,16 @@ import {
   type SalaryPerson,
   type SalaryWriteResult,
 } from '@fincrew/data';
-import { AmountField, BottomBar, Checkbox, FormMessage, MonthStepper } from '@/components/form';
+import {
+  AmountField,
+  BottomBar,
+  Checkbox,
+  Field,
+  FormMessage,
+  MonthStepper,
+} from '@/components/form';
 import { AddLess } from '@/components/money/add-less';
+import { PayNow } from '@/components/money/pay-now';
 import { useStatePill } from '@/components/money/salary';
 import { Sheet } from '@/components/sheet';
 import { Avatar, Button, Card, IconButton, Segmented, Text } from '@/components/ui';
@@ -87,6 +96,8 @@ export default function SalaryRun() {
   const [confirm, setConfirm] = useState<Confirm | null>(null);
   const [mode, setMode] = useState<string>('cash');
   const [amount, setAmount] = useState('');
+  const [paidOn, setPaidOn] = useState('');
+  const [payingNow, setPayingNow] = useState(false);
   const [sendWa, setSendWa] = useState(true);
   const [sheetError, setSheetError] = useState<string | null>(null);
   const [shareOpen, setShareOpen] = useState(false);
@@ -173,12 +184,17 @@ export default function SalaryRun() {
   };
   const askPay = (person: SalaryPerson | null) => {
     setAmount(person ? paiseToInput(due(person)) : '');
+    setPaidOn(formatDisplayDate(today));
     setSendWa(true);
     setSheetError(null);
     setConfirm({ kind: 'pay', person });
   };
   const pay = async (person: SalaryPerson | null) => {
     if (!me || !run?.runId) return;
+    const date = parseDisplayDate(paidOn);
+    if (!date) return setSheetError(t('salary.payNow.problems.date'));
+    if (date > today)
+      return setSheetError(t('salary.payNow.problems.future', { today: formatDisplayDate(today) }));
     let part: number | null = null;
     if (person) {
       const left = due(person);
@@ -195,6 +211,7 @@ export default function SalaryRun() {
           payslipId: person?.id ?? null,
           mode,
           today,
+          date,
           amount: part,
         }),
       (r) => t('salary.done.paid', { count: r.count }),
@@ -253,11 +270,13 @@ export default function SalaryRun() {
   const lineLabel = (l: PayslipLine, p: SalaryPerson) =>
     t(`salary.lines.${l.kind}`, { name: l.name ?? '', days: p.summary.payableDays });
   const period = (p: SalaryPerson) =>
-    t('salary.period', {
-      from: formatDisplayDate(p.period.from),
-      to: formatDisplayDate(p.period.to),
-      payDate: formatDisplayDate(p.period.payDate),
-    });
+    p.newCycleFrom
+      ? `${formatDisplayDate(p.period.from)} – ${formatDisplayDate(p.period.to)} · ${t('statement.closedEarly', { date: formatDisplayDate(p.newCycleFrom) })}`
+      : t('salary.period', {
+          from: formatDisplayDate(p.period.from),
+          to: formatDisplayDate(p.period.to),
+          payDate: formatDisplayDate(p.period.payDate),
+        });
   const back = () => (router.canGoBack() ? router.back() : router.replace('/money'));
   const selected = people.find((p) => p.staffId === open) ?? null;
   const s = 'mobile.money.salary';
@@ -568,11 +587,33 @@ export default function SalaryRun() {
 
       <Sheet
         open={!!selected}
-        onClose={() => setOpen(null)}
-        title={selected?.name ?? ''}
+        onClose={() => {
+          setOpen(null);
+          setPayingNow(false);
+        }}
+        title={
+          selected && payingNow
+            ? t('salary.payNow.title', { name: selected.name })
+            : (selected?.name ?? '')
+        }
         subtitle={selected ? `${mName} · ${period(selected)}` : undefined}
       >
-        {selected && (
+        {selected && payingNow && (
+          <PayNow
+            person={selected}
+            year={year}
+            month={month}
+            monthName={mName.split(' ')[0] ?? mName}
+            onBack={() => setPayingNow(false)}
+            onDone={(text) => {
+              setPayingNow(false);
+              setOpen(null);
+              setMessage({ ok: true, text });
+              void load();
+            }}
+          />
+        )}
+        {selected && !payingNow && (
           <View style={{ gap: space['space-3'] }}>
             <Text variant="caption" muted>
               {t('salary.days.payable', {
@@ -620,6 +661,14 @@ export default function SalaryRun() {
               onAdd={addEntry}
               onRemove={removeEntry}
             />
+            {selected.state === 'draft' && selected.paidAmount > 0 && (
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                <Text>{t('salary.payNow.paidSoFar')}</Text>
+                <Text variant="money-sm" color={c['money-paid']}>
+                  −{formatINR(selected.paidAmount)}
+                </Text>
+              </View>
+            )}
             <View
               style={{
                 flexDirection: 'row',
@@ -630,15 +679,37 @@ export default function SalaryRun() {
                 borderTopColor: c.line,
               }}
             >
-              <Text variant="label-sm">{t('salary.steps.takeHome')}</Text>
-              <Text variant="money-md">{formatINR(selected.net)}</Text>
+              <Text variant="label-sm">
+                {selected.state === 'draft' && selected.paidAmount > 0
+                  ? t('salary.payNow.stillToPaySoFar')
+                  : t('salary.steps.takeHome')}
+              </Text>
+              <Text variant="money-md">
+                {formatINR(
+                  selected.state === 'draft' ? selected.net - selected.paidAmount : selected.net,
+                )}
+              </Text>
             </View>
+            {selected.state === 'draft' && selected.running && (
+              <Text variant="caption" muted>
+                {t('salary.payNow.runningNote', { to: formatDisplayDate(selected.period.to) })}
+              </Text>
+            )}
             {selected.state !== 'draft' && (
               <Text variant="caption" muted>
                 {t('salary.addLess.locked')}
               </Text>
             )}
-            {canRun && selected.state === 'draft' && (
+            {canRun && selected.state === 'draft' && selected.running && (
+              <Button
+                label={t('salary.payNow.button')}
+                icon={IndianRupee}
+                block
+                disabled={busy}
+                onPress={() => setPayingNow(true)}
+              />
+            )}
+            {canRun && selected.state === 'draft' && !selected.running && (
               <Button
                 label={t(`${s}.finalizeOne`, { name: selected.name })}
                 icon={Check}
@@ -725,6 +796,21 @@ export default function SalaryRun() {
             }}
             hint={t(`${s}.amountHint`)}
           />
+        )}
+        {confirm?.kind === 'pay' && (
+          <View style={{ marginTop: space['space-2'] }}>
+            <Field
+              label={t('salary.payNow.paidOn')}
+              value={paidOn}
+              onChange={(v) => {
+                setPaidOn(v);
+                setSheetError(null);
+              }}
+              placeholder="DD/MM/YYYY"
+              keyboardType="numbers-and-punctuation"
+              hint={t('salary.payNow.paidOnHint', { date: formatDisplayDate(today) })}
+            />
+          </View>
         )}
         {confirm?.kind === 'pay' && (
           <View style={{ gap: space['space-2'], marginTop: space['space-2'] }}>

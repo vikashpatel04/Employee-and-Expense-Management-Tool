@@ -54,9 +54,49 @@ async function payDayOf(
 }
 
 /**
+ * Salary paid early towards months not finalized yet, by month (`year * 12 + month`): payments
+ * that point at a draft payslip. Someone who can't read drafts (the staff member themself) gets
+ * them under `unplaced`, to put on the month running now.
+ */
+async function paidEarly(supabase: Supabase, staffId: string) {
+  const [{ data: slips }, { data: lines }] = await Promise.all([
+    supabase
+      .from('payslips')
+      .select('id, status, salary_runs!inner(year, month)')
+      .eq('staff_id', staffId),
+    supabase
+      .from('ledger_entries')
+      .select('id, date, type, amount_paise, payment_mode, ref_table, ref_id, reverses_id')
+      .eq('staff_id', staffId)
+      .in('type', ['salary_payment', 'reversal']),
+  ]);
+  const undone = new Set((lines ?? []).map((l) => l.reverses_id).filter(Boolean));
+  const finalized = new Set((slips ?? []).filter((s) => s.status === 'finalized').map((s) => s.id));
+  const draftMonth = new Map(
+    (slips ?? []).filter((s) => s.status === 'draft').map((s) => [s.id, monthKey(s.salary_runs)]),
+  );
+  const byMonth = new Map<number, Payment[]>();
+  const unplaced: Payment[] = [];
+  for (const l of lines ?? []) {
+    if (l.type !== 'salary_payment' || undone.has(l.id) || l.ref_table !== 'payslips' || !l.ref_id)
+      continue;
+    if (finalized.has(l.ref_id)) continue;
+    const payment = { date: l.date, amount: -Number(l.amount_paise), mode: l.payment_mode };
+    const key = draftMonth.get(l.ref_id);
+    if (key === undefined) unplaced.push(payment);
+    else byMonth.set(key, [...(byMonth.get(key) ?? []), payment]);
+  }
+  return { byMonth, unplaced };
+}
+
+/** A salary payment made before the salary was finalized (Pay now, keeping the pay day). */
+export type Payment = { date: BusinessDate; amount: number; mode: string | null };
+
+/**
  * Every month this person has no finalized salary for, oldest first: from their first marked day
  * up to the period running today. Months before anything was marked (before the shop used FinCrew)
- * don't count. `amount` is before advance and expenses, which come off once, at the end.
+ * don't count. `amount` is before advance and expenses, which come off once, at the end; `paid`
+ * is what was paid towards it early.
  */
 export async function loadOpenMonths(
   supabase: Supabase,
@@ -66,9 +106,10 @@ export async function loadOpenMonths(
   finalized: ReadonlySet<number>,
   today: BusinessDate,
 ) {
-  const [payDay, { data: first }] = await Promise.all([
+  const [payDay, { data: first }, early] = await Promise.all([
     payDayOf(supabase, shopId, staffId, joiningDate, today),
     supabase.from('attendance').select('date').eq('staff_id', staffId).order('date').limit(1),
+    paidEarly(supabase, staffId),
   ]);
   const current = payPeriodOn(today, payDay);
   const start = first?.[0] ? payPeriodOn(first[0].date, payDay) : current;
@@ -102,7 +143,14 @@ export async function loadOpenMonths(
       };
     }),
   );
-  return months.filter((m) => m !== null);
+  const open = months.filter((m) => m !== null);
+  return open.map((m, i) => {
+    const payments = [
+      ...(early.byMonth.get(monthKey(m)) ?? []),
+      ...(i === open.length - 1 ? early.unplaced : []),
+    ].sort((a, b) => a.date.localeCompare(b.date));
+    return { ...m, payments, paid: payments.reduce((a, p) => a + p.amount, 0) };
+  });
 }
 
 /**
@@ -138,6 +186,7 @@ export async function loadMoneyNow(
     expenseOwed: overview.expenseOwed ?? 0,
     expenseCharged: overview.expenseCharged ?? 0,
     unfinalized: months.map((m) => m.amount),
+    paidEarly: months.reduce((a, m) => a + m.paid, 0),
   });
 }
 
@@ -167,7 +216,7 @@ export async function loadStatement(
     supabase
       .from('payslips')
       .select(
-        'id, run_id, revision, net_pay_paise, lines, summary, period_from, period_to, salary_runs!inner(year, month)',
+        'id, run_id, revision, net_pay_paise, lines, summary, period_from, period_to, new_cycle_from, salary_runs!inner(year, month)',
       )
       .eq('staff_id', staffId)
       .eq('status', 'finalized')
@@ -223,6 +272,7 @@ export async function loadStatement(
         payableDays: summary.payableDays,
         employedDays: summary.employedDays,
         payslipId: s.id,
+        ...(s.new_cycle_from ? { newCycleFrom: s.new_cycle_from } : {}),
       };
     }),
     ...open.map((m): StatementMonth => ({
@@ -232,7 +282,7 @@ export async function loadStatement(
       to: m.to,
       state: m.running ? 'running' : 'draft',
       amount: m.amount,
-      paid: 0,
+      paid: m.paid,
       lines: m.lines,
       payableDays: m.payableDays,
       employedDays: m.employedDays,

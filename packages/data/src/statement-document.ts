@@ -76,7 +76,10 @@ export function statementMonthLine(m: StatementMonth, t: Translate) {
     payable: m.payableDays,
     employed: m.employedDays,
   });
-  return `${formatDisplayDate(m.from)} – ${formatDisplayDate(m.to)} · ${days}`;
+  const closed = m.newCycleFrom
+    ? ` · ${t('statement.closedEarly', { date: formatDisplayDate(m.newCycleFrom) })}`
+    : '';
+  return `${formatDisplayDate(m.from)} – ${formatDisplayDate(m.to)} · ${days}${closed}`;
 }
 
 /** How a month's amount is made up: Salary ₹14,516.00 · Late −₹100.00 · … */

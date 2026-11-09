@@ -26,6 +26,13 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import {
+  formatDisplayDate,
+  formatINR,
+  paiseToInput,
+  parseDisplayDate,
+  parseRupees,
+} from '@fincrew/core';
 import { t } from '@/lib/i18n';
 import { inputClass } from '../../components';
 import type { ActionResult } from './actions';
@@ -114,8 +121,10 @@ export function PayControl({
   title,
   body,
   variant = 'primary',
+  today,
+  due,
 }: {
-  pay: (mode: string) => Promise<ActionResult>;
+  pay: (mode: string, date: string, amount: number | null) => Promise<ActionResult>;
   label: string;
   modeLabel: string;
   modes: Record<string, string>;
@@ -123,8 +132,15 @@ export function PayControl({
   title: string;
   body: string;
   variant?: 'primary' | 'secondary';
+  /** Today, the default Paid on. */
+  today: string;
+  /** One person's still to pay: shows an amount field to pay part of it. */
+  due?: number;
 }) {
   const [mode, setMode] = useState('cash');
+  const [paidOn, setPaidOn] = useState(formatDisplayDate(today));
+  const [amount, setAmount] = useState(due ? paiseToInput(due) : '');
+  const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const [pending, run] = useRunner();
   return (
@@ -140,6 +156,38 @@ export function PayControl({
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{body}</DialogDescription>
         </DialogHeader>
+        {due !== undefined && (
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="pay-amount">{t('salary.payNow.amount')}</Label>
+            <input
+              id="pay-amount"
+              value={amount}
+              inputMode="decimal"
+              onChange={(e) => {
+                setAmount(e.target.value);
+                setError(null);
+              }}
+              className={`${inputClass} mt-0 tabular-nums`}
+            />
+          </div>
+        )}
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="pay-date">{t('salary.payNow.paidOn')}</Label>
+          <input
+            id="pay-date"
+            value={paidOn}
+            inputMode="numeric"
+            placeholder="DD/MM/YYYY"
+            onChange={(e) => {
+              setPaidOn(e.target.value);
+              setError(null);
+            }}
+            className={`${inputClass} mt-0 tabular-nums`}
+          />
+          <span className="text-xs text-[var(--ink-muted)]">
+            {t('salary.payNow.paidOnHint', { date: formatDisplayDate(today) })}
+          </span>
+        </div>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="pay-mode">{modeLabel}</Label>
           <select
@@ -155,6 +203,11 @@ export function PayControl({
             ))}
           </select>
         </div>
+        {error && (
+          <span role="alert" className="text-xs text-[var(--status-absent)]">
+            {error}
+          </span>
+        )}
         <DialogFooter>
           <Button variant="outline" disabled={pending} onClick={() => setOpen(false)}>
             {t('common.cancel')}
@@ -162,12 +215,21 @@ export function PayControl({
           <Button
             disabled={pending}
             aria-busy={pending}
-            onClick={() =>
+            onClick={() => {
+              const date = parseDisplayDate(paidOn);
+              if (!date) return setError(t('salary.payNow.problems.date'));
+              if (date > today)
+                return setError(
+                  t('salary.payNow.problems.future', { today: formatDisplayDate(today) }),
+                );
+              const part = due !== undefined ? parseRupees(amount) : null;
+              if (due !== undefined && (part === null || part <= 0 || part > due))
+                return setError(t('salary.payNow.problems.payAmount', { amount: formatINR(due) }));
               run(
-                () => pay(mode),
+                () => pay(mode, date, part !== null && part < (due ?? 0) ? part : null),
                 () => setOpen(false),
-              )
-            }
+              );
+            }}
           >
             {pending ? working : label}
           </Button>

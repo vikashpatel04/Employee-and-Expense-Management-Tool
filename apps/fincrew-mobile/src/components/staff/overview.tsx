@@ -8,7 +8,13 @@ import {
   Phone,
   Receipt,
 } from 'lucide-react-native';
-import { businessDateOf, formatINR, monthOf } from '@fincrew/core';
+import {
+  businessDateOf,
+  formatDisplayDate,
+  formatINR,
+  monthOf,
+  parseDisplayDate,
+} from '@fincrew/core';
 import {
   loadAttendanceMonth,
   loadPayslipsDue,
@@ -19,7 +25,7 @@ import {
 } from '@fincrew/data';
 import { AdvanceSheet } from '@/components/advance-sheet';
 import { PayBackSheet } from '@/components/payback-sheet';
-import { FormMessage } from '@/components/form';
+import { Field, FormMessage } from '@/components/form';
 import { Sheet } from '@/components/sheet';
 import { Button, Card, Segmented, SummaryChip, Text } from '@/components/ui';
 import { monthLabel } from '@/lib/money';
@@ -54,6 +60,8 @@ export function OverviewSection({
   const [payOpen, setPayOpen] = useState(false);
   const [payBackOpen, setPayBackOpen] = useState(false);
   const [mode, setMode] = useState<string>('cash');
+  const [paidOn, setPaidOn] = useState('');
+  const [payError, setPayError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const today = businessDateOf(new Date());
@@ -77,6 +85,10 @@ export function OverviewSection({
   /** Pay every month still due, oldest first. */
   const pay = async () => {
     if (!me) return;
+    const date = parseDisplayDate(paidOn);
+    if (!date) return setPayError(t('salary.payNow.problems.date'));
+    if (date > today)
+      return setPayError(t('salary.payNow.problems.future', { today: formatDisplayDate(today) }));
     setBusy(true);
     setMessage(null);
     for (const d of due) {
@@ -86,6 +98,7 @@ export function OverviewSection({
         payslipId: d.payslipId,
         mode,
         today,
+        date,
       });
       if (!r.ok) {
         setBusy(false);
@@ -198,7 +211,11 @@ export function OverviewSection({
           label={t('mobile.staff.pay', { amount: formatINR(dueTotal) })}
           icon={IndianRupee}
           block
-          onPress={() => setPayOpen(true)}
+          onPress={() => {
+            setPaidOn(formatDisplayDate(today));
+            setPayError(null);
+            setPayOpen(true);
+          }}
         />
       )}
 
@@ -295,6 +312,17 @@ export function OverviewSection({
         title={t('mobile.money.salary.payTitle', { name: info.name })}
         subtitle={due.map((d) => `${monthLabel(d.year, d.month)} · ${formatINR(d.due)}`).join('\n')}
       >
+        <Field
+          label={t('salary.payNow.paidOn')}
+          value={paidOn}
+          onChange={(v) => {
+            setPaidOn(v);
+            setPayError(null);
+          }}
+          placeholder="DD/MM/YYYY"
+          keyboardType="numbers-and-punctuation"
+          hint={t('salary.payNow.paidOnHint', { date: formatDisplayDate(today) })}
+        />
         <Text variant="label-sm">{t('salary.payMode')}</Text>
         <Segmented
           label={t('salary.payMode')}
@@ -302,6 +330,7 @@ export function OverviewSection({
           onChange={setMode}
           options={MODES.map((m) => ({ value: m, label: modes[m] ?? m }))}
         />
+        {payError && <FormMessage ok={false} text={payError} />}
         <View style={{ flexDirection: 'row', gap: space['space-2'], marginTop: space['space-4'] }}>
           <View style={{ flex: 1 }}>
             <Button

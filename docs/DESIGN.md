@@ -86,6 +86,10 @@ Web · check and finalize, add or less; Web · staff page, what we owe; Web · s
 statement, historical; Salary · add or less; Staff · statement. Built:
 `docs/features/statements.md`.
 
+**Pay early, new cycle (09/11/2026)**: FinCrew key screens, page "Pay early, new cycle": Web ·
+pay now: keep the 16th or a new cycle; Web · pay a finalized salary, paid on; App · pay now; Web ·
+after paying early. Built: `docs/features/pay-early.md`.
+
 ## packages/ui
 
 `packages/ui/design/tokens.json` is a snapshot of the system's `project/tokens.json`. To refresh:

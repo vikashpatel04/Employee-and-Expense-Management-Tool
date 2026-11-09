@@ -3,6 +3,7 @@ import {
   businessDateOf,
   compareDates,
   employedPart,
+  newCycleCheck,
   monthEnd,
   monthOf,
   monthStart,
@@ -58,6 +59,10 @@ export type SalaryPerson = {
   state: 'draft' | 'finalized' | 'paid';
   /** Add or less entries that can still be removed; once finalized they are payslip lines. */
   entries: SalaryEntry[];
+  /** Not finalized and its period isn't over: Pay now instead of Finalize. */
+  running: boolean;
+  /** Closed early: a new cycle started on this date. */
+  newCycleFrom: BusinessDate | null;
 };
 
 /** Warnings on a payslip that isn't finalized yet (core's, plus the leave roll and the period). */
@@ -105,6 +110,10 @@ export async function loadSalaryRun(
   for (const s of slips ?? []) if (!latest.has(s.staff_id)) latest.set(s.staff_id, s);
   const rows = [...latest.values()].filter((r) => r.status === 'finalized');
   const finalized = new Set(rows.map((r) => r.staff_id));
+  // A draft is saved when someone is paid early: what's paid comes off at finalizing.
+  const drafts = new Map(
+    [...latest.values()].filter((r) => r.status === 'draft').map((r) => [r.staff_id, r.id]),
+  );
   // A month with no run and nothing marked (before the shop used FinCrew) has nothing to show.
   const before = shiftMonth(year, month, -1);
   const used =
@@ -118,10 +127,7 @@ export async function loadSalaryRun(
         .lte('date', monthEnd(year, month))
     ).count ?? 0) > 0;
   const [paid, computed] = await Promise.all([
-    paidByPayslip(
-      supabase,
-      rows.map((r) => r.id),
-    ),
+    paidByPayslip(supabase, [...rows.map((r) => r.id), ...drafts.values()]),
     used ? computeMonth(supabase, shopId, year, month) : [],
   ]);
 
@@ -157,9 +163,11 @@ export async function loadSalaryRun(
         payback: r.expensePayback,
         expenseCut: r.expenseCut,
         net: r.netPay,
-        paidAmount: 0,
+        paidAmount: paid.get(drafts.get(p.staffId) ?? '') ?? 0,
         state: 'draft',
         entries: p.entries,
+        running: !periodOver,
+        newCycleFrom: null,
       };
     });
 
@@ -200,6 +208,8 @@ export async function loadSalaryRun(
       paidAmount,
       state: paidAmount >= net ? 'paid' : 'finalized',
       entries: [],
+      running: false,
+      newCycleFrom: r.new_cycle_from,
     };
   });
   const people = [...saved, ...live].sort((a, b) => a.name.localeCompare(b.name));
@@ -313,7 +323,13 @@ export function salaryOverview(people: readonly SalaryPerson[]) {
  */
 async function saveDrafts(
   supabase: Supabase,
-  input: Ctx & { personId: string; year: number; month: number; staffIds: readonly string[] },
+  input: Ctx & {
+    personId: string;
+    year: number;
+    month: number;
+    staffIds: readonly string[];
+    closes?: ReadonlyMap<string, BusinessDate>;
+  },
 ): Promise<{ ok: true; drafts: string[] } | ReturnType<typeof failed>> {
   const { shopId, year, month } = input;
   let { data: run } = await supabase
@@ -335,7 +351,7 @@ async function saveDrafts(
 
   const wanted = new Set(input.staffIds);
   const [people, { data: existing }] = await Promise.all([
-    computeMonth(supabase, shopId, year, month),
+    computeMonth(supabase, shopId, year, month, { closes: input.closes }),
     supabase
       .from('payslips')
       .select('id, staff_id, revision, status')
@@ -356,7 +372,8 @@ async function saveDrafts(
     const json = (v: unknown) => v as Json;
     const row = {
       period_from: p.period.from,
-      period_to: p.period.to,
+      period_to: p.closesOn ?? p.period.to,
+      new_cycle_from: p.closesOn ? addDays(p.closesOn, 1) : null,
       lines: json(r.lines),
       summary: json(r.summary),
       warnings: json(draftWarnings(p, true)),
@@ -467,11 +484,15 @@ export async function paySalary(
     mode: string;
     today: BusinessDate;
     amount?: number | null;
+    /** The day it was paid (Paid on); today when left out. Never after today. */
+    date?: BusinessDate;
   },
 ): Promise<SalaryWriteResult> {
   if (!input.permissions.includes('salary.run')) return noPermission;
   const mode = PAYMENT_MODES.find((m) => m === input.mode);
   if (!mode) return failed(input.mode);
+  const date = input.date ?? input.today;
+  if (compareDates(date, input.today) > 0) return failed('date');
   const part = input.amount ?? null;
   if (part !== null && (!input.payslipId || !Number.isInteger(part) || part <= 0))
     return failed('amount');
@@ -499,7 +520,7 @@ export async function paySalary(
     const { error } = await supabase.from('ledger_entries').insert({
       shop_id: input.shopId,
       staff_id: s.staff_id,
-      date: input.today,
+      date,
       type: 'salary_payment',
       amount_paise: -(part ?? left),
       payment_mode: mode,
@@ -510,6 +531,166 @@ export async function paySalary(
     count++;
   }
   return { ok: true, count };
+}
+
+/**
+ * Pay now, keeping the pay day (owner 09/11/2026; needs salary.run): pay any amount towards a
+ * salary not finalized yet. Its live figures are saved as the draft payslip and the payment points
+ * at it, so it comes off when the salary is finalized; the period and pay day stay as they are.
+ */
+export async function payEarly(
+  supabase: Supabase,
+  input: Ctx & {
+    personId: string;
+    staffId: string;
+    year: number;
+    month: number;
+    amount: number;
+    date: BusinessDate;
+    mode: string;
+    today: BusinessDate;
+  },
+): Promise<SalaryWriteResult> {
+  if (!input.permissions.includes('salary.run')) return noPermission;
+  const mode = PAYMENT_MODES.find((m) => m === input.mode);
+  if (!mode) return failed(input.mode);
+  if (!Number.isInteger(input.amount) || input.amount <= 0) return failed('amount');
+  if (compareDates(input.date, input.today) > 0) return failed('date');
+  const saved = await saveDrafts(supabase, { ...input, staffIds: [input.staffId] });
+  if (!saved.ok) return saved;
+  const draft = saved.drafts[0];
+  if (!draft) return failed('finalized');
+  const { error } = await supabase.from('ledger_entries').insert({
+    shop_id: input.shopId,
+    staff_id: input.staffId,
+    date: input.date,
+    type: 'salary_payment',
+    amount_paise: -input.amount,
+    payment_mode: mode,
+    ref_table: 'payslips',
+    ref_id: draft,
+  });
+  return error ? failed(error.message) : { ok: true, count: 1 };
+}
+
+export type NewCyclePreview = Awaited<ReturnType<typeof previewNewCycle>>;
+
+/**
+ * What a new cycle from `paidOn` would mean for one person's salary (Pay now): where it closes, the
+ * figures for those days, what's already paid towards it, and the next salary's dates. Or why
+ * that date can't start one (core `newCycleCheck`).
+ */
+export async function previewNewCycle(
+  supabase: Supabase,
+  shopId: string,
+  staffId: string,
+  year: number,
+  month: number,
+  paidOn: BusinessDate,
+  today: BusinessDate,
+) {
+  const now = (await computeMonth(supabase, shopId, year, month)).find(
+    (p) => p.staffId === staffId,
+  );
+  if (!now) return { ok: false as const, reason: 'not_found' as const };
+  const check = newCycleCheck(now.period, paidOn, today);
+  if (!check.ok) return check;
+  const [cut, run] = await Promise.all([
+    computeMonth(supabase, shopId, year, month, {
+      closes: new Map([[staffId, check.closesOn]]),
+    }).then((all) => all.find((p) => p.staffId === staffId)),
+    supabase
+      .from('salary_runs')
+      .select('id')
+      .eq('shop_id', shopId)
+      .eq('year', year)
+      .eq('month', month)
+      .maybeSingle(),
+  ]);
+  if (!cut) return { ok: false as const, reason: 'not_found' as const };
+  const { data: draft } = run.data
+    ? await supabase
+        .from('payslips')
+        .select('id')
+        .eq('run_id', run.data.id)
+        .eq('staff_id', staffId)
+        .eq('status', 'draft')
+        .maybeSingle()
+    : { data: null };
+  const paid = draft ? ((await paidByPayslip(supabase, [draft.id])).get(draft.id) ?? 0) : 0;
+  return {
+    ok: true as const,
+    closesOn: check.closesOn,
+    payDay: check.payDay,
+    next: check.next,
+    from: employedPart(now.period, now.joiningDate, now.leavingDate).from,
+    payableDays: cut.result.summary.payableDays,
+    cycleDays: now.period.cycleDays,
+    lines: cut.result.lines,
+    net: cut.result.netPay,
+    paid,
+  };
+}
+
+/**
+ * Pay now with a new cycle (owner 09/11/2026; needs salary.run): the salary closes the day before
+ * `paidOn`, is finalized (`finalize_new_cycle`, which also makes `paidOn`'s date their pay day
+ * from then on) and what's left of it is paid, dated `paidOn`.
+ */
+export async function startNewCycle(
+  supabase: Supabase,
+  input: Ctx & {
+    personId: string;
+    staffId: string;
+    year: number;
+    month: number;
+    paidOn: BusinessDate;
+    mode: string;
+    today: BusinessDate;
+  },
+): Promise<SalaryWriteResult> {
+  if (!input.permissions.includes('salary.run')) return noPermission;
+  const mode = PAYMENT_MODES.find((m) => m === input.mode);
+  if (!mode) return failed(input.mode);
+  const preview = await previewNewCycle(
+    supabase,
+    input.shopId,
+    input.staffId,
+    input.year,
+    input.month,
+    input.paidOn,
+    input.today,
+  );
+  if (!preview.ok) return failed(preview.reason);
+  const saved = await saveDrafts(supabase, {
+    ...input,
+    staffIds: [input.staffId],
+    closes: new Map([[input.staffId, preview.closesOn]]),
+  });
+  if (!saved.ok) return saved;
+  const draft = saved.drafts[0];
+  if (!draft) return failed('finalized');
+  const { error } = await supabase.rpc('finalize_new_cycle', { p_payslip: draft });
+  if (error) return failed(error.message);
+  const [{ data: slip }, paid] = await Promise.all([
+    supabase.from('payslips').select('net_pay_paise').eq('id', draft).single(),
+    paidByPayslip(supabase, [draft]),
+  ]);
+  const left = Number(slip?.net_pay_paise ?? 0) - (paid.get(draft) ?? 0);
+  if (left > 0) {
+    const { error: payError } = await supabase.from('ledger_entries').insert({
+      shop_id: input.shopId,
+      staff_id: input.staffId,
+      date: input.paidOn,
+      type: 'salary_payment',
+      amount_paise: -left,
+      payment_mode: mode,
+      ref_table: 'payslips',
+      ref_id: draft,
+    });
+    if (payError) return failed(payError.message);
+  }
+  return { ok: true, count: 1 };
 }
 
 /**

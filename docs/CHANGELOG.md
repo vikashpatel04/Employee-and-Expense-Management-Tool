@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+### Added — 2026-11-09 (pay early; Paid on)
+
+- **Paid on**: every salary payment can be dated the day it was really paid (today by default, never
+  later), on the website and in FinCrew. The website's Pay also takes an amount, to pay part of it.
+- **Pay now** while a month is still running, with two choices: **keep the pay day** (pay any
+  amount now; it comes off when the salary is finalized) or **start a new cycle from the date paid**
+  (the salary closes the day before, is finalized and paid, and the pay day moves to that date from
+  then on). Statements, the staff page and Staffora show what was paid early.
+
 ### Added — 2026-11-05 (add or less, what we owe, statements; Staffora QR)
 
 - **Add or less**: Check and finalize now opens a person in a pop-up (website) or sheet (FinCrew

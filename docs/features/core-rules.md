@@ -26,7 +26,8 @@ template version**, so different staff can have different leave rules.
 | `markOnOffDay`       | `ignore` · `apply`                | `ignore`        | Absent/leave marked on an off day: the off day stands, or the mark replaces it (paid leave then uses balance).                                                    |
 
 Add or less entries on a month's salary are amounts typed at Check and finalize, not rules: see
-`docs/features/statements.md`.
+`docs/features/statements.md`. Paying early and starting a new cycle are choices made when paying,
+not rules: see `docs/features/pay-early.md` (`closesOn`, `newCycleCheck`).
 
 ### Late policy (`late.ts`, `LatePolicy`)
 

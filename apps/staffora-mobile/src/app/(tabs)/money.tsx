@@ -116,6 +116,16 @@ export default function Money() {
                     {formatINR(x.amount)}
                   </Text>
                 </View>
+                {x.payments.map((pay, i) => (
+                  <View key={i} style={rowStyle}>
+                    <Text style={{ flex: 1 }}>
+                      {t('statement.paidEarly', { date: formatDisplayDate(pay.date) })}
+                    </Text>
+                    <Text variant="money-md" color={c['money-paid']}>
+                      −{formatINR(pay.amount)}
+                    </Text>
+                  </View>
+                ))}
                 <View
                   style={{
                     alignSelf: 'flex-start',

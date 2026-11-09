@@ -1007,6 +1007,7 @@ export type Database = {
           pdf_path: string | null
           period_from: string | null
           period_to: string | null
+          new_cycle_from: string | null
           revision: number
           run_id: string
           shop_id: string
@@ -1032,6 +1033,7 @@ export type Database = {
           pdf_path?: string | null
           period_from?: string | null
           period_to?: string | null
+          new_cycle_from?: string | null
           revision?: number
           run_id: string
           shop_id: string
@@ -1057,6 +1059,7 @@ export type Database = {
           pdf_path?: string | null
           period_from?: string | null
           period_to?: string | null
+          new_cycle_from?: string | null
           revision?: number
           run_id?: string
           shop_id?: string
@@ -1888,6 +1891,7 @@ export type Database = {
         Returns: string
       }
       finalize_payslip: { Args: { p_payslip: string }; Returns: undefined }
+      finalize_new_cycle: { Args: { p_payslip: string }; Returns: undefined }
       helper_login_link: {
         Args: { p_email: string; p_person: string; p_user: string }
         Returns: undefined

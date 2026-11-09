@@ -2,6 +2,29 @@
 
 Choices made during the build that PLAN.md doesn't spell out. Newest first.
 
+## 2026-11-09 — Pay early: keep the pay day or a new cycle; Paid on
+
+- Owner: "next cycle can't be starting from 16th, it should be on the date they get the salary";
+  and "There should be two options". Plus: "I want a date-changing feature" because a salary given
+  yesterday entered today would move the cycle by a day.
+- **Keep the pay day = a payment against the draft payslip.** Salary is live until finalized, so
+  the early payment needs something to point at: the draft is saved and the payment refers to it;
+  finalizing keeps the same row, so it counts as paid. No net-pay limit on a draft (it can still
+  change); the usual limit applies once finalized. A draft with payments can't be deleted.
+- **New cycle = close early, at the full period's day rate.** Paying 23 days of a 31-day period as
+  a full month would pay those days twice, so the closed salary is cut like a leaving date, with
+  allowances and deductions counting their share of the full period (a leaver's fixed allowance is
+  unchanged). The pay day moves for good, written into the pay setting from the date paid (and any
+  later one), so it shows under Own rules and can be changed back from a date.
+- **The new start must be in the month the salary is named after (from its 2nd).** One salary per
+  person per month name: an earlier start would make the closed salary end in the month before,
+  which already has one. The form explains and suggests keeping the pay day.
+- **The day paid starts the new cycle**, like a pay day does today (pay day 16 starts on the 16th).
+- **Early payments come off the month not finalized** in every total (`moneyNow` `paidEarly`), so
+  the staff page, statements and Staffora don't show them as an odd negative.
+- **Pay day words**: "the 8th" comes from `salary.payNow.dayOfMonth`, with the English suffix
+  picked in code (`dayOfMonthText`), so it doesn't depend on the phone's Intl support.
+
 ## 2026-11-05 — Staffora QR: a reader that needs no Google services
 
 - Owner, after the 05/11 APK: "QR scanning is opening camera but not working". **The 30/10
