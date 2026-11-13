@@ -8,11 +8,10 @@ _Handover updated 2026-11-13. Read this section first, then `CLAUDE.md`, then th
 whatever you touch. The repo is public (MIT): keep real people's names, phone numbers and keys
 out of every committed file._
 
-**Latest (13/11/2026, committed, not pushed yet)**: **Salary by person** on the website and in
+**Latest (13/11/2026, pushed, commit `498faaa`)**: **Salary by person** on the website and in
 FinCrew (`docs/features/salary-by-person.md`): a list of people and a page per person; no month
 view. No migration. **Not seen signed in**: typecheck, tests, the website build and the app bundle
-pass, but the new pages need a sign-in to load. Needs from the owner: say push, then build the
-FinCrew APK (Staffora is unchanged).
+pass, but the new pages need a sign-in to load. FinCrew APK started on EAS the same day (`abb8f7d9`); Staffora is unchanged.
 
 **Before that (09/11/2026, fix, pushed, commit `0d00a40`)**: Pay now's new cycle has a **Salary up to** date (the last day paid
 for, following Paid on); the new cycle starts the day after. Found on the first real use (Diwali):
