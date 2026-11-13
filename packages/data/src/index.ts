@@ -18,6 +18,7 @@ export * from './roles';
 export * from './salary-month';
 export * from './expense-write';
 export * from './salary-run';
+export * from './salary-people';
 export * from './advances';
 export * from './self-service';
 export * from './payslip-text';

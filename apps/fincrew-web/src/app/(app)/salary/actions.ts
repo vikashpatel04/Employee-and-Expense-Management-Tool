@@ -40,7 +40,7 @@ async function withRunner(
           ? t('salary.errors.noPermission')
           : t('salary.errors.failed', { reason: r.message }),
     };
-  revalidatePath('/salary');
+  revalidatePath('/salary', 'layout');
   return { ok: true, message: done(r) };
 }
 

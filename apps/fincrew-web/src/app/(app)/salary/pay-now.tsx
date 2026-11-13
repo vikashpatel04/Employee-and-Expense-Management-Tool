@@ -14,18 +14,34 @@ import {
 } from '@fincrew/core';
 import { dayOfMonthText, PAYSLIP_MINUS_LINES, type NewCyclePreview } from '@fincrew/data';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { t } from '@/lib/i18n';
 import { inputClass } from '../../components';
 import { payEarly, previewCycle, startNewCycle } from './actions';
-import { usePersonDialog } from './add-less';
+import { PayContext, usePersonDialog } from './add-less';
 
 const MODES = ['cash', 'upi', 'bank', 'card'] as const;
 const p = 'salary.payNow';
 
-/** "Pay now" in a person's pop-up while their month is running: switches it to the form below. */
-export function PayNowButton() {
-  const { openPay } = usePersonDialog();
-  return <Button onClick={openPay}>{t(`${p}.button`)}</Button>;
+/** "Pay now" on a person's salary page while their salary is running: the form in a dialog. */
+export function PayNowDialog(props: Parameters<typeof PayNowForm>[0]) {
+  const [open, setOpen] = useState(false);
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button>{t(`${p}.button`)}</Button>
+      </DialogTrigger>
+      <DialogContent
+        aria-describedby={undefined}
+        className="flex max-h-[90svh] flex-col gap-3.5 overflow-y-auto p-5 sm:max-w-[560px]"
+      >
+        <DialogTitle className="sr-only">{t(`${p}.title`, { name: props.name })}</DialogTitle>
+        <PayContext value={{ openPay: () => setOpen(true), closePay: () => setOpen(false) }}>
+          <PayNowForm {...props} />
+        </PayContext>
+      </DialogContent>
+    </Dialog>
+  );
 }
 
 /** One way to pay, as a choice card. */

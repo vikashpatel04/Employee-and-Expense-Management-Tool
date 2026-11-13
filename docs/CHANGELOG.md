@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Changed — 2026-11-13 (salary by person)
+
+- **Salary is by person, not by month**, on the website and in FinCrew: a list of people (to pay
+  now, running so far, next pay dates; who needs finalizing or paying, and who is running), and a
+  page per person with what needs doing, the salary running now and every earlier salary. No month
+  names anywhere on these screens; each salary shows its own dates. The month view, Finalize
+  everyone and the month table are gone.
+
 ### Fixed — 2026-11-09 (new cycle: Salary up to)
 
 - **A new cycle now starts the day after the last day paid for**, set in a new **Salary up to**

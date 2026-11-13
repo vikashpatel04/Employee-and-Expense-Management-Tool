@@ -219,6 +219,11 @@ Staffora sign-in card (phone number + PIN; the `/join` page was removed 2026-10-
 
 ## Salary run — `(app)/salary`
 
+**By person since 13/11/2026** (`docs/features/salary-by-person.md`): `/salary` is the list of
+people and `/salary/[staffId]` one person's salary. The month steps, the month pop-up and the full
+table described below were replaced; Add or less, Pay now, Pay (with Paid on) and Finalize work the
+same from the person's page.
+
 **Pay now and Paid on (owner, 09/11/2026)**: while a month is running the pop-up shows Pay now
 (keep the pay day, or a new cycle from the date paid), and Pay has a Paid on date and an amount.
 See `docs/features/pay-early.md`.

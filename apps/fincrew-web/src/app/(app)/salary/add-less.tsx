@@ -1,12 +1,11 @@
 'use client';
 
-import { createContext, useContext, useState, useTransition, type ReactNode } from 'react';
+import { createContext, useContext, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { ChevronDown, Minus, Plus, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatINR, parseRupees } from '@fincrew/core';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,52 +18,12 @@ import { addSalaryEntry, removeSalaryEntry } from './actions';
 
 const PersonContext = createContext({ openPay: () => {}, closePay: () => {} });
 
-/** Inside `PersonDialog`: switch between the person's salary and its Pay now form. */
+/** Opens and closes the Pay now form for whatever holds it (`PayNowDialog`). */
+export const PayContext = PersonContext.Provider;
+
+/** Inside `PayNowDialog`: close the Pay now form. */
 export function usePersonDialog() {
   return useContext(PersonContext);
-}
-
-/**
- * One person's salary in a pop-up over the month (`?person=`): it stays open while entries are
- * added and the figures refresh, and closing it goes back to the month. `pay` is the Pay now form
- * it switches to (`PayNowButton`).
- */
-export function PersonDialog({
-  label,
-  closeHref,
-  pay,
-  children,
-}: {
-  label: string;
-  closeHref: string;
-  pay?: ReactNode;
-  children: ReactNode;
-}) {
-  const router = useRouter();
-  const [open, setOpen] = useState(true);
-  const [paying, setPaying] = useState(false);
-  return (
-    <Dialog
-      open={open}
-      onOpenChange={(next) => {
-        if (next) return;
-        setOpen(false);
-        router.push(closeHref, { scroll: false });
-      }}
-    >
-      <DialogContent
-        aria-describedby={undefined}
-        className="flex max-h-[90svh] flex-col gap-3.5 overflow-y-auto p-5 sm:max-w-[540px]"
-      >
-        <DialogTitle className="sr-only">{label}</DialogTitle>
-        <PersonContext.Provider
-          value={{ openPay: () => setPaying(true), closePay: () => setPaying(false) }}
-        >
-          {paying && pay ? pay : children}
-        </PersonContext.Provider>
-      </DialogContent>
-    </Dialog>
-  );
 }
 
 export type AddLessEntry = { id?: string; kind: 'add' | 'less'; name: string; amount: number };

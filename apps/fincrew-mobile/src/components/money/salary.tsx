@@ -2,76 +2,41 @@ import { useCallback, useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, View } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { ChevronRight } from 'lucide-react-native';
-import { businessDateOf, formatINR, monthOf } from '@fincrew/core';
-import { loadSalaryRun } from '@fincrew/data';
-import { Card, SectionTitle, Text } from '@/components/ui';
+import { businessDateOf, formatDisplayDate, formatINR } from '@fincrew/core';
+import {
+  dayOfMonthText,
+  daysLeft,
+  leftToPay,
+  loadSalaryPeople,
+  type SalaryPersonRow,
+} from '@fincrew/data';
+import { Avatar, Card, SectionTitle, Text } from '@/components/ui';
 import { t } from '@/lib/i18n';
-import { monthLabel, shiftMonth, ym } from '@/lib/money';
 import { useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
 import { radius, space, useTheme } from '@/lib/theme';
 
-type Overall = 'none' | 'draft' | 'finalized' | 'paid';
-type MonthRow = {
-  year: number;
-  month: number;
-  overall: Overall;
-  count: number;
-  net: number;
-  due: number;
-};
-
-/** How many months the list shows (this one and the ones before). */
-const MONTHS = 4;
-
-/** State pill colours (design: Draft amber, Paid green, the rest neutral). */
-export function useStatePill() {
-  const { c } = useTheme();
-  return (s: Overall) =>
-    s === 'paid'
-      ? { bg: c['status-present-soft'], fg: c['money-paid'] }
-      : s === 'draft'
-        ? { bg: c['status-late-soft'], fg: c.ink }
-        : s === 'finalized'
-          ? { bg: c['accent-soft'], fg: c['accent-ink'] }
-          : { bg: c['surface-muted'], fg: c['ink-muted'] };
-}
+type Data = Awaited<ReturnType<typeof loadSalaryPeople>>;
+const s = 'salaryPeople';
 
 /**
- * Money · Salary (design: "Money · salary"): the last few months with their run state, plus next
- * month once someone's pay period ending then has started; open one to check, finalize and pay
- * (`/salary/<YYYY-MM>`).
+ * Money · Salary by person (owner 13/11/2026; design "App · salary by person"): each person is on
+ * their own pay day, so no months. What's to pay now and running so far, then the people who need
+ * something and everyone else running; open someone for their salary (`/salary/<staff id>`).
  */
 export function SalarySection() {
   const { me } = useSession();
   const { c } = useTheme();
-  const pill = useStatePill();
-  const [rows, setRows] = useState<MonthRow[] | null>(null);
+  const [data, setData] = useState<Data | null>(null);
   const [loading, setLoading] = useState(false);
+  const today = businessDateOf(new Date());
 
   const load = useCallback(async () => {
     if (!me) return;
     setLoading(true);
-    const current = monthOf(businessDateOf(new Date()));
-    const months = Array.from({ length: MONTHS + 1 }, (_, i) =>
-      shiftMonth(current.year, current.month, 1 - i),
-    );
-    const list = await Promise.all(
-      months.map(async ({ year, month }) => {
-        const run = await loadSalaryRun(supabase, me.shopId, year, month);
-        return {
-          year,
-          month,
-          overall: run.overall,
-          count: run.people.length,
-          net: run.people.reduce((a, p) => a + p.net, 0),
-          due: run.people.reduce((a, p) => a + Math.max(0, p.net - p.paidAmount), 0),
-        };
-      }),
-    );
-    setRows(list.filter((r, i) => i > 0 || r.count > 0));
+    setData(await loadSalaryPeople(supabase, me.shopId, today));
     setLoading(false);
-  }, [me]);
+  }, [me, today]);
 
   useFocusEffect(
     useCallback(() => {
@@ -79,78 +44,113 @@ export function SalarySection() {
     }, [load]),
   );
 
+  const row = (p: SalaryPersonRow) => {
+    const first = p.needs[0];
+    const shown = first ?? p.current!;
+    const stage = first ? first.stage : 'running';
+    const amount = first ? p.needs.reduce((a, n) => a + leftToPay(n), 0) : leftToPay(p.current!);
+    const line = first
+      ? t(`${s}.${first.stage === 'finalize' ? 'rowFinalize' : 'rowPay'}`, {
+          from: formatDisplayDate(first.period.from),
+          to: formatDisplayDate(first.period.to),
+        })
+      : t(`${s}.rowRunning`, {
+          from: formatDisplayDate(shown.period.from),
+          to: formatDisplayDate(shown.period.to),
+          payDate: formatDisplayDate(shown.period.payDate),
+          count: daysLeft(shown, today),
+        });
+    return (
+      <Pressable
+        key={p.staffId}
+        accessibilityRole="button"
+        accessibilityLabel={t(`${s}.open`, { name: p.name })}
+        onPress={() => router.push({ pathname: '/salary/[id]', params: { id: p.staffId } })}
+        style={({ pressed }) => ({
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: space['space-3'],
+          minHeight: 72,
+          paddingLeft: space['space-3'],
+          paddingRight: space['space-2'],
+          paddingVertical: space['space-2'],
+          borderBottomWidth: 1,
+          borderBottomColor: c.line,
+          backgroundColor: pressed ? c['surface-muted'] : 'transparent',
+        })}
+      >
+        <Avatar name={p.name} />
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text variant="label" numberOfLines={1}>
+            {p.name}
+          </Text>
+          <Text variant="caption" muted numberOfLines={2}>
+            {t(`${s}.payDay`, { day: dayOfMonthText(p.payDay, t) })} · {line}
+          </Text>
+        </View>
+        <View style={{ alignItems: 'flex-end', gap: 4 }}>
+          <Text variant="money-md">{formatINR(amount)}</Text>
+          <View
+            style={{
+              paddingHorizontal: 8,
+              paddingVertical: 1,
+              borderRadius: radius['radius-pill'],
+              backgroundColor: stage === 'running' ? c['surface-muted'] : c['status-late-soft'],
+            }}
+          >
+            <Text variant="caption" color={stage === 'running' ? c['ink-muted'] : c['status-late']}>
+              {t(`${s}.badge.${stage}`)}
+            </Text>
+          </View>
+        </View>
+        <ChevronRight size={20} color={c['ink-muted']} />
+      </Pressable>
+    );
+  };
+
+  const needs = data?.people.filter((p) => p.needs.length > 0) ?? [];
+  const running = data?.people.filter((p) => p.needs.length === 0) ?? [];
+
   return (
     <ScrollView
       contentContainerStyle={{
         padding: space['space-4'],
         paddingTop: space['space-2'],
-        gap: space['space-2'],
+        gap: space['space-3'],
       }}
       refreshControl={<RefreshControl refreshing={loading} onRefresh={load} />}
     >
-      <SectionTitle title={t('mobile.money.salary.byMonth')} />
-      <Card>
-        {(rows ?? []).map((r) => {
-          const p = pill(r.overall);
-          const name = monthLabel(r.year, r.month);
-          const meta =
-            r.overall === 'none'
-              ? null
-              : r.overall === 'finalized'
-                ? t('mobile.money.salary.metaDue', { count: r.count, due: formatINR(r.due) })
-                : t(`mobile.money.salary.meta.${r.overall}`, { count: r.count });
-          return (
-            <Pressable
-              key={ym(r.year, r.month)}
-              accessibilityRole="button"
-              accessibilityLabel={`${name}, ${t(`salary.status.${r.overall}`)}`}
-              onPress={() =>
-                router.push({ pathname: '/salary/[month]', params: { month: ym(r.year, r.month) } })
-              }
-              style={({ pressed }) => ({
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: space['space-3'],
-                minHeight: 72,
-                paddingLeft: space['space-4'],
-                paddingRight: space['space-2'],
-                paddingVertical: space['space-2'],
-                borderBottomWidth: 1,
-                borderBottomColor: c.line,
-                backgroundColor: pressed ? c['surface-muted'] : 'transparent',
-              })}
-            >
-              <View style={{ flex: 1, minWidth: 0 }}>
-                <Text variant="label">{name}</Text>
-                {meta && (
-                  <Text variant="caption" muted>
-                    {meta}
-                  </Text>
-                )}
-              </View>
-              <View style={{ alignItems: 'flex-end', gap: 4 }}>
-                {r.overall !== 'none' && <Text variant="money-md">{formatINR(r.net)}</Text>}
-                <View
-                  style={{
-                    paddingHorizontal: 8,
-                    paddingVertical: 2,
-                    borderRadius: radius['radius-pill'],
-                    backgroundColor: p.bg,
-                  }}
-                >
-                  <Text variant="caption" color={p.fg}>
-                    {t(`salary.status.${r.overall}`)}
-                  </Text>
-                </View>
-              </View>
-              <ChevronRight size={20} color={c['ink-muted']} />
-            </Pressable>
-          );
-        })}
-      </Card>
-      <Text variant="caption" muted style={{ paddingHorizontal: space['space-1'] }}>
-        {t('mobile.money.salary.hint')}
-      </Text>
+      {data && data.people.length === 0 && <Text muted>{t(`${s}.empty`)}</Text>}
+      {data && data.people.length > 0 && (
+        <View
+          style={{
+            gap: 2,
+            padding: space['space-4'],
+            borderRadius: radius['radius-lg'],
+            backgroundColor: c['accent-soft'],
+          }}
+        >
+          <Text variant="label-sm" color={c['accent-ink']}>
+            {t(`${s}.toPay`)} · {t(`${s}.toPaySub`, { count: data.toPayPeople }).split(' · ')[0]}
+          </Text>
+          <Text variant="money-hero">{formatINR(data.toPay)}</Text>
+          <Text variant="caption" muted>
+            {t(`${s}.runningSoFar`)} {formatINR(data.runningSoFar)}
+          </Text>
+        </View>
+      )}
+      {needs.length > 0 && (
+        <>
+          <SectionTitle title={t(`${s}.needs`)} count={needs.length} />
+          <Card>{needs.map(row)}</Card>
+        </>
+      )}
+      {running.length > 0 && (
+        <>
+          <SectionTitle title={t(`${s}.running`)} count={running.length} />
+          <Card>{running.map(row)}</Card>
+        </>
+      )}
     </ScrollView>
   );
 }

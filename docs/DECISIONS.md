@@ -2,6 +2,20 @@
 
 Choices made during the build that PLAN.md doesn't spell out. Newest first.
 
+## 2026-11-13 — Salary by person, no month view
+
+- Owner: "we don't want monthly view in salary.. it should be by person". With each person on
+  their own pay day (and new cycles from Pay now), a month mixes people at different points.
+- **Screens only; storage unchanged.** `salary_runs` and `payslips` stay keyed by the month a
+  period ends in (it keeps one salary per person per month and all the checks built on that); the
+  screens never show it. No migration.
+- **Only open months are worked out** (`loadSalaryPeople`): per person, from their first marked
+  day to today's period, the months not finalized, plus finalized ones not fully paid. Months are
+  shared across people, so a shop of a few people works out two or three months.
+- **Finalize and pay one person at a time** from their page: bulk "Finalize everyone" assumed a
+  shared month. The payslip, statement and Staffora are unchanged.
+- **Pay now strings lost their month names** ("towards this salary").
+
 ## 2026-11-09 — New cycle: the salary pays up to a chosen last day (corrects the entry below)
 
 - Owner, first real use (Divya, Diwali): salary given on the evening of 08/11 covered work up to

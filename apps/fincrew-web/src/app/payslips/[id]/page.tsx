@@ -28,7 +28,7 @@ export default async function PayslipPage({ params }: { params: Promise<{ id: st
     <main className="mx-auto flex max-w-[210mm] flex-col gap-4 px-4 py-6 print:max-w-none print:p-0">
       <div className="flex flex-wrap items-center justify-between gap-3 print:hidden">
         <Link
-          href={`/salary?month=${slip.year}-${String(slip.month).padStart(2, '0')}`}
+          href={`/salary/${slip.staffId}`}
           className={`${quietButtonClass} inline-flex items-center gap-1 border-0 px-2`}
         >
           <ChevronLeft size={20} aria-hidden="true" />

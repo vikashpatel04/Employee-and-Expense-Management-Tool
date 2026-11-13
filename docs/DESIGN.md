@@ -90,6 +90,9 @@ statement, historical; Salary · add or less; Staff · statement. Built:
 pay now: keep the 16th or a new cycle; Web · pay a finalized salary, paid on; App · pay now; Web ·
 after paying early. Built: `docs/features/pay-early.md`.
 
+**Salary by person (13/11/2026)**: FinCrew key screens, page "Salary by person": Web · salary by
+person; App · salary by person. Built: `docs/features/salary-by-person.md`.
+
 ## packages/ui
 
 `packages/ui/design/tokens.json` is a snapshot of the system's `project/tokens.json`. To refresh:

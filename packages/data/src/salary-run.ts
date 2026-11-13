@@ -775,6 +775,7 @@ export async function loadPayslipView(supabase: Supabase, payslipId: string) {
       : 0;
   return {
     id: slip.id,
+    staffId: slip.staff_id,
     shopName: slip.shops.name,
     name: slip.staff.people.name,
     year,

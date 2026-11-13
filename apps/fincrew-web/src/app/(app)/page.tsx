@@ -310,7 +310,7 @@ export default async function DashboardPage() {
                     })}
               </p>
               <Link
-                href={`/salary?month=${salary.year}-${String(salary.month).padStart(2, '0')}`}
+                href="/salary"
                 className={`mt-auto ${salary.state === 'paid' ? quietButtonClass : buttonClass} w-fit`}
               >
                 {t(`home.salary.button.${salary.state}`)}

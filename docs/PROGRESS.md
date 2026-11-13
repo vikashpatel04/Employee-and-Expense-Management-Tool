@@ -1,14 +1,20 @@
 # Progress
 
-_Last updated: 2026-11-09_
+_Last updated: 2026-11-13_
 
 ## Start here (handover for a new session)
 
-_Handover updated 2026-11-09. Read this section first, then `CLAUDE.md`, then the feature doc for
+_Handover updated 2026-11-13. Read this section first, then `CLAUDE.md`, then the feature doc for
 whatever you touch. The repo is public (MIT): keep real people's names, phone numbers and keys
 out of every committed file._
 
-**Latest (09/11/2026, fix, pushed, commit `0d00a40`)**: Pay now's new cycle has a **Salary up to** date (the last day paid
+**Latest (13/11/2026, committed, not pushed yet)**: **Salary by person** on the website and in
+FinCrew (`docs/features/salary-by-person.md`): a list of people and a page per person; no month
+view. No migration. **Not seen signed in**: typecheck, tests, the website build and the app bundle
+pass, but the new pages need a sign-in to load. Needs from the owner: say push, then build the
+FinCrew APK (Staffora is unchanged).
+
+**Before that (09/11/2026, fix, pushed, commit `0d00a40`)**: Pay now's new cycle has a **Salary up to** date (the last day paid
 for, following Paid on); the new cycle starts the day after. Found on the first real use (Diwali):
 salary given on the evening of 08/11 covered 08/11. Migration `20261109000002` is live. Both APKs
 started on EAS with it (FinCrew `5e54d670`, Staffora `89d0b995`). Nothing had been paid with Pay
@@ -122,7 +128,7 @@ their OK.
 
 **How to check work**
 
-- `pnpm typecheck` (9 tasks incl. both apps), `pnpm test` (core 327, ui 6, i18n 1, db 246 —
+- `pnpm typecheck` (9 tasks incl. both apps), `pnpm test` (core 327, ui 6, i18n 1, db 250 —
   PGlite, no Docker), `pnpm build`, `pnpm ui:tokens --check`,
   `bash scripts/check-migrations.sh origin/main HEAD`.
 - Live DB (CLI logged in): `pnpm exec supabase db query --linked --project-ref

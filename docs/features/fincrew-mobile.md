@@ -36,6 +36,9 @@ is a placeholder until the first store build.
 - **Sign in** (`src/app/sign-in.tsx`): email + password; signed-out users are kept here by the
   root layout's guard (`Stack.Protected`).
 - **Tabs** (`src/app/(tabs)`): Today · Staff · Money · More (PLAN §6.1).
+- **Salary by person (13/11/2026)**: Money → Salary lists people (`src/components/money/salary.tsx`)
+  and opens `src/app/salary/[id].tsx` (one person: Finalize, Pay, Pay now, Add or less, earlier
+  salaries); the month screen `salary/[month]` is gone. See `docs/features/salary-by-person.md`.
 - **Pay now, Paid on (09/11/2026)**: the salary sheet shows Pay now while a month is running
   (`src/components/money/pay-now.tsx`); Pay sheets (salary run, staff page) have a Paid on date.
   See `docs/features/pay-early.md`.
